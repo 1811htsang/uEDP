@@ -7,6 +7,7 @@
 - Bổ sung lộ trình phát triển để đưa CIEDPC từ core EDP thành 1 OS hoàn chỉnh theo tiêu chuẩn Semantic Versioning.
 - Bổ sung các đối chiếu về đánh giá thiết kế của CIEDPC với mô hình chuẩn là QP/C của Miro Samek.
 - Bổ sung tài liệu để mention quá trình chuyển đổi thiết kế từ dependent của EPCB-vn AKEDP sang CIEDPC
+- Bổ sung tài liệu phân tích thiết kế của HyperPanelOS và QP/C chi tiết hơn để rút ra các bài học kinh nghiệm và áp dụng vào thiết kế của CIEDPC.
 - Quy ước: thay đổi tài liệu có thể được phát hành như patch version nếu ảnh hưởng trực tiếp đến release deliverable hoặc cách sử dụng hệ thống.
 
 ## Công việc cần làm
