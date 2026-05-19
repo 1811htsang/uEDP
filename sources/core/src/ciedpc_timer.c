@@ -165,15 +165,6 @@ void ciedpc_timer_tick(void) {
 	while (curr) {
 		if (curr->is_active) {
 			if (curr->counter > 0) {
-				#ifdef CIEDPC_PLATFORM_LINUX
-					#define TASK_NORM_CONTROLLER_ID  (0xE6) // ID của tác vụ điều khiển
-					#define SIG_USR_STOP        	   (0x02u)
-					printf("[Timer Tick] Timer ticking: Task ID=%u, Signal=0x%02X, Counter=%u\n", curr->des_task_id, curr->sig, curr->counter);
-					if (curr->counter == 758) {
-						printf("[Timer Tick] Simulating random STOP signal at counter 758 for Task ID=%u\n", curr->des_task_id);
-						ciedpc_task_norm_post_isr(TASK_NORM_CONTROLLER_ID, SIG_USR_STOP);
-					}
-				#endif
 				curr->counter--;
 			}
 

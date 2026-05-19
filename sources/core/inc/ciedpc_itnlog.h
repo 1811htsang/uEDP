@@ -26,7 +26,7 @@
     ITNLOG_LEVEL_WARN,
     ITNLOG_LEVEL_ERROR,
     ITNLOG_LEVEL_FATAL
-  } itnlog_level_t;
+  } ciedpc_itnlog_level_t;
 
   /**
    * @brief Định nghĩa các thẻ log mặc định cho các module của CIEDPC
@@ -47,7 +47,7 @@
    * @param tsm Con trỏ đến TSM liên quan đến log (nếu có)
    * @param msg Nội dung log
    * @param tmstmp Thời gian log (đơn vị: ms)
-   * @param chksum Giá trị checksum của log entry, 
+   * @param hash Giá trị hash của log entry, 
    *        được tính toán dựa trên nội dung của log entry 
    *        để đảm bảo tính toàn vẹn của dữ liệu log.
    *        Tránh việc ghi đè hoặc mất dữ liệu log 
@@ -58,17 +58,15 @@
    *            Nếu không có sử dụng `fsm` hoặc `tsm`, có thể để con trỏ này là NULL 
    *            để biểu thị không có thông tin FSM hoặc TSM liên quan đến log đó.
    */
-  typedef struct {
-    itnlog_level_t level;
+  typedef struct ciedpc_itnlog_entry_t {
+    ciedpc_itnlog_level_t level;
     const char* tag;
     ui16 task_id;
     ui16 msg_sig;
-    ciedpc_fsm_t* fsm;
-    ciedpc_tsm_t* tsm;
     const char* msg;
     ui32 tmstmp;
-    ui16 chksum; 
-  } itnlog_entry_t;
+    ui16 hash; 
+  } ciedpc_itnlog_entry_t;
 
   /**
    * @brief Ghi chú các hàm chức năng của internal logger
@@ -93,14 +91,18 @@
 
   /**
    * @brief Ghi một log entry vào internal logger
+   * @param timestamp Thời gian log (đơn vị: ms), sử dụng HAL_GetTick 
+   *                  hoặc tương đương để lấy timestamp hiện tại khi gọi hàm này
+   * @param level Mức độ log
    * @param msg Nội dung log cần ghi
+   * @param tag Thẻ log để phân loại log theo module
    * @attention Hàm này sẽ tự động lấy thông tin về task_id, msg_sig, fsm, tsm, tmstmp 
    *            và chksum dựa trên ngữ cảnh điều phối hiện tại của ciedpc_task_scheduler,
    *            do đó người dùng chỉ cần cung cấp nội dung log (msg) khi gọi hàm này 
    *            để ghi log một cách tiện lợi và nhanh chóng.
    * @note Sẽ bổ sung thêm rule để giới hạn độ dài của msg để tránh việc ghi log quá dài
    */
-  void ciedpc_itnlog_log(const char* msg);
+  void ciedpc_itnlog_log(ui32 timestamp, ciedpc_itnlog_level_t level, const char* tag, const char* msg);
 
   /**
    * @brief Xóa một log entry khỏi internal logger và trả về log entry đã xóa
@@ -108,7 +110,7 @@
    *         bao gồm tất cả các trường thông tin như level, tag, task_id, msg_sig, fsm, tsm, msg, tmstmp 
    *         và chksum của log entry đó.
    */
-  itnlog_entry_t ciedpc_itnlog_clear(void);
+  ciedpc_itnlog_entry_t ciedpc_itnlog_clear(void);
 
   /**
    * @brief Dump tất cả log entry hiện có trong internal logger
@@ -131,14 +133,14 @@
    *              giúp người dùng có thể điều chỉnh mức độ log 
    *              mà internal logger sẽ ghi lại
    */
-  void ciedpc_itnlog_set_level(itnlog_level_t level);
+  void ciedpc_itnlog_set_level(ciedpc_itnlog_level_t level);
 
   /**
    * @brief Lấy mức độ log hiện tại của internal logger
-   * @return itnlog_level_t Mức độ log hiện tại của internal logger, 
+   * @return ciedpc_itnlog_level_t Mức độ log hiện tại của internal logger, 
    *         giúp người dùng biết được mức độ log mà internal logger đang sử dụng
    */
-  itnlog_level_t ciedpc_itnlog_get_level(void);
+  ciedpc_itnlog_level_t ciedpc_itnlog_get_level(void);
 
   /**
    * @brief Lấy thẻ log hiện tại của internal logger
@@ -157,14 +159,14 @@
    * @param level Mức độ log cần lọc
    * @param tag Thẻ log cần lọc
    */
-  void ciedpc_itnlog_set_filter(itnlog_level_t level, const char* tag);
+  void ciedpc_itnlog_set_filter(ciedpc_itnlog_level_t level, const char* tag);
 
   /**
    * @brief Lấy bộ lọc log hiện tại của internal logger
    * @param level Con trỏ đến biến lưu trữ mức độ log được lọc
    * @param tag Con trỏ đến biến lưu trữ thẻ log được lọc
    */
-  void ciedpc_itnlog_get_filter(itnlog_level_t* level, const char* tag);
+  void ciedpc_itnlog_get_filter(ciedpc_itnlog_level_t* level, char* tag);
 
   /**
    * @brief Đặt hàm đầu ra cho internal logger
