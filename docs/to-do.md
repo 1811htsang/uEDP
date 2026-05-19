@@ -49,6 +49,7 @@
 - [x] Bổ sung thiết kế 1 Internal Logger (itnlog) để thay thế printf debugging trong để hỗ trợ kit không có cổng UART.
 - [x] Triển khai thiết kế logger với inline snapshot để lưu trực tiếp tsk/sig/fsm/tsm/msg và khai thác ring buffer để lưu log nội bộ ở runtime.
 - [ ] Bổ sung logic thiết kế chống ghi đè với checksum trên từng ô log để đảm bảo tính toàn vẹn của log khi sử dụng cơ chế ghi đè vòng tròn.
+- [ ] Bổ sung cơ chế threshhold để tự động kích hoạt việc xuất log ra ngoài khi có sự kiện quan trọng hoặc khi log đạt đến một mức độ nhất định, nhằm hỗ trợ việc phân tích hiệu suất và xử lý sự cố hiệu quả hơn.
 - [ ] Bổ sung tài liệu hướng dẫn sử dụng internal logger, bao gồm cách cấu hình, cách sử dụng API để ghi log và các rule để đảm bảo log được ghi chính xác và có thể phân tích hiệu quả.
 - [ ] Ra mắt phiên bản 1.0.2 của lõi CIEDPC với đầy đủ test case và tài liệu hướng dẫn sử dụng internal logger.
 
