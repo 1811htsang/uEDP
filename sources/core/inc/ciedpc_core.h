@@ -15,6 +15,7 @@
    * @brief Khai báo thư viện sử dụng cho hệ thống CIEDPC
    */
   #include <string.h>
+  #include "core_cfg.h"
   #include "pal_core.h"
 
   /**
