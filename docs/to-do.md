@@ -48,6 +48,9 @@
 - [x] Hoàn thiện test case để thống nhất định dạng và quy trình testing cho các module của lõi CIEDPC. Đã thực hiện điều này trong quá trình phát triển Core.
 - [x] Bổ sung thiết kế 1 Internal Logger (itnlog) để thay thế printf debugging trong để hỗ trợ kit không có cổng UART.
 - [x] Triển khai thiết kế logger với inline snapshot để lưu trực tiếp tsk/sig/fsm/tsm/msg và khai thác ring buffer để lưu log nội bộ ở runtime.
+- [ ] Sửa lỗi thiếu exit_critical trong timer khi timer_set
+- [ ] Loại bỏ hỗ trợ cho việc specify phân vùng trên pool để tránh xung đột thiết kế khi import vào ESP32.
+- [ ] Chuyển đổi các global variable từ uninitialize sang initialize để tránh vấn đề về memory footprint và phân vùng bộ nhớ.
 - [ ] Bổ sung logic thiết kế chống ghi đè với checksum trên từng ô log để đảm bảo tính toàn vẹn của log khi sử dụng cơ chế ghi đè vòng tròn.
 - [ ] Bổ sung cơ chế threshhold để tự động kích hoạt việc xuất log ra ngoài khi có sự kiện quan trọng hoặc khi log đạt đến một mức độ nhất định, nhằm hỗ trợ việc phân tích hiệu suất và xử lý sự cố hiệu quả hơn.
 - [ ] Bổ sung tài liệu hướng dẫn sử dụng internal logger, bao gồm cách cấu hình, cách sử dụng API để ghi log và các rule để đảm bảo log được ghi chính xác và có thể phân tích hiệu quả.
