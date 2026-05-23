@@ -102,5 +102,9 @@
 
 	// Điền các khai báo tại đây
 
+	/**
+	 * @brief Khai báo khác (nếu có)
+	 */
+
 #endif //__APP_DECL_H__
 
