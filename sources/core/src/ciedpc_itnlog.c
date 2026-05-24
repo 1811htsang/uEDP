@@ -15,24 +15,13 @@
 #include "ciedpc_itnlog.h"
 
 /**
- * @brief Khai báo hằng số cho kích thước của ring buffer log entry
- */
-
-#ifndef CIEDPC_ITNLOG_MAX_LOG_ENTRIES
-  #define CIEDPC_ITNLOG_MAX_LOG_ENTRIES  (32u) // units
-#endif // -> equipvalent to 32 units * sizeof(itnlog_entry_t) bytes
-
-/**
  * @brief Khai báo cấu trúc để lưu trữ thông tin về trạng thái của internal logger
  * @param total_captured Tổng số log entry đã được ghi lại trong internal logger
- * @param total_dropped Tổng số log entry đã bị bỏ qua do ring buffer đã đầy
- * @param overflow_flag Cờ hiệu cho biết ring buffer đã bị tràn ít nhất một lần
+ * @param underflow_flag Cờ hiệu cho biết ring buffer đã bị trống ít nhất một lần
  */
-
-typedef struct {
+typedef struct ciedpc_itnlog_status_t {
   ui8 total_captured;
-  ui8 total_dropped;
-  bool overflow_flag;
+  ui8 underflow_flag;
 } ciedpc_itnlog_status_t;
 
 /**
@@ -42,16 +31,22 @@ typedef struct {
  * @param itnlog_ringbuf_ctrl Cấu trúc quản lý cho ring buffer
  */
 
-CIEDPC_ATTR_SECTION(".ciedpc_itnlog_ring_buffer") sta ciedpc_itnlog_entry_t itnlog_ring_buffer[CIEDPC_ITNLOG_MAX_LOG_ENTRIES];
-CIEDPC_ATTR_SECTION(".ciedpc_itnlog_ring_buffer") sta ring_buffer_t itnlog_ringbuf;
-CIEDPC_ATTR_SECTION(".ciedpc_itnlog_status") sta ciedpc_itnlog_status_t itnlog_status = {0}; 
+sta ciedpc_itnlog_entry_t itnlog_ring_buffer[CIEDPC_ITNLOG_MAX_LOG_ENTRIES] = {0}; 
+sta ring_buffer_t itnlog_ringbuf = {0};
+sta ciedpc_itnlog_status_t itnlog_status = {0}; 
 
 /**
  * @brief Khai báo các biến toàn cục để lưu trữ thông tin về bộ lọc log của internal logger
  */
 
-CIEDPC_ATTR_SECTION(".ciedpc_itnlog_ring_buffer") sta ciedpc_itnlog_level_t itnlog_filter_level = ITNLOG_LEVEL_DEBUG; // Mức độ log mặc định là DEBUG
-CIEDPC_ATTR_SECTION(".ciedpc_itnlog_ring_buffer") sta const char* itnlog_filter_tag = NULL; // Thẻ log mặc định là NULL, có nghĩa là không lọc theo thẻ
+sta ciedpc_itnlog_level_t itnlog_filter_level = ITNLOG_LEVEL_DEBUG; // Mức độ log mặc định là DEBUG
+sta const char* itnlog_filter_tag = NULL; // Thẻ log mặc định là NULL, có nghĩa là không lọc theo thẻ
+
+/**
+ * @brief Khai báo biến toàn cục để lưu trữ hàm output cho internal logger
+ */
+ 
+sta ciedpc_itnlog_output_func_t itnlog_output_func = NULL; // Hàm output mặc định là NULL, có nghĩa là không có đích đến cụ thể cho log
 
 /**
  * @brief Khai báo các hàm quản lý nội bộ cho internal logger
@@ -62,19 +57,23 @@ sta ciedpc_itnlog_entry_t internal_ciedpc_itnlog_remove_entry(void);
 sta void internal_ciedpc_itnlog_calc_hash(ciedpc_itnlog_entry_t* entry);
 
 void internal_ciedpc_itnlog_add_entry(ciedpc_itnlog_entry_t* entry) {
-  if (ring_buffer_is_full(&itnlog_ringbuf)) {
-    // Cập nhật trạng thái
-    itnlog_status.overflow_flag = true;
-    itnlog_status.total_dropped++;
-    return; // Bỏ qua log entry mới nếu ring buffer đã đầy
-  } else {
-    ring_buffer_put(&itnlog_ringbuf, entry);
-    itnlog_status.total_captured++;
+  if (itnlog_status.total_captured >= CIEDPC_ITNLOG_MAX_LOG_ENTRIES) {
+    /**
+     * @brief Nếu vượt ngưỡng thì flush toàn bộ log entry hiện có 
+     *        trong ring buffer ra đích đến và reset trạng thái 
+     *        của internal logger
+     */
+    ciedpc_itnlog_dump();
+    memset(&itnlog_status, 0, sizeof(itnlog_status));
   }
+  ring_buffer_put(&itnlog_ringbuf, entry);
+  itnlog_status.total_captured++;
 }
 
 ciedpc_itnlog_entry_t internal_ciedpc_itnlog_remove_entry(void) {
   if (ring_buffer_is_empty(&itnlog_ringbuf)) {
+    // Nếu ring buffer rỗng, tăng cờ hiệu underflow và trả về một log entry mặc định
+    itnlog_status.underflow_flag++; 
     // Trả về một log entry mặc định nếu ring buffer rỗng
     return (ciedpc_itnlog_entry_t){0};
   } else {
@@ -132,8 +131,13 @@ void ciedpc_itnlog_dump(void) {
       (itnlog_filter_tag == NULL || strcmp(entry.tag, itnlog_filter_tag) == 0)
     ) {
       // Logic để xuất log entry ra đích đến, có thể là console, file hoặc giao diện
+      if (itnlog_output_func != NULL) {
+        itnlog_output_func(entry.msg);
+      }
     }
   }
+  // Sau khi dump xong, reset trạng thái của internal logger
+  memset(&itnlog_status, 0, sizeof(itnlog_status));
 }
 
 ui16 ciedpc_itnlog_get_log_count(void) {
@@ -167,5 +171,5 @@ void ciedpc_itnlog_get_filter(ciedpc_itnlog_level_t* level, char* tag) {
 }
 
 void ciedpc_itnlog_set_output(void (*output_func)(const char*)) {
-
+  itnlog_output_func = output_func;
 }

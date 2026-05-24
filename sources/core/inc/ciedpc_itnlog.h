@@ -6,12 +6,13 @@
  * @date 2026-05-14
  * @copyright MIT License
  */
-#ifndef CIEDPC_ITNLOG_H
-  #define CIEDPC_ITNLOG_H
+#ifndef __CIEDPC_ITNLOG_H__
+  #define __CIEDPC_ITNLOG_H__
 
   /**
    * @brief Khai báo thư viện sử dụng
    */
+
   #include "ciedpc_core.h"
   #include "ciedpc_fsm.h"
   #include "ciedpc_tsm.h"
@@ -19,8 +20,13 @@
   
   /**
    * @brief Định nghĩa các mức độ log
+   * @param ITNLOG_LEVEL_DEBUG Mức độ log cho các thông tin chi tiết
+   * @param ITNLOG_LEVEL_INFO Mức độ log cho các thông tin thông thường
+   * @param ITNLOG_LEVEL_WARN Mức độ log cho các cảnh báo
+   * @param ITNLOG_LEVEL_ERROR Mức độ log cho các lỗi
+   * @param ITNLOG_LEVEL_FATAL Mức độ log cho các lỗi nghiêm trọng
    */
-  typedef enum {
+  typedef enum ciedpc_itnlog_level_t {
     ITNLOG_LEVEL_DEBUG = 0,
     ITNLOG_LEVEL_INFO,
     ITNLOG_LEVEL_WARN,
@@ -67,6 +73,15 @@
     ui32 tmstmp;
     ui16 hash; 
   } ciedpc_itnlog_entry_t;
+
+  /**
+   * @brief Định nghĩa hàm output cho internal logger
+   * @note Hàm này sẽ được sử dụng để xuất dữ liệu log ra đích đến, 
+   *       có thể là console, file hoặc giao diện
+   * @note Hàm này để người dùng có thể tùy chỉnh cách thức xuất dữ liệu log 
+   *       của internal logger một cách linh hoạt
+   */
+  typedef void (*ciedpc_itnlog_output_func_t)(const char*);
 
   /**
    * @brief Ghi chú các hàm chức năng của internal logger
@@ -179,4 +194,4 @@
    */
   void ciedpc_itnlog_set_output(void (*output_func)(const char*));
 
-#endif CIEDPC_ITNLOG_H
+#endif // __CIEDPC_ITNLOG_H__

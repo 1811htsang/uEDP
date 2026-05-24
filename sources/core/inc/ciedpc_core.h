@@ -175,6 +175,22 @@
   #endif
 
   /**
+   * @brief Khai báo hằng số cho kích thước của ring buffer log entry
+   */
+
+  #ifndef CIEDPC_ITNLOG_MAX_LOG_ENTRIES
+    #define CIEDPC_ITNLOG_MAX_LOG_ENTRIES  (32u) // units
+  #endif // -> equipvalent to 32 units * sizeof(itnlog_entry_t) bytes
+
+  /**
+   * @brief Khai báo hằng số cho ngưỡng flush log entry của internal logger
+   */
+
+  #ifndef CIEDPC_ITNLOG_FLUSH_THRESHOLD
+    #define CIEDPC_ITNLOG_FLUSH_THRESHOLD  (28u) // units, ngưỡng để tự động flush log entry ra đích đến khi số lượng log entry trong ring buffer đạt đến ngưỡng này
+  #endif
+
+  /**
    * @brief Khởi tạo toàn bộ lõi CIEDPC (Pools, Timers, Task Manager)
    */
   CIEDPC_ATTR_WEAK void ciedpc_core_init(void);
