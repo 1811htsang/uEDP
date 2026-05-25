@@ -167,9 +167,13 @@ void ciedpc_itnlog_set_filter(ciedpc_itnlog_level_t level, const char* tag) {
 
 void ciedpc_itnlog_get_filter(ciedpc_itnlog_level_t* level, char* tag) {
   *level = ciedpc_itnlog_get_level();
-  *tag = (char*)ciedpc_itnlog_get_tag();
+  *tag = (char)ciedpc_itnlog_get_tag();
 }
 
 void ciedpc_itnlog_set_output(void (*output_func)(const char*)) {
   itnlog_output_func = output_func;
+}
+
+uint16_t ring_buffer_get_count(ring_buffer_t* ring_buffer) {
+  return ring_buffer->fill_size;
 }

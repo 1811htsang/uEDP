@@ -99,4 +99,11 @@
 	 */
 	uint8_t	ring_buffer_get(ring_buffer_t* ring_buffer, void* data);
 
+	/**
+	 * @brief Lấy số lượng phần tử hiện có trong vòng đệm
+	 * @param ring_buffer Con trỏ đến cấu trúc vòng đệm
+	 * @return uint16_t Số lượng phần tử hiện có trong vòng đệm
+	 */
+	uint16_t ring_buffer_get_count(ring_buffer_t* ring_buffer);
+
 #endif //__RING_BUFFER_H__
