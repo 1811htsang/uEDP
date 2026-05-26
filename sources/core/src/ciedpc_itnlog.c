@@ -93,7 +93,7 @@ void ciedpc_itnlog_init(void) {
   memset(itnlog_ring_buffer, 0, sizeof(itnlog_ring_buffer));
   ring_buffer_init(
     &itnlog_ringbuf, (ciedpc_itnlog_entry_t*)itnlog_ring_buffer, 
-    sizeof(itnlog_ring_buffer), sizeof(ciedpc_itnlog_entry_t)
+    CIEDPC_ITNLOG_MAX_LOG_ENTRIES, sizeof(ciedpc_itnlog_entry_t)
   );
 }
 
@@ -167,7 +167,7 @@ void ciedpc_itnlog_set_filter(ciedpc_itnlog_level_t level, const char* tag) {
 
 void ciedpc_itnlog_get_filter(ciedpc_itnlog_level_t* level, char* tag) {
   *level = ciedpc_itnlog_get_level();
-  *tag = (char)ciedpc_itnlog_get_tag();
+  *tag = (char)(uintptr_t)ciedpc_itnlog_get_tag();
 }
 
 void ciedpc_itnlog_set_output(void (*output_func)(const char*)) {
