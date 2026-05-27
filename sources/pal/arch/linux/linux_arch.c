@@ -15,6 +15,9 @@
 #define _GNU_SOURCE
 #define _POSIX_C_SOURCE 199309L
 
+/**
+ * @brief Khai báo thư viện sử dụng
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,8 +29,15 @@
 #include "ciedpc_core.h"
 #include "ciedpc_task.h"
 
-/* Đảm bảo ciedpc_timer_tick được biết đến */
+/**
+ * @brief Đảm bảo ciedpc_timer_tick được biết đến
+ */
+
 extern void ciedpc_timer_tick(void);
+
+/**
+ * @brief Khai báo biến mutex để hỗ trợ cơ chế khóa trong môi trường đa luồng của Linux
+ */
 
 static pthread_mutex_t ciedpc_mutex;
 static pthread_mutexattr_t mutex_attr;
@@ -40,7 +50,9 @@ void ciedpc_core_init(void) {
     /* Khởi tạo các thành phần khác của Core nếu cần */
 }
 
-/* --- IMPLEMENTATION CHO PAL_CORE.H --- */
+/**
+ * @brief Implementation cho ciedpc_core.h
+ */
 
 void pal_core_init(void) {
     pal_linux_init_env();
@@ -81,7 +93,10 @@ void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
     abort(); // Tạo core dump để debug
 }
 
-/* --- LINUX SPECIFIC FUNCTIONS --- */
+/**
+ * @brief Implementation cho linux_arch.h
+ * @note Có thể xóa hoặc bổ sung các hàm khác tùy theo nhu cầu của dự án
+ */
 
 void pal_linux_init_env(void) {
     /* 1. Khởi tạo Mutex hỗ trợ khóa lồng nhau (Recursive) */
