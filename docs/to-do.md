@@ -58,6 +58,7 @@
 - [x] Bổ sung cơ chế threshhold để tự động kích hoạt việc xuất log ra ngoài khi có sự kiện quan trọng hoặc khi log đạt đến một mức độ nhất định, nhằm hỗ trợ việc phân tích hiệu suất và xử lý sự cố hiệu quả hơn.
 - [x] Bổ sung log abstraction của PAL để hỗ trợ lưu log nội bộ trên Flash hoặc Backup Data Register của RTC trên các nền tảng phần cứng.
 - [x] Bổ sung integration test cho internal logger để đảm bảo tính ổn định và hiệu quả của cơ chế logging nội bộ.
+- [x] Thiết kế getter để truyền dữ liệu từ internal logger ra ngoài màn hình hoặc UART.
 - [ ] Bổ sung integration test trên kit LXP723ZGP1V2 để đánh giá hiệu quả của internal logger trong môi trường thực tế và đảm bảo tính ổn định khi hoạt động trên phần cứng.
 - [ ] Thêm PAL cho kit LXP723ZGP1V2 để hỗ trợ việc triển khai và testing internal logger trên nền tảng này.
 - [ ] Bổ sung tài liệu hướng dẫn sử dụng internal logger, bao gồm cách cấu hình, cách sử dụng API để ghi log và các rule để đảm bảo log được ghi chính xác và có thể phân tích hiệu quả.
@@ -65,24 +66,17 @@
 
 ### Phiên bản 1.0.3
 
-- [ ] Thiết kế getter để truyền dữ liệu từ internal logger ra ngoài màn hình hoặc UART.
-- [ ] Bổ sung các triển khai lớp internal của printf để hỗ trợ việc xuất log
 - [ ] Bổ sung tài liệu trình bày về giới hạn mà CIEDPC có thể được sử dụng trong hệ thống nhúng và khi nào nên cân nhắc sử dụng một hệ điều hành nhúng đầy đủ thay vì CIEDPC, nhằm giúp người dùng hiểu rõ hơn về phạm vi ứng dụng và lựa chọn phù hợp cho dự án của họ.
+- [ ] Bổ sung tài liệu đối chiếu thiết kế của CIEDPC với mô hình chuẩn QP/C của Miro Samek để làm rõ các điểm tương đồng và khác biệt trong kiến trúc và cách tiếp cận.
 - [ ] Ra mắt phiên bản 1.0.3 của lõi CIEDPC với đầy đủ tính năng getter cho internal logger và tài liệu hướng dẫn sử dụng.
+- [ ] Triển khai itnlog (Internal Logger) nâng cao để lưu log nội bộ trên Flash hoặc Backup Data Register của RTC.
 
 ### Phiên bản 1.0.4
-
-- [ ] Bổ sung tài liệu đối chiếu thiết kế của CIEDPC với mô hình chuẩn QP/C của Miro Samek để làm rõ các điểm tương đồng và khác biệt trong kiến trúc và cách tiếp cận.
-- [ ] Bổ sung các triển khai lớp internal của printf để hỗ trợ việc xuất log
-- [ ] Triển khai itnlog (Internal Logger) nâng cao để lưu log nội bộ trên Flash hoặc Backup Data Register của RTC, với cơ chế ghi đè vòng tròn và bảo vệ chống ghi đè bằng checksum để đảm bảo tính toàn vẹn của log.
-- [ ] Ra mắt phiên bản 1.0.4 của lõi CIEDPC với đầy đủ tính năng nâng cao cho internal logger và tài liệu đối chiếu thiết kế với QP/C.
-
-### Phiên bản 1.0.5
 
 - [ ] Bổ sung tài liệu đối chiếu lộ trình thiết kế của CIEDPC với lộ trình phát triển của HyperPanelOS để làm rõ các điểm tương đồng và khác biệt trong cách tiếp cận phát triển hệ điều hành nhúng.
 - [ ] Nâng cấp Priority Scheduling để xử lý trường hợp có nhiều task cùng độ ưu tiên.
 - [ ] Bổ sung tài liệu trình bày về cơ chế Priority Escalation và Scheduling Policy của CIEDPC để làm rõ cách thức hoạt động và lợi ích của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
-- [ ] Ra mắt phiên bản 1.0.5 của lõi CIEDPC với đầy đủ tính năng, tài liệu hướng dẫn sử dụng và tài liệu chi tiết về Priority Scheduling nhằm chuẩn bị cho việc phát triển các tính năng nâng cao hơn trong phiên bản 1.1.0.
+- [ ] Ra mắt phiên bản 1.0.4 của lõi CIEDPC với đầy đủ tính năng, tài liệu hướng dẫn sử dụng và tài liệu chi tiết về Priority Scheduling nhằm chuẩn bị cho việc phát triển các tính năng nâng cao hơn trong phiên bản 1.1.0.
 
 ### Phiên bản 1.1.0
 
@@ -113,7 +107,7 @@
 ### Phiên bản 1.4.x
 
 - [ ] Tích hợp Kconfig system với kconfiglib để quản lý cấu hình Core, Pool size và TSM settings qua menuconfig.
-- [ ] Thiết kế Virtual File System (VFS) layer để task có thể thao tác với Flash, EEPROM hoặc RAM như file.
+- [ ] Thiết kế uvfs như một giao diện để quản lý tác vụ như 1 hệ thống file ảo, cho phép người dùng tương tác với task, timer và message pool thông qua các lệnh giống như thao tác trên file system.
 - [ ] Xây dựng Component Manager để đóng gói các driver và module thành các CIEDPC Components tái sử dụng được.
 
 ### Phiên bản 1.5.x
@@ -121,6 +115,7 @@
 - [ ] Hoàn thiện Task Guard với cơ chế heartbeat định kỳ để phát hiện task bị treo và kích hoạt safe response.
 - [ ] Bổ sung Secure Signal Bridge với kiểm tra CRC và range check cho dữ liệu đi vào từ task_post_isr.
 - [ ] Thiết kế Memory Protection Logic để giả lập phân vùng bộ nhớ và tận dụng MPU nếu phần cứng hỗ trợ.
+- [ ] Bổ sung tài liệu thiết kế chi tiết cho Task Guard, Secure Signal Bridge và Memory Protection Logic để làm rõ cách thức hoạt động và lợi ích của các tính năng này trong việc nâng cao độ tin cậy và bảo mật của hệ thống.
 
 ### Sau phiên bản 1.5.x
 
