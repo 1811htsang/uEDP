@@ -132,7 +132,17 @@ void ciedpc_itnlog_dump(void) {
     ) {
       // Logic để xuất log entry ra đích đến, có thể là console, file hoặc giao diện
       if (itnlog_output_func != NULL) {
-        itnlog_output_func(entry.msg);
+        char formatted_entry[128];
+        snprintf(
+          formatted_entry,
+          sizeof(formatted_entry),
+          "[ITNLOG] %u 0x%02X 0x%02X %s\n",
+          (unsigned int)entry.tmstmp,
+          (unsigned int)entry.task_id,
+          (unsigned int)entry.msg_sig,
+          (entry.msg != NULL) ? entry.msg : ""
+        );
+        itnlog_output_func(formatted_entry);
       }
     }
   }
