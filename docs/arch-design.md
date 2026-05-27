@@ -43,6 +43,7 @@ Chứa logic thuần túy của mô hình lập trình hướng sự kiện, bao
 - Message Manager: Quản lý Pool bộ nhớ tĩnh, chống phân mảnh.
 - Timer Service: Quản lý danh sách liên kết các bộ định thời phần mềm.
 - FSM/TSM Engines: Bộ máy thực thi máy trạng thái.
+- Itnlog: Hệ thống logging cho phép thu thập toàn bộ dữ liệu tại thời điểm gọi.
 
 Trong tầng này, core được thiết kế độc lập hoàn toàn với phần cứng nhằm đảm bảo tính di động và dễ dàng tích hợp vào bất kỳ nền tảng nhúng nào. Core sẽ chỉ tương tác với phần cứng thông qua các hàm trừu tượng được cung cấp bởi tầng PAL.
 
@@ -217,3 +218,7 @@ CIEDPC sử dụng một hệ thống quản lý tín hiệu (Signal Management)
 Lưu ý rằng với mỗi dãy tín hiệu đều đảm bảo có khai báo offset để khi lấy tín hiệu xử lý theo chỉ số của pool hay các vấn đề liên quan đến việc quản lý tín hiệu thì Core có thể dễ dàng xác định được loại tín hiệu và xử lý một cách chính xác.
 
 Khi khai báo bổ sung các tín hiệu mới thì người dùng không cần phải tự cấu hình lại offset vì offset này chỉ ảnh hưởng lên việc quản lý tín hiệu trong nội bộ Core, còn đối với người dùng thì chỉ cần tuân thủ theo dải tín hiệu đã được định nghĩa sẵn để đảm bảo rằng các tín hiệu được quản lý một cách chính xác và hiệu quả trong hệ thống.
+
+### Itnlog - Hệ thống logging
+
+Itnlog là một hệ thống logging được tích hợp vào CIEDPC để cho phép thu thập toàn bộ dữ liệu tại thời điểm gọi. Hệ thống này cung cấp các API để ghi log với các mức độ khác nhau (ví dụ: INFO, WARNING, ERROR) và có thể được cấu hình để lưu trữ log vào bộ nhớ hoặc gửi ra ngoài qua UART hoặc các giao thức khác.
