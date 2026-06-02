@@ -65,8 +65,8 @@
 - [x] Bổ sung PAL config ở `app/config` để người dùng có thể cấu hình các thông số liên quan đến PAL, phục vụ cho các service mới của PAL ở phiên bản 1.0.3.
 - [x] Thêm PAL cho kit LXP723ZGP1V2 để hỗ trợ việc triển khai và testing internal logger trên nền tảng này.
 - [x] Bổ sung tài liệu hướng dẫn sử dụng internal logger, bao gồm cách cấu hình, cách sử dụng API để ghi log và các rule để đảm bảo log được ghi chính xác và có thể phân tích hiệu quả.
-- [ ] Bổ sung mục tài liệu để phân tích thiết kế dump log nằm ngoài core CIEDPC-uEDP để tận dụng out-context execution nhằm đảm bảo các tính chất của EDP.
-- [ ] Ra mắt phiên bản 1.0.2 của lõi CIEDPC với đầy đủ test case và tài liệu hướng dẫn sử dụng internal logger.
+- [x] Bổ sung mục tài liệu để phân tích thiết kế dump log nằm ngoài core CIEDPC-uEDP để tận dụng out-context execution nhằm đảm bảo các tính chất của EDP.
+- [x] Ra mắt phiên bản 1.0.2 của lõi CIEDPC với đầy đủ test case và tài liệu hướng dẫn sử dụng internal logger.
 
 ### Phiên bản 1.0.3
 
