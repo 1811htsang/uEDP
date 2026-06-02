@@ -265,7 +265,20 @@ Khi khai báo bổ sung các tín hiệu mới thì người dùng không cần 
 
 ### Itnlog - Hệ thống logging
 
-Itnlog là tầng logging nội bộ của CIEDPC, được thiết kế để ghi nhận nhanh trạng thái hệ thống tại thời điểm phát sinh sự kiện mà không phụ thuộc vào việc rải `printf` trong luồng xử lý. Mục tiêu của itnlog là cung cấp một đường ghi log nhất quán, có thể lọc theo mức độ và tag, đồng thời dễ thay đổi đích xuất log theo từng nền tảng.
+Itnlog là tầng logging nội bộ của CIEDPC, được thiết kế để thay thế cho cách debug bằng `printf` rải rác trong luồng xử lý. Mục tiêu của itnlog là cung cấp một đường ghi log nhất quán, có thể lọc theo mức độ và tag, đồng thời dễ thay đổi đích xuất log theo từng nền tảng mà không làm Core phụ thuộc trực tiếp vào stdio.
+
+Về mặt thiết kế, itnlog đóng vai trò là một lớp ghi nhận sự kiện nhẹ và tách biệt khỏi luồng xử lý chính:
+
+- Core chỉ ghi log vào bộ đệm nội bộ, không gọi `printf` trực tiếp.
+- Đích xuất log được đưa ra ngoài qua callback `ciedpc_itnlog_set_output()`, nên cùng một Core có thể xuất log ra console, UART, file hoặc backend debug khác.
+- Khi cần debug cục bộ trên Linux, callback có thể bọc `printf` hoặc `fputs` rồi `fflush(stdout)` để bảo đảm log xuất ngay.
+- Khi dùng trên nền tảng nhúng, callback có thể chuyển sang UART, semihosting, file log hoặc cơ chế trace riêng mà không phải sửa Core.
+
+Thiết kế này giúp tránh việc rải `printf` trong logic nghiệp vụ, giảm phụ thuộc vào thư viện chuẩn ở Core, và giữ cho đường đi thời gian thực ổn định hơn khi cần ghi log với tần suất cao.
+
+Trong thiết kế, itnlog không hỗ trợ flush khi gọi `ciedpc_itnlog_clear()` vì mục đích của hàm này là xóa log khỏi bộ đệm nội bộ và reset trạng thái thống kê, chứ không phải để xuất log ra ngoài. Việc flush log nên được thực hiện trong `ciedpc_itnlog_dump()` khi rút log ra và gửi đến callback, đảm bảo rằng chỉ những log đã được xử lý và lọc mới được xuất ra ngoài, giúp tối ưu hiệu suất và tránh việc xuất log không cần thiết.
+
+Do đó, `ciedpc_itnlog_dump()` sẽ nên được đặt ngoài scheduler hoặc trong một task polling riêng để đảm bảo rằng việc xuất log không ảnh hưởng đến đường đi thời gian thực của các task chính, đồng thời vẫn đảm bảo rằng log được xuất ra một cách hiệu quả và có thể kiểm soát được thông qua các bộ lọc đã thiết lập.
 
 #### Mô hình hoạt động
 
@@ -295,7 +308,7 @@ Thiết kế này giúp việc bật hoặc tắt log theo nhóm chức năng tr
 
 #### Đích xuất log
 
-Itnlog không ràng buộc đích xuất log vào một backend cố định. Core chỉ gọi callback `ciedpc_itnlog_set_output()` để chuyển một dòng log đã format sẵn ra tầng ứng dụng hoặc tầng PAL. Cách này cho phép cùng một logic logging có thể xuất ra console, UART, file, hoặc giao diện debug tùy nền tảng.
+Itnlog không ràng buộc đích xuất log vào một backend cố định. Core chỉ gọi callback `ciedpc_itnlog_set_output()` để chuyển một dòng log đã format sẵn ra tầng ứng dụng hoặc tầng PAL. Cách này cho phép cùng một logic logging có thể xuất ra console, UART, file, hoặc giao diện debug tùy nền tảng, thay vì phụ thuộc vào các lời gọi `printf` trong từng handler.
 
 Khi dùng trên Linux, callback nên là một wrapper nhận `const char*` rồi in chuỗi đó ra terminal và flush ngay sau khi xuất để tránh log bị giữ trong buffer của `stdout` cho đến khi chương trình kết thúc.
 
