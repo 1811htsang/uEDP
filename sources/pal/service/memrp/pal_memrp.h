@@ -12,6 +12,7 @@
   /**
    * @brief Khai báo thư viện sử dụng
    */
+  
   #include "ciedpc_core.h"
   #include "ciedpc_msg.h"
 
@@ -44,5 +45,10 @@
    * @brief Hàm báo cáo thông tin bộ nhớ của tất cả các target đã được định nghĩa trong hệ thống CIEDPC
    */
   void pal_memrp_report_all(void);
+
+  /**
+	 * @brief Hàm này được định nghĩa là weak để cho phép người dùng tùy chỉnh cách lấy thông tin bộ nhớ của Stack nếu cần thiết.
+	 */
+	CIEDPC_ATTR_WEAK void pal_memrp_get_sys_info(ui32 *rom_used, ui32 *ram_used, ui32 *stack_curr);
 
 #endif

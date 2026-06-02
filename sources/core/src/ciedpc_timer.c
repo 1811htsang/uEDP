@@ -29,6 +29,12 @@ typedef struct {
 } ciedpc_timer_ctrl_t;
 
 /**
+ * @brief Khai báo tick hệ thống độc lập, không phụ thuộc vào
+ * 				task.
+ */
+sta ui32 sys_tick = 0x0u;
+
+/**
  * @brief Khai báo Pool timer
  */
 sta ciedpc_timer_t timer_pool[CIEDPC_TIMER_MAX_NODES] = {0};
@@ -155,6 +161,8 @@ RETR_STAT ciedpc_timer_remove(ui16 tid, ui8 sig) {
 
 /* Hàm này được gọi từ System Tick ISR (ví dụ mỗi 1ms) */
 void ciedpc_timer_tick(void) {
+	sys_tick++;
+
 	ciedpc_timer_t* curr = timer_ctrl.head;
 	ciedpc_timer_t* prev = NULL;
 
@@ -205,4 +213,8 @@ void ciedpc_timer_tick(void) {
 void ciedpc_timer_get_stats(ui8* active, ui8* max_capacity) {
 	*active = timer_ctrl.active_count;
 	*max_capacity = CIEDPC_TIMER_MAX_NODES;
+}
+
+ui32 ciedpc_timer_get_systick(void) {
+	return sys_tick;
 }
