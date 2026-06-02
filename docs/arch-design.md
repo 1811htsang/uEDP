@@ -280,6 +280,12 @@ Trong thiết kế, itnlog không hỗ trợ flush khi gọi `ciedpc_itnlog_clea
 
 Do đó, `ciedpc_itnlog_dump()` sẽ nên được đặt ngoài scheduler hoặc trong một task polling riêng để đảm bảo rằng việc xuất log không ảnh hưởng đến đường đi thời gian thực của các task chính, đồng thời vẫn đảm bảo rằng log được xuất ra một cách hiệu quả và có thể kiểm soát được thông qua các bộ lọc đã thiết lập.
 
+Thiết kế này được gọi là Out-Context Execution (OCE), giúp đảm bảo 3 nguyên tắc sau:
+
+1. Bảo vệ nguyên tắc RTC (Run-to-Completion): Các task chính không bị gián đoạn bởi việc xuất log, tránh làm tăng độ trễ xử lý.
+2. Tận dụng nhịp nghỉ của CPU (Idle Time Utilization): Log được xuất ra trong các khoảng thời gian CPU không bận rộn, giúp tối ưu hiệu suất.
+3. An toàn cho ngắt chồng ngắt (ISR Safety): Việc xuất log không xảy ra trong ngữ cảnh ISR, tránh rủi ro tranh chấp tài nguyên hoặc deadlock.
+
 #### Mô hình hoạt động
 
 Itnlog vận hành theo chuỗi sau:
