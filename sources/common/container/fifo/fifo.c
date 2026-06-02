@@ -41,12 +41,8 @@ bool fifo_is_full(fifo_t* fifo) {
 }
 
 uint32_t fifo_put(fifo_t* fifo, void* data) {
-	uint32_t next_tail_index;
-
 	if (fifo->fill_size == fifo->buffer_size) {
-		while (1) {
-
-		}
+		return RET_FIFO_NG; // FIFO đã đầy, không thể thêm phần tử mới
 	}
 
 	if (data != NULL) {

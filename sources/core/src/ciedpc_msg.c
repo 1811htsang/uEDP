@@ -17,37 +17,6 @@
 #include "fifo.h"
 
 /**
- * @brief Khai báo các hằng số cho kích thước của các Pool tin nhắn
- * @attention 1 pool tin nhắn được thiết kế để chứa một số lượng tin nhắn nhất định, với kích thước dữ liệu tối đa được xác định trước,
- *            cho phép hệ thống CIEDPC quản lý bộ nhớ một cách hiệu quả. Ví dụ giả sử norm_pool[12][8] nghĩa là có thể chứa unit tin nhắn,
- * 						mỗi tin nhắn có thể chứa tối đa 8 bytes dữ liệu, mỗi bytes được chia ra như thế nào phụ thuộc vào đầu vào data_size khi khởi tạo pool
- * @attention sizeof(ciedpc_msg_t) phụ thuộc vào kiến trúc và trình biên dịch, nhưng giả sử là 32 bits.
- * @attention Kích thước nên được khai báo ở dạng bytes, không phải bit để tránh nhầm lẫn
- */
-
-#ifndef CIEDPC_MSG_BLANK_QUEUE_SIZE
-	#define CIEDPC_MSG_BLANK_QUEUE_SIZE  (8u) 	// units
-#endif // -> equipvalent to 8 units * 4 bytes = 32 bytes
-
-#ifndef CIEDPC_MSG_ALLOC_QUEUE_SIZE
-	#define CIEDPC_MSG_ALLOC_QUEUE_SIZE (16u)  // units
-#endif
-#ifndef CIEDPC_MSG_ALLOC_DATA_MAX
-	#define CIEDPC_MSG_ALLOC_DATA_MAX   (sizeof(void*) * 2u) // auto arrange depended on architecture
-#endif // -> equipvalent to 16 units * [(sizeof(void*) * 2u) + sizeof(ciedpc_msg_t)]
-
-#ifndef CIEDPC_MSG_EXTAL_QUEUE_SIZE
-	#define CIEDPC_MSG_EXTAL_QUEUE_SIZE  (16u) 	// units
-#endif
-#ifndef CIEDPC_MSG_EXTAL_DATA_MAX
-	#define CIEDPC_MSG_EXTAL_DATA_MAX   (sizeof(void*) * 4u) // auto arrange depended on architecture
-#endif // -> equipvalent to 16 units * [(sizeof(void*) * 4u) + sizeof(ciedpc_msg_t)]
-
-#ifndef CIEDPC_MSG_ISR_QUEUE_SIZE
-	#define CIEDPC_MSG_ISR_QUEUE_SIZE   (16u) 	// units
-#endif
-
-/**
  * @brief Khai báo cấu trúc quản lý Pool tin nhắn
  * @param free_list Con trỏ đến đầu của Pool tin nhắn
  * @param used_count Số lượng tin nhắn đang được sử dụng trong Pool
@@ -68,8 +37,8 @@ typedef struct ciedpc_msg_pool_header_t {
 /**
  * @brief Blank pool với kích thước là 8 32-bits units
  */
-CIEDPC_ATTR_SECTION(".ciedpc_msg_blank_pool") static ciedpc_msg_t blank_pool[CIEDPC_MSG_BLANK_QUEUE_SIZE];
-CIEDPC_ATTR_SECTION(".ciedpc_msg_blank_pool") ciedpc_msg_pool_header_t g_blank_pool_ctrl;
+sta ciedpc_msg_t blank_pool[CIEDPC_MSG_BLANK_QUEUE_SIZE] = {0};
+ciedpc_msg_pool_header_t g_blank_pool_ctrl = {0};
 
 /**
  * @brief Alloc pool với kích thước là 16 [sizeof(void*) * 2u] units
@@ -84,9 +53,9 @@ CIEDPC_ATTR_SECTION(".ciedpc_msg_blank_pool") ciedpc_msg_pool_header_t g_blank_p
  * +-----------------------------------+-----+-----+-----+-------+----------------------+
  * 
  */
-CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") static ciedpc_msg_t alloc_pool[CIEDPC_MSG_ALLOC_QUEUE_SIZE];
-CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") static ui8 alloc_pool_data[CIEDPC_MSG_ALLOC_QUEUE_SIZE][CIEDPC_MSG_ALLOC_DATA_MAX];
-CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") ciedpc_msg_pool_header_t g_alloc_pool_ctrl;
+sta ciedpc_msg_t alloc_pool[CIEDPC_MSG_ALLOC_QUEUE_SIZE] = {0};
+sta ui8 alloc_pool_data[CIEDPC_MSG_ALLOC_QUEUE_SIZE][CIEDPC_MSG_ALLOC_DATA_MAX] = {0};
+ciedpc_msg_pool_header_t g_alloc_pool_ctrl = {0};
 
 
 /**
@@ -102,15 +71,15 @@ CIEDPC_ATTR_SECTION(".ciedpc_msg_alloc_pool") ciedpc_msg_pool_header_t g_alloc_p
  * +-----------------------------------+-----+-----+-----+-------+----------------------+
  * 
  */
-CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") static ciedpc_msg_t extal_pool[CIEDPC_MSG_EXTAL_QUEUE_SIZE];
-CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") static ui8 extal_pool_data[CIEDPC_MSG_EXTAL_QUEUE_SIZE][CIEDPC_MSG_EXTAL_DATA_MAX];
-CIEDPC_ATTR_SECTION(".ciedpc_msg_extal_pool") ciedpc_msg_pool_header_t g_extal_pool_ctrl;
+sta ciedpc_msg_t extal_pool[CIEDPC_MSG_EXTAL_QUEUE_SIZE] = {0};
+sta ui8 extal_pool_data[CIEDPC_MSG_EXTAL_QUEUE_SIZE][CIEDPC_MSG_EXTAL_DATA_MAX] = {0};
+ciedpc_msg_pool_header_t g_extal_pool_ctrl = {0};
 
 /**
  * @brief ISR pool với kích thước là 16 sizeof(ciedpc_msg_isr_t) units
  */
-CIEDPC_ATTR_SECTION(".ciedpc_msg_isr_pool") ciedpc_msg_isr_t isr_pool_buffer[CIEDPC_MSG_ISR_QUEUE_SIZE];
-CIEDPC_ATTR_SECTION(".ciedpc_msg_isr_pool") fifo_t isr_pool;
+sta ciedpc_msg_isr_t isr_pool_buffer[CIEDPC_MSG_ISR_QUEUE_SIZE] = {0};
+fifo_t isr_pool = {0};
 
 /**
  * @brief Khai báo các hàm quản lý nội bộ

@@ -2,10 +2,6 @@
 
 Tác giả: Shang Huang - Huỳnh Thanh Sang
 
-Ngày hoàn thiện phiên bản đầu tiên: 2026-05-03
-
-Phiên bản hiện tại: 1.0
-
 ## I. Giới thiệu chung
 
 CIEDPC - Custom Independent Event Driven Programming Core là một module lõi được thiết kế để hỗ trợ mô hình lập trình hướng sự kiện (event-driven programming) trên các nền tảng nhúng. Mục tiêu của CIEDPC là cung cấp một giải pháp linh hoạt, dễ sử dụng và có khả năng mở rộng cho việc phát triển ứng dụng nhúng mà không phụ thuộc vào phần cứng cụ thể.
@@ -24,22 +20,196 @@ CIEDPC/
 │   │   ├── timer/               # pal_timer.h chứa các khai báo API timer để tự triển khai trên từng nền tảng
 │   │   └── memrp/               # pal_memrp.c/h chứa các hàm hỗ trợ memory profiling
 │   └── arch/                    # Implementation (Mã nguồn chi tiết từng chip)
-│       ├── stm32/               # stm32_arch.c/h chứa các hàm triển khai cho STM32
-│       └── linux/               # linux_arch.c/h chứa các hàm triển khai cho môi trường giả lập trên Linux
+│       └── .../                 # Mỗi nền tảng sẽ có một thư mục riêng để triển khai
 ├── app/                         # Định nghĩa logic ứng dụng, bao gồm các tác vụ và FSM do người dùng tạo ra
-│   ├── config/                  # Chứa cấu hình ứng dụng và cấu hình người dùng
-│   ├── task/                    # Định nghĩa các tác vụ (tasks) và FSM của người dùng
-│   ├── declaration/             # Implementation chính của logic hoạt động của ứng dụng người dùng
-│   └── interface/               # Định nghĩa và triển khai cổng giao tiếp với tín hiệu bên ngoài (task_if)
+│   ├── config/                  # Chứa cấu hình ứng dụng, Core và PAL
+│   ├── declaration/             # Khai báo các thiết kế cho logic nghiệp vụ
+│   ├── interface/               # Chứa các triển khai cho truyền tín hiệu từ ngoài vào Core
+│   └── app.c                    # Implementation chính của logic hoạt động của ứng dụng người dùng
 ├── common/                      # Các tiện ích và cấu trúc dữ liệu chung được sử dụng trong toàn bộ dự án
 │   └── container/               # Các cấu trúc dữ liệu như FIFO, Ring Buffer, Linked List được triển khai thuần C
 └── test/                        # BUILD SYSTEM
     ├── test01/                  # Test cơ bản với các tác vụ ISR và TSM 
     ├── test02/                  # Test với các tính năng như message pooling và memrp
-    └── test03/                  # Test tích hợp FSM phức tạp
+    ├── test03/                  # Test với các tính năng như message pooling và memrp
+    └── test04/                  # Test với tính năng itnlog
 ```
 
-## V. Hướng dẫn sử dụng
+## III. Hướng dẫn sử dụng
+
+### Message Pool
+
+Message Pool là thành phần quản lý bộ nhớ cho các message được sử dụng trong CIEDPC. Nó cung cấp cơ chế cấp phát và thu hồi message một cách hiệu quả, giúp tối ưu hóa việc sử dụng bộ nhớ và đảm bảo rằng các message được xử lý đúng cách trong hệ thống.
+
+Core hiện chia message thành các loại sau:
+
+- `CIEDPC_MSG_TYPE_BLANK`: message không có payload.
+- `CIEDPC_MSG_TYPE_ALLOC`: message có payload nhỏ hoặc vừa, vùng data riêng.
+- `CIEDPC_MSG_TYPE_EXTAL`: message từ interface ngoài Core.
+- `CIEDPC_MSG_TYPE_ISR`: tín hiệu từ ngữ cảnh ngắt.
+
+Khi khởi tạo bằng `ciedpc_msg_pool_init()`, Core dựng sẵn các pool tĩnh cho `BLANK`, `ALLOC`, `EXTAL` và một FIFO riêng cho `ISR`. Với `ALLOC` và `EXTAL`, vùng data được bố trí theo chiều 2D `[queue_size][data_size]` để mỗi message có ô dữ liệu riêng.
+
+#### Cách dùng
+
+1. Gọi `ciedpc_msg_pool_init()` sau `ciedpc_core_init()`.
+2. Gọi `ciedpc_msg_alloc(des_task_id, sig, size)` để lấy message từ pool phù hợp.
+3. Dùng `ciedpc_msg_set_data_val()` nếu muốn copy giá trị vào payload.
+4. Dùng `ciedpc_msg_set_data_ref()` nếu muốn truyền tham chiếu đến dữ liệu có vòng đời đủ dài.
+5. Dùng `ciedpc_msg_ref_inc()`/`ciedpc_msg_ref_dec()` khi một message được broadcast cho nhiều task.
+6. Dùng `ciedpc_msg_free()` khi message không còn được dùng.
+
+#### Điểm cần lưu ý
+
+- `ciedpc_msg_alloc()` tự chọn pool theo kích thước payload, nên giá trị `size` phải phản ánh đúng nhu cầu dữ liệu.
+- Nếu dùng truyền tham chiếu thì buffer tham chiếu phải còn sống sau thời điểm message được xử lý.
+- `ciedpc_msg_drain_isr_pool()` là đường đi riêng cho tín hiệu ISR; không nên tự đẩy dữ liệu ISR vào queue task thường.
+- Với `ALLOC` và `EXTAL`, `data` là con trỏ tới vùng nhớ riêng của từng message, không phải payload inline nằm ngay trong header.
+
+### Task
+
+Task trong CIEDPC có hai kiểu: message-driven và poll-driven.
+
+#### Task message-driven
+
+Task message-driven được khai báo bằng `task_norm_t` với 5 thành phần:
+
+- `id`: ID task.
+- `pri`: mức ưu tiên.
+- `task_norm`: handler chính.
+- `msg_queue`: FIFO nội bộ.
+- `msg_queue_buffer`: buffer con trỏ cho FIFO.
+
+Khi `ciedpc_task_norm_create()` chạy, Core sẽ tự khởi tạo FIFO cho mỗi task đến phần tử `CIEDPC_TASK_NORM_EOT_ID`. Kích thước hàng đợi mặc định lấy từ `CIEDPC_TASK_MSG_QUEUE_SIZE`.
+
+`ciedpc_task_scheduler()` hiện chọn task có priority cao nhất đang ready, lấy đúng một message từ queue của task đó, dispatch handler, rồi giải phóng message sau khi handler chạy xong.
+
+#### Task poll-driven
+
+Task poll-driven được khai báo bằng `task_poll_t` với `id`, `ability`, và `task_poll`.
+
+- `ciedpc_task_poll_create()` chỉ đếm danh sách đến `CIEDPC_TASK_POLL_EOT_ID`.
+- `ciedpc_task_poll_set_ability()` bật/tắt task poll theo ID.
+- Khi không có task message-driven nào ready, scheduler sẽ chạy các poll task đang bật.
+
+#### API ngữ cảnh task
+
+Trong lúc task đang chạy, có thể lấy ngữ cảnh hiện tại bằng:
+
+- `ciedpc_task_norm_get_current_id()`
+- `ciedpc_task_norm_get_current_msg()`
+
+Các API này đặc biệt hữu ích cho itnlog vì logger lấy `task_id` và `msg_sig` từ ngữ cảnh hiện tại.
+
+### ISR
+
+ISR trong CIEDPC không nên xử lý logic phức tạp trực tiếp. Đường đi chuẩn là:
+
+1. ISR gọi API đăng ký tín hiệu cho Core.
+2. Core đưa cặp task ID + signal vào FIFO ISR nội bộ.
+3. Ở đầu vòng scheduler, Core rút FIFO này và chuyển thành luồng xử lý bình thường.
+
+Đường đi này được dùng chung cho tín hiệu từ timer tick và các ngắt khác.
+
+Trong code hiện tại, `ciedpc_task_norm_post_isr()` là API dành riêng cho ISR, còn `ciedpc_timer_tick()` cũng dùng API này khi timer hết hạn để đưa tín hiệu về task đích.
+
+### Timer
+
+Timer Service của CIEDPC dùng pool cố định `CIEDPC_TIMER_MAX_NODES` node, không cấp phát heap.
+
+#### Cách dùng khai báo
+
+1. Gọi `ciedpc_timer_init()` sau khi khởi tạo Core.
+2. Gọi `ciedpc_timer_set(task_id, sig, ms, type)` để tạo timer mới hoặc cập nhật timer đã tồn tại.
+3. Gọi `ciedpc_timer_remove(task_id, sig)` để xóa timer.
+4. Gọi `ciedpc_timer_tick()` trong ngữ cảnh tick định kỳ của nền tảng.
+
+#### Hành vi thực tế
+
+- `type` hiện hỗ trợ `CIEDPC_TIMER_ONE_SHOT` và `CIEDPC_TIMER_PERIODIC`.
+- `ms` được quy đổi sang số tick bằng `CIEDPC_TIMER_TICK`.
+- Khi timer hết hạn, Core phát sinh signal về task đích bằng đường đi ISR-safe.
+- Với timer periodic, counter được nạp lại sau mỗi lần hết hạn; với one-shot, node được trả về free-list.
+
+#### Tài nguyên
+
+- Số timer tối đa đồng thời là `CIEDPC_TIMER_MAX_NODES`.
+- `ciedpc_timer_get_stats()` cho phép kiểm tra số timer đang hoạt động và capacity tối đa.
+
+#### Mục tiêu sử dụng
+
+Timer có thể được sử dụng như 1 công cụ để tạo ra delay hoặc timeout trong các task. Ví dụ, trong 1 task nào đó cần sử dụng blocking API như UART, I2C hay các giao thức truyền thông, ta có thể dùng timer để tạo ra timeout cho các API này, tránh việc task bị treo vô thời hạn nếu có sự cố xảy ra. Ngoài ra, timer cũng có thể được dùng để tạo ra các sự kiện định kỳ, ví dụ như đọc cảm biến mỗi 1 khoảng thời gian nhất định hoặc gửi heartbeat để báo rằng hệ thống vẫn đang hoạt động.
+
+### Itnlog
+
+Itnlog là cơ chế logging nội bộ của CIEDPC, được dùng để thay thế cho kiểu debug bằng `printf` rải rác trong luồng xử lý. Cách này giúp Core không phụ thuộc trực tiếp vào stdio, đồng thời cho phép đổi đích xuất log theo từng nền tảng mà không phải sửa logic xử lý.
+
+#### Cách dùng cơ bản
+
+1. Gọi `ciedpc_itnlog_init()` sau khi đã khởi tạo Core và trước khi bắt đầu chạy scheduler.
+2. Đăng ký một wrapper xuất log bằng `ciedpc_itnlog_set_output()`.
+3. Gọi `ciedpc_itnlog_log()` ở nơi cần ghi nhận sự kiện.
+4. Gọi `ciedpc_itnlog_dump()` khi muốn in toàn bộ log đang có trong bộ đệm.
+
+Ví dụ cấu hình trên Linux:
+
+```c
+static void itnlog_stdout_output(const char* text) {
+  printf("%s", text);
+  fflush(stdout);
+}
+
+int main(void) {
+  ciedpc_core_init();
+  ciedpc_msg_pool_init();
+  ciedpc_timer_init();
+
+  ciedpc_itnlog_init();
+  ciedpc_itnlog_set_output(itnlog_stdout_output);
+  ciedpc_itnlog_set_filter(ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK);
+
+  while (1) {
+    ciedpc_task_scheduler();
+    usleep(100);
+    ciedpc_itnlog_dump();
+  }
+}
+```
+
+Khi viết code ứng dụng, thay vì chèn `printf` trực tiếp trong handler, nên gọi `ciedpc_itnlog_log()` với một tag phù hợp như `TSK`, `MSG`, `FSM`, `TSM` hoặc `TIM`. Sau đó dùng `ciedpc_itnlog_dump()` ở thời điểm muốn xuất toàn bộ buffer log ra đích đã cấu hình.
+
+Lưu ý quan trọng: `ciedpc_itnlog_set_output()` nhận một hàm có chữ ký `void (*)(const char*)`. Vì vậy không nên truyền trực tiếp `printf` vào API này, mà nên bọc `printf` hoặc `fputs` trong một wrapper như ví dụ trên.
+
+#### Định dạng dòng log
+
+Khi dump, mỗi entry được ghép thành một dòng theo mẫu hoặc tùy theo thiết kế của callback output, nhưng mặc định sẽ có định dạng như sau:
+
+```text
+[ITNLOG] tmstmp task_id msg_id msg
+```
+
+Trong đó `task_id` và `msg_id` được xuất ở dạng hex để dễ map với ID nội bộ của Core. `msg_id` chính là `msg_sig` của message hiện tại khi log được ghi. Ví dụ:
+
+```text
+[ITNLOG] 0 0xE4 0x01 System is alive and running...
+```
+
+#### Lọc theo tag
+
+Nếu cần lọc log theo module, dùng `ciedpc_itnlog_set_tag("TSK")`, `ciedpc_itnlog_set_tag("MSG")`, `ciedpc_itnlog_set_tag("FSM")`, `ciedpc_itnlog_set_tag("TSM")`, hoặc `ciedpc_itnlog_set_tag("TIM")`.
+
+Lưu ý:
+
+- `NULL` có nghĩa là không lọc theo tag.
+- Khi xuất ra terminal, nên dùng một wrapper riêng thay vì truyền trực tiếp `printf` làm callback để tránh lỗi do khác kiểu chữ ký hàm và để chủ động flush `stdout`.
+- `ciedpc_itnlog_log()` lấy `task_id` từ task hiện tại và lấy `msg_sig` từ message hiện tại, nên chỉ nên gọi khi đang ở trong ngữ cảnh scheduler xử lý message hợp lệ.
+
+#### Lưu ý khi debug
+
+- Nếu log chưa hiện ngay trên terminal, kiểm tra callback output có flush `stdout` hay không.
+- Nếu muốn in log theo thời điểm nhất định, có thể gọi `ciedpc_itnlog_dump()` trong polling task hoặc ngay trước khi kết thúc testcase.
+- `ciedpc_itnlog_log()` chỉ ghi vào bộ đệm nội bộ, còn việc hiển thị phụ thuộc vào callback output và thời điểm dump.
+- Nếu buffer log đầy, `ciedpc_itnlog_log()` sẽ làm logger tự dump trước khi ghi tiếp theo thiết kế hiện tại trong source.
 
 ### Khai báo các giá trị TASK_NORM, TASK_POLL, SIG và STATE
 
@@ -189,6 +359,23 @@ Sau khi đã hoàn thành việc khai báo các handler, khởi tạo TSM table 
 - Khởi tạo TSM và FSM với `ciedpc_tsm_init()` và `ciedpc_fsm_init()`, trong đó sẽ thực hiện khởi tạo các TSM và FSM dựa trên bảng mô tả trạng thái đã khai báo, đồng thời thiết lập trạng thái ban đầu cho từng TSM và FSM.
 - Truyền tín hiệu khởi đầu vào `CIEDPC_TASK_NORM_USR_ID` với `ciedpc_post_msg()`, trong đó sẽ thực hiện truyền tín hiệu bắt đầu vào tác vụ mặc định của người dùng để kích hoạt hệ thống và bắt đầu xử lý các tín hiệu tiếp theo.
 - Vòng lặp chính sẽ thực thi `ciedpc_task_scheduler()` để bắt đầu vòng lặp xử lý tín hiệu của hệ thống, trong đó Core sẽ liên tục kiểm tra và xử lý các tín hiệu từ các tác vụ dựa trên mức độ ưu tiên đã thiết lập, đồng thời quản lý các bộ định thời phần mềm và thực thi logic của TSM và FSM khi có tín hiệu tương ứng.
+
+### Trình tự khởi tạo khuyến nghị
+
+Để phù hợp với source hiện tại, thứ tự khởi tạo nên là:
+
+1. `ciedpc_core_init()`
+2. `ciedpc_msg_pool_init()`
+3. `ciedpc_timer_init()`
+4. `ciedpc_tsm_init()` và `ciedpc_fsm_init()` nếu có TSM và FSM
+5. `ciedpc_itnlog_init()` nếu dùng logger.
+6. `ciedpc_itnlog_set_output()` và các API cấu hình log khác nếu cần.
+7. `ciedpc_task_norm_create()`
+8. `ciedpc_task_poll_create()` nếu có poll task
+9. `ciedpc_itnlog_init()` nếu dùng logger
+10. `ciedpc_itnlog_set_output()` và các API cấu hình log khác nếu cần
+11. Gửi message khởi đầu vào `CIEDPC_TASK_NORM_USR_ID`
+12. Vòng lặp `ciedpc_task_scheduler()`
 
 ### Ví dụ về chương trình mẫu không phân tách khai báo
 
@@ -650,7 +837,7 @@ void task_poll_memrp_handler() {
 
 Ở file `main.c`, STM32CubeMX đã tự động tạo ra hàm `main()` và các hàm khởi tạo hệ thống, do đó người dùng chỉ cần thêm vào phần khởi tạo ứng dụng và vòng lặp chính để chạy scheduler.
 
-## VI. Cài đặt CIEDPC trên STM32 project với STM32CubeIDE
+## IV. Cài đặt CIEDPC trên STM32 project với STM32CubeIDE
 
 Lưu ý: các hướng dẫn này dựa theo cấu hình của Linux trên STM32. Do đó sẽ có một số bước cấu hình câu lệnh khác so với Windows, tuy nhiên về logic thì vẫn tương tự nhau.
 
@@ -714,7 +901,7 @@ __attribute__((naked)) void HardFault_Handler(void) {
 
 Lưu ý rằng, sau khi hoàn thành cấu hình trong `stm32_arch` thì cần đảm bảo các implementation trong `Core/src/stm32f1xxx_it.c` được cập nhất các handler đã re-implement trong `stm32_arch` thành `__weak` để tránh lỗi trùng lặp định nghĩa khi biên dịch.
 
-## Các lưu ý quan trọng
+## V. Các lưu ý quan trọng
 
 - Việc phân bổ mức độ ưu tiên cho các tác vụ là rất quan trọng để đảm bảo rằng Core có thể xử lý tín hiệu một cách chính xác. Nếu tất cả các tác vụ đều có cùng mức độ ưu tiên thì Core sẽ gặp lỗi xử lý tín hiệu, do đó cần lưu ý việc phân bổ mức độ ưu tiên cho các tác vụ trong hệ thống.
 - Khi sử dụng cơ chế truyền tham chiếu để truyền địa chỉ của dữ liệu vào payload của message, cần đảm bảo rằng các buffer chứa dữ liệu này có phạm vi toàn cục để tránh lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi.

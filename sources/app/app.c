@@ -50,6 +50,18 @@ uint32_t system_action_count = 0x0u;
 // Điền các khai báo tại đây
 
 /**
+ * @brief Các khai báo khác (nếu có)
+ */
+
+// Điền các khai báo tại đây
+
+/**
+ * @brief Khai báo các hàm khác (nếu có)
+ */
+
+// Điền các khai báo tại đây
+
+/**
  * @brief Định nghĩa handler cho task USR, task A và task B
  */
 
@@ -67,3 +79,8 @@ uint32_t system_action_count = 0x0u;
 
 // Điền các khai báo tại đây
 
+/**
+ * @brief Định nghĩa các hàm khác (nếu có)
+ */
+
+// Điền các khai báo tại đây

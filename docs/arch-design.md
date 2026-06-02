@@ -43,8 +43,51 @@ Chứa logic thuần túy của mô hình lập trình hướng sự kiện, bao
 - Message Manager: Quản lý Pool bộ nhớ tĩnh, chống phân mảnh.
 - Timer Service: Quản lý danh sách liên kết các bộ định thời phần mềm.
 - FSM/TSM Engines: Bộ máy thực thi máy trạng thái.
+- Itnlog: Hệ thống logging cho phép thu thập toàn bộ dữ liệu tại thời điểm gọi.
 
 Trong tầng này, core được thiết kế độc lập hoàn toàn với phần cứng nhằm đảm bảo tính di động và dễ dàng tích hợp vào bất kỳ nền tảng nhúng nào. Core sẽ chỉ tương tác với phần cứng thông qua các hàm trừu tượng được cung cấp bởi tầng PAL.
+
+#### Message Manager
+
+Message Manager của CIEDPC hiện dùng mô hình pool tĩnh kết hợp free-list để tránh phân mảnh và tránh phụ thuộc vào heap trong đường đi xử lý chính. Source hiện có 3 pool chính:
+
+- `BLANK`: message không có payload, dùng cho tín hiệu đơn giản.
+- `ALLOC`: message có payload nhỏ hoặc vừa, data buffer tách riêng khỏi header.
+- `EXTAL`: message từ interface ngoài core, cũng dùng vùng dữ liệu riêng.
+
+`CIEDPC_MSG_TYPE_NORM` vẫn được định nghĩa trong enum để dự phòng cho các biến thể pool sau này, nhưng trong implementation hiện tại chưa được dựng thành một pool riêng trong `ciedpc_msg_pool_init()`.
+
+Ngoài ra còn có một hàng đợi riêng cho tín hiệu ISR. Hàng đợi này không đi qua message pool thông thường mà được khởi tạo bằng FIFO riêng để giảm rủi ro khi ghi nhận tín hiệu từ ngữ cảnh ngắt.
+
+Một message trong core mang các trường chính: `src_task_id`, `des_task_id`, `sig`, `type`, `ref_count`, `data`, metadata `interface`, và `timestamp` khi debug flag bật. Khi cấp phát, `ciedpc_msg_alloc()` sẽ chọn pool phù hợp theo kích thước payload; khi giải phóng, `ciedpc_msg_free()` trả message về đúng pool tương ứng.
+
+#### Task Manager
+
+Task Manager là lớp điều phối task message-driven và poll-driven.
+
+- Task message-driven được khai báo bằng `task_norm_t`, gồm `id`, `pri`, handler, FIFO nội bộ và buffer FIFO.
+- Task poll-driven được khai báo bằng `task_poll_t`, gồm `id`, `ability`, handler.
+- Khi `ciedpc_task_norm_create()` chạy, core đếm danh sách task đến phần tử `CIEDPC_TASK_NORM_EOT_ID` rồi tự khởi tạo FIFO nội bộ cho từng task bằng `CIEDPC_TASK_MSG_QUEUE_SIZE` slot con trỏ.
+- Scheduler hiện tại là ưu tiên bitmask: lấy priority cao nhất đang ready, xử lý đúng một message, rồi quay lại vòng lặp lần sau.
+
+Đường đi xử lý của task hiện tại được lưu tạm trong các biến nội bộ để phục vụ API lấy ngữ cảnh hiện tại và các module khác như itnlog hoặc timer.
+
+#### Timer Service
+
+Timer Service dùng pool cố định `CIEDPC_TIMER_MAX_NODES` node và danh sách liên kết cho free-list/active-list. Mỗi node lưu `des_task_id`, `sig`, `type`, `period`, `counter`, `is_active`.
+
+- `ciedpc_timer_init()` chỉ cần dựng lại free-list.
+- `ciedpc_timer_set()` tạo hoặc cập nhật timer theo cặp task ID + signal.
+- `ciedpc_timer_remove()` xóa timer khỏi active-list và trả node về free-list.
+- `ciedpc_timer_tick()` được gọi trong ngữ cảnh ngắt tick để giảm counter; khi hết hạn sẽ phát sinh message ISR sang task đích.
+
+Timer hiện hỗ trợ 2 loại: one-shot và periodic. Giá trị `period` được quy đổi từ milliseconds sang tick theo `CIEDPC_TIMER_TICK`.
+
+#### ISR Bridge
+
+CIEDPC tách riêng đường đi từ ISR vào core bằng một FIFO nội bộ cho tín hiệu ISR. Thay vì tạo message ngay trong ngắt, ISR chỉ đăng ký cặp task ID và signal vào FIFO, còn `ciedpc_task_scheduler()` sẽ gọi `ciedpc_msg_drain_isr_pool()` ở đầu chu kỳ để rút các tín hiệu này vào luồng xử lý bình thường.
+
+Cách làm này giữ đường đi trong ISR ngắn hơn, giảm nguy cơ tranh chấp và giúp core vẫn giữ được tính độc lập với phần cứng cụ thể.
 
 ### PAL - Platform Abstraction Layer (Tầng Trừu tượng)
 
@@ -77,6 +120,8 @@ Trong đó, Core được thiết kế với 4 loại pool sau:
 Để đảm bảo an toàn khi truyền tín hiệu từ ISR vào hệ thống, CIEDPC bổ sung một FIFO nội bộ bên trong Core để lưu trữ các tín hiệu từ ISR. Khi có ngắt (ví dụ: UART, Timer), PAL sẽ đẩy tín hiệu vào FIFO này. Core sẽ "drain" (rút dữ liệu) từ FIFO này vào các Task Queue ở đầu mỗi chu kỳ Scheduler. Cơ chế này giúp loại bỏ hoàn toàn việc Core phải biết về ISR, đồng thời đảm bảo an toàn và hiệu quả khi truyền tín hiệu từ ISR vào hệ thống.
 
 Nhằm đảm bảo tính an toàn và tránh tranh chấp tài nguyên, việc drain FIFO này được thực hiện trong critical section, đảm bảo rằng quá trình này không bị gián đoạn bởi các tác vụ khác hoặc ISR khác. Điều này giúp duy trì tính nhất quán của dữ liệu và đảm bảo rằng các tín hiệu từ ISR được xử lý một cách an toàn và hiệu quả trong hệ thống CIEDPC.
+
+Khi một timer hết hạn, `ciedpc_timer_tick()` cũng đi qua cơ chế này bằng cách gọi `ciedpc_task_norm_post_isr()` để đưa tín hiệu của timer về task đích theo cùng một luồng xử lý.
 
 ### Data-to-Message passing
 
@@ -217,3 +262,64 @@ CIEDPC sử dụng một hệ thống quản lý tín hiệu (Signal Management)
 Lưu ý rằng với mỗi dãy tín hiệu đều đảm bảo có khai báo offset để khi lấy tín hiệu xử lý theo chỉ số của pool hay các vấn đề liên quan đến việc quản lý tín hiệu thì Core có thể dễ dàng xác định được loại tín hiệu và xử lý một cách chính xác.
 
 Khi khai báo bổ sung các tín hiệu mới thì người dùng không cần phải tự cấu hình lại offset vì offset này chỉ ảnh hưởng lên việc quản lý tín hiệu trong nội bộ Core, còn đối với người dùng thì chỉ cần tuân thủ theo dải tín hiệu đã được định nghĩa sẵn để đảm bảo rằng các tín hiệu được quản lý một cách chính xác và hiệu quả trong hệ thống.
+
+### Itnlog - Hệ thống logging
+
+Itnlog là tầng logging nội bộ của CIEDPC, được thiết kế để thay thế cho cách debug bằng `printf` rải rác trong luồng xử lý. Mục tiêu của itnlog là cung cấp một đường ghi log nhất quán, có thể lọc theo mức độ và tag, đồng thời dễ thay đổi đích xuất log theo từng nền tảng mà không làm Core phụ thuộc trực tiếp vào stdio.
+
+Về mặt thiết kế, itnlog đóng vai trò là một lớp ghi nhận sự kiện nhẹ và tách biệt khỏi luồng xử lý chính:
+
+- Core chỉ ghi log vào bộ đệm nội bộ, không gọi `printf` trực tiếp.
+- Đích xuất log được đưa ra ngoài qua callback `ciedpc_itnlog_set_output()`, nên cùng một Core có thể xuất log ra console, UART, file hoặc backend debug khác.
+- Khi cần debug cục bộ trên Linux, callback có thể bọc `printf` hoặc `fputs` rồi `fflush(stdout)` để bảo đảm log xuất ngay.
+- Khi dùng trên nền tảng nhúng, callback có thể chuyển sang UART, semihosting, file log hoặc cơ chế trace riêng mà không phải sửa Core.
+
+Thiết kế này giúp tránh việc rải `printf` trong logic nghiệp vụ, giảm phụ thuộc vào thư viện chuẩn ở Core, và giữ cho đường đi thời gian thực ổn định hơn khi cần ghi log với tần suất cao.
+
+Trong thiết kế, itnlog không hỗ trợ flush khi gọi `ciedpc_itnlog_clear()` vì mục đích của hàm này là xóa log khỏi bộ đệm nội bộ và reset trạng thái thống kê, chứ không phải để xuất log ra ngoài. Việc flush log nên được thực hiện trong `ciedpc_itnlog_dump()` khi rút log ra và gửi đến callback, đảm bảo rằng chỉ những log đã được xử lý và lọc mới được xuất ra ngoài, giúp tối ưu hiệu suất và tránh việc xuất log không cần thiết.
+
+Do đó, `ciedpc_itnlog_dump()` sẽ nên được đặt ngoài scheduler hoặc trong một task polling riêng để đảm bảo rằng việc xuất log không ảnh hưởng đến đường đi thời gian thực của các task chính, đồng thời vẫn đảm bảo rằng log được xuất ra một cách hiệu quả và có thể kiểm soát được thông qua các bộ lọc đã thiết lập.
+
+Thiết kế này được gọi là Out-Context Execution (OCE), giúp đảm bảo 3 nguyên tắc sau:
+
+1. Bảo vệ nguyên tắc RTC (Run-to-Completion): Các task chính không bị gián đoạn bởi việc xuất log, tránh làm tăng độ trễ xử lý.
+2. Tận dụng nhịp nghỉ của CPU (Idle Time Utilization): Log được xuất ra trong các khoảng thời gian CPU không bận rộn, giúp tối ưu hiệu suất.
+3. An toàn cho ngắt chồng ngắt (ISR Safety): Việc xuất log không xảy ra trong ngữ cảnh ISR, tránh rủi ro tranh chấp tài nguyên hoặc deadlock.
+
+#### Mô hình hoạt động
+
+Itnlog vận hành theo chuỗi sau:
+
+1. `ciedpc_itnlog_init()` khởi tạo ring buffer nội bộ để lưu log entry.
+2. `ciedpc_itnlog_log()` ghi từng entry vào bộ đệm nội bộ theo ngữ cảnh đang chạy.
+3. `ciedpc_itnlog_dump()` rút toàn bộ entry ra, áp dụng bộ lọc level/tag, rồi xuất ra callback do người dùng cung cấp.
+
+Về mặt lưu trữ, entry hiện tại là một cấu trúc nhỏ chứa `level`, `tag`, `task_id`, `msg_sig`, `msg`, `tmstmp` và `hash`. Bộ đệm dùng ring buffer cố định có kích thước `CIEDPC_ITNLOG_MAX_LOG_ENTRIES`, vì vậy khi số entry được ghi vượt ngưỡng thì logger sẽ tự dump trước khi ghi tiếp.
+
+Khi dump, dòng log được ghép theo mẫu:
+
+`[ITNLOG] tmstmp task_id msg_id msg`
+
+Trong đó `task_id` và `msg_id` được xuất ở dạng hex, còn `tmstmp` là giá trị số nguyên không kèm hậu tố đơn vị. `msg_id` chính là `msg_sig` của message hiện tại tại thời điểm log được ghi.
+
+#### Bộ lọc và ngữ nghĩa tag
+
+Itnlog hỗ trợ lọc theo mức độ log và theo tag:
+
+- `itnlog_filter_level` quyết định entry nào đủ điều kiện xuất.
+- `itnlog_filter_tag` cho phép lọc theo module, ví dụ `TSK`, `MSG`, `FSM`, `TSM`, `TIM`.
+- Nếu tag filter là `NULL`, itnlog hiểu là không lọc theo tag và chấp nhận mọi entry hợp lệ.
+
+Thiết kế này giúp việc bật hoặc tắt log theo nhóm chức năng trở nên rõ ràng hơn khi debug, đặc biệt trong các test tích hợp như test 04. Do callback output chỉ nhận một chuỗi đã format sẵn, phần format log được cố định trong `ciedpc_itnlog_dump()` thay vì để người dùng tự ghép chuỗi ở callback.
+
+#### Đích xuất log
+
+Itnlog không ràng buộc đích xuất log vào một backend cố định. Core chỉ gọi callback `ciedpc_itnlog_set_output()` để chuyển một dòng log đã format sẵn ra tầng ứng dụng hoặc tầng PAL. Cách này cho phép cùng một logic logging có thể xuất ra console, UART, file, hoặc giao diện debug tùy nền tảng, thay vì phụ thuộc vào các lời gọi `printf` trong từng handler.
+
+Khi dùng trên Linux, callback nên là một wrapper nhận `const char*` rồi in chuỗi đó ra terminal và flush ngay sau khi xuất để tránh log bị giữ trong buffer của `stdout` cho đến khi chương trình kết thúc.
+
+#### Hành vi nội bộ cần lưu ý
+
+- `ciedpc_itnlog_log()` lấy `task_id` từ tác vụ hiện tại và lấy `msg_sig` từ message hiện tại, nên nó chỉ an toàn khi scheduler đang xử lý một message hợp lệ.
+- `ciedpc_itnlog_dump()` không chỉ in log mà còn xóa log khỏi ring buffer và reset trạng thái thống kê nội bộ.
+- `ciedpc_itnlog_set_tag(NULL)` tương đương với tắt lọc theo tag.

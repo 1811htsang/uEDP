@@ -17,13 +17,6 @@
 #include "ciedpc_task.h"
 
 /**
- * @brief Khai báo các hằng số cho số lượng timer tối đa có thể chạy cùng lúc
- */
-#ifndef CIEDPC_TIMER_MAX_NODES
-  #define CIEDPC_TIMER_MAX_NODES    (4u) // units
-#endif
-
-/**
  * @brief Cấu trúc quản lý toàn bộ hệ thống Timer
  * @param head: Con trỏ đến đầu danh sách liên kết các timer đang chạy
  * @param free_list: Con trỏ đến danh sách các nút timer đang rảnh trong Pool
@@ -36,10 +29,16 @@ typedef struct {
 } ciedpc_timer_ctrl_t;
 
 /**
+ * @brief Khai báo tick hệ thống độc lập, không phụ thuộc vào
+ * 				task.
+ */
+sta ui32 sys_tick = 0x0u;
+
+/**
  * @brief Khai báo Pool timer
  */
-CIEDPC_ATTR_SECTION(".ciedpc_timer_pool") static ciedpc_timer_t timer_pool[CIEDPC_TIMER_MAX_NODES];
-CIEDPC_ATTR_SECTION(".ciedpc_timer_pool") static ciedpc_timer_ctrl_t timer_ctrl;
+sta ciedpc_timer_t timer_pool[CIEDPC_TIMER_MAX_NODES] = {0};
+sta ciedpc_timer_ctrl_t timer_ctrl = {0};
 
 sta ciedpc_timer_t* internal_ciedpc_timer_find(ui8 tid, ui8 sig) {
 	ciedpc_timer_t* curr = timer_ctrl.head;
@@ -75,14 +74,17 @@ RETR_STAT ciedpc_timer_set(ui16 tid, ui8 sig, ui32 ms, ciedpc_timer_type_t type)
 		existing_timer->counter = existing_timer->period;
 		existing_timer->type = type;
 		existing_timer->is_active = true;
+		pal_exit_critical();
 		return STAT_OK; // Timer đã được cập nhật thành công
 	}
 
 	if (timer_ctrl.active_count >= CIEDPC_TIMER_MAX_NODES) {
+		pal_exit_critical();
 		return STAT_BUSY; // Đã đạt đến giới hạn số lượng timer hoạt động
 	}
 
 	if (!timer_ctrl.free_list) {
+		pal_exit_critical();
 		return STAT_BUSY; // Không còn nút timer nào rảnh trong Pool
 	}
 
@@ -159,21 +161,14 @@ RETR_STAT ciedpc_timer_remove(ui16 tid, ui8 sig) {
 
 /* Hàm này được gọi từ System Tick ISR (ví dụ mỗi 1ms) */
 void ciedpc_timer_tick(void) {
+	sys_tick++;
+
 	ciedpc_timer_t* curr = timer_ctrl.head;
 	ciedpc_timer_t* prev = NULL;
 
 	while (curr) {
 		if (curr->is_active) {
 			if (curr->counter > 0) {
-				#ifdef CIEDPC_PLATFORM_LINUX
-					#define TASK_NORM_CONTROLLER_ID  (0xE6) // ID của tác vụ điều khiển
-					#define SIG_USR_STOP        	   (0x02u)
-					printf("[Timer Tick] Timer ticking: Task ID=%u, Signal=0x%02X, Counter=%u\n", curr->des_task_id, curr->sig, curr->counter);
-					if (curr->counter == 758) {
-						printf("[Timer Tick] Simulating random STOP signal at counter 758 for Task ID=%u\n", curr->des_task_id);
-						ciedpc_task_norm_post_isr(TASK_NORM_CONTROLLER_ID, SIG_USR_STOP);
-					}
-				#endif
 				curr->counter--;
 			}
 
@@ -218,4 +213,8 @@ void ciedpc_timer_tick(void) {
 void ciedpc_timer_get_stats(ui8* active, ui8* max_capacity) {
 	*active = timer_ctrl.active_count;
 	*max_capacity = CIEDPC_TIMER_MAX_NODES;
+}
+
+ui32 ciedpc_timer_get_systick(void) {
+	return sys_tick;
 }

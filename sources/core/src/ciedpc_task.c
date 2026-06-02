@@ -16,22 +16,18 @@
  * @brief Khai báo các biến toàn cục quản lý thông tin của các tác vụ trong hệ thống CIEDPC
  */
 
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_norm_t g_current_task_norm; // Cấu trúc quản lý thông tin của tác vụ hiện tại đang được thực thi
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_id_t g_active_task_norm_id = CIEDPC_TASK_NORM_IDLE_ID; // ID của tác vụ hiện tại đang được thực thi
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta ciedpc_msg_t* g_current_msg; // Con trỏ đến tin nhắn hiện tại đang được xử lý bởi tác vụ hiện tại
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_pri_t g_task_norm_ready; // Biến bitmap quản lý trạng thái sẵn sàng của các tác vụ, mỗi bit tương ứng với một mức độ ưu tiên của tác vụ
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_norm_t* g_task_norm_table = NULL; // Bảng thông tin của các tác vụ bình thường
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta task_poll_t* g_task_poll_table = NULL; // Bảng thông tin của các tác vụ poll
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta ui8 g_task_norm_count = 0; // Số lượng tác vụ bình thường được đăng ký trong hệ thống
-CIEDPC_ATTR_SECTION(".ciedpc_task_section") sta ui8 g_task_poll_count = 0; // Số lượng tác vụ poll được đăng ký trong hệ thống
+sta task_norm_t g_current_task_norm = {0};                      // Cấu trúc quản lý thông tin của tác vụ hiện tại đang được thực thi
+sta task_id_t g_active_task_norm_id = CIEDPC_TASK_NORM_IDLE_ID; // ID của tác vụ hiện tại đang được thực thi
+sta ciedpc_msg_t* g_current_msg = NULL;                         // Con trỏ đến tin nhắn hiện tại đang được xử lý bởi tác vụ hiện tại
+sta task_pri_t g_task_norm_ready = 0;                           // Biến bitmap quản lý trạng thái sẵn sàng của các tác vụ, mỗi bit tương ứng với một mức độ ưu tiên của tác vụ
+sta task_norm_t* g_task_norm_table = NULL;                      // Bảng thông tin của các tác vụ bình thường
+sta task_poll_t* g_task_poll_table = NULL;                      // Bảng thông tin của các tác vụ poll
+sta ui8 g_task_norm_count = 0;                                  // Số lượng tác vụ bình thường được đăng ký trong hệ thống
+sta ui8 g_task_poll_count = 0;                                  // Số lượng tác vụ poll được đăng ký trong hệ thống
 
 /**
- * @brief Define các kích thước của các hàng đợi tin nhắn cho các tác vụ trong hệ thống CIEDPC
+ * @brief Khai báo các hàm quản lý nội bộ của hệ thống tác vụ CIEDPC
  */
-
-#ifndef CIEDPC_TASK_MSG_QUEUE_SIZE
-  #define CIEDPC_TASK_MSG_QUEUE_SIZE  (8u) // Số lượng tin nhắn tối đa trong hàng đợi của mỗi tác vụ
-#endif
 
 sta void          internal_ciedpc_task_norm_put_to_queue            (task_id_t tid, ciedpc_msg_t* msg);
 sta ciedpc_msg_t* internal_ciedpc_task_norm_get_from_queue          (task_id_t tid);

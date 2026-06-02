@@ -4,12 +4,17 @@
  * @brief Header file for Linux Architecture Abstraction Layer in CIEDPC
  * @version 0.1
  * @date 2026-04-20
- * 
  * @copyright MIT License
- * 
  */
+
 #ifndef __LINUX_ARCH_H__
   #define __LINUX_ARCH_H__
+
+  /**
+   * @brief Khai báo thư viện sử dụng
+   * @note Việc định nghĩa _POSIX_C_SOURCE phải được thực hiện trước khi bao gồm bất kỳ header nào để đảm bảo các hàm 
+   *       và kiểu dữ liệu cần thiết được khai báo đúng cách
+   */
 
   #include "pal_core.h"
 

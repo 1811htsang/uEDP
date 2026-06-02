@@ -1,45 +1,55 @@
-﻿// Khai báo thư viện sử dụng
+﻿/**
+ * @file ring_buffer.c
+ * @author Shang Huang
+ * @brief Implementation of ring buffer in C
+ * @version 0.1
+ * @date 2026-05-15
+ * @copyright MIT License
+ */
 #include <stdbool.h>
 #include <stdlib.h>
 #include "ring_buffer.h"
 
-// Hàm khởi tạo vòng đệm
-void ring_buffer_init(ring_buffer_t* ring_buffer, void* buffer, uint16_t buffer_size, uint16_t element_size) {
+void ring_buffer_init(ring_buffer_t* ring_buffer, void* buffer, uint32_t buffer_size, uint32_t element_size) {
 	ring_buffer->tail_index = 0;
 	ring_buffer->head_index = 0;
 	ring_buffer->fill_size = 0;
 
 	ring_buffer->buffer_size = buffer_size;
-	ring_buffer->buffer = (uint8_t*)buffer;
+	ring_buffer->buffer = memset(buffer, 0, buffer_size * element_size);
 	ring_buffer->element_size = element_size;
 }
 
-// Hàm lấy số lượng phần tử có thể chứa trong vòng đệm
-uint16_t ring_buffer_availble(ring_buffer_t* ring_buffer) {
+bool 		ring_buffer_isinit(ring_buffer_t* ring_buffer) {
+	return (ring_buffer->buffer != NULL) ? true : false;
+}
+
+uint32_t ring_buffer_availble(ring_buffer_t* ring_buffer) {
 	return ring_buffer->fill_size;
 }
 
-// Hàm kiểm tra vòng đệm có rỗng hay không
 bool ring_buffer_is_empty(ring_buffer_t* ring_buffer) {
 	return (ring_buffer->fill_size == 0) ? true : false;
 }
 
-// Hàm kiểm tra vòng đệm có đầy hay không
 bool ring_buffer_is_full(ring_buffer_t* ring_buffer) {
 	return (ring_buffer->fill_size == ring_buffer->buffer_size) ? true : false;
 }
 
-// Hàm thêm phần tử vào vòng đệm
 uint8_t ring_buffer_put(ring_buffer_t* ring_buffer, void* data) {
-	uint16_t next_tail_index;
-	uint16_t next_head_index;
+	uint32_t next_tail_index;
+	uint32_t next_head_index;
 
 	if (data != NULL) {
-		memcpy((uint8_t*)(ring_buffer->buffer + ring_buffer->tail_index * ring_buffer->element_size), (uint8_t*)data, ring_buffer->element_size);
+		// Tính toán địa chỉ và tự động copy đúng số byte đã định nghĩa lúc ring_buffer_init
+		uint8_t* p_dest = (uint8_t*)ring_buffer->buffer + (ring_buffer->tail_index * ring_buffer->element_size);
+		memcpy(p_dest, data, ring_buffer->element_size);
 
+		// Cập nhật chỉ số đuôi và kích thước đã điền vào vòng đệm
 		next_tail_index = (++ring_buffer->tail_index) % ring_buffer->buffer_size;
 		ring_buffer->tail_index = next_tail_index;
 
+		// Nếu vòng đệm đã đầy, cập nhật chỉ số đầu để ghi đè phần tử cũ nhất, ngược lại tăng kích thước đã điền vào vòng đệm
 		if (ring_buffer->fill_size == ring_buffer->buffer_size) {
 			next_head_index = (++ring_buffer->head_index) % ring_buffer->buffer_size;
 			ring_buffer->head_index = next_head_index;
@@ -55,17 +65,19 @@ uint8_t ring_buffer_put(ring_buffer_t* ring_buffer, void* data) {
 	return RET_RING_BUFFER_OK;
 }
 
-// Hàm lấy phần tử ra khỏi vòng đệm
 uint8_t ring_buffer_get(ring_buffer_t* ring_buffer, void* data) {
-	uint16_t next_head_index;
+	uint32_t next_head_index;
 
 	if (ring_buffer_is_empty(ring_buffer)) {
 		return RET_RING_BUFFER_NG;
 	}
 
 	if (data != NULL) {
-		memcpy((uint8_t*)data, (uint8_t*)(ring_buffer->buffer + ring_buffer->head_index * ring_buffer->element_size), ring_buffer->element_size);
+		// Tính toán địa chỉ và tự động copy đúng số byte đã định nghĩa lúc ring_buffer_init
+		uint8_t* p_src = (uint8_t*)ring_buffer->buffer + (ring_buffer->head_index * ring_buffer->element_size);
+		memcpy((uint8_t*)data, p_src, ring_buffer->element_size);
 
+		// Cập nhật chỉ số đầu và giảm kích thước đã điền vào vòng đệm
 		next_head_index = (++ring_buffer->head_index) % ring_buffer->buffer_size;
 		ring_buffer->head_index = next_head_index;
 
@@ -77,65 +89,3 @@ uint8_t ring_buffer_get(ring_buffer_t* ring_buffer, void* data) {
 
 	return RET_RING_BUFFER_OK;
 }
-
-// Các hàm xử lý vòng đệm đặc biệt cho kiểu char
-void ring_buffer_char_init(ring_buffer_char_t* ring_buffer, void* buffer, uint16_t buffer_size) {
-	ring_buffer->tail_index = 0;
-	ring_buffer->head_index = 0;
-	ring_buffer->fill_size = 0;
-
-	ring_buffer->buffer_size = buffer_size;
-	ring_buffer->buffer = (uint8_t*)buffer;
-}
-
-// Hàm lấy số lượng phần tử có thể chứa trong vòng đệm
-uint16_t ring_buffer_char_availble(ring_buffer_char_t* ring_buffer) {
-	return ring_buffer->fill_size;
-}
-
-// Hàm kiểm tra vòng đệm có rỗng hay không
-bool ring_buffer_char_is_empty(ring_buffer_char_t* ring_buffer) {
-	return (ring_buffer->fill_size == 0) ? true : false;
-}
-
-// Hàm kiểm tra vòng đệm có đầy hay không
-bool ring_buffer_char_is_full(ring_buffer_char_t* ring_buffer) {
-	return (ring_buffer->fill_size == ring_buffer->buffer_size) ? true : false;
-}
-
-// Hàm thêm phần tử vào vòng đệm
-void ring_buffer_char_put(ring_buffer_char_t* ring_buffer, uint8_t c) {
-	uint16_t next_tail_index;
-	uint16_t next_head_index;
-
-	ring_buffer->buffer[ring_buffer->tail_index] = c;
-
-	next_tail_index = (++ring_buffer->tail_index) % ring_buffer->buffer_size;
-	ring_buffer->tail_index = next_tail_index;
-
-	if (ring_buffer->fill_size == ring_buffer->buffer_size) {
-		next_head_index = (++ring_buffer->head_index) % ring_buffer->buffer_size;
-		ring_buffer->head_index = next_head_index;
-	}
-	else {
-		ring_buffer->fill_size++;
-	}
-}
-
-// Hàm lấy phần tử ra khỏi vòng đệm
-uint8_t	ring_buffer_char_get(ring_buffer_char_t* ring_buffer) {
-	uint16_t ret = 0;
-	uint16_t next_head_index;
-
-	if (ring_buffer->fill_size) {
-		ret = ring_buffer->buffer[ring_buffer->head_index];
-
-		next_head_index = (++ring_buffer->head_index) % ring_buffer->buffer_size;
-		ring_buffer->head_index = next_head_index;
-
-		ring_buffer->fill_size--;
-	}
-
-	return ret;
-}
-
