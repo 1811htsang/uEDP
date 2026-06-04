@@ -1,4 +1,4 @@
-# CIEDPC: Custom Independent Event-Driven Programming Core
+# CIEDPC / uEDP: Custom Independent Event-Driven Programming Core
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Language: C](https://img.shields.io/badge/Language-Pure%20C-blue.svg)
@@ -6,47 +6,56 @@
 ![Platform: Agnostic](https://img.shields.io/badge/Platform-STM32%20|%20ESP32%20|%20Linux-green.svg)
 ![Status: Active Development](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
 
-**CIEDPC** là một hạt nhân (Kernel) lập trình hướng sự kiện siêu nhẹ, hiệu suất cao, được thiết kế tham khảo theo mô hình **Active Object** với các tùy chỉnh bổ sung. Mục tiêu cốt lõi là đạt được khả năng **"Zero-Touch Porting"** – cho phép di chuyển toàn bộ logic ứng dụng giữa các nền tảng (như từ STM32 sang Linux mô phỏng) mà không cần thay đổi mã nguồn lõi.
+**CIEDPC** (đang tiến tới định danh `uEDP`) là một hạt nhân (kernel) lập trình hướng sự kiện siêu nhẹ, hiệu suất cao, dựa trên mô hình **Active Object**. 
+
+Mục tiêu cốt lõi là đạt được khả năng **"Zero-Touch Porting"** — cho phép di chuyển logic ứng dụng giữa các nền tảng (STM32, ESP32, Linux) mà không cần thay đổi mã nguồn lõi.
 
 ---
 
 ## 🚀 Tính năng nổi bật
 
-- **Kiến trúc Tách biệt Tuyệt đối:** Phân tầng rõ rệt giữa App Layer - CIEDPC Core - PAL (Platform Abstraction Layer).
-- **Bộ lập lịch O(1):** Lập lịch đa nhiệm ưu tiên dựa trên Bitmask, tối ưu hóa tốc độ phản ứng với sự kiện.
-- **Quản lý Bộ nhớ Tĩnh (Static Memory Pools):** Triệt tiêu hoàn toàn hiện tượng phân mảnh RAM (Fragmentation), đảm bảo tính đoán định (Deterministic) cho hệ thống Real-time.
-- **Hệ thống Tin nhắn Hợp nhất (Unified Messaging):** Tự động thích ứng kích thước con trỏ (4-byte trên 32-bit, 8-byte trên 64-bit), hỗ trợ cả truyền tham trị (Value) và tham chiếu (Zero-copy).
-- **Cơ chế "Lớp vỏ & Lõi" (TSM & FSM):**
-  - **TSM (Table-driven):** Quản lý chế độ vận hành lớn với Entry/Exit actions tự động.
-  - **FSM (Pointer-driven):** Xử lý logic nghiệp vụ chi tiết linh hoạt.
-- **Simulation Ready:** Hỗ trợ mô phỏng hoàn hảo trên Linux POSIX giúp kiểm thử logic 100% trước khi nạp xuống phần cứng.
+- **Kiến trúc Tách biệt:** Phân tầng rõ rệt giữa App Layer — CIEDPC/uEDP Core — PAL (Platform Abstraction Layer).
+- **Bộ lập lịch O(1):** Lập lịch đa nhiệm ưu tiên dựa trên bitmask, tối ưu hóa thời gian phản hồi với sự kiện.
+- **Quản lý Bộ nhớ Tĩnh (Static Memory Pools):** Giảm tối đa fragmentation, đảm bảo tính đoán định cho hệ thống real-time.
+- **Unified Messaging:** Hỗ trợ truyền tham trị (value) và tham chiếu (zero-copy), tự động thích ứng kích thước con trỏ 32/64-bit.
+- **Lớp vỏ & Lõi (TSM & FSM):** Kết hợp quản lý chế độ (TSM) và logic vi mô (FSM) để tổ chức hệ thống rõ ràng.
+- **Logging Chain:** Hệ thống logging ba lớp `xprintf` → `rprintf` → `logdp` (itnlog) hỗ trợ thu thập và chuyển tiếp log an toàn từ ISR tới backend.
+- **Memory Profiling (PAL memrp):** Công cụ PAL để đo và báo cáo footprint bộ nhớ và stack watermark.
+- **Simulation Ready:** Chạy mô phỏng 100% logic trên Linux POSIX để phát triển và test trước khi porting.
 
 ---
 
 ## 🏗 Kiến trúc Hệ thống
 
 ```mermaid
-graph TD
-    subgraph "Application Layer"
-        App[Tasks Logic & FSM]
+graph LR
+    subgraph App[Application Layer]
+        Config[App Config app_cfg.h]
+        Declaration[App Logic declaration/]
+        Logic[Main App Logic app.c]
     end
 
-    subgraph "CIEDPC Core (Hardware Agnostic)"
-        Shed[Priority Scheduler]
-        Msg[Message Manager]
+    subgraph Core[CIEDPC/uEDP Core ]
+        Task[Task Scheduler & Task Objects]
+        Msg[Message Pools & Manager]
         Timer[Timer Service]
         SM[TSM/FSM Engine]
+        Itnlog[Event Logger itnlog]
     end
 
-    subgraph "PAL Layer (Porting Interface)"
-        Sync[Concurrency/Critical]
-        HWT[Hardware Tick]
-        Math[Math Accel/CLZ]
+    subgraph PAL[Platform Abstraction Layer]
+        Arch[Architecture-Specific HAL]
+        Logdp[Log Dispatcher logdp]
+        Rprintf[redirectable printf]
+        Memrp[Memory Profiler memrp]
     end
 
-    App -->|post_msg / timer_set| CIEDPC
-    CIEDPC -->|Requirements| PAL
-    PAL -->|Implementation| MCU[STM32 / ESP32 / Linux]
+    PAL -->|Hardware Access| Core
+    Core -->|Event-Driven API| App
+    App -->|Configuration| Core
+    App -->|Configuration| PAL
+    App -->|Logging| PAL
+    Core -->|Logging| PAL
 ```
 
 ---
@@ -54,75 +63,45 @@ graph TD
 ## 📂 Cấu trúc thư mục
 
 ```text
-CIEDPC/
+CIEDPC-uEDP/
 ├── core/                 # Định nghĩa và triển khai logic chính của CIEDPC
-│   ├── inc/              # ciedpc_msg.h, ciedpc_task.h, ciedpc_timer.h, ciedpc_fsm.h, ciedpc_tsm.h
+│   ├── inc/              # Message, Task, Timer, Itnlog, FSM, TSM
 │   │   └── ciedpc_core.h # Định nghĩa các tín hiệu, hằng số và cấu trúc dữ liệu cốt lõi của CIEDPC
-│   └── src/              # Triển khai logic scheduler, timer engine, message manager
+│   └── src/              # Triển khai logic scheduler, timer engine, message manager, FSM/TSM engine, v.v.
 ├── pal/                  # BACKEND (Lớp trừu tượng)
 │   ├── pal_core.h        # Khai báo thống nhất chung cho toàn bộ PAL và các dịch vụ hệ thống
 │   ├── services/         # Hardware Services (Mapping phần cứng)
-│   │   ├── timer/        # pal_timer.h chứa các khai báo API timer để tự triển khai trên từng nền tảng
-│   │   └── memrp/        # pal_memrp.c/h chứa các hàm hỗ trợ memory profiling
+│   │   ├── logdp/        # pal_logdp.h chứa các khai báo service Log Dispatcher định tuyến log
+│   │   ├── memrp/        # pal_memrp.h chứa các khai báo API memory profiling
+│   │   └── rprintf/      # pal_rprintf.h chứa các khai báo API rprintf để tự triển khai trên từng nền tảng
 │   └── arch/             # Implementation (Mã nguồn chi tiết từng chip)
-│       ├── stm32/        # stm32_arch.c/h chứa các hàm triển khai cho STM32
+│       ├── stm32f103/    # stm32_f103_arch.c/h chứa các hàm triển khai cho STM32F103
+│       ├── stm32h723/    # stm32h723_arch.c/h chứa các hàm triển khai cho STM32H723
+│       ├── esp32_wr32/   # esp32_wr32_arch.c/h chứa các hàm triển khai cho ESP32-WROOM-32
+│       ├── esp32_s3/     # esp32_s3_arch.c/h chứa các hàm triển khai cho ESP32-S3
 │       └── linux/        # linux_arch.c/h chứa các hàm triển khai cho môi trường giả lập trên Linux
 ├── app/                  # Định nghĩa logic ứng dụng, bao gồm các tác vụ và FSM do người dùng tạo ra
 │   ├── config/           # Chứa cấu hình ứng dụng và cấu hình người dùng
-│   ├── task/             # Định nghĩa các tác vụ (tasks) và FSM của người dùng
+│   │   ├── app_cfg.h     # Chứa các cấu hình yêu cầu như bảng task, timer, tín hiệu, v.v.
+│   │   ├── core_cfg.h    # Chứa các cấu hình yêu cầu cho lõi như kích thước pool, số lượng task, timer, v.v.
+│   │   └── pal_cfg.h     # Chứa các cấu hình yêu cầu cho PAL như kích thước pool, số lượng service, v.v.
 │   ├── declaration/      # Implementation chính của logic hoạt động của ứng dụng người dùng
-│   └── interface/        # Định nghĩa và triển khai cổng giao tiếp với tín hiệu bên ngoài (task_if)
-├── common/               # Các tiện ích và cấu trúc dữ liệu chung được sử dụng trong toàn bộ dự án
-│   └── container/        # Các cấu trúc dữ liệu như FIFO, Ring Buffer, Linked List được triển khai thuần C
-└── test/                 # Các bài kiểm tra tích hợp (Integration Tests) để đảm bảo tính đúng đắn của hệ thống
-    ├── test01/           # Test cơ bản với các tác vụ ISR và TSM
-    ├── test02/           # Test với các tính năng như message pooling và memrp
-    └── test03/           # Test tích hợp FSM phức tạp
+│   ├── interface/        # Định nghĩa và triển khai cổng giao tiếp với tín hiệu bên ngoài (task_if)
+│   └── app.c             # Triển khai logic ứng dụng chính
+└── common/               # Các tiện ích và cấu trúc dữ liệu chung được sử dụng trong toàn bộ dự án
+    ├── container/        # Các cấu trúc dữ liệu như FIFO, Ring Buffer, Linked List được triển khai thuần C
+    └── xprintf/          # Thư viện xprintf tùy chỉnh để hỗ trợ định dạng log nâng cao
 ```
-
----
-
-## 🛠 Hướng dẫn Khởi chạy nhanh (Linux Simulation)
-
-CIEDPC hỗ trợ chạy mô phỏng ngay trên môi trường Linux để kiểm tra logic.
-
-### 1. Yêu cầu
-
-- GCC Compiler
-- CMake (version 3.10+)
-
-### 2. Biên dịch
-
-```bash
-mkdir build && cd build
-cmake -DPLATFORM=LINUX ..
-make
-```
-
-### 3. Chạy Integration Test
-
-```bash
-./ciedpc_test
-```
-
-*Kết quả sẽ hiển thị luồng chuyển trạng thái TSM/FSM và hoạt động của Timer Service trên Terminal.*
-
----
-
-## 📖 Nguyên lý "Lớp vỏ & Lõi"
-
-CIEDPC giải quyết bài toán phức tạp bằng cách lồng ghép hai loại máy trạng thái:
-
-1. **TSM (Macro-level):** Quản lý các "Chế độ" (ví dụ: `IDLE`, `RUNNING`, `ERROR`). Nó tự động dọn dẹp tài nguyên khi Task đổi chế độ thông qua hàm `on_exit`.
-2. **FSM (Micro-level):** Quản lý "Hành vi" bên trong từng chế độ (ví dụ: giải mã gói tin UART byte-by-byte).
-
-Cơ chế này giúp loại bỏ hoàn toàn các biến cờ (`flags`) lộn xộn, biến mã nguồn trở thành một bản mô tả sơ đồ logic sạch sẽ.
 
 ---
 
 ## 📝 Tài liệu hướng dẫn
 
-Thông tin chi tiết về API, cách quy hoạch Pool bộ nhớ và hướng dẫn Porting sang các MCU khác có thể tìm thấy trong tài liệu [User Manual (PDF)](./docs/user-manual.md).
+Thông tin chi tiết về API, cách quy hoạch pool bộ nhớ và hướng dẫn porting sang MCU khác có trong [User Manual](./docs/user-manual.md).
+
+Phân tích so sánh giữa mô hình event-driven (uEDP/CIEDPC) và RTOS có trong [uEDP vs FreeRTOS](./docs/uedp-vs-freertos.md).
+
+Nếu muốn xem trước tài liệu trong giai đoạn phát triển, hãy chuyển sang nhánh `docs` để xem các tài liệu đang được soạn thảo.
 
 ---
 
@@ -136,14 +115,4 @@ Dự án được phát triển bởi **Shang Huang (Huỳnh Thanh Sang)**. Mọ
 
 ## Roadmap tương lai
 
-Đây là các lộ trình triển khai dự kiến trong tương lai để hoàn thiện và mở rộng tính năng của CIEDPC:
-
-- Triển khai PAL services cho RAM profiling.
-- Triển khai PAL services cho Debug.
-- Triển khai PAL services cho Tracing và Fatal Error Handling.
-- Bổ sung các xử lý cho giao diện thu thập tín hiệu từ bên ngoài.
-- Mở rộng thêm các bài kiểm tra tích hợp (Integration Tests) để đảm bảo tính ổn định của hệ thống.
-- Phát triển thêm các ví dụ ứng dụng thực tế để minh họa cách sử dụng CIEDPC trong các tình huống khác nhau.
-- Hoàn thiện tài liệu hướng dẫn chi tiết về cách sử dụng và porting CIEDPC sang các nền tảng khác nhau.
-
-Lưu ý rằng các mốc lộ trình này không đảm bảo sẽ được thực hiện hoặc có thể thay đổi tùy thuộc vào tình hình phát triển. Tuy nhiên chúng sẽ được cập nhật thường xuyên để phản ánh tiến độ và kế hoạch phát triển của dự án.
+Toàn bộ lộ trình thiết kế được lưu trữ trong [to-do.md](./docs/to-do.md) để theo dõi tiến độ và kế hoạch phát triển các tính năng mới, cải tiến và tài liệu liên quan. Để xem các cập nhật chi tiết hơn, hãy chuyển sang nhánh `docs` để xem các tài liệu đang được soạn thảo và cập nhật.
