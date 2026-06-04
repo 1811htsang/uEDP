@@ -6,7 +6,7 @@
 ![Platform: Agnostic](https://img.shields.io/badge/Platform-STM32%20|%20ESP32%20|%20Linux-green.svg)
 ![Status: Active Development](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
 
-**CIEDPC** (đang tiến tới định danh `uEDP`) là một hạt nhân (kernel) lập trình hướng sự kiện siêu nhẹ, hiệu suất cao, dựa trên mô hình **Active Object**. 
+**CIEDPC** (đang tiến tới định danh `uEDP`) là một hạt nhân (kernel) lập trình hướng sự kiện siêu nhẹ, hiệu suất cao, dựa trên mô hình **Active Object**.
 
 Mục tiêu cốt lõi là đạt được khả năng **"Zero-Touch Porting"** — cho phép di chuyển logic ứng dụng giữa các nền tảng (STM32, ESP32, Linux) mà không cần thay đổi mã nguồn lõi.
 
