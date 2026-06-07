@@ -1,29 +1,10 @@
 # Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Sự kiện trong CIEDPC/uEDP
 
-## 1. Yêu cầu chung về Sự kiện (Event Abstraction)
-
-* **SRS_QP_EVT_00: Cung cấp trừu tượng hóa Sự kiện cho ứng dụng**
-  * *Mô tả:* Thành phần khung (framework) QP/C phải định nghĩa một sự trừu tượng hóa chung cho Sự kiện (Event), để nó có thể được khởi tạo, trao đổi và diễn giải chính xác bởi cả ứng dụng QP/C và chính khung làm việc.
-
-## 2. Tín hiệu Sự kiện (Event Signals)
-
-* **SRS_QP_EVT_20: Mỗi thực thể sự kiện phải chứa Tín hiệu (Signal)**
-  * *Mô tả:* Tín hiệu sự kiện mang thông tin về sự việc đã xảy ra. Ứng dụng QP/C cần truy cập dễ dàng vào Tín hiệu này để xác định cách xử lý sự kiện tương ứng.
-* **SRS_QP_EVT_21: Hỗ trợ tối đa 64K (65536) tín hiệu sự kiện**
-  * *Mô tả:* Framework phải cung cấp khả năng quản lý lên đến 64.000 tín hiệu (sử dụng 2 byte bộ nhớ cho mỗi tín hiệu sự kiện).
-* **SRS_QP_EVT_22: Dự phòng một số tín hiệu cho mục đích nội bộ**
-  * *Mô tả:* Framework có thể dành riêng một số tín hiệu để triển khai các tính năng bên trong các máy trạng thái phân tầng (hierarchical state machines). Các tín hiệu dự phòng này thường có giá trị số thấp nhất.
-* **SRS_QP_EVT_23: Cung cấp giá trị tín hiệu thấp nhất cho phép trong ứng dụng**
-  * *Mô tả:* Để tránh xung đột với các tín hiệu dự phòng của hệ thống, framework phải cung cấp giới hạn số thấp nhất cho các tín hiệu ở cấp ứng dụng (ví dụ: các tín hiệu ứng dụng sẽ bắt đầu từ một giá trị `SIGNAL_OFFSET` trở đi).
-
-## 3. Tham số Sự kiện (Event Parameters)
-
-* **SRS_QP_EVT_30: Cho phép ứng dụng tạo sự kiện với các Tham số tùy chỉnh**
-  * *Mô tả:* Cơ chế trừu tượng hóa sự kiện phải cho phép người dùng định nghĩa các tham số bổ sung cần thiết cho ứng dụng và khởi tạo các sự kiện đi kèm với các tham số đó.
-* **SRS_QP_EVT_31: Chứa các dữ liệu quản lý nội bộ**
-  * *Mô tả:* Cấu trúc sự kiện có thể chứa thêm các mục dữ liệu khác để phục vụ việc quản lý sự kiện bên trong framework (liên quan đến quản lý bộ nhớ sự kiện).
-
-## 4. Khởi tạo Sự kiện (Event Initialization)
-
-* **SRS_QP_EVT_40: Cấu hình khởi tạo tùy chỉnh tại thời điểm biên dịch**
-  * *Mô tả:* Framework có thể được cấu hình lúc biên dịch để cho phép khởi tạo tùy chỉnh trên các thực thể sự kiện. Khi được cấu hình, framework sẽ gọi hàm khởi tạo tùy chỉnh này khi một sự kiện động (dynamic event) được tạo ra.
+* **SRS_QP_EVT_00:** Cung cấp trừu tượng hóa Sự kiện cho ứng dụng. Thành phần khung (framework) QP/C phải định nghĩa một sự trừu tượng hóa chung cho Sự kiện (Event), để nó có thể được khởi tạo, trao đổi và diễn giải chính xác bởi cả ứng dụng QP/C và chính khung làm việc.
+* **SRS_QP_EVT_20:** Mỗi thực thể sự kiện phải chứa Tín hiệu (Signal). Tín hiệu sự kiện mang thông tin về sự việc đã xảy ra. Ứng dụng QP/C cần truy cập dễ dàng vào Tín hiệu này để xác định cách xử lý sự kiện tương ứng.
+* **SRS_QP_EVT_21:** Hỗ trợ tối đa 64K (65536) tín hiệu sự kiện. Framework phải cung cấp khả năng quản lý lên đến 64.000 tín hiệu (sử dụng 2 byte bộ nhớ cho mỗi tín hiệu sự kiện).
+* **SRS_QP_EVT_22:** Dự phòng một số tín hiệu cho mục đích nội bộ. Framework có thể dành riêng một số tín hiệu để triển khai các tính năng bên trong các máy trạng thái phân tầng (hierarchical state machines). Các tín hiệu dự phòng này thường có giá trị số thấp nhất.
+* **SRS_QP_EVT_23:** Cung cấp giá trị tín hiệu thấp nhất cho phép trong ứng dụng. Để tránh xung đột với các tín hiệu dự phòng của hệ thống, framework phải cung cấp giới hạn số thấp nhất cho các tín hiệu ở cấp ứng dụng (ví dụ: các tín hiệu ứng dụng sẽ bắt đầu từ một giá trị `SIGNAL_OFFSET` trở đi).
+* **SRS_QP_EVT_30:** Cho phép ứng dụng tạo sự kiện với các Tham số tùy chỉnh. Cơ chế trừu tượng hóa sự kiện phải cho phép người dùng định nghĩa các tham số bổ sung cần thiết cho ứng dụng và khởi tạo các sự kiện đi kèm với các tham số đó.
+* **SRS_QP_EVT_31:** Chứa các dữ liệu quản lý nội bộ. Cấu trúc sự kiện có thể chứa thêm các mục dữ liệu khác để phục vụ việc quản lý sự kiện bên trong framework (liên quan đến quản lý bộ nhớ sự kiện).
+* **SRS_QP_EVT_40:** Cấu hình khởi tạo tùy chỉnh tại thời điểm biên dịch. Framework có thể được cấu hình lúc biên dịch để cho phép khởi tạo tùy chỉnh trên các thực thể sự kiện. Khi được cấu hình, framework sẽ gọi hàm khởi tạo tùy chỉnh này khi một sự kiện động (dynamic event) được tạo ra.

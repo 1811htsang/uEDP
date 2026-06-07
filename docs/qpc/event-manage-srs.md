@@ -1,22 +1,8 @@
 # Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Quản lý Sự kiện trong CIEDPC/uEDP
 
-## 1. Hỗ trợ Sự kiện tĩnh (Immutable Events)
-
-* **SRS_QP_EMM_00: Hỗ trợ các sự kiện không thay đổi (Immutable Events)**
-  * *Mô tả:* Khung làm việc QP/C phải cung cấp cách thức để tạo và khởi tạo các sự kiện tĩnh (thường được lưu trong ROM). Framework phải nhận diện và phân biệt được sự kiện tĩnh với sự kiện động (mutable) để không thực hiện các thao tác quản lý bộ nhớ sai lầm trên chúng.
-
-## 2. Hỗ trợ Sự kiện động (Mutable Events)
-
-* **SRS_QP_EMM_10: Hỗ trợ các sự kiện có thể thay đổi (Mutable Events)**
-  * *Mô tả:* Framework phải cung cấp cơ chế để tạo và khởi tạo các sự kiện động. Tương tự như trên, nó phải phân biệt được chúng với sự kiện tĩnh để quản lý vòng đời một cách chính xác.
-* **SRS_QP_EMM_11: Hỗ trợ tối đa 15 vùng nhớ sự kiện (Event Pools)**
-  * *Mô tả:* Framework phải hỗ trợ nhiều vùng nhớ sự kiện (event pools) với kích thước khối (block size) khác nhau để đảm bảo tính định thời (deterministic). Số lượng vùng nhớ tối đa có thể cấu hình khi biên dịch, nhưng không vượt quá 15.
-
-## 3. Cấp phát và Giải phóng bộ nhớ
-
-* **SRS_QP_EMM_20: Cung cấp phương thức cấp phát sự kiện động khi thực thi (Runtime Allocation)**
-  * *Mô tả:* Framework phải cung cấp hàm để cấp phát sự kiện động dựa trên kích thước sự kiện yêu cầu (tự động chọn vùng nhớ có kích thước khối nhỏ nhất phù hợp). Phương thức này phải dùng được cho cả Active Objects, ISRs (ngắt), trình điều khiển thiết bị hoặc các luồng RTOS thông thường.
-* **SRS_QP_EMM_30: Hỗ trợ tự động thu hồi (Recycling) sự kiện theo chính sách "Zero-copy"**
-  * *Mô tả:* Framework phải theo dõi mọi lần sử dụng của một sự kiện động để hỗ trợ chính sách quản lý bộ nhớ "không sao chép" (zero-copy). Framework phải tự động thu hồi (recycle) một sự kiện về vùng nhớ khi nó không còn được sử dụng bởi bất kỳ đối tượng nào. Thông thường, cơ chế này được thực hiện qua thuật toán đếm tham chiếu (reference counting).
-* **SRS_QP_EMM_40: Cung cấp phương thức thu hồi sự kiện một cách tường minh**
-  * *Mô tả:* Framework phải cung cấp một phương thức để các thành phần hệ thống (AO, ISR, device driver...) có thể chủ động trả lại (recycle) các sự kiện động về vùng nhớ tương ứng một cách thủ công khi cần thiết.
+* **SRS_QP_EMM_00:** Hỗ trợ các sự kiện không thay đổi (Immutable Events). Khung làm việc QP/C phải cung cấp cách thức để tạo và khởi tạo các sự kiện tĩnh (thường được lưu trong ROM). Framework phải nhận diện và phân biệt được sự kiện tĩnh với sự kiện động (mutable) để không thực hiện các thao tác quản lý bộ nhớ sai lầm trên chúng cũng như không có chuyển đổi một immutable event thành mutable event.
+* **SRS_QP_EMM_10:** Hỗ trợ các sự kiện có thể thay đổi (Mutable Events). Framework phải cung cấp cơ chế để tạo và khởi tạo các sự kiện động. Tương tự như trên, nó phải phân biệt được chúng với sự kiện tĩnh để quản lý vòng đời một cách chính xác.
+* **SRS_QP_EMM_11:** Hỗ trợ tối đa 15 vùng nhớ sự kiện (Event Pools). Framework phải hỗ trợ nhiều vùng nhớ sự kiện (event pools) với kích thước khối (block size) khác nhau để đảm bảo tính định thời (deterministic). Số lượng vùng nhớ tối đa có thể cấu hình khi biên dịch, nhưng không vượt quá 15.
+* **SRS_QP_EMM_20:** Cung cấp phương thức cấp phát sự kiện động khi thực thi (Runtime Allocation). Framework phải cung cấp hàm để cấp phát sự kiện động dựa trên kích thước sự kiện yêu cầu (tự động chọn vùng nhớ có kích thước khối nhỏ nhất phù hợp). Phương thức này phải dùng được cho cả Active Objects, ISRs (ngắt), trình điều khiển thiết bị hoặc các luồng RTOS thông thường.
+* **SRS_QP_EMM_30:** Hỗ trợ tự động thu hồi (Recycling) sự kiện theo chính sách "Zero-copy". Framework phải theo dõi mọi lần sử dụng của một sự kiện động để hỗ trợ chính sách quản lý bộ nhớ "không sao chép" (zero-copy). Framework phải tự động thu hồi (recycle) một sự kiện về vùng nhớ khi nó không còn được sử dụng bởi bất kỳ đối tượng nào. Thông thường, cơ chế này được thực hiện qua thuật toán đếm tham chiếu (reference counting).
+* **SRS_QP_EMM_40:** Cung cấp phương thức thu hồi sự kiện một cách tường minh. Framework phải cung cấp một phương thức để các thành phần hệ thống (AO, ISR, device driver...) có thể chủ động trả lại (recycle) các sự kiện động về vùng nhớ tương ứng một cách thủ công khi cần thiết.

@@ -1,31 +1,19 @@
 # Tài liệu đặc tả yêu cầu phần mềm (SRS) cho mô hình Active Object trong CIEDPC/uEDP
 
-## 1. Các yêu cầu về mô hình Active Object (Core Concepts)
-
-* **SRS_QP_AO_01 (Encapsulation):** Mỗi Active Object phải đóng gói các dữ liệu trạng thái (state variables) và các hàm xử lý sự kiện. Dữ liệu bên trong AO không được để các thực thể khác truy cập trực tiếp.
-* **SRS_QP_AO_02 (Thread of Control):** Mỗi Active Object phải sở hữu một luồng thực thi (thread of control) riêng biệt.
-* **SRS_QP_AO_03 (Event Queue):** Mỗi Active Object phải có một hàng đợi sự kiện (event queue) riêng để nhận các sự kiện đến một cách bất đồng bộ.
-* **SRS_QP_AO_04 (Run-to-Completion - RTC):** Việc xử lý mỗi sự kiện bởi Active Object phải tuân thủ ngữ nghĩa Run-to-Completion. Nghĩa là AO phải xử lý xong hoàn toàn một sự kiện trước khi bắt đầu xử lý sự kiện tiếp theo từ hàng đợi.
-
-## 2. Các yêu cầu về Quản lý Active Object
-
-* **SRS_QP_AO_20 (Initialization):** Khung làm việc (framework) phải cung cấp cơ chế để khởi tạo một Active Object, bao gồm việc thực hiện hành động khởi tạo trạng thái ban đầu.
-* **SRS_QP_AO_21 (Execution/Start):** Khung làm việc phải cung cấp phương thức để bắt đầu thực thi một Active Object, bao gồm việc gán mức ưu tiên (priority), hàng đợi sự kiện và bộ nhớ stack (nếu cần).
-* **SRS_QP_AO_22 (Priority):** Mỗi Active Object phải được gán một mức ưu tiên duy nhất trong hệ thống.
-* **SRS_QP_AO_23 (Termination):** Khung làm việc nên cung cấp cơ chế để dừng (terminate) việc thực thi của một Active Object một cách an toàn (tùy chọn tùy vào kernel).
-
-## 3. Các yêu cầu về Chuyển phát Sự kiện (Event Delivery)
-
-* **SRS_QP_AO_30 (Direct Post):** Hệ thống phải hỗ trợ gửi sự kiện trực tiếp (Direct Event Posting) từ một thực thể (AO hoặc ISR) tới một Active Object cụ thể.
-* **SRS_QP_AO_31 (Publish-Subscribe):** Hệ thống phải hỗ trợ mô hình Xuất bản-Đăng ký (Publish-Subscribe), cho phép gửi sự kiện tới tất cả các Active Object đã đăng ký nhận loại sự kiện đó mà không cần biết danh tính của chúng.
-* **SRS_QP_AO_32 (FIFO/LIFO):** Mặc định sự kiện phải được đưa vào hàng đợi theo cơ chế FIFO (vào trước ra trước), nhưng khung làm việc cũng có thể hỗ trợ LIFO (vào sau ra trước) cho các trường hợp đặc biệt (như xử lý lỗi).
-
-## 4. Các yêu cầu về Quản lý Bộ nhớ Sự kiện
-
-* **SRS_QP_AO_40 (Event Allocation):** Hệ thống phải cung cấp cơ chế cấp phát sự kiện động (dynamic event allocation) từ các vùng nhớ chung (event pools).
-* **SRS_QP_AO_41 (Event Recycling):** Khung làm việc phải tự động giải phóng (recycle) các sự kiện động sau khi chúng đã được xử lý bởi tất cả các Active Object nhận được chúng, để tránh rò rỉ bộ nhớ.
-* **SRS_QP_AO_42 (Immutability):** Các sự kiện sau khi được tạo và gửi đi không được phép thay đổi nội dung (read-only) để đảm bảo an toàn luồng (thread-safety) mà không cần dùng mutex.
-
-## 5. Các yêu cầu về Thời gian (Time Management)
-
-* **SRS_QP_AO_50 (Time Events):** Khung làm việc phải cung cấp cơ chế "Sự kiện thời gian" (Time Events) để gửi một sự kiện tới Active Object sau một khoảng thời gian nhất định hoặc theo chu kỳ định sẵn.
+* **SRS_QP_AO_00:** Khái niệm trừu tượng Đối tượng Hoạt động (Active Object) do thành phần Khung QP/C cung cấp có thể được tùy chỉnh bởi Ứng dụng QP/C và được thực thi bởi QP/C theo mô hình tính toán Đối tượng Hoạt động. Thành phần QP/C Framework có thể đáp ứng yêu cầu này bằng cách cung cấp trừu tượng Đối tượng Hoạt động (Active Object) dưới dạng một lớp, mà các ứng dụng QP/C có thể tùy chỉnh bằng cách kế thừa lớp con. Lớp cơ sở Đối tượng Hoạt động như vậy phải có thể tùy chỉnh tại thời điểm biên dịch cho nhiều loại nhân thời gian thực khác nhau, bao gồm cả các hệ điều hành thời gian thực truyền thống có cơ chế chặn và các nhân không chặn dựa trên sự kiện.
+* **SRS_QP_AO_01:** Thành phần QP/C Framework phải có khả năng quản lý số lượng Đối tượng Hoạt động có thể cấu hình trong quá trình biên dịch, không vượt quá 64 thể hiện.
+* **SRS_QP_AO_10:** Khái niệm trừu tượng Đối tượng Hoạt động sẽ cung cấp mức độ ưu tiên duy nhất cho mỗi thể hiện Đối tượng Hoạt động.
+* **SRS_QP_AO_11:** Thứ tự ưu tiên của Đối tượng đang hoạt động sẽ sử dụng sơ đồ đánh số ưu tiên trực tiếp. Độ ưu tiên của Đối tượng đang hoạt động phải tuân theo sơ đồ đánh số trực tiếp được định nghĩa như sau: độ ưu tiên 1 tương ứng với độ ưu tiên thấp nhất, và các số cao hơn tương ứng với độ ưu tiên cao hơn (sơ đồ đánh số ưu tiên trực tiếp). Độ ưu tiên 0 không thể được gán cho bất kỳ Đối tượng đang hoạt động nào, và được dành riêng cho luồng nhàn rỗi (hoặc trạng thái nhàn rỗi) của nhân thời gian thực bên dưới.
+* **SRS_QP_AO_12:** Khái niệm trừu tượng Đối tượng Hoạt động có thể cung cấp một "ưu tiên phụ" thứ hai cho mỗi thể hiện Đối tượng Hoạt động.
+* **SRS_QP_AO_20:** Lớp trừu tượng Active Object sẽ cung cấp một hàng đợi sự kiện cho mỗi thể hiện của Active Object.
+* **SRS_QP_AO_21:** Hàng đợi sự kiện Active Object phải tuân thủ chính sách FIFO (vào trước ra trước) để đăng các sự kiện từ bên ngoài Active Object.
+* **SRS_QP_AO_22:** Hàng đợi sự kiện Active Object sẽ cung cấp thêm chính sách LIFO cho các sự kiện tự đăng từ bên trong Active Object.
+* **SRS_QP_AO_23:** Dung lượng tối đa của hàng đợi sự kiện Đối tượng Hoạt động có thể được cấu hình trong quá trình chạy.
+* **SRS_QP_AO_30:** Khái niệm trừu tượng Active Object có thể cung cấp ngữ cảnh thực thi tùy chọn cho mỗi thể hiện Active Object. The execution context (e.g., thread) attribute shall be compile-time configurable to allow various thread types corresponding to the chosen real-time kernel.
+* **SRS_QP_AO_31:** Thành phần QP/C Framework phải cho phép khởi tạo các thể hiện Active Object trong thời gian chạy.
+* **SRS_QP_AO_32:** Mặc định sự kiện phải được đưa vào hàng đợi theo cơ chế FIFO (vào trước ra trước), nhưng khung làm việc cũng có thể hỗ trợ LIFO (vào sau ra trước) cho các trường hợp đặc biệt (như xử lý lỗi).
+* **SRS_QP_AO_40:** Khái niệm trừu tượng Active Object có thể cung cấp một "đối tượng hệ điều hành" tùy chọn cho mỗi thể hiện Active Object. "Đối tượng hệ điều hành" tùy chọn sẽ có thể định cấu hình trong thời gian biên dịch để cho phép các loại đối tượng hệ điều hành khác nhau tương ứng với hạt nhân thời gian thực đã chọn.
+* **SRS_QP_AO_50:** Sự trừu tượng của Active Object sẽ bao hàm các thành phần bên trong của nó. Lớp trừu tượng Active Object cần che giấu và bảo vệ các thành phần bên trong của nó, cả về việc đọc và ghi bởi bất kỳ thực thể bên ngoài nào. Ngoài ra, thành phần QP/C Framework phải cho phép Ứng dụng QP/C che giấu và bảo vệ bất kỳ thuộc tính bổ sung nào được thêm vào các Active Object kế thừa.
+* **SRS_QP_AO_51:** Khái niệm trừu tượng Đối tượng Hoạt động (Active Object) cho phép các ứng dụng dễ dàng truy cập các thuộc tính bên trong Đối tượng Hoạt động từ bên trong đó. Bất chấp Yêu cầu **SRS_QP_AO_10**, thành phần Khung QP/C phải cho phép truy cập dễ dàng và tiết kiệm chi phí tính toán vào các thuộc tính bên trong của Đối tượng Hoạt động từ bên trong AO, chẳng hạn như từ máy trạng thái nội bộ của nó.
+* **SRS_QP_AO_60:** Khái niệm trừu tượng Đối tượng Hoạt động sẽ hỗ trợ xử lý sự kiện hoàn thành khi chạy xong.
+* **SRS_QP_AO_70:** Khái niệm trừu tượng Active Object sẽ hỗ trợ các máy trạng thái.

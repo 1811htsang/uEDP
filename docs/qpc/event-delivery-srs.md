@@ -2,31 +2,19 @@
 
 ## 1. Cơ chế Gửi sự kiện trực tiếp (Direct Event Posting)
 
-* **SRS_QP_EDM_00: Hỗ trợ Gửi sự kiện trực tiếp (Direct Posting)**
-  * *Mô tả:* Khung làm việc (framework) phải cung cấp cơ chế để gửi một sự kiện trực tiếp đến một Đối tượng hoạt động (Active Object - AO) cụ thể.
-* **SRS_QP_EDM_01: Chuyển phát bất đồng bộ (Asynchronous Delivery)**
-  * *Mô tả:* Việc gửi sự kiện trực tiếp phải mang tính bất đồng bộ. Điều này có nghĩa là sự kiện được đưa vào hàng đợi của AO nhận và hàm gửi sẽ trả về ngay lập tức mà không cần đợi AO đó xử lý xong sự kiện.
-* **SRS_QP_EDM_02: An toàn luồng và hỗ trợ ISR (Thread-Safe & ISR-Callable)**
-  * *Mô tả:* Cơ chế gửi sự kiện trực tiếp phải đảm bảo an toàn luồng (thread-safe) và có thể được gọi từ cả các luồng khác (AO khác) hoặc từ các Trình phục vụ ngắt (ISR).
-* **SRS_QP_EDM_03: Hỗ trợ thứ tự FIFO và LIFO**
-  * *Mô tả:* Framework phải cho phép gửi sự kiện vào cuối hàng đợi (FIFO - mặc định) hoặc đưa lên đầu hàng đợi (LIFO) để xử lý khẩn cấp.
-
-## 2. Cơ chế Xuất bản - Đăng ký (Publish-Subscribe)
-
-* **SRS_QP_EDM_10: Hỗ trợ mô hình Xuất bản - Đăng ký (Publish-Subscribe)**
-  * *Mô tả:* Framework phải cung cấp cơ chế chuyển phát sự kiện kiểu "nhiều-đến-nhiều", trong đó bên gửi (publisher) không cần biết danh tính của bên nhận (subscribers).
-* **SRS_QP_EDM_11: Đăng ký dựa trên Tín hiệu (Signal-Based Subscriptions)**
-  * *Mô tả:* Các Đối tượng hoạt động (AO) phải có khả năng đăng ký nhận các sự kiện dựa trên mã tín hiệu (Signal) của sự kiện đó.
-* **SRS_QP_EDM_12: Chuyển phát đa hướng tự động (Automatic Multicasting)**
-  * *Mô tả:* Khi một sự kiện được "xuất bản" (published), framework phải tự động chuyển phát sự kiện đó tới tất cả các AO đã đăng ký nhận tín hiệu tương ứng.
-* **SRS_QP_EDM_13: Hiệu quả thực thi (Runtime Efficiency)**
-  * *Mô tả:* Cơ chế Publish-Subscribe phải được tối ưu hóa để việc chuyển phát sự kiện diễn ra nhanh chóng, lý tưởng nhất là với độ phức tạp thời gian không phụ thuộc quá lớn vào số lượng AO trong hệ thống.
-* **SRS_QP_EDM_14: Xử lý khi không có người đăng ký (Zero Subscriptions)**
-  * *Mô tả:* Việc xuất bản một tín hiệu mà không có bất kỳ AO nào đăng ký nhận phải được coi là hợp lệ và framework phải xử lý an toàn (thường là tự động giải phóng sự kiện đó).
-
-## 3. Yêu cầu về độ tin cậy và quản lý
-
-* **SRS_QP_EDM_20: Ngăn chặn tràn hàng đợi (Queue Overflow Protection)**
-  * *Mô tả:* Framework phải cung cấp cơ chế để phát hiện hoặc xử lý tình huống hàng đợi sự kiện của một AO bị đầy khi có sự kiện mới gửi đến.
-* **SRS_QP_EDM_30: Khả năng quan sát (Observability/Traceability)**
-  * *Mô tả:* Các cơ chế chuyển phát sự kiện phải hỗ trợ việc tích hợp các công cụ phần mềm trung gian (như QSPY) để theo dõi quá trình gửi/nhận sự kiện giữa các thành phần.
+* **SRS_QP_EDM_00:** Hỗ trợ Gửi sự kiện trực tiếp (Direct Posting). Khung làm việc (framework) phải cung cấp cơ chế để gửi một sự kiện trực tiếp đến một Đối tượng hoạt động (Active Object - AO) cụ thể.
+* **SRS_QP_EDM_01:** Thành phần QP/C Framework sẽ cung cấp khả năng tự đăng sự kiện trực tiếp lên các thể hiện Active Object dựa trên chính sách LIFO. Tự đăng sự kiện có nghĩa là một thể hiện của Đối tượng Hoạt động (Active Object) sẽ đăng một sự kiện vào hàng đợi sự kiện của nó. Cơ chế tự đăng sự kiện này phải sử dụng cùng một hàng đợi sự kiện với chính sách FIFO mặc định. Tuy nhiên, ngoài chính sách FIFO mặc định, nó cũng phải cung cấp chính sách LIFO (Vào sau ra trước). Việc tự đăng sự kiện với chính sách LIFO này phải sử dụng một API khác biệt rõ rệt so với việc đăng sự kiện trực tiếp mặc định với chính sách FIFO.
+* **SRS_QP_EDM_10:** Thành phần QP/C Framework sẽ cung cấp sự đảm bảo về việc phân phối sự kiện cho cơ chế đăng sự kiện trực tiếp. QP/C Framework component shall detect all conditions that could prevent a posted event from reaching the recipient Active Object (in particular, event queue overflow and event-pool depletion for mutable events).
+* **SRS_QP_EDM_50:** Thành phần Khung QP/C sẽ cung cấp cơ chế phân phối sự kiện đăng ký xuất bản. Mô hình xuất bản-đăng ký sẽ sử dụng việc đăng sự kiện trực tiếp (mặc định, biến thể đáng tin cậy dựa trên chính sách FIFO) làm cơ chế cấp thấp để phát đa hướng các sự kiện đã đăng ký.
+* **SRS_QP_EDM_51:** Cơ chế phân phối sự kiện xuất bản-đăng ký có thể được cấu hình và tùy chọn. Ứng dụng QP/C sẽ khởi tạo và cấu hình cơ chế phân phối xuất bản-đăng ký bằng cách cung cấp số lượng tối đa các tín hiệu sự kiện có thể đăng ký và một bộ đệm bộ nhớ để lưu trữ thông tin đăng ký. Trong trường hợp đặc biệt, ứng dụng QP/C có thể chọn không khởi tạo cơ chế xuất bản-đăng ký, trong trường hợp đó tính năng này sẽ không hoạt động và sẽ không gây lãng phí tài nguyên (RAM).
+* **SRS_QP_EDM_52:** Thành phần QP/C Framework sẽ cho phép các thể hiện của Active Object đăng ký nhận tín hiệu sự kiện nhất định trong thời gian chạy. API này có thể được gọi nhiều lần bởi một Đối tượng Hoạt động nhất định để đăng ký nhận các tín hiệu sự kiện khác nhau. Việc đăng ký sự kiện yêu cầu khởi tạo tính năng xuất bản-đăng ký, và các nỗ lực đăng ký mà không có sự khởi tạo trước đó sẽ được coi là lỗi lập trình. Tương tự, việc đăng ký nhận một tín hiệu đã được đăng ký (bởi cùng một Đối tượng Hoạt động) cũng sẽ được coi là lỗi lập trình.
+* **SRS_QP_EDM_53:** Thành phần QP/C Framework phải cho phép các thể hiện của Active Object hủy đăng ký khỏi tín hiệu sự kiện đã đăng ký trong thời gian chạy.
+* **SRS_QP_EDM_54:** Thành phần QP/C Framework phải cho phép các thể hiện Active Object hủy đăng ký khỏi tất cả các tín hiệu sự kiện đã đăng ký trong thời gian chạy.
+* **SRS_QP_EDM_55:** Việc truyền phát sự kiện đa điểm trong quá trình xuất bản phải được hoàn tất trước khi xử lý các sự kiện đã được xuất bản.
+* **SRS_QP_EDM_61:** Thành phần QP/C Framework có thể cung cấp cơ chế đăng sự kiện nỗ lực tốt nhất thay thế mà không đảm bảo phân phối sự kiện. Cơ chế đăng sự kiện nỗ lực tốt nhất thay thế mà không đảm bảo phân phối sự kiện sẽ phát hiện rằng một sự kiện nhất định không thể được đăng, nhưng thành phần QP/C Framework sẽ chuyển thông tin này đến Ứng dụng QP/C thay vì chuyển sang trạng thái không an toàn. Cơ chế đăng sự kiện trực tiếp thay thế không đảm bảo phân phối sự kiện phải sử dụng API khác với cơ chế mặc định có đảm bảo phân phối.
+* **SRS_QP_EDM_62:** Cơ chế đăng sự kiện không đáng tin cậy thay thế sẽ không can thiệp vào việc đăng sự kiện đáng tin cậy mặc định. Một ví dụ về sự can thiệp giữa hai cơ chế đăng sự kiện là làm cạn kiệt dung lượng hàng đợi do đăng sự kiện không đáng tin cậy, do đó việc đăng sự kiện đáng tin cậy không thành công. Do đó, cơ chế đăng sự kiện không đáng tin cậy không nên làm cạn kiệt hoàn toàn tài nguyên hàng đợi sự kiện mà nên để lại một số mục nhập hàng đợi không sử dụng cụ thể (biên độ an toàn) để phân phối sự kiện đáng tin cậy.
+* **SRS_QP_EDM_64:** Phân bổ sự kiện có thể thay đổi (mutable event) sẽ đáng tin cậy. Yêu cầu này cũng có nghĩa là Ứng dụng QP/C chịu trách nhiệm xác định kích thước đầy đủ tất cả các nhóm sự kiện.
+* **SRS_QP_EDM_65:** Thành phần QP/C Framework có thể cung cấp phương pháp thay thế không đáng tin cậy để phân bổ các sự kiện có thể thay đổi. Phương pháp thay thế, chỉ nỗ lực hết sức để phân bổ các sự kiện có thể thay đổi phải sử dụng API khác với phân bổ sự kiện đáng tin cậy mặc định. Thành phần QP/C Framework vẫn sẽ phát hiện ra rằng một sự kiện có thể thay đổi không thể được phân bổ, nhưng framework sẽ chuyển thông tin này đến Ứng dụng QP/C thay vì vào trạng thái an toàn dự phòng. Chính sách phân bổ sự kiện không đáng tin cậy sẽ là một trường hợp đặc biệt và nên được sử dụng một cách thận trọng.
+* **SRS_QP_EDM_66:** Phương pháp phân bổ sự kiện nỗ lực tốt nhất thay thế sẽ không can thiệp vào việc phân bổ sự kiện đáng tin cậy mặc định. Phân bổ sự kiện thay thế không đáng tin cậy phải cùng tồn tại với phân bổ sự kiện đáng tin cậy mặc định. Một ví dụ về sự can thiệp giữa hai phương pháp phân bổ sự kiện là làm cạn kiệt dung lượng hàng đợi do đăng sự kiện không đáng tin cậy, do đó việc đăng sự kiện đáng tin cậy không thành công và khiến hệ thống chuyển sang trạng thái không an toàn.
+* **SRS_QP_EDM_80:** Tất cả các cơ chế phân phối sự kiện sẽ không có nguy cơ đồng thời. "Không có nguy cơ đồng thời" có nghĩa là không có các mối nguy hiểm như điều kiện cuộc đua và cuộc đua dữ liệu. Điều đó cũng có nghĩa là thành phần QP/C Framework phải đảm bảo rằng sự kiện hiện tại không thay đổi (ví dụ: không bị hỏng hoặc tái chế sớm) trong tất cả các bước RTC mà nó tham gia.
+* **SRS_QP_EDM_81:** Tất cả các cơ chế phân phối sự kiện sẽ là xác định (deterministic).

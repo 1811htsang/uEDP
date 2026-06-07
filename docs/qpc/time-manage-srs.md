@@ -1,36 +1,11 @@
 # Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Quản lý Thời gian trong CIEDPC/uEDP
 
-## 1. Yêu cầu về Thiết lập Sự kiện Thời gian (Arming)
-
-* **SRS_QP_TM_00: Hỗ trợ Sự kiện thời gian một lần (One-shot Time Events)**
-  * *Mô tả:* Khung làm việc phải cung cấp cơ chế để một Sự kiện thời gian được thiết lập (armed) để hết hạn sau một khoảng thời gian xác định (số lượng tích tắc - ticks). Sau khi hết hạn, sự kiện sẽ được gửi đến Đối tượng hoạt động (AO) và tự động dừng lại.
-* **SRS_QP_TM_01: Hỗ trợ Sự kiện thời gian chu kỳ (Periodic Time Events)**
-  * *Mô tả:* Khung làm việc phải cung cấp cơ chế để một Sự kiện thời gian tự động thiết lập lại sau mỗi khoảng chu kỳ nhất định. Sự kiện sẽ được gửi định kỳ đến AO cho đến khi bị dừng lại một cách tường minh.
-* **SRS_QP_TM_02: Cho phép thiết lập thông số thời gian khi Arming**
-  * *Mô tả:* Khi thiết lập một Sự kiện thời gian, ứng dụng phải có khả năng chỉ định số lượng tích tắc (ticks) cho lần hết hạn đầu tiên và số lượng tích tắc cho các lần lặp lại (nếu là sự kiện chu kỳ).
-
-## 2. Yêu cầu về Hủy bỏ và Thiết lập lại (Disarming & Re-arming)
-
-* **SRS_QP_TM_10: Hỗ trợ dừng Sự kiện thời gian (Disarming)**
-  * *Mô tả:* Khung làm việc phải cung cấp phương thức để dừng (disarm) một Sự kiện thời gian đã được thiết lập trước đó nhưng chưa hết hạn. Sau khi dừng, sự kiện đó không được phép gửi đến AO nữa.
-* **SRS_QP_TM_11: Hỗ trợ thiết lập lại (Re-arming) hiệu quả**
-  * *Mô tả:* Khung làm việc nên cung cấp cơ chế để thiết lập lại một Sự kiện thời gian đang chạy với các thông số thời gian mới mà không cần phải gọi lệnh dừng trước đó một cách thủ công.
-
-## 3. Yêu cầu về Đa cơ sở thời gian (Multiple Time Bases)
-
-* **SRS_QP_TM_20: Hỗ trợ nhiều cơ sở thời gian (Multiple Time Bases)**
-  * *Mô tả:* Framework phải hỗ trợ nhiều "Tích tắc hệ thống" (System Ticks) độc lập. Điều này cho phép các Sự kiện thời gian hoạt động trên các thang đo thời gian khác nhau (ví dụ: một cơ sở thời gian 10ms cho các tác vụ nhanh và một cơ sở thời gian 1s cho các tác vụ chậm).
-* **SRS_QP_TM_21: Chỉ định Cơ sở thời gian khi khởi tạo**
-  * *Mô tả:* Mỗi Sự kiện thời gian phải có khả năng liên kết với một cơ sở thời gian cụ thể trong số các cơ sở thời gian có sẵn của hệ thống.
-
-## 4. Yêu cầu về Xử lý Tích tắc (Tick Processing)
-
-* **SRS_QP_TM_30: Xử lý tích tắc an toàn trong ISR (ISR-Safe Tick Processing)**
-  * *Mô tả:* Hàm xử lý tích tắc (Tick Function) của framework phải được thiết kế để có thể gọi an toàn từ bên trong một Trình phục vụ ngắt (ISR) hoặc một luồng hệ thống định kỳ.
-* **SRS_QP_TM_31: Hiệu suất xử lý tích tắc**
-  * *Mô tả:* Việc xử lý tích tắc phải diễn ra nhanh chóng và mang tính định thời (deterministic). Thời gian xử lý tích tắc không nên phụ thuộc tuyến tính vào tổng số lượng Sự kiện thời gian có trong hệ thống, mà chỉ phụ thuộc vào số lượng sự kiện thực sự hết hạn tại thời điểm đó.
-
-## 5. Yêu cầu về Chuyển phát Sự kiện (Delivery)
-
-* **SRS_QP_TM_40: Liên kết với một Đối tượng hoạt động (Active Object Association)**
-  * *Mô tả:* Mỗi Sự kiện thời gian khi được tạo ra phải được liên kết với duy nhất một Đối tượng hoạt động (AO) nhận. Khi sự kiện hết hạn, framework sẽ tự động gửi (post) sự kiện đó vào hàng đợi của AO đã đăng ký.
+* **SRS_QP_TM_00:** Thành phần QP/C Framework sẽ hỗ trợ Time Events. Hỗ trợ cho các sự kiện thời gian có nghĩa là thành phần QP/C Framework sẽ cung cấp một sự trừu tượng hóa Sự kiện thời gian hoạt động giống như các sự kiện khác trong QP/C, nhưng được trang bị thêm khái niệm về thời gian trôi qua. Thời gian trôi qua bao gồm các bước rời rạc (tích tắc đồng hồ).
+* **SRS_QP_TM_10:** Thành phần QP / C Framework sẽ hỗ trợ tối đa 15 tickrates. Hỗ trợ nhiều tốc độ đánh dấu đồng hồ có nghĩa là thành phần QP / C Framework sẽ cung cấp nhiều cách khác nhau để nhóm các Sự kiện thời gian và liên kết chúng với một tốc độ đánh dấu đồng hồ nhất định. Số lượng tốc độ đánh dấu đồng hồ tối đa được hỗ trợ bởi thành phần QP / C Framework phải được định cấu hình thời gian biên dịch với tối đa là 15.
+* **SRS_QP_TM_11:** Thành phần QP/C Framework sẽ cung cấp các hoạt động xử lý tích tắc đồng hồ cho tất cả các tốc độ xung nhịp được hỗ trợ mà Ứng dụng QP/C phải gọi định kỳ để phục vụ các Sự kiện thời gian được trang bị. Hoạt động xử lý tích tắc đồng hồ sẽ cập nhật tất cả các Sự kiện thời gian được trang bị liên quan đến một tốc độ đánh dấu nhất định. Thao tác xử lý tích tắc đồng hồ phải có thể gọi được từ cấp độ ngắt và cả từ cấp luồng (ví dụ: từ Đối tượng đang hoạt động). Ngoài ra, các hoạt động xử lý tick đồng hồ cho các tốc độ tick khác nhau phải được phép ưu tiên lẫn nhau (ví dụ: tốc độ tick đồng hồ cao hơn có thể được phục vụ từ ngắt trong khi các hoạt động khác được phục vụ từ luồng).
+* **SRS_QP_TM_20:** Thành phần QP / C Framework sẽ cung cấp khởi tạo Sự kiện thời gian.
+* **SRS_QP_TM_21:** Thành phần Khung QP / C sẽ cho phép một Sự kiện thời gian được trang bị cho cả một lần và hết hạn định kỳ.
+* **SRS_QP_TM_22:** Thành phần Khung QP / C sẽ cho phép một Sự kiện thời gian được giải giáp một cách rõ ràng. Sự kiện thời gian sẽ cung cấp dịch vụ để giải giáp nó. Dịch vụ này sẽ có sẵn cho các Sự kiện thời gian được trang bị cho một lần hoặc hết hạn định kỳ. Vô hiệu hóa một Sự kiện Thời gian là tốt và không được coi là một lỗi.
+* **SRS_QP_TM_23:** Thành phần Khung QP / C sẽ cho phép một Sự kiện Thời gian được trang bị lại. Sự kiện thời gian sẽ cung cấp một dịch vụ tự trang bị lại để hết hạn trong một số tích tắc đồng hồ được chỉ định (của tốc độ đánh dấu liên quan). Dịch vụ này sẽ có sẵn cho các Sự kiện thời gian được trang bị cho một lần hoặc hết hạn định kỳ. Khởi động lại Sự kiện thời gian bị vô hiệu hóa là tốt và không được coi là lỗi.
+* **SRS_QP_TM_30:** Thành phần Khung QP/C sẽ cung cấp một hoạt động để kiểm tra xem có bất kỳ Sự kiện Thời gian nào được trang bị cho một tốc độ đánh dấu nhất định hay không.
+* **SRS_QP_TM_40:** Thành phần QP / C Framework sẽ hỗ trợ các chế độ ngủ công suất thấp. Thành phần QP / C Framework sẽ phát hiện tình trạng nhàn rỗi của hệ thống và cung cấp cơ chế để Ứng dụng QP / C vào chế độ ngủ mong muốn một cách an toàn. "Vào chế độ ngủ an toàn" có nghĩa là không nên có điều kiện và tình huống chạy đua mà hệ thống sẽ chuyển sang chế độ ngủ với một số sự kiện hiện diện trong hàng đợi sự kiện Active Object và do đó yêu cầu xử lý.
