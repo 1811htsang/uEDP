@@ -1,4 +1,4 @@
-# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Quản lý Thời gian trong CIEDPC/uEDP
+# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Quản lý Thời gian của QP/C
 
 * **SRS_QP_TM_00:** Thành phần QP/C Framework sẽ hỗ trợ Time Events. Hỗ trợ cho các sự kiện thời gian có nghĩa là thành phần QP/C Framework sẽ cung cấp một sự trừu tượng hóa Sự kiện thời gian hoạt động giống như các sự kiện khác trong QP/C, nhưng được trang bị thêm khái niệm về thời gian trôi qua. Thời gian trôi qua bao gồm các bước rời rạc (tích tắc đồng hồ).
 * **SRS_QP_TM_10:** Thành phần QP / C Framework sẽ hỗ trợ tối đa 15 tickrates. Hỗ trợ nhiều tốc độ đánh dấu đồng hồ có nghĩa là thành phần QP / C Framework sẽ cung cấp nhiều cách khác nhau để nhóm các Sự kiện thời gian và liên kết chúng với một tốc độ đánh dấu đồng hồ nhất định. Số lượng tốc độ đánh dấu đồng hồ tối đa được hỗ trợ bởi thành phần QP / C Framework phải được định cấu hình thời gian biên dịch với tối đa là 15.

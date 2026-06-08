@@ -1,4 +1,4 @@
-# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho mô hình Active Object trong CIEDPC/uEDP
+# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho mô hình Active Object của QP/C
 
 * **SRS_QP_AO_00:** Khái niệm trừu tượng Đối tượng Hoạt động (Active Object) do thành phần Khung QP/C cung cấp có thể được tùy chỉnh bởi Ứng dụng QP/C và được thực thi bởi QP/C theo mô hình tính toán Đối tượng Hoạt động. Thành phần QP/C Framework có thể đáp ứng yêu cầu này bằng cách cung cấp trừu tượng Đối tượng Hoạt động (Active Object) dưới dạng một lớp, mà các ứng dụng QP/C có thể tùy chỉnh bằng cách kế thừa lớp con. Lớp cơ sở Đối tượng Hoạt động như vậy phải có thể tùy chỉnh tại thời điểm biên dịch cho nhiều loại nhân thời gian thực khác nhau, bao gồm cả các hệ điều hành thời gian thực truyền thống có cơ chế chặn và các nhân không chặn dựa trên sự kiện.
 * **SRS_QP_AO_01:** Thành phần QP/C Framework phải có khả năng quản lý số lượng Đối tượng Hoạt động có thể cấu hình trong quá trình biên dịch, không vượt quá 64 thể hiện.

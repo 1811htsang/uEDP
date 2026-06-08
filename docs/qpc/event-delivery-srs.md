@@ -1,4 +1,4 @@
-# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Cơ chế Chuyển phát Sự kiện trong CIEDPC/uEDPz
+# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Cơ chế Chuyển phát Sự kiện của QP/C
 
 ## 1. Cơ chế Gửi sự kiện trực tiếp (Direct Event Posting)
 

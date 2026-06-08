@@ -1,4 +1,4 @@
-# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Quản lý Sự kiện trong CIEDPC/uEDP
+# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Quản lý Sự kiện của QP/C
 
 * **SRS_QP_EMM_00:** Hỗ trợ các sự kiện không thay đổi (Immutable Events). Khung làm việc QP/C phải cung cấp cách thức để tạo và khởi tạo các sự kiện tĩnh (thường được lưu trong ROM). Framework phải nhận diện và phân biệt được sự kiện tĩnh với sự kiện động (mutable) để không thực hiện các thao tác quản lý bộ nhớ sai lầm trên chúng cũng như không có chuyển đổi một immutable event thành mutable event.
 * **SRS_QP_EMM_10:** Hỗ trợ các sự kiện có thể thay đổi (Mutable Events). Framework phải cung cấp cơ chế để tạo và khởi tạo các sự kiện động. Tương tự như trên, nó phải phân biệt được chúng với sự kiện tĩnh để quản lý vòng đời một cách chính xác.

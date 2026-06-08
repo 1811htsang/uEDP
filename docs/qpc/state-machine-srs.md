@@ -1,4 +1,4 @@
-# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho mô hình Máy trạng thái trong CIEDPC/uEDP
+# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho mô hình Máy trạng thái của QP/C
 
 * **SRS_QP_SM_00 (Hierarchical State Machines):** Khung làm việc phải hỗ trợ máy trạng thái phân tầng (HSM) cho cả các Đối tượng hoạt động (Active Objects) và các đối tượng có trạng thái thụ động (passive stateful objects).
 * **SRS_QP_SM_10 (Implementation Strategies):** Phải hỗ trợ nhiều chiến lược triển khai máy trạng thái khác nhau và có thể hoán đổi cho nhau tại thời điểm thực thi.

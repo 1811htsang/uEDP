@@ -1,47 +1,11 @@
-# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Tracing trong CIEDPC/uEDP
+# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Tracing của QP/C
 
-## 1. Yêu cầu chung về Tracing (General Requirements)
-
-* **SRS_QP_QS_00: Cung cấp cơ chế quan sát phần mềm (Software Instrumentation)**
-  * *Mô tả:* Khung làm việc phải cung cấp một cơ chế quan sát phần mềm tích hợp sẵn để theo dõi hành vi của hệ thống (cả framework và ứng dụng) mà không làm thay đổi đáng kể đặc tính thời gian thực của hệ thống đó.
-
-## 2. Sự ảnh hưởng và Hiệu năng (Overhead & Footprint)
-
-* **SRS_QP_QS_10: Khả năng cấu hình tại thời điểm biên dịch**
-  * *Mô tả:* Cơ chế tracing phải có khả năng được bật hoặc tắt hoàn toàn tại thời điểm biên dịch.
-* **SRS_QP_QS_11: Ảnh hưởng tối thiểu khi tắt (Zero Footprint)**
-  * *Mô tả:* Khi tính năng tracing bị tắt, nó không được tiêu thụ bộ nhớ (ROM/RAM) hoặc chu kỳ CPU (ngoại trừ các macro rỗng).
-* **SRS_QP_QS_12: Ảnh hưởng tối thiểu khi bật (Minimal Runtime Overhead)**
-  * *Mô tả:* Khi được bật, việc ghi lại một dữ liệu vết (trace record) phải cực kỳ nhanh chóng để giảm thiểu hiện tượng "Probe Effect" (thay đổi hành vi hệ thống do việc đo lường).
-
-## 3. Lọc dữ liệu Vết (Trace Filtering)
-
-* **SRS_QP_QS_20: Khả năng lọc tại nguồn (Source-level Filtering)**
-  * *Mô tả:* Hệ thống phải cho phép chọn lọc các loại dữ liệu vết nào được phép gửi đi để tiết kiệm băng thông và giảm tải cho CPU.
-* **SRS_QP_QS_21: Lọc toàn cục (Global Filtering)**
-  * *Mô tả:* Hỗ trợ lọc dựa trên loại bản ghi (Record ID). Ví dụ: Chỉ cho phép ghi lại các sự kiện máy trạng thái mà bỏ qua các sự kiện hàng đợi.
-* **SRS_QP_QS_22: Lọc cục bộ (Local/Object-level Filtering)**
-  * *Mô tả:* Hỗ trợ lọc dựa trên từng đối tượng cụ thể. Ví dụ: Chỉ theo dõi hành vi của một Active Object cụ thể mà bỏ qua các đối tượng khác.
-
-## 4. Thu thập và Định dạng Dữ liệu (Data Collection & Formatting)
-
-* **SRS_QP_QS_30: Sử dụng bộ đệm vòng (Circular Buffer)**
-  * *Mô tả:* Dữ liệu vết phải được lưu trữ tạm thời trong một bộ đệm vòng an toàn để xử lý việc chênh lệch tốc độ giữa việc tạo dữ liệu và việc truyền dữ liệu.
-* **SRS_QP_QS_31: Định dạng dữ liệu bên ngoài mục tiêu (Offline Formatting)**
-  * *Mô tả:* Hệ thống mục tiêu (Target) chỉ gửi dữ liệu thô (binary). Việc chuyển đổi dữ liệu thành văn bản (human-readable) phải được thực hiện ở máy chủ (Host) để giảm tải cho vi xử lý nhúng.
-* **SRS_QP_QS_32: Giao thức truyền tin hiệu quả**
-  * *Mô tả:* Dữ liệu phải được đóng gói theo một giao thức nhẹ (như giao thức QS của QP) để đảm bảo tính toàn vẹn và dễ dàng tách khung dữ liệu (framing).
-
-## 5. Nội dung bản ghi Vết (Trace Records)
-
-* **SRS_QP_QS_40: Hỗ trợ các bản ghi hệ thống và ứng dụng**
-  * *Mô tả:* Framework phải cung cấp các bản ghi có sẵn cho các sự kiện nội bộ (chuyển trạng thái, gửi sự kiện, v.v.) và cho phép người dùng định nghĩa các bản ghi riêng cho ứng dụng.
-* **SRS_QP_QS_41: Dấu thời gian (Timestamps)**
-  * *Mô tả:* Mỗi bản ghi vết phải có khả năng đính kèm một dấu thời gian có độ phân giải cao để phục vụ việc phân tích trình tự thời gian.
-* **SRS_QP_QS_42: Cơ chế từ điển (Dictionary Records)**
-  * *Mô tả:* Để tối ưu băng thông, hệ thống phải hỗ trợ "bản ghi từ điển" để ánh xạ các địa chỉ bộ nhớ hoặc hằng số thành tên (chuỗi văn bản) trên máy chủ.
-
-## 6. Tương tác hai chiều (Bi-directional Interaction)
-
-* **SRS_QP_QS_50: Hỗ trợ nhận lệnh từ Host (Target Input)**
-  * *Mô tả:* Cơ chế QS không chỉ là một chiều (gửi đi) mà còn phải hỗ trợ nhận các lệnh hoặc dữ liệu từ máy chủ để tác động ngược lại vào hệ thống đang chạy (phục vụ Unit Testing hoặc cấu hình trực tiếp).
+* **SRS_QP_QS_00:** Cung cấp cơ chế quan sát phần mềm (Software Instrumentation). Khung làm việc phải cung cấp một cơ chế quan sát phần mềm tích hợp sẵn để theo dõi hành vi của hệ thống (cả framework và ứng dụng) mà không làm thay đổi đáng kể đặc tính thời gian thực của hệ thống đó.
+* **SRS_QP_QS_01:** Thành phần thường trú mục tiêu (target-resident) QS sẽ không hoạt động theo mặc định và chỉ được kích hoạt khi được bật rõ ràng. API theo dõi QS sẽ không hoạt động theo mặc định, có nghĩa là nó sẽ không tạo ra bất kỳ mã thực thi nào. Thiết bị QS sẽ chỉ hoạt động khi được bật rõ ràng. Yêu cầu này KHÔNG có nghĩa là thiết bị theo dõi QS bị xóa hoặc thay đổi trong thành phần QP/C Framework hoặc mã nguồn Ứng dụng QP/C. Thay vào đó, yêu cầu này có nghĩa là thiết bị QS (không hoạt động) có thể được để lại một cách an toàn trong mã nguồn (cả thành phần QP/C Framework và Ứng dụng QP/C) để giúp phát triển, thử nghiệm và bảo trì trong tương lai.
+* **SRS_QP_QS_10:** Thành phần thường trú mục tiêu của QS sẽ sử dụng giao thức dữ liệu nhị phân. Thành phần thường trú mục tiêu QS sẽ tạo ra dữ liệu theo dõi vào bộ đệm RAM được mã hóa bằng giao thức nhị phân. Tính năng chính được yêu cầu từ giao thức được áp dụng là duy trì các khung được phân cách, mỗi khung chứa một bản ghi dấu vết. "Khung" giao thức phải chứa các yếu tố sau:
+* **SRS_QP_QS_20:** Thành phần thường trú mục tiêu của QS sẽ hỗ trợ Bộ lọc toàn cầu (Global filter). Bộ lọc toàn cầu QS dựa trên id bản ghi được liên kết với mỗi bản ghi theo dõi QS (xem SRS_QP_QS_10). Bộ lọc toàn cầu sẽ cho phép Ứng dụng QP / C tắt hoặc bật từng id bản ghi hoặc một tập hợp con tùy ý của id bản ghi. Ví dụ: Ứng dụng QP/C có thể chỉ bật hoặc tắt các bản ghi nhập máy trạng thái hoặc tất cả các nhóm bản ghi máy trạng thái. Bộ lọc này hoạt động trên toàn cầu cho tất cả các bản ghi theo dõi trong toàn bộ hệ thống.
+* **SRS_QP_QS_21:** Lọc cục bộ (Local/Object-level Filtering). Bộ lọc cục bộ QS dựa trên id đối tượng riêng lẻ được liên kết với các đối tượng khác nhau trong bộ nhớ đích. Object-id là các số nguyên nhỏ trong phạm vi 0..127. Object-id trong phạm vi 0..64 được dành riêng cho Active Objects, trong đó object-id tương ứng với mức độ ưu tiên duy nhất của Active Object. Ứng dụng QP/C có thể liên kết các đối tượng khác (65..127) với các đối tượng khác nhau. Sau đó, Ứng dụng QP/C có thể thiết lập QS Local-Filter để chỉ kích hoạt một đối tượng cụ thể hoặc bất kỳ tập hợp con nào của đối tượng.
+* **SRS_QP_QS_30:** Thành phần cư dân mục tiêu của QS sẽ hỗ trợ các bản ghi dấu vết được xác định trước. Các bản ghi theo dõi được xác định trước là các bản ghi theo dõi có định dạng cố định được biết trước bởi cả thành phần thường trú mục tiêu QS và thành phần thường trú máy chủ QSPY.
+* **SRS_QP_QS_31:** Thành phần thường trú mục tiêu của QS sẽ hỗ trợ các hồ sơ theo dõi dành riêng cho ứng dụng. Các bản ghi theo dõi dành riêng cho ứng dụng có định dạng linh hoạt không được biết trước đối với thành phần thường trú máy chủ QSPY. Thay vào đó, các bản ghi theo dõi dành riêng cho ứng dụng mang thông tin định dạng trong đó (điều này làm cho chúng kém hiệu quả hơn so với các bản ghi theo dõi được xác định trước). ID bản ghi của các bản ghi theo dõi dành riêng cho ứng dụng nằm trong phạm vi 101-127 và chỉ được sử dụng cho Bộ lọc cục bộ (xem SRS_QP_QS_20). Tuy nhiên, id bản ghi trong trường hợp này không xác định bất kỳ định dạng cụ thể nào của bản ghi dành riêng cho ứng dụng. Nói cách khác, nhiều bản ghi theo dõi dành riêng cho ứng dụng có thể có cùng ID bản ghi. Tất cả các bản ghi theo dõi dành riêng cho ứng dụng đều có phần tử dữ liệu dấu thời gian (xem SRS_QP_QS_10).
+* **SRS_QP_QS_40:** Thành phần thường trú mục tiêu của QS sẽ cung cấp thông tin ký hiệu trong dấu vết bằng cách sử dụng các bản ghi dấu vết từ điển. Thành phần mục tiêu-cư trú QS cung cấp các bản ghi dấu vết từ điển được xác định trước đặc biệt được thiết kế rõ ràng để cung cấp thông tin ký hiệu về mã đích trong chính dấu vết. Các bản ghi từ điển này tương tự như thông tin biểu tượng được nhúng trong các tệp đối tượng cho trình gỡ lỗi một bước truyền thống. QS hỗ trợ năm loại bản ghi theo dõi từ điển: Từ điển đối tượng, Từ điển chức năng, Từ điển tín hiệu, Từ điển liệt kê, Từ điển người dùng (đối với các bản ghi theo dõi dành riêng cho ứng dụng)
+* **SRS_QP_QS_50:** Thành phần cư trú mục tiêu QS sẽ cung cấp kênh nhận để cho phép tương tác giữa máy chủ và mục tiêu. Cần có kênh QS-RX để tương tác với hệ thống mục tiêu và triển khai các tính năng như kiểm tra, xác nhận, xác minh và giám sát hệ thống mục tiêu. Kênh QS-RX cung cấp các dịch vụ sau: Đặt lại Mục tiêu từ xa, Yêu cầu thông tin mục tiêu (phiên bản, tất cả kích thước của đối tượng, dấu thời gian xây dựng), Thực hiện lệnh do người dùng xác định bên trong mục tiêu với các đối số được cung cấp từ thành phần máy chủ QSPY, Chèn một sự kiện tùy ý vào mục tiêu (gửi đi, đăng hoặc xuất bản), Thay đổi Bộ lọc toàn cục" bên trong mục tiêu (xem @ref SRS_QP_QS_20) - Thay đổi Bộ lọc cục bộ" bên trong mục tiêu (xem SRS_QP_QS_21), Thay đổi đối tượng hiện tại bên trong mục tiêu, Xem nhanh dữ liệu bên trong bộ nhớ mục tiêu, Chọc dữ liệu vào bộ nhớ mục tiêu, Điền vào vùng bộ nhớ mục tiêu được chỉ định bằng mẫu bit được cung cấp, Thực hiện đánh dấu đồng hồ bên trong mục tiêu, Thực hiện thiết lập kiểm thử bên trong mục tiêu, Thực hiện thử nghiệm xé bỏ bên trong Target, Cất giữ "Thăm dò thử nghiệm" bên trong mục tiêu.

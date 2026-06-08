@@ -1,4 +1,4 @@
-# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Sự kiện trong CIEDPC/uEDP
+# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Sự kiện của QP/C
 
 * **SRS_QP_EVT_00:** Cung cấp trừu tượng hóa Sự kiện cho ứng dụng. Thành phần khung (framework) QP/C phải định nghĩa một sự trừu tượng hóa chung cho Sự kiện (Event), để nó có thể được khởi tạo, trao đổi và diễn giải chính xác bởi cả ứng dụng QP/C và chính khung làm việc.
 * **SRS_QP_EVT_20:** Mỗi thực thể sự kiện phải chứa Tín hiệu (Signal). Tín hiệu sự kiện mang thông tin về sự việc đã xảy ra. Ứng dụng QP/C cần truy cập dễ dàng vào Tín hiệu này để xác định cách xử lý sự kiện tương ứng.
