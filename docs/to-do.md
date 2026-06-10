@@ -78,15 +78,10 @@
 - [x] Bổ sung tài liệu đối chiếu thiết kế của CIEDPC với mô hình chuẩn QP/C của Miro Samek để làm rõ các điểm tương đồng và khác biệt trong kiến trúc và cách tiếp cận.
 - [x] Ra mắt phiên bản 1.0.3 của lõi CIEDPC với các tính năng redirect printf và xprintf, cùng với tài liệu hướng dẫn sử dụng và phân tích thiết kế chi tiết về giới hạn sử dụng của CIEDPC và đối chiếu với mô hình QP/C.
 
-### Phiên bản 1.0.4
-
-- [ ] Bổ sung tài liệu đối chiếu lộ trình thiết kế của CIEDPC với lộ trình phát triển của HyperPanelOS để làm rõ các điểm tương đồng và khác biệt trong cách tiếp cận phát triển hệ điều hành nhúng.
-- [ ] Nâng cấp Priority Scheduling để xử lý trường hợp có nhiều task cùng độ ưu tiên.
-- [ ] Bổ sung tài liệu trình bày về cơ chế Priority Escalation và Scheduling Policy của CIEDPC để làm rõ cách thức hoạt động và lợi ích của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
-- [ ] Ra mắt phiên bản 1.0.4 của lõi CIEDPC với đầy đủ tính năng, tài liệu hướng dẫn sử dụng và tài liệu chi tiết về Priority Scheduling nhằm chuẩn bị cho việc phát triển các tính năng nâng cao hơn trong phiên bản 1.1.0.
-
 ### Phiên bản 1.1.0
 
+- [ ] Bổ sung tài liệu đối chiếu lộ trình thiết kế của CIEDPC với lộ trình phát triển của HyperPanelOS để làm rõ các điểm tương đồng và khác biệt trong cách tiếp cận phát triển hệ điều hành nhúng.
+- [ ] Bổ sung tài liệu trình bày về cơ chế Priority Escalation và Scheduling Policy của CIEDPC để làm rõ cách thức hoạt động và lợi ích của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
 - [ ] Nâng cấp thiết kế phân phối task với API cho phép thực hiện cơ chế Priority Escalation để cho phép một task có thể tạm thời tăng độ ưu tiên của mình khi cần thiết và hoàn trả độ ưu tiên về mức ban đầu sau khi hoàn thành công việc khẩn cấp.
 - [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ CIEDPC (uEDP) sang uE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
 - [ ] Rename CIEDPC thành uEDP (micro-EDP) để phản ánh rõ hơn về mục tiêu của dự án là một lõi điều phối nhẹ cho các hệ thống nhúng và bắt đầu quá trình nâng cấp thiết kế lên uE-OS với thiết kế sử dụng 2 lõi điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt và phần mềm để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
