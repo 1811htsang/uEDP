@@ -43,7 +43,7 @@ Chứa logic thuần túy của mô hình lập trình hướng sự kiện, bao
 - Message Manager: Quản lý Pool bộ nhớ tĩnh, chống phân mảnh.
 - Timer Service: Quản lý danh sách liên kết các bộ định thời phần mềm.
 - FSM/TSM Engines: Bộ máy thực thi máy trạng thái.
-- Itnlog: Hệ thống logging cho phép thu thập toàn bộ dữ liệu tại thời điểm gọi.
+- Itnlog: Hệ thống logging cho phép thu thập toàn bộ dữ liệu tại thời điểm gọi, sau đó có thể đẩy sang logdp và rprintf để xuất ra nhiều đích khác nhau.
 
 Trong tầng này, core được thiết kế độc lập hoàn toàn với phần cứng nhằm đảm bảo tính di động và dễ dàng tích hợp vào bất kỳ nền tảng nhúng nào. Core sẽ chỉ tương tác với phần cứng thông qua các hàm trừu tượng được cung cấp bởi tầng PAL.
 
@@ -94,6 +94,33 @@ Cách làm này giữ đường đi trong ISR ngắn hơn, giảm nguy cơ tranh
 Tầng này đóng vai trò là cầu nối giữa Core và phần cứng cụ thể. PAL cung cấp các dịch vụ hệ thống như quản lý ngắt, thao tác bit, và các hàm tiện ích khác mà Core yêu cầu để hoạt động. Mỗi nền tảng sẽ có một triển khai riêng của PAL, nhưng tất cả đều tuân thủ cùng một giao diện chung để đảm bảo tính nhất quán.
 
 Trong đó `pal_core.h` chứa các khai báo chung cho toàn bộ PAL, bao gồm các hàm dịch vụ hệ thống như `pal_enter_critical()`, `pal_exit_critical()`, và `pal_get_highest_priority()`. Các dịch vụ này sẽ được triển khai khác nhau tùy theo nền tảng (ví dụ: trên STM32 sẽ sử dụng ngắt để quản lý critical section, trong khi trên Linux sẽ sử dụng mutex). Điều này giúp Core hoàn toàn không phải quan tâm đến chi tiết phần cứng, từ đó đạt được mục tiêu "Zero-Touch Porting".
+
+#### Chuỗi xuất log: xprintf, rprintf và logdp
+
+CIEDPC tách phần xuất log thành ba lớp để tránh Core phụ thuộc trực tiếp vào `printf` và đồng thời cho phép một log entry được phân phối tới nhiều backend:
+
+- `xprintf`: lớp formatter ở mức ký tự, cung cấp các hàm như `xprintf()`, `xfprintf()` và `xsprintf()` để ghép chuỗi theo format ổn định trên nhiều nền tảng.
+- `rprintf`: lớp redirect print ở tầng PAL, nhận một `ciedpc_itnlog_entry_t`, định dạng entry thành chuỗi hiển thị và đẩy chuỗi đó ra backend qua `write` hoặc `putc`.
+- `logdp`: lớp dispatch của PAL, giữ một bảng callback có kiểu `void (*)(ciedpc_itnlog_entry_t*)` để fan-out cùng một log entry ra nhiều đích như UART, console, file hoặc trace buffer.
+
+Luồng dữ liệu chuẩn trong kiến trúc hiện tại là:
+
+1. Core hoặc application tạo ra `ciedpc_itnlog_entry_t`.
+2. `pal_logdp_dispatch()` phát entry đó tới toàn bộ callback đã đăng ký bằng `pal_logdp_register()`.
+3. Mỗi callback thường giữ một `pal_rprintf_service_t` riêng, copy entry vào `service->entry` rồi gọi `pal_rprintf_flush_entry()`.
+4. `pal_rprintf_flush_entry()` gọi `xfprintf()` để format chuỗi log và xuất ra backend đã được khởi tạo trước.
+
+Thiết kế này có hai lợi ích chính:
+
+- Tách biệt trách nhiệm: `xprintf` lo format, `rprintf` lo chuyển đổi entry thành chuỗi xuất, còn `logdp` lo phân phối.
+- Mở rộng backend: cùng một log entry có thể đồng thời xuất ra UART, màn hình debug và file log mà không cần sửa logic của Core.
+
+Lưu ý khi tích hợp:
+
+- `pal_logdp_dispatch()` chỉ truyền con trỏ entry, nên callback không nên giữ nguyên con trỏ đó nếu entry chỉ có vòng đời ngắn; tốt nhất là copy nội dung vào service nội bộ trước khi flush.
+- `pal_rprintf_service_t` cho phép `init` là `NULL` nếu backend đã được khởi tạo sẵn từ BSP hoặc application.
+- `pal_rprintf_flush_entry()` chỉ thực sự xuất dữ liệu khi `is_ready()` trả về `true`.
+- Định dạng mặc định của `rprintf` là một dòng có timestamp, task ID, signal ID và message, được tạo bằng `xfprintf()` thay vì ghép chuỗi thủ công.
 
 ## IV. Logic thiết kế chi tiết
 
