@@ -80,7 +80,7 @@
 
 ### Phiên bản 1.1.0: The Escalation Update
 
-- [ ] Đổi tên CIEDPC thành μEDP (micro-EDP) với các API tương đồng để phản ánh rõ hơn về mục tiêu của dự án là một lõi điều phối nhẹ cho các hệ thống nhúng.
+- [x] Đổi tên CIEDPC thành μEDP (micro-EDP) với các API tương đồng để phản ánh rõ hơn về mục tiêu của dự án là một lõi điều phối nhẹ cho các hệ thống nhúng.
 - [ ] Bổ sung tài liệu trình bày về cơ chế Priority Escalation và Scheduling Policy của CIEDPC để làm rõ cách thức hoạt động và lợi ích của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
 - [ ] Nâng cấp thiết kế phân phối task với API cho phép thực hiện cơ chế Priority Escalation để cho phép một task có thể tạm thời tăng độ ưu tiên của mình khi cần thiết và hoàn trả độ ưu tiên về mức ban đầu sau khi hoàn thành công việc khẩn cấp.
 - [ ] Bổ sung cơ chế OCE đơn giản để làm khung hỗ trợ cho AOCE (Advance OCE) trong tương lai.
