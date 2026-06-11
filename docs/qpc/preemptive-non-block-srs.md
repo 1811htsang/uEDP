@@ -1,0 +1,8 @@
+# Tài liệu đặc tả yêu cầu phần mềm (SRS) cho Preemptive Non-blocking Kernel QK của QP/C
+
+* **SRS_QP_QK_00:** Thành phần QP/C Framework sẽ cung cấp hạt nhân QK không chặn ưu tiên như một trong các hạt nhân tích hợp.
+* **SRS_QP_QK_10:** Nhân QK sẽ cung cấp một lệnh gọi lại nhàn rỗi được xác định trong Ứng dụng QP/C. Khi hạt nhân QK xử lý xong tất cả các bước RTC trong tất cả các AO, nó sẽ thực hiện vòng lặp nhàn rỗi QK. Vòng lặp nhàn rỗi QK này sẽ gọi một lệnh gọi lại nhàn rỗi (một hàm) được xác định trong Ứng dụng QP/C. Lệnh gọi lại nhàn rỗi có thể thực hiện bất kỳ quá trình xử lý nào, bao gồm cả việc đặt CPU và các thiết bị ngoại vi ở chế độ ngủ năng lượng thấp.
+* **SRS_QP_QK_20:** Hạt nhân QK sẽ cung cấp API để khóa có chọn lọc các AO lập lịch dưới mức ưu tiên trần khóa bộ lập lịch được chỉ định. API khóa bộ lập lịch chọn lọc sẽ ngăn lập lịch bất kỳ AO nào có mức độ ưu tiên duy nhất thấp hơn mức ưu tiên trần khóa bộ lập lịch được chỉ định.
+* **SRS_QP_QK_21:** Nhân QK sẽ cung cấp API để mở khóa các AO lên lịch. API mở khóa bộ lập lịch sẽ bổ sung cho API khóa trình lập lịch (xem SRS_QP_QK_20). API mở khóa bộ lập lịch sẽ khôi phục trần khóa bộ lập lịch được thiết lập trong lệnh gọi gần đây nhất đến API khóa bộ lập lịch.
+* **SRS_QP_QK_30:** Nhân QK sẽ hỗ trợ lập lịch ngưỡng ưu tiên (PTS). Hỗ trợ lập lịch ngưỡng ưu tiên (PTS) có nghĩa là mỗi AO có thể được gán một ngưỡng ưu tiên (cùng với mức độ ưu tiên QP/C duy nhất của nó). AO có ngưỡng ưu tiên nhất định không thể bị chiếm ưu tiên bởi AO có mức độ ưu tiên QP/C duy nhất dưới ngưỡng ưu tiên.
+* **SRS_QP_QK_31:** Ngưỡng ưu tiên được gán cho Đối tượng đang hoạt động phải phù hợp với mức độ ưu tiên QP/C duy nhất của nó.

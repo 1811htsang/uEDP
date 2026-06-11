@@ -24,8 +24,7 @@ void ciedpc_fsm_go_next(ciedpc_fsm_t* me, state_handler target) {
   // Gửi tín hiệu EXIT đến trạng thái hiện tại trước khi chuyển đổi
   if (me->state) {
     ciedpc_msg_t exit_msg;
-    memset(&exit_msg, 0, sizeof(exit_msg)); // Khởi tạo tin nhắn về 0
-    ciedpc_msg_create(&exit_msg, CIEDPC_FSM_SIG_EXIT); // Giả định có hàm tạo msg chuẩn
+    exit_msg.sig = CIEDPC_FSM_SIG_EXIT; // Giả định có hàm tạo msg chuẩn
     me->state(&exit_msg);
   }
 
@@ -38,8 +37,7 @@ void ciedpc_fsm_go_next(ciedpc_fsm_t* me, state_handler target) {
 
   // Gửi tín hiệu ENTRY đến trạng thái mục tiêu sau khi chuyển đổi
   ciedpc_msg_t entry_msg;
-  memset(&entry_msg, 0, sizeof(entry_msg)); // Khởi tạo tin nhắn về 0
-  ciedpc_msg_create(&entry_msg, CIEDPC_FSM_SIG_ENTRY); // Giả định có hàm tạo msg chuẩn
+  entry_msg.sig = CIEDPC_FSM_SIG_ENTRY; // Giả định có hàm tạo msg chuẩn
 
   // Gửi tín hiệu ENTRY đến trạng thái mục tiêu
   target(&entry_msg);
@@ -71,8 +69,7 @@ void ciedpc_fsm_go_back(ciedpc_fsm_t* me) {
 
   // Gửi tín hiệu EXIT đến trạng thái hiện tại trước khi quay lại
   ciedpc_msg_t exit_msg;
-  memset(&exit_msg, 0, sizeof(exit_msg)); // Khởi tạo tin nhắn về 0
-  ciedpc_msg_create(&exit_msg, CIEDPC_FSM_SIG_EXIT); // Giả định có hàm tạo msg chuẩn
+  exit_msg.sig = CIEDPC_FSM_SIG_EXIT; // Giả định có hàm tạo msg chuẩn
   me->state(&exit_msg);
 
   // Cập nhật trạng thái hiện tại của FSM thành trạng thái trước đó
@@ -82,8 +79,7 @@ void ciedpc_fsm_go_back(ciedpc_fsm_t* me) {
 
   // Gửi tín hiệu ENTRY đến trạng thái trước đó sau khi quay lại
   ciedpc_msg_t entry_msg;
-  memset(&entry_msg, 0, sizeof(entry_msg)); // Khởi tạo tin nhắn về 0
-  ciedpc_msg_create(&entry_msg, CIEDPC_FSM_SIG_ENTRY); // Giả định có hàm tạo msg chuẩn
+  entry_msg.sig = CIEDPC_FSM_SIG_ENTRY; // Giả định có hàm tạo msg chuẩn
 
   // Gửi tín hiệu ENTRY đến trạng thái trước đó
   previous_state(&entry_msg);
