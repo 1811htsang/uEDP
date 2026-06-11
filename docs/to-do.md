@@ -1,14 +1,6 @@
 # To-do list
 
-Đây là nơi lưu trữ các công việc cần làm liên quan đến dự án CIEDPC cũng như các ghi chú và ý tưởng phát triển trong tương lai.
-
-## Ghi chú phát triển
-
-- Bổ sung lộ trình phát triển để đưa CIEDPC từ core EDP thành 1 OS hoàn chỉnh theo tiêu chuẩn Semantic Versioning.
-- Bổ sung các đối chiếu về đánh giá thiết kế của CIEDPC với mô hình chuẩn là QP/C của Miro Samek.
-- Bổ sung tài liệu để mention quá trình chuyển đổi thiết kế từ dependent của EPCB-vn AKEDP sang CIEDPC
-- Bổ sung tài liệu phân tích thiết kế của HyperPanelOS và QP/C chi tiết hơn để rút ra các bài học kinh nghiệm và áp dụng vào thiết kế của CIEDPC.
-- Quy ước: thay đổi tài liệu có thể được phát hành như patch version nếu ảnh hưởng trực tiếp đến release deliverable hoặc cách sử dụng hệ thống.
+Đây là nơi lưu trữ các công việc cần làm liên quan đến dự án μEDP cũng như các ghi chú và ý tưởng phát triển trong tương lai.
 
 ## Công việc cần làm
 
@@ -17,42 +9,42 @@
 - [x] Hoàn thiện phân tích lõi tham chiếu AKEDP hiện có để đưa ra tài liệu phân tích & đề xuất cải tiến.
 - [x] Remove các obsolete code và thay thế bằng cấu trúc thư mục + cấu trúc code mới.
 - [x] Hoàn thiện thông tin core gốc
-- [x] Hoàn thiện message pool implementation và tích hợp vào lõi CIEDPC.
+- [x] Hoàn thiện message pool implementation và tích hợp vào lõi μEDP.
 - [x] Hoàn thiện FSM, TSM làm cơ sở để implement vào task driver.
-- [x] Hoàn thiện task driver implementation và tích hợp vào lõi CIEDPC.
-- [x] Hoàn thiện timer driver implementation và tích hợp vào lõi CIEDPC.
-- [x] Hoàn thiện ISR Bridge implementation và tích hợp vào lõi CIEDPC.
+- [x] Hoàn thiện task driver implementation và tích hợp vào lõi μEDP.
+- [x] Hoàn thiện timer driver implementation và tích hợp vào lõi μEDP.
+- [x] Hoàn thiện ISR Bridge implementation và tích hợp vào lõi μEDP.
 - [x] Thiết kế testing chức năng trên task, timer, isr, message pool, tsm.
 - [x] Bổ sung thiết kế testing MSG allocation cho task.
 - [x] Bổ sung thiết kế testing FSM cho task.
 - [x] Sửa đổi bổ sung thiết kế hàm khởi tạo FSM để tránh cyclic dependency giữa FSM, message pool và task driver.
 - [x] Bổ sung API cho tương tác với task poll.
-- [x] Bổ sung driver memrp để thực hiện memory profiling và tối ưu hóa memory footprint của lõi CIEDPC.
-- [x] Viết tài liệu hướng dẫn sử dụng và phát triển lõi CIEDPC.
+- [x] Bổ sung driver memrp để thực hiện memory profiling và tối ưu hóa memory footprint của lõi μEDP.
+- [x] Viết tài liệu hướng dẫn sử dụng và phát triển lõi μEDP.
 - [x] Kiểm tra các data types sử dụng nhằm thu gọn memory footprint.
 - [x] Bổ sung linting và code formatting để đảm bảo codebase sạch sẽ và dễ đọc.
 
 ### Phiên bản 1.0.1: The Launch
 
-- [x] Bổ sung template code cho phần app layer để làm ví dụ cho việc phát triển ứng dụng trên nền tảng CIEDPC.
+- [x] Bổ sung template code cho phần app layer để làm ví dụ cho việc phát triển ứng dụng trên nền tảng μEDP.
 - [x] Import thiết kế vào STM32 nhằm thử nghiệm thực tế trên phần cứng.
-- [x] Bổ sung RAM profiling cho memrp để đánh giá hiệu quả sử dụng bộ nhớ của lõi CIEDPC trên đa nền tảng.
-- [x] Import các template code vào lại source code để ra mắt phiên bản 1.0.1 của lõi CIEDPC.
-- [x] Bổ sung tài liệu để hướng dẫn phát triển với nền tảng CIEDPC trên STM32, bao gồm hướng dẫn cài đặt môi trường phát triển, cấu hình phần cứng và ví dụ code.
+- [x] Bổ sung RAM profiling cho memrp để đánh giá hiệu quả sử dụng bộ nhớ của lõi μEDP trên đa nền tảng.
+- [x] Import các template code vào lại source code để ra mắt phiên bản 1.0.1 của lõi μEDP.
+- [x] Bổ sung tài liệu để hướng dẫn phát triển với nền tảng μEDP trên STM32, bao gồm hướng dẫn cài đặt môi trường phát triển, cấu hình phần cứng và ví dụ code.
 - [x] Loại bỏ user-manual bản PDF do tốn thời gian căn chỉnh ngắt trang và thay thế tạm thời bằng markdown file để dễ dàng cập nhật và chỉnh sửa trong quá trình phát triển.
-- [x] Bổ sung các tài liệu phân tích và thiết kế chi tiết cho các module của lõi CIEDPC từ lỗi AKEDP, bao gồm FSM, TSM, task driver, timer driver và ISR bridge đã thất lạc vào thời điểm hoàn thiện phiên bản 1.0.0.
-- [x] Ra mắt phiên bản 1.0.1 của lõi CIEDPC với đầy đủ tài liệu hướng dẫn sử dụng và phát triển trên STM32.
+- [x] Bổ sung các tài liệu phân tích và thiết kế chi tiết cho các module của lõi μEDP từ lỗi AKEDP, bao gồm FSM, TSM, task driver, timer driver và ISR bridge đã thất lạc vào thời điểm hoàn thiện phiên bản 1.0.0.
+- [x] Ra mắt phiên bản 1.0.1 của lõi μEDP với đầy đủ tài liệu hướng dẫn sử dụng và phát triển trên STM32.
 
 ### Phiên bản 1.0.2: The Internal Logger
 
-- [x] Hoàn thiện test case để thống nhất định dạng và quy trình testing cho các module của lõi CIEDPC. Đã thực hiện điều này trong quá trình phát triển Core.
+- [x] Hoàn thiện test case để thống nhất định dạng và quy trình testing cho các module của lõi μEDP. Đã thực hiện điều này trong quá trình phát triển Core.
 - [x] Bổ sung thiết kế 1 Internal Logger (itnlog) để thay thế printf debugging trong để hỗ trợ kit không có cổng UART.
 - [x] Triển khai thiết kế logger với inline snapshot để lưu trực tiếp tsk/sig/fsm/tsm/msg và khai thác ring buffer để lưu log nội bộ ở runtime.
 - [x] Sửa lỗi thiếu exit_critical trong timer khi timer_set
 - [x] Loại bỏ hỗ trợ cho việc specify phân vùng trên pool để tránh xung đột thiết kế khi import vào ESP32.
 - [x] Chuyển đổi các global variable từ uninitialize sang initialize để tránh vấn đề về memory footprint và phân vùng bộ nhớ.
-- [x] Chuyển các size specifier của pool sang ciedpc_core để thống nhất và dễ dàng quản lý cấu hình pool size cho người dùng.
-- [x] Bổ sung 1 file `core_Cfg.h` ở `app/config` để người dùng có thể cấu hình các thông số của lõi CIEDPC như pool size, task count, timer count, v.v. một cách dễ dàng mà không cần phải chỉnh sửa trực tiếp trong source code của lõi.
+- [x] Chuyển các size specifier của pool sang uedp_core để thống nhất và dễ dàng quản lý cấu hình pool size cho người dùng.
+- [x] Bổ sung 1 file `core_Cfg.h` ở `app/config` để người dùng có thể cấu hình các thông số của lõi μEDP như pool size, task count, timer count, v.v. một cách dễ dàng mà không cần phải chỉnh sửa trực tiếp trong source code của lõi.
 - [x] Bổ sung các khai báo PAL cho các kiến trúc STM32-F103, ESP32-S3, ESP32-WR32 để hỗ trợ việc import vào các nền tảng này và chuẩn bị cho việc phát triển đa nền tảng trong tương lai.
 - [x] Bổ sung logic thiết kế bảo vệ toàn vẹn dữ liệu với hash hoặc checksum để đảm bảo tính toàn vẹn của dữ liệu khi truyền qua các API như task_post_isr, đặc biệt là khi truyền dữ liệu lớn hoặc nhạy cảm.
 - [x] Bổ sung cơ chế threshhold để tự động kích hoạt việc xuất log ra ngoài khi có sự kiện quan trọng hoặc khi log đạt đến một mức độ nhất định, nhằm hỗ trợ việc phân tích hiệu suất và xử lý sự cố hiệu quả hơn.
@@ -63,8 +55,8 @@
 - [x] Bổ sung PAL config ở `app/config` để người dùng có thể cấu hình các thông số liên quan đến PAL, phục vụ cho các service mới của PAL ở phiên bản 1.0.3.
 - [x] Thêm PAL cho kit LXP723ZGP1V2 để hỗ trợ việc triển khai và testing internal logger trên nền tảng này.
 - [x] Bổ sung tài liệu hướng dẫn sử dụng internal logger, bao gồm cách cấu hình, cách sử dụng API để ghi log và các rule để đảm bảo log được ghi chính xác và có thể phân tích hiệu quả.
-- [x] Bổ sung mục tài liệu để phân tích thiết kế dump log nằm ngoài core CIEDPC-μEDP để tận dụng out-context execution nhằm đảm bảo các tính chất của EDP.
-- [x] Ra mắt phiên bản 1.0.2 của lõi CIEDPC với đầy đủ test case và tài liệu hướng dẫn sử dụng internal logger.
+- [x] Bổ sung mục tài liệu để phân tích thiết kế dump log nằm ngoài core μEDP để tận dụng out-context execution nhằm đảm bảo các tính chất của EDP.
+- [x] Ra mắt phiên bản 1.0.2 của lõi μEDP với đầy đủ test case và tài liệu hướng dẫn sử dụng internal logger.
 
 ### Phiên bản 1.0.3: The Plug-N-Play Logging Pipeline
 
@@ -73,22 +65,22 @@
 - [x] Bổ sung xprintf (eXtended printf) để hỗ trợ định dạng log nâng cao, bao gồm timestamp, task ID, signal ID, v.v. nhằm cung cấp thông tin chi tiết hơn trong các log được ghi lại.
 - [x] Bổ sung logdp (log dispatcher) để tự động định tuyến log đến các đích khác nhau dựa trên mức độ ưu tiên hoặc loại log, ví dụ như gửi log quan trọng đến UART và log thông thường đến internal logger.
 - [x] Bổ sung tài liệu thiết kế chi tiết cho các tính năng logdp, xprintf và rprintf để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của các tính năng này trong việc hỗ trợ việc phân tích hiệu suất và xử lý sự cố hiệu quả hơn.
-- [x] Bổ sung tài liệu trình bày về giới hạn mà CIEDPC có thể được sử dụng trong hệ thống nhúng và khi nào nên cân nhắc sử dụng một hệ điều hành nhúng đầy đủ như FreeRTOS thay vì CIEDPC, nhằm giúp người dùng hiểu rõ hơn về phạm vi ứng dụng và lựa chọn phù hợp cho dự án của họ.
-- [X] Import tài liệu yêu cầu phần mềm của mô hình QP/C của Miro Samek để làm tài liệu tham khảo cho việc phát triển các tính năng tracing trong CIEDPC.
-- [x] Bổ sung tài liệu đối chiếu thiết kế của CIEDPC với mô hình chuẩn QP/C của Miro Samek để làm rõ các điểm tương đồng và khác biệt trong kiến trúc và cách tiếp cận.
-- [x] Ra mắt phiên bản 1.0.3 của lõi CIEDPC với các tính năng redirect printf và xprintf, cùng với tài liệu hướng dẫn sử dụng và phân tích thiết kế chi tiết về giới hạn sử dụng của CIEDPC và đối chiếu với mô hình QP/C.
+- [x] Bổ sung tài liệu trình bày về giới hạn mà μEDP có thể được sử dụng trong hệ thống nhúng và khi nào nên cân nhắc sử dụng một hệ điều hành nhúng đầy đủ như FreeRTOS thay vì μEDP, nhằm giúp người dùng hiểu rõ hơn về phạm vi ứng dụng và lựa chọn phù hợp cho dự án của họ.
+- [X] Import tài liệu yêu cầu phần mềm của mô hình QP/C của Miro Samek để làm tài liệu tham khảo cho việc phát triển các tính năng tracing trong μEDP.
+- [x] Bổ sung tài liệu đối chiếu thiết kế của μEDP với mô hình chuẩn QP/C của Miro Samek để làm rõ các điểm tương đồng và khác biệt trong kiến trúc và cách tiếp cận.
+- [x] Ra mắt phiên bản 1.0.3 của lõi μEDP với các tính năng redirect printf và xprintf, cùng với tài liệu hướng dẫn sử dụng và phân tích thiết kế chi tiết về giới hạn sử dụng của μEDP và đối chiếu với mô hình QP/C.
 
 ### Phiên bản 1.1.0: The Escalation Update
 
-- [ ] Đổi tên CIEDPC thành μEDP (micro-EDP) với các API tương đồng để phản ánh rõ hơn về mục tiêu của dự án là một lõi điều phối nhẹ cho các hệ thống nhúng.
-- [ ] Bổ sung tài liệu trình bày về cơ chế Priority Escalation và Scheduling Policy của CIEDPC để làm rõ cách thức hoạt động và lợi ích của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
+- [ ] Đổi tên μEDP thành μEDP (micro-EDP) với các API tương đồng để phản ánh rõ hơn về mục tiêu của dự án là một lõi điều phối nhẹ cho các hệ thống nhúng.
+- [ ] Bổ sung tài liệu trình bày về cơ chế Priority Escalation và Scheduling Policy của μEDP để làm rõ cách thức hoạt động và lợi ích của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
 - [ ] Nâng cấp thiết kế phân phối task với API cho phép thực hiện cơ chế Priority Escalation để cho phép một task có thể tạm thời tăng độ ưu tiên của mình khi cần thiết và hoàn trả độ ưu tiên về mức ban đầu sau khi hoàn thành công việc khẩn cấp.
 - [ ] Bổ sung cơ chế OCE đơn giản để làm khung hỗ trợ cho AOCE (Advance OCE) trong tương lai.
 - [ ] Ra mắt phiên bản 1.1.0 của lõi μEDP với đầy đủ tính năng Priority Escalation và tài liệu hướng dẫn sử dụng.
 
 ### Phiên bản 1.1.1: The Hardware Accelerated Scheduling
 
-- [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ CIEDPC (μEDP) sang μE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
+- [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
 - [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng của bộ điều phối phần cứng như NVIC và xử lý vấn đề về ISR nesting & preemption để đảm bảo hệ thống hoạt động ổn định và hiệu quả khi xử lý các sự kiện thời gian thực.
 - [ ] Ra mắt phiên bản 1.1.1 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
 
@@ -110,8 +102,8 @@
 - [ ] Hoàn thiện thiết kế Safe Out-Core Interaction.
 - [ ] Ra mắt phiên bản 1.2.1 của lõi μEDP với đầy đủ tính năng Safe Out-Core Interaction và tài liệu hướng dẫn sử dụng.
 
-Sau phiên bản này, CIEDPC (μEDP) sẽ bắt đầu chuyển đổi thành μE-OS với thiết kế mới và các tính năng nâng cao như HAS (Hardware Accelerated Scheduling), TIM (Tickless Idle Mode), uvfs (Micro-Virtual File System), compmng (Component Manager), SHA (Safe Heap Allocation), ESD (Execution Space Division), MPU/MMU Integration, SSI (Secure Signal Injection), ...
+Sau phiên bản này, μEDP (μEDP) sẽ bắt đầu chuyển đổi thành μE-OS với thiết kế mới và các tính năng nâng cao như HAS (Hardware Accelerated Scheduling), TIM (Tickless Idle Mode), uvfs (Micro-Virtual File System), compmng (Component Manager), SHA (Safe Heap Allocation), ESD (Execution Space Division), MPU/MMU Integration, SSI (Secure Signal Injection), ...
 
-Các hạng mục bổ sung tài liệu thiết kế từ CIEDPC (μEDP) sang μE-OS sẽ được cập nhật chi tiết hơn khi tiến trình chuyển đổi bắt đầu.
+Các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS sẽ được cập nhật chi tiết hơn khi tiến trình chuyển đổi bắt đầu.
 
 Phiên bản sẽ được tách thành 1 repository mới với tên gọi μE-OS để phản ánh rõ hơn về mục tiêu của dự án là một hệ điều hành nhúng nhẹ, và sẽ tiếp tục phát triển theo lộ trình đã đề ra với các tính năng mới và cải tiến dựa trên thiết kế của HyperPanelOS, RTOS.

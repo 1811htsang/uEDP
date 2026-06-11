@@ -1,21 +1,21 @@
 ﻿/**
- * @file ciedpc_tsm.h
+ * @file uedp_tsm.h
  * @author Shang Huang
- * @brief Header file for Transition State Machine (TSM) management in CIEDPC system
+ * @brief Header file for Transition State Machine (TSM) management in UEDP system
  * @version 0.1
  * @date 2026-04-17
  * 
  * @copyright MIT License
  * 
  */
-#ifndef __CIEDPC_TSM_H__
-	#define __CIEDPC_TSM_H__
+#ifndef __UEDP_TSM_H__
+	#define __UEDP_TSM_H__
 
 	/**
 	 * @brief Khai báo các thư viện sử dụng
 	 */
 	#include <stdint.h>
-	#include "ciedpc_core.h"
+	#include "uedp_core.h"
 
 	/**
 	 * @brief Định nghĩa kiểu dữ liệu để quản lý trạng thái trong máy trạng thái chuyển tiếp (TSM)
@@ -23,18 +23,18 @@
 	typedef ui16 tsm_state_id_t;
 
 	/**
-	 * @brief Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống CIEDPC
-	 * @attention `ciedpc_msg_t` được gọi ở đây để thực thi forward declaration, 
-	 * 						cho phép sử dụng con trỏ đến `ciedpc_msg_t` trong các khai báo sau này 
-	 * 						mà không cần phải định nghĩa chi tiết của `ciedpc_msg_t` tại thời điểm này, 
-	 * 						giúp tránh các vấn đề về phụ thuộc lẫn nhau giữa các cấu trúc dữ liệu trong hệ thống CIEDPC.
+	 * @brief Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống UEDP
+	 * @attention `uedp_msg_t` được gọi ở đây để thực thi forward declaration, 
+	 * 						cho phép sử dụng con trỏ đến `uedp_msg_t` trong các khai báo sau này 
+	 * 						mà không cần phải định nghĩa chi tiết của `uedp_msg_t` tại thời điểm này, 
+	 * 						giúp tránh các vấn đề về phụ thuộc lẫn nhau giữa các cấu trúc dữ liệu trong hệ thống UEDP.
 	 */
-	typedef struct ciedpc_msg_t ciedpc_msg_t;
+	typedef struct uedp_msg_t uedp_msg_t;
 
 	/**
 	 * @brief Khai báo con trỏ hàm để quản lý handler và callback
 	 */
-	typedef void (*tsm_func_f)(ciedpc_msg_t*); // Hàm xử lý trạng thái
+	typedef void (*tsm_func_f)(uedp_msg_t*); // Hàm xử lý trạng thái
 	typedef void (*tsm_on_state_f)(tsm_state_id_t); // Hàm callback khi trạng thái thay đổi
 
 	/**
@@ -79,7 +79,7 @@
 		const tsm_state_desc_t* state_table;
 		ui8      state_count;
 		tsm_on_state_f on_state_changed;
-	} ciedpc_tsm_t;
+	} uedp_tsm_t;
 
 	/**
 	 * @brief Hàm khởi tạo TSM
@@ -90,8 +90,8 @@
 	 * @param on_state_changed Hàm callback sẽ được gọi khi trạng thái thay đổi, nhận vào ID của trạng thái mới
 	 * @attention Khi khởi tạo trạng thái ban đầu thì initial_state_id được set là 1 state tự trỏ vào chính nó
 	 */
-	void ciedpc_tsm_init(
-		ciedpc_tsm_t* tsm_table, const tsm_state_desc_t* state_des_table, 
+	void uedp_tsm_init(
+		uedp_tsm_t* tsm_table, const tsm_state_desc_t* state_des_table, 
 		ui8 state_count, tsm_state_id_t initial_state_id, 
 		tsm_on_state_f on_state_changed
 	);
@@ -102,7 +102,7 @@
 	 * @param tsm_table Bảng chứa thông tin về các trạng thái và transition của TSM
 	 * @param state_id ID của trạng thái mục tiêu mà TSM sẽ chuyển đến
 	 */
-	void ciedpc_tsm_trans(ciedpc_tsm_t* tsm_table, tsm_state_id_t state_id);
+	void uedp_tsm_trans(uedp_tsm_t* tsm_table, tsm_state_id_t state_id);
 
 	/**
 	 * @brief Hàm để xử lý tín hiệu và điều hướng trạng thái trong TSM
@@ -110,7 +110,7 @@
 	 * @param tsm_table Bảng chứa thông tin về các trạng thái và transition của TSM
 	 * @param msg Con trỏ đến tin nhắn chứa tín hiệu cần xử lý để điều hướng trạng thái trong TSM
 	 */
-	void ciedpc_tsm_dispatch(ciedpc_tsm_t* tsm_table, ciedpc_msg_t* msg); 
+	void uedp_tsm_dispatch(uedp_tsm_t* tsm_table, uedp_msg_t* msg); 
 
-#endif //__CIEDPC_TSM_H__
+#endif //__UEDP_TSM_H__
 

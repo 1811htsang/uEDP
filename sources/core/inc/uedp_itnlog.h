@@ -1,21 +1,21 @@
 /**
- * @file ciedpc_itnlog.h
+ * @file uedp_itnlog.h
  * @author Shang Huang
- * @brief Internal logger for CIEDPC
+ * @brief Internal logger for UEDP
  * @version 0.1
  * @date 2026-05-14
  * @copyright MIT License
  */
-#ifndef __CIEDPC_ITNLOG_H__
-  #define __CIEDPC_ITNLOG_H__
+#ifndef __UEDP_ITNLOG_H__
+  #define __UEDP_ITNLOG_H__
 
   /**
    * @brief Khai báo thư viện sử dụng
    */
 
-  #include "ciedpc_core.h"
-  #include "ciedpc_fsm.h"
-  #include "ciedpc_tsm.h"
+  #include "uedp_core.h"
+  #include "uedp_fsm.h"
+  #include "uedp_tsm.h"
   #include <stdint.h>
   
   /**
@@ -26,16 +26,16 @@
    * @param ITNLOG_LEVEL_ERROR Mức độ log cho các lỗi
    * @param ITNLOG_LEVEL_FATAL Mức độ log cho các lỗi nghiêm trọng
    */
-  typedef enum ciedpc_itnlog_level_t {
+  typedef enum uedp_itnlog_level_t {
     ITNLOG_LEVEL_DEBUG = 0,
     ITNLOG_LEVEL_INFO,
     ITNLOG_LEVEL_WARN,
     ITNLOG_LEVEL_ERROR,
     ITNLOG_LEVEL_FATAL
-  } ciedpc_itnlog_level_t;
+  } uedp_itnlog_level_t;
 
   /**
-   * @brief Định nghĩa các thẻ log mặc định cho các module của CIEDPC
+   * @brief Định nghĩa các thẻ log mặc định cho các module của UEDP
    */
   #define ITNLOG_TAG_TSK  "TSK"
   #define ITNLOG_TAG_MSG  "MSG"
@@ -64,15 +64,15 @@
    *            Nếu không có sử dụng `fsm` hoặc `tsm`, có thể để con trỏ này là NULL 
    *            để biểu thị không có thông tin FSM hoặc TSM liên quan đến log đó.
    */
-  typedef struct ciedpc_itnlog_entry_t {
-    ciedpc_itnlog_level_t level;
+  typedef struct uedp_itnlog_entry_t {
+    uedp_itnlog_level_t level;
     const char* tag;
     ui16 task_id;
     ui16 msg_sig;
     const char* msg;
     ui32 tmstmp;
     ui16 hash; 
-  } ciedpc_itnlog_entry_t;
+  } uedp_itnlog_entry_t;
 
   /**
    * @brief Định nghĩa hàm output cho internal logger
@@ -81,7 +81,7 @@
    * @note Hàm này để người dùng có thể tùy chỉnh cách thức xuất dữ liệu log 
    *       của internal logger một cách linh hoạt
    */
-  typedef void (*ciedpc_itnlog_output_func_t)(const char*);
+  typedef void (*uedp_itnlog_output_func_t)(const char*);
 
   /**
    * @brief Ghi chú các hàm chức năng của internal logger
@@ -102,7 +102,7 @@
   /**
    * @brief Khởi tạo internal logger
    */
-  void ciedpc_itnlog_init(void);
+  void uedp_itnlog_init(void);
 
   /**
    * @brief Ghi một log entry vào internal logger
@@ -112,12 +112,12 @@
    * @param msg Nội dung log cần ghi
    * @param tag Thẻ log để phân loại log theo module
    * @attention Hàm này sẽ tự động lấy thông tin về task_id, msg_sig, fsm, tsm, tmstmp 
-   *            và chksum dựa trên ngữ cảnh điều phối hiện tại của ciedpc_task_scheduler,
+   *            và chksum dựa trên ngữ cảnh điều phối hiện tại của uedp_task_scheduler,
    *            do đó người dùng chỉ cần cung cấp nội dung log (msg) khi gọi hàm này 
    *            để ghi log một cách tiện lợi và nhanh chóng.
    * @note Sẽ bổ sung thêm rule để giới hạn độ dài của msg để tránh việc ghi log quá dài
    */
-  void ciedpc_itnlog_log(ui32 timestamp, ciedpc_itnlog_level_t level, const char* tag, const char* msg);
+  void uedp_itnlog_log(ui32 timestamp, uedp_itnlog_level_t level, const char* tag, const char* msg);
 
   /**
    * @brief Xóa một log entry khỏi internal logger và trả về log entry đã xóa
@@ -125,14 +125,14 @@
    *         bao gồm tất cả các trường thông tin như level, tag, task_id, msg_sig, fsm, tsm, msg, tmstmp 
    *         và chksum của log entry đó.
    */
-  ciedpc_itnlog_entry_t ciedpc_itnlog_clear(void);
+  uedp_itnlog_entry_t uedp_itnlog_clear(void);
 
   /**
    * @brief Dump tất cả log entry hiện có trong internal logger
    * @note Hàm này sẽ cần bổ sung thêm support cho đích đến để dữ liệu log được xuất ra, 
    *       có thể là console, file hoặc giao diện màn hình.
    */
-  void ciedpc_itnlog_dump(void);
+  void uedp_itnlog_dump(void);
 
   /**
   * @brief Lấy số lượng log entry hiện có trong internal logger
@@ -140,7 +140,7 @@
   *         giúp người dùng biết được số lượng log entry đã được ghi lại 
   *         và đang lưu trữ trong internal logger.
   */
-  ui16 ciedpc_itnlog_get_log_count(void);
+  ui16 uedp_itnlog_get_log_count(void);
 
   /**
    * @brief Đặt mức độ log cho internal logger
@@ -148,40 +148,40 @@
    *              giúp người dùng có thể điều chỉnh mức độ log 
    *              mà internal logger sẽ ghi lại
    */
-  void ciedpc_itnlog_set_level(ciedpc_itnlog_level_t level);
+  void uedp_itnlog_set_level(uedp_itnlog_level_t level);
 
   /**
    * @brief Lấy mức độ log hiện tại của internal logger
-   * @return ciedpc_itnlog_level_t Mức độ log hiện tại của internal logger, 
+   * @return uedp_itnlog_level_t Mức độ log hiện tại của internal logger, 
    *         giúp người dùng biết được mức độ log mà internal logger đang sử dụng
    */
-  ciedpc_itnlog_level_t ciedpc_itnlog_get_level(void);
+  uedp_itnlog_level_t uedp_itnlog_get_level(void);
 
   /**
    * @brief Lấy thẻ log hiện tại của internal logger
    * @return const char* Thẻ log hiện tại của internal logger
    */
-  const char* ciedpc_itnlog_get_tag(void);
+  const char* uedp_itnlog_get_tag(void);
 
   /**
    * @brief Đặt thẻ log cho internal logger
    * @param tag Thẻ log cần đặt cho internal logger
    */
-  void ciedpc_itnlog_set_tag(const char* tag);
+  void uedp_itnlog_set_tag(const char* tag);
 
   /**
    * @brief Đặt bộ lọc log cho internal logger
    * @param level Mức độ log cần lọc
    * @param tag Thẻ log cần lọc
    */
-  void ciedpc_itnlog_set_filter(ciedpc_itnlog_level_t level, const char* tag);
+  void uedp_itnlog_set_filter(uedp_itnlog_level_t level, const char* tag);
 
   /**
    * @brief Lấy bộ lọc log hiện tại của internal logger
    * @param level Con trỏ đến biến lưu trữ mức độ log được lọc
    * @param tag Con trỏ đến biến lưu trữ thẻ log được lọc
    */
-  void ciedpc_itnlog_get_filter(ciedpc_itnlog_level_t* level, char* tag);
+  void uedp_itnlog_get_filter(uedp_itnlog_level_t* level, char* tag);
 
   /**
    * @brief Đặt hàm đầu ra cho internal logger
@@ -192,6 +192,6 @@
    *       xuất dữ liệu log của internal logger một cách linh hoạt 
    *       và phù hợp với nhu cầu sử dụng của mình.
    */
-  void ciedpc_itnlog_set_output(void (*output_func)(const char*));
+  void uedp_itnlog_set_output(void (*output_func)(const char*));
 
-#endif // __CIEDPC_ITNLOG_H__
+#endif // __UEDP_ITNLOG_H__

@@ -1,7 +1,7 @@
 /**
  * @file pal_logdp.h
  * @author Shang Huang
- * @brief Platform Abstraction Layer for Log Dispatching in CIEDPC
+ * @brief Platform Abstraction Layer for Log Dispatching in UEDP
  * @version 0.1
  * @date 2026-05-24
  * @copyright MIT License
@@ -18,12 +18,12 @@
   /**
    * @brief Forward declaration cho itnlog
    */
-  typedef struct ciedpc_itnlog_entry_t ciedpc_itnlog_entry_t;
+  typedef struct uedp_itnlog_entry_t uedp_itnlog_entry_t;
 
   /**
    * @brief Định nghĩa kiểu hàm callback để xuất dữ liệu log
    */
-  typedef void (*logdp_output_fn)(ciedpc_itnlog_entry_t* entry);
+  typedef void (*logdp_output_fn)(uedp_itnlog_entry_t* entry);
 
   /**
    * @brief Hàm để đăng ký hàm callback xuất dữ liệu log
@@ -41,6 +41,6 @@
    * @brief Hàm để dispatch log entry từ internal logger đến các hàm callback đã đăng ký
    * @param entry Con trỏ đến log entry được gửi từ internal logger để dispatch đến các hàm callback đã đăng ký
    */
-  void pal_logdp_dispatch(ciedpc_itnlog_entry_t* entry);
+  void pal_logdp_dispatch(uedp_itnlog_entry_t* entry);
 
 #endif // __PAL_LOGDP_H__

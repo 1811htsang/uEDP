@@ -1,7 +1,7 @@
 /**
  * @file pal_memrp.h
  * @author Shang Huang
- * @brief PAL Memory Reporter header file for CIEDPC project
+ * @brief PAL Memory Reporter header file for UEDP project
  * @version 0.1
  * @date 2026-04-30
  * @copyright MIT License
@@ -13,8 +13,8 @@
    * @brief Khai báo thư viện sử dụng
    */
   
-  #include "ciedpc_core.h"
-  #include "ciedpc_msg.h"
+  #include "uedp_core.h"
+  #include "uedp_msg.h"
 
   /**
    * @brief Cấu trúc thông tin báo cáo bộ nhớ cho một target cụ thể
@@ -29,7 +29,7 @@
   typedef struct pal_memrp_info_t {
     void* target;
     const char* name; // Tên của target để dễ dàng nhận biết trong báo cáo, có thể là "Blank Pool", "Alloc Pool", "Extal Pool", "Timer Pool", "ISR Queue", "Task A Queue", v.v.
-    ciedpc_msg_type_t type;
+    uedp_msg_type_t type;
     ui8 used;
     ui8 max_used;
     ui8 total;
@@ -42,13 +42,13 @@
   void pal_memrp_report(pal_memrp_info_t* info);
 
   /**
-   * @brief Hàm báo cáo thông tin bộ nhớ của tất cả các target đã được định nghĩa trong hệ thống CIEDPC
+   * @brief Hàm báo cáo thông tin bộ nhớ của tất cả các target đã được định nghĩa trong hệ thống UEDP
    */
   void pal_memrp_report_all(void);
 
   /**
 	 * @brief Hàm này được định nghĩa là weak để cho phép người dùng tùy chỉnh cách lấy thông tin bộ nhớ của Stack nếu cần thiết.
 	 */
-	CIEDPC_ATTR_WEAK void pal_memrp_get_sys_info(ui32 *rom_used, ui32 *ram_used, ui32 *stack_curr);
+	UEDP_ATTR_WEAK void pal_memrp_get_sys_info(ui32 *rom_used, ui32 *ram_used, ui32 *stack_curr);
 
 #endif

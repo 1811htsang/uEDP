@@ -13,10 +13,10 @@
 
 #include "app_cfg.h"
 #include "app_decl.h"
-#include "ciedpc_core.h"
-#include "ciedpc_task.h"
-#include "ciedpc_msg.h"
-#include "ciedpc_timer.h"
+#include "uedp_core.h"
+#include "uedp_task.h"
+#include "uedp_msg.h"
+#include "uedp_timer.h"
 #include "pal_memrp.h"
 
 /**

@@ -1,7 +1,7 @@
 /**
  * @file fifo.h
  * @author Shang Huang
- * @brief FIFO (First-In-First-Out) queue definitions and utilities for CIEDPC system
+ * @brief FIFO (First-In-First-Out) queue definitions and utilities for UEDP system
  * @version 0.1
  * @date 2026-04-16
  * @copyright MIT License
