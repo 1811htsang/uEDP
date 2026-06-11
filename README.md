@@ -1,4 +1,4 @@
-# CIEDPC / uEDP: Custom Independent Event-Driven Programming Core
+# μEDP: Custom Independent Event-Driven Programming Core
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Language: C](https://img.shields.io/badge/Language-Pure%20C-blue.svg)
@@ -6,7 +6,7 @@
 ![Platform: Agnostic](https://img.shields.io/badge/Platform-STM32%20|%20ESP32%20|%20Linux-green.svg)
 ![Status: Active Development](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
 
-**CIEDPC** (currently being renamed `uEDP`) is a lightweight, high-performance, event-driven programming kernel based on the **Active Object** model.
+**μEDP** is a lightweight, high-performance, event-driven programming kernel based on the **Active Object** model for embedded systems. It is designed to be platform-agnostic, supporting multiple architectures (STM32, ESP32, Linux) with a unified API and architecture.
 
 The core goal is to achieve **"Zero-Touch Porting"** — enabling the porting of application logic between platforms (STM32, ESP32, Linux) without changing the core source code.
 
@@ -14,14 +14,13 @@ The core goal is to achieve **"Zero-Touch Porting"** — enabling the porting of
 
 ## 🚀 Key Features
 
-- **Separate Architecture:** Clear layering between App Layer — CIEDPC/uEDP Core — PAL (Platform Abstraction Layer).
-- **O(1) Scheduler:** Priority-based multitasking scheduling using bitmasks, optimizing response time for events.
-- **Static Memory Management (Static Memory Pools):** Minimizing fragmentation and ensuring deterministic behavior for real-time systems.
-- **Unified Messaging:** Support for passing values and references (zero-copy), automatically adapting to 32/64-bit pointer sizes.
-- **Wrapper & Core (TSM & FSM):** Integration of mode management (TSM) and micrologic (FSM) for clear system organization.
-- **Logging Chain:** Three-layer logging system `xprintf` → `rprintf` → `logdp` (itnlog) supporting safe log collection and forwarding from ISR to backend.
-- **Memory Profiling (PAL memrp):** Built-in memory profiling service to track memory usage patterns for optimization.
-- **Simulation Ready:** Designed to run on Linux for development and testing before deployment on embedded platforms.
+- Unified Messaging (v1.0.x): Unified message management mechanism.
+- Hybrid State Machine (v1.0.x): TSM and FSM for managing business logic.
+- Safe ISR Injection (v1.0.x): Bridge for injecting interrupt signals into the Core.
+- Priority Escalation (v1.1.0): Software scheduling policy for handling urgent messages.
+- Pub-Sub Engine (v1.2.0): Extends multicast communication between Tasks.
+- itnlog (v1.0.2): System for logging snapshot logic inside the Core.
+- Out-Context Execution - OCE (v1.0.x): Theoretical framework for freeing up CPU for light tasks when the Scheduler is idle.
 
 ---
 
@@ -35,7 +34,7 @@ graph LR
         Logic[Main App Logic app.c]
     end
 
-    subgraph Core[CIEDPC/uEDP Core ]
+    subgraph Core[μEDP Core ]
         Task[Task Scheduler & Task Objects]
         Msg[Message Pools & Manager]
         Timer[Timer Service]
@@ -63,10 +62,10 @@ graph LR
 ## 📂 Directory Structure
 
 ```text
-CIEDPC-uEDP/
-├── core/                 # Definition and implementation of the core logic of CIEDPC
+μEDP/
+├── core/                 # Definition and implementation of the core logic of μEDP
 │   ├── inc/              # Message, Task, Timer, Itnlog, FSM, TSM
-│   │   └── ciedpc_core.h # Definition of signals, constants and core data structures of CIEDPC
+│   │   └── uedp_core.h   # Definition of signals, constants and core data structures of μEDP
 │   └── src/              # Implementation of scheduler logic, timer engine, message manager, FSM/TSM engine, etc.
 ├── pal/                  # BACKEND (Abstract Layer)
 │   ├── pal_core.h        # Unified declaration for the entire PAL and system services
@@ -99,9 +98,9 @@ CIEDPC-uEDP/
 
 Information about the API, memory pool planning, and porting guides to other MCUs can be found in the [User Manual](./docs/user-manual.md).
 
-A comparison analysis between the event-driven model (uEDP/CIEDPC) and RTOS is available in [uEDP vs FreeRTOS](./docs/uedp-vs-freertos.md).
+A comparison analysis between the event-driven model (μEDP) and RTOS is available in [μEDP vs FreeRTOS](./docs/uedp-vs-freertos.md).
 
-A detailed analysis between the μEDP/CIEDPC and the QP/C framework is available in [uEDP vs QP/C](./docs/uedp-vs-qpc.md).
+A detailed analysis between the μEDP and the QP/C framework is available in [μEDP vs QP/C](./docs/uedp-vs-qpc.md).
 
 If you want to see the documentation in progress, switch to the `docs` branch to view the documents that are currently being drafted and updated. Please also note that the documentation is currently supporting Vietnamese, and English documentation will be added in the future as the project progresses or with contributions from the community.
 

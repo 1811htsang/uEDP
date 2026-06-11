@@ -6,8 +6,8 @@
  * @date 2026-06-01
  * @copyright MIT License
  */
-#include "ciedpc_core.h"
-#include "ciedpc_itnlog.h"
+#include "uedp_core.h"
+#include "uedp_itnlog.h"
 #include "xprintf.h"
 #include "pal_rprintf.h"
 #include <string.h>
@@ -25,8 +25,8 @@ sta size_t internal_format_buffer_length = 0;
  */
 
 sta void internal_buffer_putc(int chr);
-sta void internal_validate_entry(ciedpc_itnlog_entry_t* entry);
-sta void internal_format_entry(ciedpc_itnlog_entry_t* entry, char* buffer, size_t buf_size);
+sta void internal_validate_entry(uedp_itnlog_entry_t* entry);
+sta void internal_format_entry(uedp_itnlog_entry_t* entry, char* buffer, size_t buf_size);
 
 /**
  * @brief Triển khai các hàm của dịch vụ redirect print cho PAL layer
@@ -64,13 +64,13 @@ void pal_rprintf_flush_entry(pal_rprintf_service_t* service) {
   * @note Tùy thuộc vào nhu cầu kiểm tra trong tương lai nên cần 
   *       tách hàm này thành nhiều hàm nhỏ hơn để kiểm tra từng phần của log entry một cách chi tiết hơn,
   */
-void internal_validate_entry(ciedpc_itnlog_entry_t* entry) {
+void internal_validate_entry(uedp_itnlog_entry_t* entry) {
   if (entry == NULL) {
     return; // Nếu entry là NULL, không cần xử lý gì
   }
 }
 
-void internal_format_entry(ciedpc_itnlog_entry_t* entry, char* buffer, size_t buf_size) {
+void internal_format_entry(uedp_itnlog_entry_t* entry, char* buffer, size_t buf_size) {
   if (entry == NULL || buffer == NULL || buf_size == 0) {
     return;
   }

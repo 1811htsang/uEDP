@@ -1,7 +1,7 @@
 ﻿/**
  * @file fifo.c
  * @author Shang Huang
- * @brief Implementation of FIFO (First-In-First-Out) queue for CIEDPC system
+ * @brief Implementation of FIFO (First-In-First-Out) queue for UEDP system
  * @version 0.1
  * @date 2026-04-16
  * 

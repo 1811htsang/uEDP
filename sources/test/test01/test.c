@@ -10,42 +10,42 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "test.h"
-#include "ciedpc_core.h"
-#include "ciedpc_task.h"
-#include "ciedpc_tsm.h"
-#include "ciedpc_fsm.h"
-#include "ciedpc_msg.h"
-#include "ciedpc_timer.h"
+#include "uedp_core.h"
+#include "uedp_task.h"
+#include "uedp_tsm.h"
+#include "uedp_fsm.h"
+#include "uedp_msg.h"
+#include "uedp_timer.h"
 
 /**
  * @brief Khai báo static message queue cho task USR (entry point), task Controller và task Blinker
  */
 
-static ciedpc_msg_t* ctrl_q_mem[8];
-static ciedpc_msg_t* blink_q_mem[8];
+static uedp_msg_t* ctrl_q_mem[8];
+static uedp_msg_t* blink_q_mem[8];
 
 /**
  * @brief Định nghĩa các on-entry/exit cho STATE_BLINK_ACTIVE
  */
 
-void fn_on_active_exit(ciedpc_msg_t* msg) {
+void fn_on_active_exit(uedp_msg_t* msg) {
   (void)msg;
   printf("[Blinker] -> Exiting ACTIVE Mode. Stopping Timer...\n");
   // Bắt buộc phải gỡ timer để tránh nhận tin nhắn thừa trong IDLE
-  ciedpc_timer_remove(TASK_NORM_BLINKER_ID, SIG_INTERNAL_TICK);
+  uedp_timer_remove(TASK_NORM_BLINKER_ID, SIG_INTERNAL_TICK);
 }
 
-void fn_on_active_entry(ciedpc_msg_t* msg) {
+void fn_on_active_entry(uedp_msg_t* msg) {
   (void)msg;
   printf("[Blinker] -> Entered ACTIVE Mode. Starting Timer 1000ms...\n");
-  ciedpc_timer_set(TASK_NORM_BLINKER_ID, SIG_INTERNAL_TICK, 1000, CIEDPC_TIMER_PERIODIC);
+  uedp_timer_set(TASK_NORM_BLINKER_ID, SIG_INTERNAL_TICK, 1000, UEDP_TIMER_PERIODIC);
 }
 
 /**
  * @brief Định nghĩa hàm on-entry cho STATE_BLINK_IDLE
  */
 
-void fn_on_idle_entry(ciedpc_msg_t* msg) { 
+void fn_on_idle_entry(uedp_msg_t* msg) { 
   (void)msg;
   printf("[Blinker] -> Entered IDLE Mode. Waiting for Start...\n");
 }
@@ -54,7 +54,7 @@ void fn_on_idle_entry(ciedpc_msg_t* msg) {
  * @brief Định nghĩa hàm on-state cho TSM
  */
 
-void fn_active_logic(ciedpc_msg_t* msg) {
+void fn_active_logic(uedp_msg_t* msg) {
   (void)msg;
   printf("[Blinker] Processing Tick event. State remains ACTIVE.\n");
 }
@@ -65,7 +65,7 @@ void fn_active_logic(ciedpc_msg_t* msg) {
 
 const tsm_trans_t blink_idle_trans[] = {
   { SIG_USR_START, STATE_BLINK_ACTIVE, NULL },
-  { SIG_USR_STOP,  CIEDPC_TSM_STATE_STAY, NULL } // Đã IDLE rồi thì STOP đứng yên
+  { SIG_USR_STOP,  UEDP_TSM_STATE_STAY, NULL } // Đã IDLE rồi thì STOP đứng yên
 };
 
 /**
@@ -73,9 +73,9 @@ const tsm_trans_t blink_idle_trans[] = {
  */
 
 const tsm_trans_t blink_active_trans[] = {
-  { SIG_INTERNAL_TICK, CIEDPC_TSM_STATE_STAY, fn_active_logic },
+  { SIG_INTERNAL_TICK, UEDP_TSM_STATE_STAY, fn_active_logic },
   { SIG_USR_STOP,      STATE_BLINK_IDLE,      NULL },
-  { SIG_USR_START,     CIEDPC_TSM_STATE_STAY, NULL } // Đã ACTIVE rồi thì START đứng yên
+  { SIG_USR_START,     UEDP_TSM_STATE_STAY, NULL } // Đã ACTIVE rồi thì START đứng yên
 };
 
 /**
@@ -91,21 +91,21 @@ const tsm_state_desc_t blinker_tsm_table[] = {
  * @brief Định nghĩa TSM cho task Blinker
  */
 
-static ciedpc_tsm_t blinker_tsm;
+static uedp_tsm_t blinker_tsm;
 
 /**
  * @brief Định nghĩa các handler cho các task
  */
 
-void task_blinker_handler(ciedpc_msg_t* msg) {
-  ciedpc_tsm_dispatch(&blinker_tsm, msg);
+void task_blinker_handler(uedp_msg_t* msg) {
+  uedp_tsm_dispatch(&blinker_tsm, msg);
 }
 
-void task_controller_handler(ciedpc_msg_t* msg) {
+void task_controller_handler(uedp_msg_t* msg) {
   if (msg->sig == SIG_USR_START || msg->sig == SIG_USR_STOP) {
     printf("[Controller] Relaying Signal 0x%02X to Blinker\n", msg->sig);
-    ciedpc_msg_t* m = ciedpc_msg_alloc(TASK_NORM_BLINKER_ID, msg->sig, 0);
-    if (m) ciedpc_task_norm_post_msg(TASK_NORM_BLINKER_ID, m);
+    uedp_msg_t* m = uedp_msg_alloc(TASK_NORM_BLINKER_ID, msg->sig, 0);
+    if (m) uedp_task_norm_post_msg(TASK_NORM_BLINKER_ID, m);
   }
 }
 
@@ -114,9 +114,9 @@ void task_controller_handler(ciedpc_msg_t* msg) {
  */
 
 task_norm_t app_task_table[] = {
-  { TASK_NORM_CONTROLLER_ID, CIEDPC_TASK_PRI_LEVEL_8, {0}, {0}, task_controller_handler, {0}, ctrl_q_mem  },
-  { TASK_NORM_BLINKER_ID,    CIEDPC_TASK_PRI_LEVEL_6, {0}, {0}, task_blinker_handler,    {0}, blink_q_mem },
-  { CIEDPC_TASK_NORM_EOT_ID, CIEDPC_TASK_PRI_LEVEL_0, {0}, {0}, NULL,                    {0}, NULL        }
+  { TASK_NORM_CONTROLLER_ID, UEDP_TASK_PRI_LEVEL_8, {0}, {0}, task_controller_handler, {0}, ctrl_q_mem  },
+  { TASK_NORM_BLINKER_ID,    UEDP_TASK_PRI_LEVEL_6, {0}, {0}, task_blinker_handler,    {0}, blink_q_mem },
+  { UEDP_TASK_NORM_EOT_ID, UEDP_TASK_PRI_LEVEL_0, {0}, {0}, NULL,                    {0}, NULL        }
 };
 
 
@@ -128,7 +128,7 @@ task_norm_t app_task_table[] = {
 void* linux_tick_thread(void* arg) {
   while (1) {
     usleep(1000); // 1ms
-    ciedpc_timer_tick();
+    uedp_timer_tick();
   }
   return NULL;
 }
@@ -141,15 +141,15 @@ int main() {
   printf("=== CIEDPC LINUX INTEGRATION TEST ===\n");
 
   // Khởi động Core
-  ciedpc_core_init();
+  uedp_core_init();
 
   // Khởi tạo Message Pool, Timer và Task
-  ciedpc_msg_pool_init();
-  ciedpc_timer_init();
-  ciedpc_task_norm_create(app_task_table);
+  uedp_msg_pool_init();
+  uedp_timer_init();
+  uedp_task_norm_create(app_task_table);
 
   // Khởi tạo TSM cho task Blinker
-  ciedpc_tsm_init(&blinker_tsm, blinker_tsm_table, 2, STATE_BLINK_IDLE, NULL);
+  uedp_tsm_init(&blinker_tsm, blinker_tsm_table, 2, STATE_BLINK_IDLE, NULL);
 
   // Tạo luồng giả lập Tick
   pthread_t tick_tid;
@@ -157,10 +157,10 @@ int main() {
 
   // Giả lập tín hiệu bắt đầu
   printf("[System] Simulating External Interrupt: Start Button Pressed...\n");
-  ciedpc_task_norm_post_isr(TASK_NORM_CONTROLLER_ID, SIG_USR_START);  
+  uedp_task_norm_post_isr(TASK_NORM_CONTROLLER_ID, SIG_USR_START);  
 
   while (1) {
-    ciedpc_task_scheduler();
+    uedp_task_scheduler();
     usleep(100); // Sleep để tránh CPU hogging
   }
 

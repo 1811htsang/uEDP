@@ -18,21 +18,21 @@
 	/**
 	 * @brief Khai báo danh sách tác vụ và tác vụ polling của ứng dụng
 	 * @attention Với n tác vụ thì có n entry trong bảng tác vụ và tác vụ polling
-	 * @attention Lưu ý rằng CIEDPC_TASK_NORM_USR_ID và CIEDPC_TASK_NORM_EOT_ID là 2 ID đặc biệt bắt buộc phải có
+	 * @attention Lưu ý rằng UEDP_TASK_NORM_USR_ID và UEDP_TASK_NORM_EOT_ID là 2 ID đặc biệt bắt buộc phải có
 	 * @note Người dùng tự định nghĩa bảng tác vụ và tác vụ polling nhưng vẫn giữ nguyên
 	 * 			 khai báo tên bảng tác vụ và tác vụ polling. Phần implementation nội bộ
 	 * 			 do người dùng tự triển khai hoặc có thể giữ nguyên nếu không sử dụng tác vụ polling.
 	 * @example 
 	 * task_norm_t app_task_table[] = {
-	 * 	{ CIEDPC_TASK_NORM_USR_ID,  CIEDPC_TASK_PRI_LEVEL_8, task_norm_usr_handler, {0}, usr_q_mem  },
-	 * 	{ TASK_NORM_A_ID,           CIEDPC_TASK_PRI_LEVEL_7, task_norm_a_handler,   {0}, a_q_mem    },
-	 * 	{ TASK_NORM_B_ID,           CIEDPC_TASK_PRI_LEVEL_6, task_norm_b_handler,   {0}, b_q_mem    },
-	 * 	{ CIEDPC_TASK_NORM_EOT_ID,  CIEDPC_TASK_PRI_LEVEL_0, NULL,                  {0}, NULL       }
+	 * 	{ UEDP_TASK_NORM_USR_ID,  UEDP_TASK_PRI_LEVEL_8, task_norm_usr_handler, {0}, usr_q_mem  },
+	 * 	{ TASK_NORM_A_ID,           UEDP_TASK_PRI_LEVEL_7, task_norm_a_handler,   {0}, a_q_mem    },
+	 * 	{ TASK_NORM_B_ID,           UEDP_TASK_PRI_LEVEL_6, task_norm_b_handler,   {0}, b_q_mem    },
+	 * 	{ UEDP_TASK_NORM_EOT_ID,  UEDP_TASK_PRI_LEVEL_0, NULL,                  {0}, NULL       }
 	 * };
 	 *
 	 * task_poll_t app_poll_table[] = {
-	 * 	{ CIEDPC_TASK_POLL_MEMRP_ID , 0, task_poll_memrp_handler },
-	 * 	{ CIEDPC_TASK_POLL_EOT_ID, 0, NULL }
+	 * 	{ UEDP_TASK_POLL_MEMRP_ID , 0, task_poll_memrp_handler },
+	 * 	{ UEDP_TASK_POLL_EOT_ID, 0, NULL }
 	 * };
 	 */
 
@@ -46,9 +46,9 @@
 	 * 			 triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM
 	 * @example
 	 * const tsm_trans_t blink_active_trans[] = {
-	 * { SIG_INTERNAL_TICK, CIEDPC_TSM_STATE_STAY, fn_active_logic },
+	 * { SIG_INTERNAL_TICK, UEDP_TSM_STATE_STAY, fn_active_logic },
 	 * { SIG_USR_STOP,      STATE_BLINK_IDLE,      NULL },
-	 * { SIG_USR_START,     CIEDPC_TSM_STATE_STAY, NULL } // Đã ACTIVE rồi thì START đứng yên
+	 * { SIG_USR_START,     UEDP_TSM_STATE_STAY, NULL } // Đã ACTIVE rồi thì START đứng yên
 	 * };
 	 */
 
@@ -76,7 +76,7 @@
 	 * 			 triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM cho tác vụ
 	 */
 
-	extern ciedpc_tsm_t app_tsm;
+	extern uedp_tsm_t app_tsm;
 
 	/**
 	 * @brief Định nghĩa FSM cho tác vụ
@@ -86,7 +86,7 @@
 	 * 			 triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng FSM cho tác vụ
 	 */
 
-	extern ciedpc_fsm_t app_fsm;
+	extern uedp_fsm_t app_fsm;
 
 #endif //__APP_CFG_H__
 

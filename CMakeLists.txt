@@ -1,6 +1,6 @@
 # @file CMakeLists.txt
 # @author Shang Huang
-# @brief CMake configuration cho CIEDPC-uEDP import on ESP-IDF
+# @brief CMake configuration cho UEDP-uEDP import on ESP-IDF
 # @version 1.0
 # @date 2026-05-23
 # @copyright MIT License
@@ -62,7 +62,7 @@ idf_component_register(
     app_update                  # Cần cho OTA
     esp_app_format              # Cần cho OTA
     bootloader_support          # Cần cho OTA
-    esp_timer                   # Cần cho ciedpc_timer_tick
+    esp_timer                   # Cần cho uedp_timer_tick
     driver                      # Cần cho GPIO/UART/I2C
     freertos                    # Cần cho task/sleep
     log                         # Cần cho logging
@@ -70,4 +70,4 @@ idf_component_register(
 )
 
 # @brief Định nghĩa Macro toàn cục để Code biết đang chạy trên ESP32
-target_compile_definitions(${COMPONENT_LIB} PUBLIC CIEDPC)
+target_compile_definitions(${COMPONENT_LIB} PUBLIC UEDP)

@@ -1,7 +1,7 @@
 /**
  * @file pal_cfg.h
  * @author Shang Huang
- * @brief Configuration header for PAL module in CIEDPC
+ * @brief Configuration header for PAL module in UEDP
  * @version 0.1
  * @date 2026-06-01
  * @copyright MIT License

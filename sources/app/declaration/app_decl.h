@@ -15,12 +15,12 @@
 	 * @brief Khai báo thư viện sử dụng
 	 */
 
-	#include "ciedpc_core.h"
-	#include "ciedpc_task.h"
-	#include "ciedpc_tsm.h"
-	#include "ciedpc_fsm.h"
-	#include "ciedpc_msg.h"
-	#include "ciedpc_timer.h"
+	#include "uedp_core.h"
+	#include "uedp_task.h"
+	#include "uedp_tsm.h"
+	#include "uedp_fsm.h"
+	#include "uedp_msg.h"
+	#include "uedp_timer.h"
 
 	/**
 	 * @brief Khai báo tác vụ
@@ -37,7 +37,7 @@
 	 * @brief Khai báo tín hiệu giao tiếp giữa các tác vụ
 	 * @attention Tác vụ phải khai báo đúng định dạng `0x0x`
 	 * 						x bắt đầu từ 1 trở đi. Không nên vượt quá 0x7F 
-	 * 						để tránh trùng với tín hiệu nội bộ của hệ thống CIEDPC
+	 * 						để tránh trùng với tín hiệu nội bộ của hệ thống UEDP
 	 * @example
 	 * #define SIG_USR_START     (0x01u)
 	 * #define SIG_USR_STOP      (0x02u)
@@ -51,11 +51,11 @@
 	 * @brief Khai báo message queue cho các tác vụ
 	 * @attention Mỗi tác vụ sẽ có một hàng đợi tin nhắn riêng biệt
 	 * 						Tùy thuộc vào nhu cầu của ứng dụng để điều chỉnh kích thước của hàng đợi, 
-	 * 						nhưng cần đảm bảo không vượt quá giới hạn của hệ thống CIEDPC
+	 * 						nhưng cần đảm bảo không vượt quá giới hạn của hệ thống UEDP
 	 * @example 
-	 * extern ciedpc_msg_t* usr_q_mem[8];
-	 * extern ciedpc_msg_t* a_q_mem[8];
-	 * extern ciedpc_msg_t* b_q_mem[8];
+	 * extern uedp_msg_t* usr_q_mem[8];
+	 * extern uedp_msg_t* a_q_mem[8];
+	 * extern uedp_msg_t* b_q_mem[8];
 	 */
 
 	// Điền các khai báo tại đây
@@ -75,7 +75,7 @@
 	 * @attention Mỗi tác vụ phải có một hàm handler tương ứng 
 	 * 						để xử lý các tin nhắn nhận được. 
 	 * 						Với các task_norm thì hàm handler 
-	 * 							có định dạng `void task_norm_x_handler(ciedpc_msg_t* msg)`,
+	 * 							có định dạng `void task_norm_x_handler(uedp_msg_t* msg)`,
 	 * 							trong đó x là tên tác vụ.
 	 * 						Với các task_poll thì hàm handler 
 	 * 							có định dạng `void task_poll_x_handler()`,

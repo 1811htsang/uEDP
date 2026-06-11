@@ -4,9 +4,9 @@ Tài liệu này tập trung vào so sánh kỹ thuật và triết lý thiết 
 
 Lưu ý tên gọi:
 
-- Trong source hiện tại, dự án đang dùng tên CIEDPC.
-- Trong tài liệu roadmap, CIEDPC dự kiến đổi tên thành uEDP.
-- Tài liệu này dùng tên uEDP để đồng bộ với định hướng uE-OS, nhưng API map sẽ tham chiếu tên CIEDPC hiện hành.
+- Trong source hiện tại, dự án đang dùng tên UEDP.
+- Trong tài liệu roadmap, UEDP dự kiến đổi tên thành uEDP.
+- Tài liệu này dùng tên uEDP để đồng bộ với định hướng uE-OS, nhưng API map sẽ tham chiếu tên UEDP hiện hành.
 
 ## 1. Tổng quan triết lý (Design Philosophy)
 
@@ -23,9 +23,9 @@ Lưu ý tên gọi:
 
 uEDP:
 
-- Tạo task theo bảng tĩnh (vd: `ciedpc_task_norm_create`, `ciedpc_task_poll_create`).
+- Tạo task theo bảng tĩnh (vd: `uedp_task_norm_create`, `uedp_task_poll_create`).
 - Cấm blocking trong handler message-driven.
-- Mô hình cho đổi trạng thái timer + transition (`ciedpc_timer_set` + FSM/TSM).
+- Mô hình cho đổi trạng thái timer + transition (`uedp_timer_set` + FSM/TSM).
 
 FreeRTOS:
 
@@ -107,15 +107,15 @@ FreeRTOS:
 | Multi-thread true concurrent / multi-core RTOS features | Không phải mục tiêu chính | Tốt |
 | Team quen lập trình blocking tuần tự | Khó tiếp cận ban đầu | Dễ tiếp cận hơn |
 
-## 5. Bảng map API (FreeRTOS -> uEDP/CIEDPC)
+## 5. Bảng map API (FreeRTOS -> uEDP/UEDP)
 
-| Tính năng | FreeRTOS API | uEDP Equivalent (CIEDPC hien tai) |
+| Tính năng | FreeRTOS API | uEDP Equivalent (UEDP hien tai) |
 | :--- | :--- | :--- |
-| Tạo task message-driven | `xTaskCreate`/`xTaskCreateStatic` | `ciedpc_task_norm_create` |
-| Delay chờ đợi | `vTaskDelay` | `ciedpc_timer_set` + xử lý bảng FSM/TSM |
-| Gửi dữ liệu giữa task | `xQueueSend` | `ciedpc_msg_alloc` + `ciedpc_task_norm_post_msg` |
+| Tạo task message-driven | `xTaskCreate`/`xTaskCreateStatic` | `uedp_task_norm_create` |
+| Delay chờ đợi | `vTaskDelay` | `uedp_timer_set` + xử lý bảng FSM/TSM |
+| Gửi dữ liệu giữa task | `xQueueSend` | `uedp_msg_alloc` + `uedp_task_norm_post_msg` |
 | Bảo vệ vùng găng | `taskENTER_CRITICAL`/`taskEXIT_CRITICAL` | `pal_enter_critical`/`pal_exit_critical` |
-| ISR gửi sự kiện | `xQueueSendFromISR` | `ciedpc_task_norm_post_isr` |
+| ISR gửi sự kiện | `xQueueSendFromISR` | `uedp_task_norm_post_isr` |
 
 ## 6. "Stack Watermark" là điểm khác biệt lớn
 

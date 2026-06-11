@@ -1,7 +1,7 @@
 /**
  * @file esp32_wr32_arch.h
  * @author Shang Huang
- * @brief Header file for ESP32-WR32 Architecture Abstraction Layer in CIEDPC
+ * @brief Header file for ESP32-WR32 Architecture Abstraction Layer in UEDP
  * @version 0.1
  * @date 2026-04-20
  * @copyright MIT License
