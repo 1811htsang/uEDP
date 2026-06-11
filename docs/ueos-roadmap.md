@@ -59,4 +59,4 @@ Tài liệu này trình bày lộ trình phát triển của hệ điều hành 
 
 ## Sau phiên bản 1.4.3
 
-Các tính năng và hạng mục bổ sung sẽ được xác định và lên kế hoạch chi tiết hơn dựa trên tiến trình phát triển của μE-OS và phản hồi từ cộng đồng người dùng.
+Các tính năng và hạng mục bổ sung sẽ được xác định và lên kế hoạch chi tiết hơn dựa trên tiến trình phát triển của μE-OS và phản hồi từ cộng đồng người dùng. Điều này phụ thuộc vào việc hoàn thiện các tính năng đã đề ra trong lộ trình và đánh giá hiệu quả của chúng trong thực tế, cũng như việc nghiên cứu và áp dụng các công nghệ mới có thể hỗ trợ cho sự phát triển của hệ điều hành nhúng.
