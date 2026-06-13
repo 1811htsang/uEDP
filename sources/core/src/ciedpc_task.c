@@ -78,7 +78,7 @@ RETR_STAT ciedpc_task_norm_post_msg(task_id_t dest_id, ciedpc_msg_t* msg) {
     return STAT_ERROR; // Trả về lỗi nếu msg là NULL
   }
   internal_ciedpc_task_norm_put_to_queue(dest_id, msg);
-  internal_ciedpc_task_norm_set_ready(internal_get_task_norm_by_id(dest_id)->pri); // Đặt trạng thái sẵn sàng cho tác vụ dựa trên mức độ ưu tiên của nó
+  internal_ciedpc_task_norm_set_ready(internal_get_task_norm_by_id(dest_id)->base_pri); // Đặt trạng thái sẵn sàng cho tác vụ dựa trên mức độ ưu tiên của nó
   return STAT_OK;
 }
 
@@ -96,7 +96,7 @@ RETR_STAT ciedpc_task_scheduler() {
   if (highest_pri > 0) {
     // Nếu có tác vụ nào đó đang ở trạng thái sẵn sàng, tìm và thực thi tác vụ đó
     for (ui8 i = 0; i < g_task_norm_count; i++) {
-      if (g_task_norm_table[i].pri == highest_pri) {
+      if (g_task_norm_table[i].base_pri == highest_pri) {
         ciedpc_msg_t* msg = internal_ciedpc_task_norm_get_from_queue(g_task_norm_table[i].id);
         // Nếu lấy được tin nhắn từ hàng đợi của tác vụ, thực thi tác vụ với tin nhắn đó
         if (msg) {
@@ -132,7 +132,7 @@ bool ciedpc_task_norm_is_ready(task_id_t task_id) {
   task_pri_t pri = 0;
   for (ui8 i = 0; i < g_task_norm_count; i++) {
     if (g_task_norm_table[i].id == task_id) {
-      pri = g_task_norm_table[i].pri;
+      pri = g_task_norm_table[i].base_pri;
       break;
     }
   }

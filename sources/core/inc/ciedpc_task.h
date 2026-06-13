@@ -56,7 +56,9 @@
 	/**
 	 * @brief Định nghĩa cấu trúc để quản lý thông tin của tác vụ message-driven
 	 * @param id: ID của tác vụ message-driven
-	 * @param pri: Mức độ ưu tiên của tác vụ message-driven
+	 * @param base_pri: Mức độ ưu tiên cơ bản của tác vụ message-driven
+	 * @param cur_pri: Mức độ ưu tiên hiện tại của tác vụ message-driven, 
+	 * 								 có thể được điều chỉnh dựa trên các tín hiệu khẩn cấp hoặc các yếu tố khác
 	 * @param fsm: Cấu trúc FSM để quản lý trạng thái của tác vụ message-driven
 	 * @param tsm: Cấu trúc TSM để quản lý thời gian và sự kiện của tác vụ message-driven
 	 * @param task_norm: Hàm thực thi của tác vụ message-driven, được gọi khi tác vụ nhận được tin nhắn để xử lý
@@ -65,7 +67,8 @@
 	 */
 	typedef struct task_norm_t {
 		task_id_t id;
-		task_pri_t pri;
+		task_pri_t base_pri;
+		task_pri_t cur_pri;
 		pf_task_norm task_norm;
 		fifo_t msg_queue; 
 		ciedpc_msg_t** msg_queue_buffer;
