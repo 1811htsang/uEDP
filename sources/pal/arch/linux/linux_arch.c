@@ -1,7 +1,7 @@
 /**
  * @file linux_arch.c
  * @author Shang Huang
- * @brief Implementation of Linux Architecture Abstraction Layer for CIEDPC
+ * @brief Implementation of Linux Architecture Abstraction Layer for UEDP
  * @version 0.1
  * @date 2026-04-20
  * @copyright MIT License
@@ -26,32 +26,32 @@
 #include <signal.h>
 #include <time.h>
 #include "linux_arch.h"
-#include "ciedpc_core.h"
-#include "ciedpc_task.h"
+#include "uedp_core.h"
+#include "uedp_task.h"
 
 /**
- * @brief Đảm bảo ciedpc_timer_tick được biết đến
+ * @brief Đảm bảo uedp_timer_tick được biết đến
  */
 
-extern void ciedpc_timer_tick(void);
+extern void uedp_timer_tick(void);
 
 /**
  * @brief Khai báo biến mutex để hỗ trợ cơ chế khóa trong môi trường đa luồng của Linux
  */
 
-static pthread_mutex_t ciedpc_mutex;
+static pthread_mutex_t uedp_mutex;
 static pthread_mutexattr_t mutex_attr;
 static ui32 start_tick_ms = 0;
 
-/* --- IMPLEMENTATION CHO CIEDPC_CORE.H --- */
+/* --- IMPLEMENTATION CHO UEDP_CORE.H --- */
 
-void ciedpc_core_init(void) {
+void uedp_core_init(void) {
     pal_core_init();
     /* Khởi tạo các thành phần khác của Core nếu cần */
 }
 
 /**
- * @brief Implementation cho ciedpc_core.h
+ * @brief Implementation cho uedp_core.h
  */
 
 void pal_core_init(void) {
@@ -59,11 +59,11 @@ void pal_core_init(void) {
 }
 
 void pal_enter_critical(void) {
-    pthread_mutex_lock(&ciedpc_mutex);
+    pthread_mutex_lock(&uedp_mutex);
 }
 
 void pal_exit_critical(void) {
-    pthread_mutex_unlock(&ciedpc_mutex);
+    pthread_mutex_unlock(&uedp_mutex);
 }
 
 ui8 pal_math_get_highest_bit16(ui16 mask) {
@@ -102,7 +102,7 @@ void pal_linux_init_env(void) {
     /* 1. Khởi tạo Mutex hỗ trợ khóa lồng nhau (Recursive) */
     pthread_mutexattr_init(&mutex_attr);
     pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&ciedpc_mutex, &mutex_attr);
+    pthread_mutex_init(&uedp_mutex, &mutex_attr);
 
     /* 2. Đăng ký xử lý tín hiệu hệ thống Ctrl+C */
     signal(SIGINT, pal_signal_handler);
@@ -115,7 +115,7 @@ void pal_linux_init_env(void) {
 
 void pal_linux_simulate_interrupt(ui8 task_id, ui8 signal) {
     /* Giả lập việc nạp tín hiệu từ ngoại vi vào Bridge của Core */
-    ciedpc_task_norm_post_isr(task_id, signal);
+    uedp_task_norm_post_isr(task_id, signal);
 }
 
 /* Hàm này phải match với pthread callback */
@@ -127,13 +127,13 @@ void* pal_linux_simulate_tick_thread(void* arg) {
     while (1) {
         nanosleep(&ts, NULL);
         /* Gọi nhịp đập của Core */
-        ciedpc_timer_tick(); 
+        uedp_timer_tick(); 
     }
     return NULL;
 }
 
 void pal_linux_cleanup(void) {
-    pthread_mutex_destroy(&ciedpc_mutex);
+    pthread_mutex_destroy(&uedp_mutex);
     pthread_mutexattr_destroy(&mutex_attr);
 }
 

@@ -14,15 +14,15 @@
    */
 
   #include <stdbool.h>
-  #include "ciedpc_core.h"
-	#include "ciedpc_itnlog.h"
+  #include "uedp_core.h"
+	#include "uedp_itnlog.h"
   #include "pal_core.h"
 
   /**
    * @brief Forward declaration cho itnlog
    */
 
-  typedef struct ciedpc_itnlog_entry_t ciedpc_itnlog_entry_t;
+  typedef struct uedp_itnlog_entry_t uedp_itnlog_entry_t;
 
   /**
    * @brief Khai báo contract cho dịch vụ redirect print của PAL layer
@@ -35,7 +35,7 @@
    *      nhưng việc khởi tạo sẽ được thực hiện bởi người dùng hoặc BSP cụ thể trước khi sử dụng dịch vụ này.
    */
   typedef struct pal_rprintf_service_t {
-    ciedpc_itnlog_entry_t entry;
+    uedp_itnlog_entry_t entry;
     RETR_STAT (*init)(void);    
     void (*putc)(unsigned char c);    
     void (*write)(const uint8_t* data, uint16_t len);    

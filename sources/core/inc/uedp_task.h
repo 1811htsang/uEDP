@@ -1,7 +1,7 @@
 ﻿/**
- * @file ciedpc_task.h
+ * @file uedp_task.h
  * @author Shang Huang
- * @brief Task management definitions and utilities for CIEDPC system
+ * @brief Task management definitions and utilities for UEDP system
  * @version 0.1
  * @date 2026-04-16
  * @copyright MIT License
@@ -10,23 +10,23 @@
 	#define __TASK_H__
 
 	/**
-	 * @brief Khai báo các hằng số và macro cho hệ thống CIEDPC
+	 * @brief Khai báo các hằng số và macro cho hệ thống UEDP
 	 */
 	#include <stdint.h>
 	#include <stdbool.h>
-	#include "ciedpc_core.h"
-	#include "ciedpc_fsm.h"
-	#include "ciedpc_tsm.h"
+	#include "uedp_core.h"
+	#include "uedp_fsm.h"
+	#include "uedp_tsm.h"
 	#include "fifo.h" 
 
 	/**
-	 * @brief Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống CIEDPC
-	 * @attention `ciedpc_msg_t` được gọi ở đây để thực thi forward declaration, 
-	 * 						cho phép sử dụng con trỏ đến `ciedpc_msg_t` trong các khai báo sau này 
-	 * 						mà không cần phải định nghĩa chi tiết của `ciedpc_msg_t` tại thời điểm này, 
-	 * 						giúp tránh các vấn đề về phụ thuộc lẫn nhau giữa các cấu trúc dữ liệu trong hệ thống CIEDPC.
+	 * @brief Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống UEDP
+	 * @attention `uedp_msg_t` được gọi ở đây để thực thi forward declaration, 
+	 * 						cho phép sử dụng con trỏ đến `uedp_msg_t` trong các khai báo sau này 
+	 * 						mà không cần phải định nghĩa chi tiết của `uedp_msg_t` tại thời điểm này, 
+	 * 						giúp tránh các vấn đề về phụ thuộc lẫn nhau giữa các cấu trúc dữ liệu trong hệ thống UEDP.
 	 */
-	typedef struct ciedpc_msg_t ciedpc_msg_t;
+	typedef struct uedp_msg_t uedp_msg_t;
 
 	/**
 	 * @brief Định nghĩa các hằng số để quản lý kích thước 
@@ -39,7 +39,7 @@
 
 	/**
 	 * @brief Định nghĩa các kiểu dữ liệu để quản lý ID 
-	 * 				và mức độ ưu tiên của tác vụ trong hệ thống CIEDPC
+	 * 				và mức độ ưu tiên của tác vụ trong hệ thống UEDP
 	 */
 	typedef ui16	task_pri_t; // Mức ưu tiên của tác vụ
 	typedef ui16	task_id_t; 	// ID của tác vụ
@@ -50,7 +50,7 @@
 	 * 						nơi mỗi tác vụ sẽ được kích hoạt và thực thi liên tục hoặc theo một lịch trình nhất định, 
 	 * 						không phụ thuộc vào việc nhận tin nhắn.
 	 */
-	typedef void (*pf_task_norm)(ciedpc_msg_t*);
+	typedef void (*pf_task_norm)(uedp_msg_t*);
 	typedef void (*pf_task_poll)(); 
 
 	/**
@@ -71,13 +71,13 @@
 		task_pri_t cur_pri;
 		pf_task_norm task_norm;
 		fifo_t msg_queue; 
-		ciedpc_msg_t** msg_queue_buffer;
+		uedp_msg_t** msg_queue_buffer;
 	} task_norm_t;
 
 	/**
 	 * @brief Định nghĩa cấu trúc để quản lý thông tin của tác vụ poll-driven
 	 * @attention `ability` được sử dụng để quản lý khả năng của tác vụ poll, 
-	 *            cho phép hệ thống CIEDPC xác định và điều phối việc thực thi của các tác vụ poll 
+	 *            cho phép hệ thống UEDP xác định và điều phối việc thực thi của các tác vụ poll 
 	 * 						dựa trên khả năng của chúng.
 	 */
 	typedef struct task_poll_t {
@@ -87,52 +87,52 @@
 	} task_poll_t;
 
 	/**
-	 * @brief Hàm tạo tác vụ message-driven trong hệ thống CIEDPC
+	 * @brief Hàm tạo tác vụ message-driven trong hệ thống UEDP
 	 * @param task_table: Con trỏ đến bảng chứa thông tin của các tác vụ message-driven cần tạo     
 	 */
-	void ciedpc_task_norm_create(task_norm_t* task_table);
+	void uedp_task_norm_create(task_norm_t* task_table);
 
 	/**
-	 * @brief Hàm tạo tác vụ poll-driven trong hệ thống CIEDPC
+	 * @brief Hàm tạo tác vụ poll-driven trong hệ thống UEDP
 	 * @param task_table: Con trỏ đến bảng chứa thông tin của các tác vụ poll-driven cần tạo     
 	 */
-	void ciedpc_task_poll_create(task_poll_t* task_table);
+	void uedp_task_poll_create(task_poll_t* task_table);
 
 	/**
-	 * @brief Hàm gửi tin nhắn từ một tác vụ đến một tác vụ khác trong hệ thống CIEDPC
+	 * @brief Hàm gửi tin nhắn từ một tác vụ đến một tác vụ khác trong hệ thống UEDP
 	 * @param dest_id: ID của tác vụ đích mà tin nhắn sẽ được gửi đến
 	 * @param msg: Con trỏ đến cấu trúc tin nhắn cần gửi
 	 * @return RETR_STAT: Trả về trạng thái của việc gửi tin nhắn
 	 */
-	RETR_STAT ciedpc_task_norm_post_msg(task_id_t dest_id, ciedpc_msg_t* msg);
+	RETR_STAT uedp_task_norm_post_msg(task_id_t dest_id, uedp_msg_t* msg);
 
 	/**
-	 * @brief Hàm đăng ký tín hiệu từ ISR cho tác vụ trong hệ thống CIEDPC
+	 * @brief Hàm đăng ký tín hiệu từ ISR cho tác vụ trong hệ thống UEDP
 	 * @param dest_id: ID của tác vụ đích mà tín hiệu sẽ được đăng ký
 	 * @param sig: Giá trị của tín hiệu cần đăng ký
 	 * @return RETR_STAT: Trả về trạng thái của việc đăng ký tín hiệu
 	 * @attention Hàm này được thiết kế tách biệt dành cho việc xử lý với ISR
 	 */
-	RETR_STAT ciedpc_task_norm_post_isr(task_id_t dest_id, ui8 sig);
+	RETR_STAT uedp_task_norm_post_isr(task_id_t dest_id, ui8 sig);
 
 	/**
-	 * @brief Hàm lập lịch và thực thi các tác vụ trong hệ thống CIEDPC
+	 * @brief Hàm lập lịch và thực thi các tác vụ trong hệ thống UEDP
 	 * @return RETR_STAT: Trả về trạng thái của việc lập lịch và thực thi các tác vụ, 
-	 * 				 bao gồm các trạng thái như OK, ERROR, BUSY, TIMEOUT, DONE, NRDY và RDY, giúp người dùng dễ dàng xác định kết quả của việc lập lịch và thực thi các tác vụ trong hệ thống CIEDPC.
+	 * 				 bao gồm các trạng thái như OK, ERROR, BUSY, TIMEOUT, DONE, NRDY và RDY, giúp người dùng dễ dàng xác định kết quả của việc lập lịch và thực thi các tác vụ trong hệ thống UEDP.
 	 */
-	RETR_STAT ciedpc_task_scheduler(); 
+	RETR_STAT uedp_task_scheduler(); 
 
 	/**
 	 * @brief Hàm lấy ID của tác vụ hiện tại đang được thực thi
 	 * @return task_id_t 
 	 */
-	task_id_t ciedpc_task_norm_get_current_id();
+	task_id_t uedp_task_norm_get_current_id();
 
 	/**
 	 * @brief Hàm lấy tin nhắn hiện tại đang được xử lý bởi tác vụ
-	 * @return ciedpc_msg_t* 
+	 * @return uedp_msg_t* 
 	 */
-	ciedpc_msg_t* ciedpc_task_norm_get_current_msg();
+	uedp_msg_t* uedp_task_norm_get_current_msg();
 
 	/**
 	 * @brief Hàm kiểm tra xem tác vụ có sẵn sàng để thực thi hay không
@@ -141,7 +141,7 @@
 	 * @return true nếu tác vụ sẵn sàng để thực thi
 	 * @return false nếu tác vụ không sẵn sàng để thực thi
 	 */
-	bool ciedpc_task_norm_is_ready(task_id_t task_id);
+	bool uedp_task_norm_is_ready(task_id_t task_id);
 
 	/**
 	 * @brief Lấy thông tin hàng đợi của một Task
@@ -149,14 +149,14 @@
 	 * @param used Con trỏ đến biến sẽ nhận số lượng tin nhắn đang có trong hàng đợi của Task
 	 * @param max Con trỏ đến biến sẽ nhận kích thước tối đa của hàng đợi của Task
 	 */
-	void ciedpc_task_norm_get_queue_stats(task_id_t tid, ui8* used, ui8* max);
+	void uedp_task_norm_get_queue_stats(task_id_t tid, ui8* used, ui8* max);
 
 	/**
 	 * @brief Thiết lập khả năng thực thi cho tác vụ poll
 	 * @param tid ID của tác vụ poll cần thiết lập khả năng
 	 * @param ability Khả năng thực thi của tác vụ poll
 	 */
-	void ciedpc_task_poll_set_ability(task_id_t tid, ui8 ability);
+	void uedp_task_poll_set_ability(task_id_t tid, ui8 ability);
 
 #endif //__TASK_H__
 
