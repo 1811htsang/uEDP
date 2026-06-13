@@ -357,20 +357,30 @@ Về mặt thiết kế ban đầu, μEDP chỉ có tổng số mức ưu tiên 
 
 Để giải quyết vấn đề này, có thể bổ sung một cơ chế Priority Escalation (Tăng ưu tiên tạm thời) trong Core. Cơ chế này sẽ cho phép một TASK_NORM được nâng lên mức ưu tiên cao hơn trong một khoảng thời gian ngắn để xử lý tín hiệu quan trọng, sau đó tự động hạ xuống mức ưu tiên ban đầu sau khi xử lý xong.
 
-Về mặt nguyên tắc phân chia mức ưu tiên, tác giả đề xuất bổ sung thiết kế mới như sau:
+#### Bổ sung thiết kế mới
 
 - Mức ưu tiên được tăng lên tổng số lượng mức là 24, tức 16 mức ưu tiên gốc + 8 mức ưu tiên tăng tạm thời. Lưu ý rằng, giả sử số lượng TASK_NORM sử dụng dưới 16 thì có thể xem các mức ưu tiên dư thừa này như là các mức ưu tiên tăng tạm thời, điều này giúp đảm bảo rằng các TASK_NORM có thể được tăng ưu tiên tạm thời một cách linh hoạt mà không bị giới hạn bởi số lượng TASK_NORM đang sử dụng.
 - Metadata của mỗi TASK_NORM sẽ được bổ sung thêm một trường `base_pri` để lưu trữ mức ưu tiên gốc của TASK_NORM, giúp Core có thể dễ dàng hạ xuống mức ưu tiên ban đầu sau khi xử lý xong tín hiệu quan trọng.
-- API mới `uedp_task_norm_escalate_pri(task_id, new_pri)` sẽ được bổ sung để cho phép tăng ưu tiên tạm thời của một TASK_NORM, trong đó `new_pri` phải nằm trong khoảng từ `UEDP_TASK_PRI_LEVEL_16` đến `UEDP_TASK_PRI_LEVEL_23` để đảm bảo rằng mức ưu tiên tăng tạm thời không vượt quá giới hạn đã định.
+- API mới `uedp_task_norm_set_urgent(task_id, new_pri)` sẽ được bổ sung để cho phép tăng ưu tiên tạm thời của một TASK_NORM, trong đó `new_pri` phải nằm trong khoảng từ `UEDP_TASK_PRI_LEVEL_16` đến `UEDP_TASK_PRI_LEVEL_23` để đảm bảo rằng mức ưu tiên tăng tạm thời không vượt quá giới hạn đã định.
+- API mới `internal_task_norm_reset_pri(task_id)` sẽ được bổ sung để cho phép hạ xuống mức ưu tiên ban đầu của một TASK_NORM sau khi xử lý xong tín hiệu quan trọng, giúp đảm bảo rằng các TASK_NORM có thể trở lại trạng thái bình thường sau khi hoàn thành nhiệm vụ quan trọng. Điều đó có nghĩa tác vụ chỉ cho phép giữ mức ưu tiên cao tạm thời trong 1 vòng scheduling để xử lý tín hiệu quan trọng, sau đó sẽ tự động hạ xuống mức ưu tiên ban đầu để đảm bảo rằng các TASK_NORM khác cũng có cơ hội được xử lý tín hiệu của mình một cách công bằng và hiệu quả trong hệ thống.
+- Bổ sung logic xử lý pending escalation trong scheduler để đảm bảo nếu tất cả các mức ưu tiên tăng tạm thời đều đã được sử dụng thì TASK_NORM cần tăng ưu tiên tạm thời sẽ được đánh dấu là pending, sau 1 vòng scheduling thì sẽ được gán mức ưu tiên trống mới nhất để xử lý tín hiệu quan trọng, giúp đảm bảo rằng tín hiệu quan trọng sẽ được xử lý một cách kịp thời ngay khi có khả năng tăng ưu tiên tạm thời.
 
-Với thiết kế này, các vấn đề cần xử lý bao gồm:
+#### các vấn đề cần xử lý
 
-- Phân phối mức ưu tiên nếu có nhiều TASK_NORM cùng được tăng ưu tiên tạm thời, tác giả đề xuất cơ chế tìm kiếm mức ưu tiên cao nhất tạm thời của bảng TASK_NORM, sau đó, với mỗi mức ưu tiên tăng dần, nếu có TASK_NORM nào đã được tăng lên mức đó thì sẽ tiếp tục tìm kiếm mức tiếp theo cho đến khi tìm được mức ưu tiên trống để gán cho TASK_NORM cần tăng ưu tiên tạm thời. Nếu tất cả các mức ưu tiên tăng tạm thời đều đã được sử dụng thì API sẽ giữ nguyên mức ưu tiên của TASK_NORM mà không thực hiện tăng ưu tiên tạm thời, đồng thời trả về lỗi để người dùng có thể xử lý tình huống này một cách phù hợp.
+Phân phối mức ưu tiên nếu có nhiều TASK_NORM cùng được tăng ưu tiên tạm thời, tác giả đề xuất cơ chế tìm kiếm mức ưu tiên cao nhất tạm thời của bảng TASK_NORM, sau đó, với mỗi mức ưu tiên tăng dần, nếu có TASK_NORM nào đã được tăng lên mức đó thì sẽ tiếp tục tìm kiếm mức tiếp theo cho đến khi tìm được mức ưu tiên trống để gán cho TASK_NORM cần tăng ưu tiên tạm thời. Nếu tất cả các mức ưu tiên tăng tạm thời đều đã được sử dụng thì API sẽ giữ nguyên mức ưu tiên của TASK_NORM mà không thực hiện tăng ưu tiên tạm thời, đồng thời trả về lỗi để người dùng có thể xử lý tình huống này một cách phù hợp.
 
-Thuật toán xử lý:
+#### Thuật toán xử lý
 
 - Mức ưu tiên cần gán `target_pri` được tính theo công thức: `target_pri = current_max + step`.
-- Core sẽ tra cứu bitmap `g_task_norm_ready` để tìm mức ưu tiên cao nhất đang ready, sau đó sẽ tăng dần `target_pri` từ `UEDP_TASK_PRI_LEVEL_16` đến `UEDP_TASK_PRI_LEVEL_23` để tìm mức ưu tiên trống.
+- Core sẽ tra cứu bitmap `g_task_norm_ready` trong phân vùng 16-23 để tìm mức ưu tiên cao nhất đang ready, sau đó sẽ tăng dần `target_pri` từ `UEDP_TASK_PRI_LEVEL_16` đến `UEDP_TASK_PRI_LEVEL_23` để tìm mức ưu tiên trống.
 - Nếu tìm được mức ưu tiên trống thì sẽ gán `target_pri` cho TASK_NORM cần tăng ưu tiên tạm thời, đồng thời lưu `base_pri` của TASK_NORM này để có thể hạ xuống sau khi xử lý xong tín hiệu quan trọng. Nếu 1 mức ưu tiên đã được gán cho một TASK_NORM khác thì sẽ tiếp tục tìm kiếm mức tiếp theo cho đến khi tìm được mức ưu tiên trống hoặc đã kiểm tra hết tất cả các mức ưu tiên tăng tạm thời. Mức tăng mỗi lần sẽ là 1 đơn vị thay vì 2 đơn vị.
 - Sau khi TASK_NORM đã xử lý xong tín hiệu quan trọng, Core sẽ tự động hạ xuống mức ưu tiên ban đầu bằng cách gán `base_pri` trở lại cho TASK_NORM này, đồng thời cập nhật lại bitmap `g_task_norm_ready` để phản ánh sự thay đổi về mức ưu tiên.
 - Nếu trường hợp tất cả các mức ưu tiên tạm thời đều được sử dụng thì API sẽ lưu vào `target_pri` một giá trị đặc biệt để đánh dấu rằng TASK_NORM đã pending, sau 1 vòng scheduling thì sẽ đảm bảo rằng TASK_NORM này được gán mức ưu tiên trống mới nhất để xử lý tín hiệu quan trọng. Trong lúc pending, TASK_NORM này sẽ vẫn giữ mức ưu tiên ban đầu nhưng sẽ được đánh dấu để scheduler ưu tiên gán mức ưu tiên tạm thời khi có slot trống, điều này giúp đảm bảo rằng tín hiệu quan trọng sẽ được xử lý một cách kịp thời ngay khi có khả năng tăng ưu tiên tạm thời.
+
+#### Quy tắc xử lý xung đột
+
+Để đảm bảo tính nhất quán của Bitmap Ready, khi một TASK_NORM thực hiện leo thang (Escalate), Core sẽ thực hiện:
+
+- Tạm thời xóa bit Ready ở mức ưu tiên gốc (base_pri).
+- Tìm slot trống trong dải khẩn cấp và set bit Ready tại đó.
+- Sau khi xử lý xong tin nhắn khẩn cấp, Core thực hiện quy trình ngược lại để đưa Task về vị trí tĩnh, đảm bảo tính Unique Priority luôn được bảo toàn tại mọi thời điểm của hệ thống.
