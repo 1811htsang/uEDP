@@ -111,7 +111,10 @@ RETR_STAT uedp_task_scheduler() {
            * còn nếu không có tin nhắn nào nữa thì sẽ bị xóa ready và không được thực thi nữa 
            * cho đến khi có tin nhắn mới hoặc có tín hiệu khẩn cấp mới
            */
-          if (g_task_norm_table[i].cur_pri >= UEDP_TASK_PRI_LEVEL_16) {
+          if (
+            g_task_norm_table[i].cur_pri >= UEDP_TASK_PRI_LEVEL_16 && 
+            g_task_norm_table[i].cur_pri <= UEDP_TASK_PRI_LEVEL_23
+          ) {
             internal_uedp_task_norm_reset_urgent(g_task_norm_table[i].id);
           }
           // Nếu hàng đợi trống thì xóa trạng thái sẵn sàng của tác vụ
