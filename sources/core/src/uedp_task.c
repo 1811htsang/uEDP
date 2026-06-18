@@ -112,8 +112,8 @@ RETR_STAT uedp_task_scheduler() {
            * cho đến khi có tin nhắn mới hoặc có tín hiệu khẩn cấp mới
            */
           if (
-            g_task_norm_table[i].cur_pri >= UEDP_TASK_PRI_LEVEL_16 && 
-            g_task_norm_table[i].cur_pri <= UEDP_TASK_PRI_LEVEL_23
+            highest_pri >= UEDP_TASK_PRI_LEVEL_16 && 
+            highest_pri <= UEDP_TASK_PRI_LEVEL_23
           ) {
             internal_uedp_task_norm_reset_urgent(g_task_norm_table[i].id);
           }
@@ -374,12 +374,13 @@ void internal_uedp_task_norm_set_urgent(task_id_t tid) {
   if (task) {
     pal_enter_critical(); // Vào critical section để đảm bảo an toàn khi truy cập và cập nhật trạng thái của tác vụ
 
+    internal_uedp_task_norm_clear_ready(task->cur_pri); // Xóa trạng thái sẵn sàng hiện tại của tác vụ để chuẩn bị thiết lập mức độ ưu tiên khẩn cấp mới
     task_pri_t urgent_pri = 0x0u;
 
     // Loop để tìm bit 0 đầu tiên trong dãy 16-23
     for (ui8 p = 16; p <= 23; p++) {
       if (!(g_task_norm_ready & (1 << p))) {
-        urgent_pri = (task_pri_t)p;
+        urgent_pri = (task_pri_t)p + UEDP_TASK_PRI_LEVEL_0; // Tính toán mức độ ưu tiên khẩn cấp dựa trên bit 0 đầu tiên tìm thấy
         break;
       }
     }
