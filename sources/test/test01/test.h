@@ -11,12 +11,12 @@
      */
     #include <stdint.h>
     #include <stdbool.h>
-    #include "ciedpc_core.h"
-    #include "ciedpc_task.h"
-    #include "ciedpc_tsm.h"
-    #include "ciedpc_fsm.h"
-    #include "ciedpc_msg.h"
-    #include "ciedpc_timer.h"
+    #include "uedp_core.h"
+    #include "uedp_task.h"
+    #include "uedp_tsm.h"
+    #include "uedp_fsm.h"
+    #include "uedp_msg.h"
+    #include "uedp_timer.h"
 
     /**
      * @brief Khai báo các task ID

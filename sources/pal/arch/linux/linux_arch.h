@@ -1,7 +1,7 @@
 /**
  * @file linux_arch.h
  * @author Shang Huang
- * @brief Header file for Linux Architecture Abstraction Layer in CIEDPC
+ * @brief Header file for Linux Architecture Abstraction Layer in UEDP
  * @version 0.1
  * @date 2026-04-20
  * @copyright MIT License
@@ -26,13 +26,13 @@
 
   /**
    * @brief Giả lập một ngắt phần cứng (Ví dụ: phím nhấn từ Terminal)
-   * Để gọi ciedpc_task_norm_post_isr từ ngoài vào Core
+   * Để gọi uedp_task_norm_post_isr từ ngoài vào Core
    */
   void pal_linux_simulate_interrupt(ui8 task_id, ui8 signal);
 
   /**
    * @brief Giả lập tick hệ thống trên Linux (Ví dụ: sử dụng timer hoặc luồng riêng)
-   * Để gọi ciedpc_timer_tick() định kỳ
+   * Để gọi uedp_timer_tick() định kỳ
    */
   void pal_linux_simulate_tick(void);
 

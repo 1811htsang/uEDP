@@ -1,7 +1,7 @@
 /**
  * @file esp32_s3_arch.c
  * @author Shang Huang
- * @brief Implementation of ESP32-S3 Architecture Abstraction Layer for CIEDPC
+ * @brief Implementation of ESP32-S3 Architecture Abstraction Layer for UEDP
  * @version 0.1
  * @date 2026-04-20
  * @copyright MIT License
@@ -12,17 +12,17 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "esp32_s3_arch.h"
-#include "ciedpc_core.h"
-#include "ciedpc_task.h"
-#include "ciedpc_msg.h"
-#include "ciedpc_timer.h"
+#include "uedp_core.h"
+#include "uedp_task.h"
+#include "uedp_msg.h"
+#include "uedp_timer.h"
 #include "pal_memrp.h"
 
 /**
  * @brief Khai báo spinlock để bảo vệ trong môi trường đa nhân
  */
 
-// static portMUX_TYPE ciedpc_mux = portMUX_INITIALIZER_UNLOCKED;
+// static portMUX_TYPE uedp_mux = portMUX_INITIALIZER_UNLOCKED;
 
 /**
  * @brief Khai báo biến toàn cục kiểm tra hệ thống khởi động
@@ -31,19 +31,19 @@
 sta ui8 system_inited = 0;
 
 /**
- * @brief Đảm bảo ciedpc_timer_tick được biết đến
+ * @brief Đảm bảo uedp_timer_tick được biết đến
  */
 
-extern void ciedpc_timer_tick(void);
+extern void uedp_timer_tick(void);
 
 /**
- * @brief Implementation cho ciedpc_core.h
+ * @brief Implementation cho uedp_core.h
  */
 
-void ciedpc_core_init(void) {
+void uedp_core_init(void) {
   pal_core_init();
-  ciedpc_msg_pool_init();
-  ciedpc_timer_init();
+  uedp_msg_pool_init();
+  uedp_timer_init();
   system_inited = 1;
 }
 
@@ -63,7 +63,7 @@ void pal_exit_critical(void) {
 
 }
 
-ui8 pal_math_get_highest_bit16(ui16 mask) {
+ui8 pal_math_get_highest_bit32(ui32 mask) {
 
 }
 
@@ -86,7 +86,7 @@ void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
 
 void timer_callback(void* arg) {
   if (system_inited) {
-    ciedpc_timer_tick();
+    uedp_timer_tick();
   }
 }
 

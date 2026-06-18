@@ -9,15 +9,15 @@ Tài liệu này thực hiện so sánh bộ lõi **uEDP (v1.0.2)** với đặc
 | Module | Yêu cầu SRS từ QP/C | Hiện trạng triển khai uEDP | Đánh giá |
 | :--- | :--- | :--- | :--- |
 | **Active Object** | **SRS_QP_AO_01:** Đóng gói dữ liệu & RTC. | Thực thi qua `task_norm_t` và cơ chế Scheduler bốc 1 tin nhắn/lượt. | **Đạt** |
-| | **SRS_QP_AO_11:** Ưu tiên 0 dành cho Idle. | `CIEDPC_TASK_NORM_EOT_ID` (0xFF) và mức ưu tiên thấp nhất. | **Tương đương** |
+| | **SRS_QP_AO_11:** Ưu tiên 0 dành cho Idle. | `UEDP_TASK_NORM_EOT_ID` (0xFF) và mức ưu tiên thấp nhất. | **Tương đương** |
 | | **SRS_QP_AO_20:** Mỗi AO có 1 Queue riêng. | `msg_queue` được init riêng cho từng Task. | **Đạt** |
-| **Event Delivery** | **SRS_QP_EDM_00:** Hỗ trợ Direct Posting. | `ciedpc_task_norm_post_msg()` gửi đích danh Task ID. | **Đạt** |
+| **Event Delivery** | **SRS_QP_EDM_00:** Hỗ trợ Direct Posting. | `uedp_task_norm_post_msg()` gửi đích danh Task ID. | **Đạt** |
 | | **SRS_QP_EDM_01:** Hỗ trợ LIFO (Self-post). | Hiện tại mặc định 100% FIFO. | *Roadmap v1.2* |
-| | **SRS_QP_EDM_10:** Đảm bảo phân phối tin nhắn. | Cơ chế `ciedpc_msg_drain_isr_pool` đảm bảo không mất tin từ ISR. | **Đạt** |
-| **Memory Manage** | **SRS_QP_EMM_30:** Quản lý Zero-copy. | `ciedpc_msg_set_data_ref()` truyền địa chỉ con trỏ trực tiếp. | **Vượt** (1) |
+| | **SRS_QP_EDM_10:** Đảm bảo phân phối tin nhắn. | Cơ chế `uedp_msg_drain_isr_pool` đảm bảo không mất tin từ ISR. | **Đạt** |
+| **Memory Manage** | **SRS_QP_EMM_30:** Quản lý Zero-copy. | `uedp_msg_set_data_ref()` truyền địa chỉ con trỏ trực tiếp. | **Vượt** (1) |
 | | **SRS_QP_EMM_11:** Hỗ trợ nhiều Event Pools. | 3 Pool: BLANK, ALLOC, EXTAL. | **Đạt** |
 | **State Machine** | **SRS_QP_SM_00:** Hỗ trợ HSM (Phân tầng). | Mô hình Hybrid: TSM (Macro) lồng FSM (Micro). | **Khác biệt** (2) |
-| | **SRS_QP_SM_32/33:** Entry/Exit Actions. | Tích hợp tự động trong `ciedpc_tsm_trans()`. | **Đạt** |
+| | **SRS_QP_SM_32/33:** Entry/Exit Actions. | Tích hợp tự động trong `uedp_tsm_trans()`. | **Đạt** |
 | **Tracing** | **SRS_QP_QS_00:** Software Instrumentation. | Hệ thống `itnlog` với nguyên lý Out-Context Execution (OCE). | **Đạt** |
 
 ---
@@ -59,7 +59,7 @@ Cả hai mô hình đều nhắm tới hiệu suất tối đa thông qua việc
 | Tiêu chí | uEDP (Current Implementation) | QP/C (SRS Reference) |
 | :--- | :--- | :--- |
 | **Cấu trúc dữ liệu** | Sử dụng biến Bitmap `g_task_norm_ready` (16-bit). | Sử dụng "Ready-mask" (8 đến 64 bit). |
-| **Thuật toán** | `pal_math_get_highest_bit16` dựa trên lệnh **CLZ** (Cortex-M) hoặc `__builtin_clz` (Linux). | **SRS_QP_QV_22 / SRS_QP_QK_31:** Yêu cầu sử dụng cơ chế "Deterministic task selection" (thường là bitmask lookup). |
+| **Thuật toán** | `pal_math_get_highest_bit32` dựa trên lệnh **CLZ** (Cortex-M) hoặc `__builtin_clz` (Linux). | **SRS_QP_QV_22 / SRS_QP_QK_31:** Yêu cầu sử dụng cơ chế "Deterministic task selection" (thường là bitmask lookup). |
 | **Độ phức tạp** | **O(1)**. Tốc độ không đổi bất kể số lượng Task. | **O(1)**. Tối ưu hóa cho các MCU cấp thấp. |
 
 #### 2. Mô hình thực thi và Chiếm quyền (Preemption Model)

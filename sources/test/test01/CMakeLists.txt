@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 3.10)
-project(ciedpc_test C)
+project(uedp_test C)
 
 # 1. Định nghĩa Biến Nền tảng (Mặc định là LINUX nếu không chỉ định)
 set(PLATFORM "LINUX" CACHE STRING "Target platform: LINUX, STM32, ESP32")
 
 # 2. Danh sách file nguồn LÕI (Không đổi dù sang nền tảng nào)
 set(CORE_SOURCES
-  ../../core/src/ciedpc_fsm.c
-  ../../core/src/ciedpc_tsm.c
-  ../../core/src/ciedpc_msg.c
-  ../../core/src/ciedpc_task.c
-  ../../core/src/ciedpc_timer.c
+  ../../core/src/uedp_fsm.c
+  ../../core/src/uedp_tsm.c
+  ../../core/src/uedp_msg.c
+  ../../core/src/uedp_task.c
+  ../../core/src/uedp_timer.c
   ../../pal/service/memrp/pal_memrp.c
   ../../common/container/fifo/fifo.c
 )
@@ -23,7 +23,7 @@ if(PLATFORM STREQUAL "LINUX")
   )
   # Thêm thư viện pthread cho Linux
   set(PLATFORM_LIBS pthread)
-  add_definitions(-DCIEDPC_PLATFORM_LINUX)
+  add_definitions(-DUEDP_PLATFORM_LINUX)
 elseif(PLATFORM STREQUAL "STM32")
   # Hiện tại chưa có implementation cho STM32, sẽ thêm sau
 else()

@@ -11,7 +11,7 @@ tags: [excalidraw]
 
 ## Text Elements
 /**
- * @brief Cấu trúc quản lý tin nhắn trong hệ thống CIEDPC
+ * @brief Cấu trúc quản lý tin nhắn trong hệ thống UEDP
  * @param next: Con trỏ đến tin nhắn tiếp theo trong danh sách liên kết
  * @param src_task_id: ID của tác vụ nguồn gửi tin nhắn
  * @param des_task_id: ID của tác vụ đích nhận tin nhắn
@@ -44,7 +44,7 @@ typedef struct ciedpc_msg_t {
     } interface;
     
     /* Tùy chọn debug */
-    #if defined(CIEDPC_DEBUG_FLAG) && (CIEDPC_DEBUG_FLAG & 0x01u)
+    #if defined(UEDP_DEBUG_FLAG) && (UEDP_DEBUG_FLAG & 0x01u)
             ui32 timestamp;   /* Thời điểm tạo tin nhắn */
     #endif
 } ciedpc_msg_t; ^l9LE2JhO
@@ -60,30 +60,30 @@ typedef struct ciedpc_msg_isr_t {
 } ciedpc_msg_isr_t; ^COqJzU2y
 
 ciedpc_msg_pool_header_t g_blank_pool_ctrl;
-static ciedpc_msg_t blank_pool[CIEDPC_MSG_BLANK_QUEUE_SIZE];
-#define CIEDPC_MSG_BLANK_QUEUE_SIZE  (8u) ^Z38RMV3R
+static ciedpc_msg_t blank_pool[UEDP_MSG_BLANK_QUEUE_SIZE];
+#define UEDP_MSG_BLANK_QUEUE_SIZE  (8u) ^Z38RMV3R
 
 ciedpc_msg_pool_header_t g_norm_pool_ctrl;
-static ciedpc_msg_t norm_pool[CIEDPC_MSG_NORM_QUEUE_SIZE];
-static ui8 norm_pool_data[CIEDPC_MSG_NORM_QUEUE_SIZE][CIEDPC_MSG_NORM_DATA_MAX];
-#define CIEDPC_MSG_NORM_QUEUE_SIZE   (8u) // units
-#define CIEDPC_MSG_NORM_DATA_MAX    (8u) // bytes ^sTT2xQp8
+static ciedpc_msg_t norm_pool[UEDP_MSG_NORM_QUEUE_SIZE];
+static ui8 norm_pool_data[UEDP_MSG_NORM_QUEUE_SIZE][UEDP_MSG_NORM_DATA_MAX];
+#define UEDP_MSG_NORM_QUEUE_SIZE   (8u) // units
+#define UEDP_MSG_NORM_DATA_MAX    (8u) // bytes ^sTT2xQp8
 
 ciedpc_msg_pool_header_t g_alloc_pool_ctrl;
-static ciedpc_msg_t alloc_pool[CIEDPC_MSG_ALLOC_QUEUE_SIZE];
-static ui8 alloc_pool_data[CIEDPC_MSG_ALLOC_QUEUE_SIZE][CIEDPC_MSG_ALLOC_DATA_MAX];
-#define CIEDPC_MSG_ALLOC_QUEUE_SIZE  (12u)  // units
-#define CIEDPC_MSG_ALLOC_DATA_MAX   (8u) // bytes ^n4sQf8Lc
+static ciedpc_msg_t alloc_pool[UEDP_MSG_ALLOC_QUEUE_SIZE];
+static ui8 alloc_pool_data[UEDP_MSG_ALLOC_QUEUE_SIZE][UEDP_MSG_ALLOC_DATA_MAX];
+#define UEDP_MSG_ALLOC_QUEUE_SIZE  (12u)  // units
+#define UEDP_MSG_ALLOC_DATA_MAX   (8u) // bytes ^n4sQf8Lc
 
 ciedpc_msg_pool_header_t g_extal_pool_ctrl;
-static ciedpc_msg_t extal_pool[CIEDPC_MSG_EXTAL_QUEUE_SIZE];
-static ui8 extal_pool_data[CIEDPC_MSG_EXTAL_QUEUE_SIZE][CIEDPC_MSG_EXTAL_DATA_MAX];
-#define CIEDPC_MSG_EXTAL_QUEUE_SIZE  (16u)         // units
-#define CIEDPC_MSG_EXTAL_DATA_MAX   (8u)                 // bytes ^Wi7FLqkx
+static ciedpc_msg_t extal_pool[UEDP_MSG_EXTAL_QUEUE_SIZE];
+static ui8 extal_pool_data[UEDP_MSG_EXTAL_QUEUE_SIZE][UEDP_MSG_EXTAL_DATA_MAX];
+#define UEDP_MSG_EXTAL_QUEUE_SIZE  (16u)         // units
+#define UEDP_MSG_EXTAL_DATA_MAX   (8u)                 // bytes ^Wi7FLqkx
 
 static fifo_t isr_pool;
-static ciedpc_msg_isr_t isr_pool_buffer[CIEDPC_MSG_ISR_QUEUE_SIZE];
-#define CIEDPC_MSG_ISR_QUEUE_SIZE   (16u)         // units ^Ar9enanB
+static ciedpc_msg_isr_t isr_pool_buffer[UEDP_MSG_ISR_QUEUE_SIZE];
+#define UEDP_MSG_ISR_QUEUE_SIZE   (16u)         // units ^Ar9enanB
 
 typedef struct ciedpc_msg_pool_header_t {
         ciedpc_msg_t* free_list;         
@@ -92,14 +92,14 @@ typedef struct ciedpc_msg_pool_header_t {
 } ciedpc_msg_pool_header_t; ^XXUdTcu9
 
 typedef enum ciedpc_msg_type_t {
-    CIEDPC_MSG_TYPE_BLANK = 0,   
-    CIEDPC_MSG_TYPE_NORM,                      
-    CIEDPC_MSG_TYPE_ALLOC,                     
-    CIEDPC_MSG_TYPE_EXTAL                            
+    UEDP_MSG_TYPE_BLANK = 0,   
+    UEDP_MSG_TYPE_NORM,                      
+    UEDP_MSG_TYPE_ALLOC,                     
+    UEDP_MSG_TYPE_EXTAL                            
 } ciedpc_msg_type_t; ^zC0haUmt
 
 sta task_norm_t g_current_task_norm; // Cấu trúc quản lý thông tin của tác vụ hiện tại đang được thực thi
-sta task_id_t g_active_task_norm_id = CIEDPC_TASK_IDLE_ID; // ID của tác vụ hiện tại đang được thực thi
+sta task_id_t g_active_task_norm_id = UEDP_TASK_IDLE_ID; // ID của tác vụ hiện tại đang được thực thi
 sta ciedpc_msg_t* g_current_msg; // Con trỏ đến tin nhắn hiện tại đang được xử lý bởi tác vụ hiện tại
 sta task_pri_t g_task_norm_ready; // Biến bitmap quản lý trạng thái sẵn sàng của các tác vụ, mỗi bit tương ứng với một mức độ ưu tiên của tác vụ
 sta task_norm_t* g_task_norm_table = NULL; // Bảng thông tin của các tác vụ bình thường
@@ -107,16 +107,16 @@ sta task_polling_t* g_task_polling_table = NULL; // Bảng thông tin của các
 sta ui8 g_task_norm_count = 0; // Số lượng tác vụ bình thường được đăng ký trong hệ thống
 sta ui8 g_task_polling_count = 0; // Số lượng tác vụ polling được đăng ký trong hệ thống ^lNRlKPcb
 
-#define CIEDPC_TASK_NORM_MAX_SIZE                          (16u) // 16 tác vụ, từ 0 đến 15
-#define CIEDPC_TASK_NORM_TIM_ID                                (0xDF0) // Tác vụ timer
-#define CIEDPC_TASK_NORM_IF_ID                      (0xDF1) // Tác vụ giao tiếp
-#define CIEDPC_TASK_SYS_ID                                (0xDF2) // Tác vụ hệ thống (info + memrp)
-#define CIEDPC_TASK_DBG_ID                                (0xDF3) // Tác vụ debug
-#define CIEDPC_TASK_USR_ID                                (0xDF4) // Tác vụ người dùng
-#define CIEDPC_TASK_IDLE_ID                                (0xDFE) // Tác vụ trống
-#define CIEDPC_TASK_EOT_ID                                (0xDFF) // Kết thúc danh sách tác vụ
-#define CIEDPC_TASK_MIN_ID                                 (0xDF0) // ID đầu tiên
-#define CIEDPC_TASK_MAX_ID                                (0xDFF) // ID cuối cùng ^LYbLQyaL
+#define UEDP_TASK_NORM_MAX_SIZE                          (16u) // 16 tác vụ, từ 0 đến 15
+#define UEDP_TASK_NORM_TIM_ID                                (0xDF0) // Tác vụ timer
+#define UEDP_TASK_NORM_IF_ID                      (0xDF1) // Tác vụ giao tiếp
+#define UEDP_TASK_SYS_ID                                (0xDF2) // Tác vụ hệ thống (info + memrp)
+#define UEDP_TASK_DBG_ID                                (0xDF3) // Tác vụ debug
+#define UEDP_TASK_USR_ID                                (0xDF4) // Tác vụ người dùng
+#define UEDP_TASK_IDLE_ID                                (0xDFE) // Tác vụ trống
+#define UEDP_TASK_EOT_ID                                (0xDFF) // Kết thúc danh sách tác vụ
+#define UEDP_TASK_MIN_ID                                 (0xDF0) // ID đầu tiên
+#define UEDP_TASK_MAX_ID                                (0xDFF) // ID cuối cùng ^LYbLQyaL
 
 typedef struct task_norm_t {
         task_id_t id;

@@ -12,6 +12,8 @@ The core goal is to achieve **"Zero-Touch Porting"** — enabling the porting of
 
 Future development plans insist on embedding μEDP as the Kernel of a new μE-OS (micro Event-Driven Operating System) that will be built on top of the μEDP framework, providing additional OS-level features while maintaining the core principles of event-driven programming.
 
+Future development plans insist on embedding μEDP as the Kernel of a new μE-OS (micro Event-Driven Operating System) that will be built on top of the μEDP framework, providing additional OS-level features while maintaining the core principles of event-driven programming.
+
 ---
 
 ## 🚀 Key Features - Released & Future Development
@@ -69,7 +71,7 @@ graph LR
 μEDP/
 ├── core/                 # Definition and implementation of the core logic of CIEDPC
 │   ├── inc/              # Message, Task, Timer, Itnlog, FSM, TSM
-│   │   └── ciedpc_core.h # Definition of signals, constants and core data structures of CIEDPC
+│   │   └── uedp_core.h   # Definition of signals, constants and core data structures of μEDP
 │   └── src/              # Implementation of scheduler logic, timer engine, message manager, FSM/TSM engine, etc.
 ├── pal/                  # BACKEND (Abstract Layer)
 │   ├── pal_core.h        # Unified declaration for the entire PAL and system services
