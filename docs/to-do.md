@@ -70,35 +70,55 @@
 - [x] Bổ sung tài liệu đối chiếu thiết kế của μEDP với mô hình chuẩn QP/C của Miro Samek để làm rõ các điểm tương đồng và khác biệt trong kiến trúc và cách tiếp cận.
 - [x] Ra mắt phiên bản 1.0.3 của lõi μEDP với các tính năng redirect printf và xprintf, cùng với tài liệu hướng dẫn sử dụng và phân tích thiết kế chi tiết về giới hạn sử dụng của μEDP và đối chiếu với mô hình QP/C.
 
-### Phiên bản 1.1.0: The Escalation Update
+### Phiên bản 1.1.0: The Empty Priority Escalation Update
 
 - [x] Đổi tên μEDP thành μEDP (micro-EDP) với các API tương đồng để phản ánh rõ hơn về mục tiêu của dự án là một lõi điều phối nhẹ cho các hệ thống nhúng.
 - [x] Bổ sung tài liệu trình bày về cơ chế Priority Escalation và Scheduling Policy của μEDP để làm rõ cách thức hoạt động và lợi ích của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
 - [x] Nâng cấp thiết kế phân phối task với API cho phép thực hiện cơ chế Priority Escalation để cho phép một task có thể tạm thời tăng độ ưu tiên của mình khi cần thiết và hoàn trả độ ưu tiên về mức ban đầu sau khi hoàn thành công việc khẩn cấp.
+- [x] Bổ sung ô nhớ lưu trữ mức ưu tiên hiện tại, rename ô nhớ cũ thành ô nhớ base priority để tránh nhầm lẫn và đảm bảo rằng task có thể hoàn trả độ ưu tiên về mức ban đầu một cách chính xác sau khi hoàn thành công việc khẩn cấp.
+- [x] Bổ sung cờ nhớ `urgent_pending` để đánh dấu rằng task đang trong trạng thái tăng ưu tiên tạm thời và cần được xử lý ngay lập tức, nhằm đảm bảo rằng các task quan trọng được xử lý kịp thời và hiệu quả.
 - [x] Thêm tài liệu thiết kế của PPLP (Plug-N-Play Logging Pipeline) do thiếu sót chỉ có tài liệu hướng dẫn sử dụng.
 - [x] Thêm tài liệu để phân biệt giữa task polling và OCE service với các ví dụ minh họa cụ thể để làm rõ sự khác biệt trong cách thức hoạt động và ứng dụng của hai cơ chế này trong việc xử lý các tác vụ và sự kiện trong hệ thống.
-- [x] Bổ sung cơ chế OCE đơn giản để làm khung hỗ trợ cho AOCE (Advance OCE) trong tương lai. Cơ chế này tích hợp sẵn khi task scheduler hoàn thành 1 vòng lặp lịch thì thoát ra và tự động chạy OCE service để xử lý các sự kiện đã đăng ký, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler. Tuy nhiên ở AOCE sẽ bổ sung try-catch để đảm bảo OCE thực thi khi không có task nào sẵn sàng chạy, nhằm tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
-- [ ] Bổ sung testing cho cơ chế Priority Escalation để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
-- [ ] Ra mắt phiên bản 1.1.0 của lõi μEDP với đầy đủ tính năng Priority Escalation và tài liệu hướng dẫn sử dụng.
+- [x] Bổ sung testing cho cơ chế Priority Escalation để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
+- [x] Sửa lỗi sai điều kiện reset priority trong scheduler.
+- [x] Bổ sung mức ưu tiên base khi tìm mức ưu tiên mới cho task trong cơ chế Priority Escalation để đảm bảo rằng task không bị lệch khỏi dãy giá trị ưu tiên hợp lệ và tránh tình trạng task bị mất quyền truy cập vào các tài nguyên quan trọng trong hệ thống.
+- [ ] Ra mắt phiên bản 1.1.0 của lõi μEDP với đầy đủ tính năng Priority Escalation cơ bản và tài liệu hướng dẫn sử dụng.
 
-### Phiên bản 1.1.1: The Kconfig Configuration
+### Phiên bản 1.1.1: The S-LnF (Safe LIFO-nested FIFO) Mechanism
 
+- [ ] Bổ sung tài liệu thiết kế chi tiết cho cơ chế S-LnF (Safe LIFO-nested FIFO) để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của cơ chế này trong việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả trong hệ thống.
+- [ ] Triển khai thiết kế trên FIFO API để hỗ trợ việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả, đồng thời đảm bảo rằng các tin nhắn được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
+- [ ] Tích hợp cơ chế S-LnF vào urgent call của task kèm theo self-post messaging để đảm bảo rằng các tin nhắn khẩn cấp được xử lý ngay lập tức mà không phải chờ đợi các tin nhắn cũ trong task queue, đồng thời vẫn đảm bảo rằng các tin nhắn khẩn cấp được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
+- [ ] Bổ sung testing cho cơ chế S-LnF để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả trong hệ thống.
+- [ ] Ra mắt phiên bản 1.1.1 của lõi μEDP với đầy đủ tính năng S-LnF và tài liệu hướng dẫn sử dụng.
+
+### Phiên bản 1.1.2: The Kconfig Configuration
+
+- [ ] Sửa lỗi memrp để cho phép redirect cấu hình vào pipeline của itnlog và loại bỏ printf
 - [ ] Bổ sung Kconfig để hỗ trợ cấu hình các tính năng của lõi μEDP một cách dễ dàng thông qua một giao diện cấu hình trực quan, giúp người dùng có thể tùy chỉnh các thông số của hệ thống mà không cần phải chỉnh sửa trực tiếp trong code.
 - [ ] Bổ sung tài liệu thiết kế chi tiết cho Kconfig để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc cấu hình hệ thống một cách dễ dàng và trực quan hơn.
-- [ ] Ra mắt phiên bản 1.1.1 của lõi μEDP với đầy đủ tính năng Kconfig và tài liệu hướng dẫn sử dụng.
+- [ ] Ra mắt phiên bản 1.1.2 của lõi μEDP với đầy đủ tính năng Kconfig và tài liệu hướng dẫn sử dụng.
 
-### Phiên bản 1.1.2: The I/O Mapping Shell
+### Phiên bản 1.1.3: The Out-Context Execution Service
+
+- [ ] Bổ sung cơ chế OCE đơn giản để làm khung hỗ trợ cho AOCE (Advance OCE) trong tương lai. Cơ chế này tích hợp sẵn khi task scheduler hoàn thành 1 vòng lặp lịch thì thoát ra và tự động chạy OCE service để xử lý các sự kiện đã đăng ký, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler. Tuy nhiên ở AOCE sẽ bổ sung try-catch để đảm bảo OCE thực thi khi không có task nào sẵn sàng chạy, nhằm tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
+- [ ] Triển khai thiết kế với cơ chế OCE có dispatch, register và unregister để hỗ trợ việc đăng ký và hủy đăng ký các sự kiện cần xử lý trong OCE service, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
+- [ ] Refine tài liệu hướng dẫn sử dụng OCE service để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc xử lý các sự kiện quan trọng một cách kịp thời và hiệu quả hơn.
+- [ ] Bổ sung testing cho cơ chế OCE để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các sự kiện quan trọng một cách kịp thời và hiệu quả hơn.
+- [ ] Ra mắt phiên bản 1.1.3 của lõi μEDP với đầy đủ tính năng OCE service và tài liệu hướng dẫn sử dụng.
+
+### Phiên bản 1.1.4: The I/O Mapping Shell
 
 - [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế IOMS (I/O Mapping Shell) để cung cấp cơ chế gán lệnh vào 1 chân GPIO cụ thể để hỗ trợ việc kích hoạt các chức năng của lõi μEDP thông qua các tín hiệu vật lý, giúp mở rộng khả năng tương tác với phần cứng và hỗ trợ các ứng dụng yêu cầu tương tác thời gian thực.
 - [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng như viot (virtual I/O table), idempotency signal, pipeline command để thống nhất cơ chế gán lệnh vào chân GPIO và đảm bảo tính ổn định và hiệu quả khi sử dụng IOMS để kích hoạt các chức năng của lõi μEDP thông qua các tín hiệu vật lý.
 - [ ] Bổ sung tài liệu phát triển chức năng Priority Degradation của μE-OS để giảm mức ưu tiên của command được kích hoạt thông qua IOMS sau một khoảng thời gian nhất định để tránh tình trạng task bị chiếm dụng quá lâu do các tín hiệu vật lý liên tục kích hoạt cùng một chức năng, giúp đảm bảo tính ổn định và hiệu quả của hệ thống khi xử lý các tín hiệu vật lý.
-- [ ] Ra mắt phiên bản 1.1.2 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho IOMS và tính năng viot, idempotency cùng với tài liệu hướng dẫn sử dụng.
+- [ ] Ra mắt phiên bản 1.1.4 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho IOMS và tính năng viot, idempotency cùng với tài liệu hướng dẫn sử dụng, tài liệu phát triển cho chức năng Priority Degradation của μE-OS để hỗ trợ việc sử dụng IOMS một cách hiệu quả và ổn định trong các ứng dụng yêu cầu tương tác thời gian thực thông qua các tín hiệu vật lý.
 
-### Phiên bản 1.1.3: The Hardware Accelerated Scheduling
+### Phiên bản 1.1.5: The Hardware Accelerated Scheduling
 
 - [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
 - [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng của bộ điều phối phần cứng như NVIC và xử lý vấn đề về ISR nesting & preemption để đảm bảo hệ thống hoạt động ổn định và hiệu quả khi xử lý các sự kiện thời gian thực.
-- [ ] Ra mắt phiên bản 1.1.3 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
+- [ ] Ra mắt phiên bản 1.1.5 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
 
 ### Phiên bản 1.2.0: The Pub/Sub Engine
 
@@ -109,10 +129,11 @@
 ### Phiên bản 1.2.1: The Safe Out-Core Interaction
 
 - [ ] Bổ sung tài liệu chi tiết cho thiết kế Safe Out-Core Interaction nhằm đảm bảo các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, nhằm đảm bảo tính ổn định và an toàn của hệ thống khi xử lý các tín hiệu từ bên ngoài.
+- [ ] Refine tính năng SOCI với OCE để đảm bảo rằng các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, đồng thời đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
 - [ ] Hoàn thiện thiết kế Safe Out-Core Interaction.
 - [ ] Ra mắt phiên bản 1.2.1 của lõi μEDP với đầy đủ tính năng Safe Out-Core Interaction và tài liệu hướng dẫn sử dụng.
 
-Sau phiên bản này, μEDP (μEDP) sẽ bắt đầu chuyển đổi thành μE-OS với thiết kế mới và các tính năng nâng cao như HAS (Hardware Accelerated Scheduling), TIM (Tickless Idle Mode), uvfs (Micro-Virtual File System), compmng (Component Manager), SHA (Safe Heap Allocation), ESD (Execution Space Division), MPU/MMU Integration, SSI (Secure Signal Injection), ...
+Sau phiên bản này, μEDP (μEDP) sẽ bắt đầu chuyển đổi thành μE-OS với thiết kế mới và các tính năng nâng cao như HAS (Hardware Accelerated Scheduling), TIM (Tickless Idle Mode), uvfs (Micro-Virtual File System), compmng (Component Manager), SHA (Safe Heap Allocation), ESD (Execution Space Division), MPU/MMU Integration, SSI (Secure Signal Injection), AOCE (Advance Out-Context Execution), DIOMS (Degradable IOMS), ...
 
 Các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS sẽ được cập nhật chi tiết hơn khi tiến trình chuyển đổi bắt đầu.
 

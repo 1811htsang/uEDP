@@ -405,11 +405,44 @@ Phân phối mức ưu tiên nếu có nhiều TASK_NORM cùng được tăng ư
 - Tìm slot trống trong dải khẩn cấp và set bit Ready tại đó.
 - Sau khi xử lý xong tin nhắn khẩn cấp, Core thực hiện quy trình ngược lại để đưa Task về vị trí tĩnh, đảm bảo tính Unique Priority luôn được bảo toàn tại mọi thời điểm của hệ thống.
 
+#### Phân tích hoạt động giả định
+
+Khi 1 TASK_NORM được gọi hàm thực thi handler của Task đó, điều này có nghĩa là TASK_NORM đã được scheduler chọn thực thi và có phân bổ tin nhắn từ task queue của TASK_NORM đó. Nếu muốn TASK_NORM được thực thi handler ở vòng scheduling tiếp theo với mức ưu tiên cao hơn, người dùng có thể gọi API `uedp_task_norm_set_urgent(task_id, new_pri)` để tăng ưu tiên tạm thời của TASK_NORM đó, điều này phải đảm bảo sau khi set_urgent thì TASK_NORM phải gửi tin nhắn cho chính nó để được scheduler chọn thực thi ở vòng scheduling tiếp theo với mức ưu tiên cao hơn. Sau khi TASK_NORM đã xử lý xong tin nhắn khẩn cấp, Core sẽ tự động hạ xuống mức ưu tiên ban đầu bằng cách gán `base_pri` trở lại cho TASK_NORM này, đồng thời cập nhật lại bitmap `g_task_norm_ready` để phản ánh sự thay đổi về mức ưu tiên.
+
+> Vậy giả sử khi có nhiều tin nhắn nằm trong task queue thì tin nhắn tự gọi chính nó nên được ưu tiên xử lý hay là xử lý tuần tự tin nhắn trong task queue?
+
+Câu trả lời là xử lý tin nhắn tự gọi chính nó. Bởi vì nếu xử lý tuần tự sẽ tin ra lỗi ưu tiên ảo, tức là TASK_NORM đã được tăng ưu tiên tạm thời nhưng vẫn phải chờ xử lý các tin nhắn cũ trong task queue, điều này sẽ làm mất đi ý nghĩa của việc tăng ưu tiên tạm thời. Do đó, khi TASK_NORM tự gọi chính nó, Core sẽ đảm bảo rằng tin nhắn này được xử lý ngay lập tức ở vòng scheduling tiếp theo với mức ưu tiên cao hơn, giúp đảm bảo rằng tín hiệu quan trọng được xử lý kịp thời và hiệu quả.
+
+Cơ chế bổ sung cho PE sẽ là Safe LIFO-nested FIFO (S-LnF) để đảm bảo rằng các tin nhắn khẩn cấp được xử lý ngay lập tức mà không phải chờ đợi các tin nhắn cũ trong task queue, đồng thời vẫn đảm bảo rằng các tin nhắn khẩn cấp được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
+
+Ở thời điểm phiên bản 1.1.0, cơ chế PE chính thức được triển khai với các API `uedp_task_norm_set_urgent()` và `internal_task_norm_reset_pri()` để tăng và hạ mức ưu tiên tạm thời của TASK_NORM, đồng thời bổ sung logic xử lý pending escalation trong scheduler để đảm bảo rằng các TASK_NORM có thể được tăng ưu tiên tạm thời một cách linh hoạt và hiệu quả trong hệ thống. Tuy nhiên, sự thiếu vắng của cơ chế S-LnF sẽ được bổ sung trong các phiên bản tiếp theo để đảm bảo rằng các tin nhắn khẩn cấp được xử lý một cách an toàn và hiệu quả, đồng thời vẫn đảm bảo rằng các TASK_NORM có thể hoạt động một cách linh hoạt và hiệu quả trong hệ thống.
+
+### [SLNF] Safe LIFO-nested FIFO - Cơ chế xử lý tin nhắn khẩn cấp an toàn
+
+// Sẽ thêm vào ở phiên bản tiếp theo sau khi đã hoàn thiện LPE (Linear Priority Escalation).
+
 ### [OCE] Out-Context Execution - Thực thi ngoài ngữ cảnh
 
 Out-Context Execution (OCE) là một thiết kế quan trọng trong μEDP nhằm đảm bảo rằng các tác vụ phụ trợ như thao tác bộ nhớ, quản lý giao thức mạng. Thiết kế này giúp duy trì tính ổn định và hiệu suất của hệ thống bằng cách tách biệt rõ ràng giữa các tác vụ chính và các tác vụ phụ trợ.
 
 Các dịch vụ thuộc về OCE được định danh là `ocesvc` và có phân vùng bộ nhớ riêng biệt để đảm bảo rằng các tác vụ này không can thiệp vào bộ nhớ của các tác vụ chính. Các dịch vụ OCE được thực thi trong một ngữ cảnh riêng biệt, có thể là một task polling hoặc một thread riêng, tùy thuộc vào nền tảng và yêu cầu cụ thể của ứng dụng.
+
+Ở mức thiết kế framework như μEDP thì OCE được triển khai đơn giản nằm ngoài vòng lặp chính của scheduler để đảm bảo rằng các tác vụ chính (Norm Task) và các tác vụ polling (Polling Task) đã được xử lý xong xuôi trước khi OCE bắt đầu thực thi. Điều này giúp đảm bảo rằng các tác vụ phụ trợ không làm gián đoạn hoặc ảnh hưởng đến hiệu suất của các tác vụ chính, đồng thời tận dụng được nhịp nghỉ của CPU để thực hiện các công việc phụ trợ một cách hiệu quả.
+
+Ví dụ cơ bản:
+
+```c
+while (1) {
+  ciedpc_task_scheduler(); // Xử lý tất cả các Norm Task và Polling Task
+  if (STAT_NRDY) { // Nếu không còn Task nào ready
+    // Gọi các tác vụ cần thực thi trong OCE
+  }
+}
+```
+
+Lưu ý rằng OCE ở μEDP chỉ đơn giản là cơ chế để người dùng tự khai báo dịch vụ phụ trợ mà không làm gián đoạn các tác vụ chính. Người dùng có thể triển khai các dịch vụ OCE theo nhu cầu của ứng dụng, nhưng cần đảm bảo rằng các dịch vụ này được thiết kế để thực thi nhanh chóng và hiệu quả, tránh việc chiếm dụng quá nhiều thời gian của CPU, đồng thời có thể được cấu hình để chạy theo các điều kiện nhất định (ví dụ: chỉ chạy khi nhịp rảnh đủ dài).
+
+Ở μE-OS thì sẽ nâng cấp thành AOCE (Advance OCE) với SCB (Service Control Block) để quản lý các dịch vụ OCE một cách linh hoạt hơn và xử lý ưu tiên theo mức > theo thời gian, kèm theo cơ chế leaning expetime, quantum và error callback. Điều này sẽ giúp μE-OS hoàn thiện triển khai OCE một cách chuyên nghiệp hơn, đồng thời cung cấp cho người dùng nhiều công cụ hơn để quản lý và tối ưu hóa các dịch vụ phụ trợ trong hệ thống.
 
 #### Phân biệt TASK_POLL và ocesvc
 
@@ -438,8 +471,8 @@ Kết luận:
 
 #### Tác hại và Thách thức (Cons)
 
-- **Độ phức tạp của vòng lặp chính:** Bạn phải quản lý thêm một lớp thực thi bên ngoài `ciedpc_task_scheduler()`.
-- **Nguy cơ trễ nhịp sau:** Nếu OCE thực hiện một việc quá nặng (như ghi file lớn vào SD Card mà không chia nhỏ), nó sẽ làm chậm thời điểm bắt đầu của vòng lập lịch tiếp theo.
+- **Độ phức tạp của vòng lặp chính:** Phải quản lý thêm một lớp thực thi bên ngoài `ciedpc_task_scheduler()`.
+- **Nguy cơ trễ nhịp sau:** Nếu OCE thực hiện một việc quá nặng (như ghi file lớn vào SD Card mà không chia nhỏ), nó sẽ làm chậm thời điểm bắt đầu của vòng lập lịch tiếp theo. Điều này được triển khai bằng SCB trong AOCE để phân chia công việc thành các quantum nhỏ hơn và có cơ chế timeout để tránh việc OCE chiếm dụng quá lâu.
 
 #### Thiết kế triển khai
 
