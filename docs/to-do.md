@@ -81,17 +81,24 @@
 - [ ] Bổ sung testing cho cơ chế Priority Escalation để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
 - [ ] Ra mắt phiên bản 1.1.0 của lõi μEDP với đầy đủ tính năng Priority Escalation và tài liệu hướng dẫn sử dụng.
 
-### Phiên bản 1.1.1: The Hardware Accelerated Scheduling
-
-- [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
-- [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng của bộ điều phối phần cứng như NVIC và xử lý vấn đề về ISR nesting & preemption để đảm bảo hệ thống hoạt động ổn định và hiệu quả khi xử lý các sự kiện thời gian thực.
-- [ ] Ra mắt phiên bản 1.1.1 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
-
-### Phiên bản 1.1.2: The Kconfig Configuration
+### Phiên bản 1.1.1: The Kconfig Configuration
 
 - [ ] Bổ sung Kconfig để hỗ trợ cấu hình các tính năng của lõi μEDP một cách dễ dàng thông qua một giao diện cấu hình trực quan, giúp người dùng có thể tùy chỉnh các thông số của hệ thống mà không cần phải chỉnh sửa trực tiếp trong code.
 - [ ] Bổ sung tài liệu thiết kế chi tiết cho Kconfig để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc cấu hình hệ thống một cách dễ dàng và trực quan hơn.
-- [ ] Ra mắt phiên bản 1.1.2 của lõi μEDP với đầy đủ tính năng Kconfig và tài liệu hướng dẫn sử dụng.
+- [ ] Ra mắt phiên bản 1.1.1 của lõi μEDP với đầy đủ tính năng Kconfig và tài liệu hướng dẫn sử dụng.
+
+### Phiên bản 1.1.2: The I/O Mapping Shell
+
+- [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế IOMS (I/O Mapping Shell) để cung cấp cơ chế gán lệnh vào 1 chân GPIO cụ thể để hỗ trợ việc kích hoạt các chức năng của lõi μEDP thông qua các tín hiệu vật lý, giúp mở rộng khả năng tương tác với phần cứng và hỗ trợ các ứng dụng yêu cầu tương tác thời gian thực.
+- [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng như viot (virtual I/O table), idempotency signal, pipeline command để thống nhất cơ chế gán lệnh vào chân GPIO và đảm bảo tính ổn định và hiệu quả khi sử dụng IOMS để kích hoạt các chức năng của lõi μEDP thông qua các tín hiệu vật lý.
+- [ ] Bổ sung tài liệu phát triển chức năng Priority Degradation của μE-OS để giảm mức ưu tiên của command được kích hoạt thông qua IOMS sau một khoảng thời gian nhất định để tránh tình trạng task bị chiếm dụng quá lâu do các tín hiệu vật lý liên tục kích hoạt cùng một chức năng, giúp đảm bảo tính ổn định và hiệu quả của hệ thống khi xử lý các tín hiệu vật lý.
+- [ ] Ra mắt phiên bản 1.1.2 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho IOMS và tính năng viot, idempotency cùng với tài liệu hướng dẫn sử dụng.
+
+### Phiên bản 1.1.3: The Hardware Accelerated Scheduling
+
+- [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
+- [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng của bộ điều phối phần cứng như NVIC và xử lý vấn đề về ISR nesting & preemption để đảm bảo hệ thống hoạt động ổn định và hiệu quả khi xử lý các sự kiện thời gian thực.
+- [ ] Ra mắt phiên bản 1.1.3 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
 
 ### Phiên bản 1.2.0: The Pub/Sub Engine
 
