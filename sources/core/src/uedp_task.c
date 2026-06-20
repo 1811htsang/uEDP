@@ -406,6 +406,7 @@ void internal_uedp_task_norm_reset_urgent(task_id_t tid) {
   task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
   if (task) {
     pal_enter_critical(); // Vào critical section để đảm bảo an toàn khi truy cập và cập nhật trạng thái của tác vụ
+    internal_uedp_task_norm_clear_ready(task->cur_pri); // Xóa trạng thái sẵn sàng của tác vụ để đảm bảo nó không còn được thực thi ở mức độ ưu tiên khẩn cấp
     task->cur_pri = task->base_pri; // Đặt lại mức độ ưu tiên của tác vụ về mức độ ưu tiên cơ bản
     task->urgent_pending = false; // Đặt lại cờ tín hiệu khẩn cấp đang chờ xử lý về false
     pal_exit_critical(); // Thoát critical section sau khi đã cập nhật trạng thái của tác vụ
