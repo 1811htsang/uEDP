@@ -385,7 +385,7 @@ Về mặt thiết kế ban đầu, μEDP chỉ có tổng số mức ưu tiên 
 - API mới `internal_task_norm_reset_pri(task_id)` sẽ được bổ sung để cho phép hạ xuống mức ưu tiên ban đầu của một TASK_NORM sau khi xử lý xong tín hiệu quan trọng, giúp đảm bảo rằng các TASK_NORM có thể trở lại trạng thái bình thường sau khi hoàn thành nhiệm vụ quan trọng. Điều đó có nghĩa tác vụ chỉ cho phép giữ mức ưu tiên cao tạm thời trong 1 vòng scheduling để xử lý tín hiệu quan trọng, sau đó sẽ tự động hạ xuống mức ưu tiên ban đầu để đảm bảo rằng các TASK_NORM khác cũng có cơ hội được xử lý tín hiệu của mình một cách công bằng và hiệu quả trong hệ thống.
 - Bổ sung logic xử lý pending escalation trong scheduler để đảm bảo nếu tất cả các mức ưu tiên tăng tạm thời đều đã được sử dụng thì TASK_NORM cần tăng ưu tiên tạm thời sẽ được đánh dấu là pending, sau 1 vòng scheduling thì sẽ được gán mức ưu tiên trống mới nhất để xử lý tín hiệu quan trọng, giúp đảm bảo rằng tín hiệu quan trọng sẽ được xử lý một cách kịp thời ngay khi có khả năng tăng ưu tiên tạm thời.
 
-#### các vấn đề cần xử lý
+#### Các vấn đề cần xử lý
 
 Phân phối mức ưu tiên nếu có nhiều TASK_NORM cùng được tăng ưu tiên tạm thời, tác giả đề xuất cơ chế tìm kiếm mức ưu tiên cao nhất tạm thời của bảng TASK_NORM, sau đó, với mỗi mức ưu tiên tăng dần, nếu có TASK_NORM nào đã được tăng lên mức đó thì sẽ tiếp tục tìm kiếm mức tiếp theo cho đến khi tìm được mức ưu tiên trống để gán cho TASK_NORM cần tăng ưu tiên tạm thời. Nếu tất cả các mức ưu tiên tăng tạm thời đều đã được sử dụng thì API sẽ giữ nguyên mức ưu tiên của TASK_NORM mà không thực hiện tăng ưu tiên tạm thời, đồng thời trả về lỗi để người dùng có thể xử lý tình huống này một cách phù hợp.
 
@@ -419,7 +419,35 @@ Cơ chế bổ sung cho PE sẽ là Safe LIFO-nested FIFO (S-LnF) để đảm b
 
 ### [SLNF] Safe LIFO-nested FIFO - Cơ chế xử lý tin nhắn khẩn cấp an toàn
 
-// Sẽ thêm vào ở phiên bản tiếp theo sau khi đã hoàn thiện LPE (Linear Priority Escalation).
+#### Xét lại thiết kế cũ
+
+Trong phiên bản 1.1.0, cơ chế PE (non=S-LnF PE) đã được triển khai với các API hoàn chỉnh. Tuy nhiên, 1 điểm yếu chí mạng chính là chức năng chỉ đảm bảo hoạt động khi TASK_NORM chỉ có 1 tin nhắn trong task queue. Nếu TASK_NORM có nhiều tin nhắn trong task queue thì sẽ xảy ra tình trạng ưu tiên ảo, tức là TASK_NORM đã được tăng ưu tiên tạm thời nhưng vẫn phải chờ xử lý các tin nhắn cũ trong task queue, điều này sẽ làm mất đi ý nghĩa của việc tăng ưu tiên tạm thời.
+
+Để giải quyết vấn đề này, có thể bổ sung một cơ chế Safe LIFO-nested FIFO (S-LnF) trong Core. Cơ chế này sẽ đảm bảo rằng các tin nhắn khẩn cấp được xử lý ngay lập tức mà không phải chờ đợi các tin nhắn cũ trong task queue, đồng thời vẫn đảm bảo rằng các tin nhắn khẩn cấp được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
+
+#### Hoàn thiện triển khai thiết kế
+
+##### Bài toán FIFO First-Insertion
+
+Trong FIFO, chúng ta thực hiện insert vào cuối danh sách và remove từ đầu danh sách. Nếu thực hiện insert vào đầu danh sách, phương pháp này sẽ luôn đảm bảo thực thi ở O(n). Điều này làm lãng phí thời gian copy tuần tự và không đảm bảo tính công bằng trong việc xử lý các tin nhắn khẩn cấp.
+
+> Vậy có cách nào để vừa đảm bảo FIFO, vừa đảm bảo O(1) cho cả insert và remove?
+
+##### Giải pháp lật ngược danh sách
+
+Chính là lật ngược chiều dữ liệu, lúc này insert chính là thực hiện push vào cuối danh sách, nhưng thực tế thì lại chính là insert vào đầu danh sách. Khi remove thì thực hiện pop từ đầu danh sách, nhưng thực tế lại chính là remove từ cuối danh sách. Cách này sẽ đảm bảo FIFO, đồng thời vẫn đảm bảo O(1) cho cả insert và remove. Do cơ chế S-LnF chỉ cần đảm bảo xử lý cho phiên bản non=S-LnF PE nên không cần bổ sung API cho việc remove lật ngược danh sách, mà chỉ cần bổ sung API cho việc insert lật ngược danh sách để đảm bảo FIFO.
+
+#### Triển khai logic
+
+Trong API gốc của FIFO, ta thực hiện cập nhật `head = (head + 1) % capacity` để thực hiện remove từ đầu danh sách, và cập nhật `tail = (tail + 1) % capacity` để thực hiện insert vào cuối danh sách. Trong API mới của S-LnF, ta sẽ thực hiện cập nhật `head = (head - 1 + capacity) % capacity` để thực hiện insert vào đầu danh sách, và cập nhật `tail = (tail - 1 + capacity) % capacity` để thực hiện remove từ cuối danh sách. Cách này sẽ đảm bảo FIFO, đồng thời vẫn đảm bảo O(1) cho cả insert và remove.
+
+> Vậy sau khi đã thực hiện insert lật ngược và hoàn tất thao tác thì giá trị head và tail sẽ như thế nào?
+
+Giá trị của `head` sẽ là vị trí của phần tử đầu tiên trong danh sách, còn giá trị của `tail` sẽ là vị trí của phần tử cuối cùng trong danh sách. Điều này vẫn đảm bảo thứ tự thực thi gốc của FIFO mà không cần xử lý thêm logic nào khác, đồng thời vẫn đảm bảo O(1) cho cả insert và remove.
+
+#### API mới
+
+Cập nhật thêm 1 hàm `fifo_put_head()` để thực hiện insert lật ngược vào đầu danh sách, trong đó `head` sẽ được cập nhật theo công thức `head = (head - 1 + capacity) % capacity` để đảm bảo FIFO, đồng thời vẫn đảm bảo O(1) cho cả insert và remove. API này sẽ được sử dụng trong cơ chế S-LnF để đảm bảo rằng các tin nhắn khẩn cấp được xử lý ngay lập tức mà không phải chờ đợi các tin nhắn cũ trong task queue, đồng thời vẫn đảm bảo rằng các tin nhắn khẩn cấp được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
 
 ### [OCE] Out-Context Execution - Thực thi ngoài ngữ cảnh
 

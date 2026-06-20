@@ -82,11 +82,11 @@
 - [x] Bổ sung testing cho cơ chế Priority Escalation để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
 - [x] Sửa lỗi sai điều kiện reset priority trong scheduler.
 - [x] Bổ sung mức ưu tiên base khi tìm mức ưu tiên mới cho task trong cơ chế Priority Escalation để đảm bảo rằng task không bị lệch khỏi dãy giá trị ưu tiên hợp lệ và tránh tình trạng task bị mất quyền truy cập vào các tài nguyên quan trọng trong hệ thống.
-- [ ] Ra mắt phiên bản 1.1.0 của lõi μEDP với đầy đủ tính năng Priority Escalation cơ bản và tài liệu hướng dẫn sử dụng.
+- [x] Ra mắt phiên bản 1.1.0 của lõi μEDP với đầy đủ tính năng Priority Escalation cơ bản và tài liệu hướng dẫn sử dụng.
 
 ### Phiên bản 1.1.1: The S-LnF (Safe LIFO-nested FIFO) Mechanism
 
-- [ ] Bổ sung tài liệu thiết kế chi tiết cho cơ chế S-LnF (Safe LIFO-nested FIFO) để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của cơ chế này trong việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả trong hệ thống.
+- [x] Bổ sung tài liệu thiết kế chi tiết cho cơ chế S-LnF (Safe LIFO-nested FIFO) để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của cơ chế này trong việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả trong hệ thống.
 - [ ] Triển khai thiết kế trên FIFO API để hỗ trợ việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả, đồng thời đảm bảo rằng các tin nhắn được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
 - [ ] Tích hợp cơ chế S-LnF vào urgent call của task kèm theo self-post messaging để đảm bảo rằng các tin nhắn khẩn cấp được xử lý ngay lập tức mà không phải chờ đợi các tin nhắn cũ trong task queue, đồng thời vẫn đảm bảo rằng các tin nhắn khẩn cấp được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
 - [ ] Bổ sung testing cho cơ chế S-LnF để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả trong hệ thống.
