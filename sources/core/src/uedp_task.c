@@ -39,6 +39,7 @@ sta void          internal_uedp_task_poll_exec                    (void);
 sta task_norm_t*  internal_uedp_task_get_task_norm_by_id          (task_id_t tid);
 sta void          internal_uedp_task_norm_set_urgent              (task_id_t tid);
 sta void          internal_uedp_task_norm_reset_urgent            (task_id_t tid);
+sta void          internal_uedp_task_norm_put_head_to_queue       (task_id_t tid, uedp_msg_t* msg);
 
 void uedp_task_norm_create(task_norm_t* task_table) {
   if (task_table) {
@@ -409,4 +410,42 @@ void internal_uedp_task_norm_reset_urgent(task_id_t tid) {
     task->urgent_pending = false; // Đặt lại cờ tín hiệu khẩn cấp đang chờ xử lý về false
     pal_exit_critical(); // Thoát critical section sau khi đã cập nhật trạng thái của tác vụ
   }
+}
+
+RETR_STAT uedp_task_norm_post_urgent(task_id_t tid, uedp_msg_t* msg) {
+  if (tid < UEDP_TASK_NORM_MIN_ID || tid > UEDP_TASK_NORM_MAX_ID) {
+    return STAT_ERROR; // Trả về lỗi nếu tid không hợp lệ
+  }
+  if (!msg) {
+    return STAT_ERROR; // Trả về lỗi nếu msg là NULL
+  }
+
+  internal_uedp_task_norm_put_head_to_queue(tid, msg); // Đưa tin nhắn vào đầu hàng đợi của tác vụ đích
+  internal_uedp_task_norm_set_urgent(tid); // Thiết lập mức độ ưu tiên khẩn cấp cho tác vụ đích
+
+  return STAT_OK; // Trả về OK sau khi đã đăng ký tin nhắn khẩn cấp thành công
+}
+
+void internal_uedp_task_norm_put_head_to_queue(task_id_t tid, uedp_msg_t* msg) {
+  // Kiểm tra xem tác vụ có tồn tại trong bảng tác vụ hay không
+  task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
+  if (task == NULL) {
+    // Nếu tác vụ không tồn tại, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
+    return;
+  }
+
+  // Kiểm tra fifo của tác vụ đã được khởi tạo chưa
+  if (!fifo_isinit(&task->msg_queue)) {
+    // Nếu fifo chưa được khởi tạo, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
+    return;
+  }
+
+  // Entry critical section
+  pal_enter_critical();
+
+  // Đưa tin nhắn vào đầu hàng đợi của tác vụ
+  fifo_put_head(&task->msg_queue, (uedp_msg_t*)(&msg));
+
+  // Exit critical section
+  pal_exit_critical();
 }
