@@ -89,3 +89,26 @@ uint32_t fifo_get(fifo_t* fifo, void* data) {
 	return RET_FIFO_OK;
 }
 
+uint32_t 	fifo_put_head(fifo_t* fifo, void* data) {
+	if (fifo->fill_size == fifo->buffer_size) {
+		return RET_FIFO_NG; // FIFO đã đầy, không thể thêm phần tử mới
+	}
+
+	if (data != NULL) {
+		// Tính toán chỉ số mới cho head (đi ngược lại)
+		uint32_t new_head = (fifo->head_index + fifo->buffer_size - 1) % fifo->buffer_size;
+
+		// Ghi dữ liệu vào vị trí mới của head
+		uint8_t* p_dest = (uint8_t*)fifo->buffer + (new_head * fifo->element_size);
+    memcpy(p_dest, data, fifo->element_size);
+
+		// Cập nhật head_index và fill_size
+		fifo->head_index = new_head;
+		fifo->fill_size++;
+	}
+	else {
+		return RET_FIFO_NG;
+	}
+
+	return RET_FIFO_OK;
+}

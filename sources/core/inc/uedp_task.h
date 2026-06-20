@@ -160,7 +160,7 @@
 	 */
 	void uedp_task_poll_set_ability(task_id_t tid, ui8 ability);
 
-		/**
+	/**
 	 * @brief Thiết lập một tín hiệu khẩn cấp cho một tác vụ message-driven,
 	 * 				cho phép tác vụ tăng mức ưu tiên thực thi cao hơn mức tín hiệu cao nhất hiện tại,
 	 * 				để đảm bảo rằng tác vụ sẽ được thực thi ngay lập tức sau khi nhận được tín hiệu khẩn cấp,
@@ -168,6 +168,15 @@
 	 * @param tid ID của tác vụ message-driven cần thiết lập tín hiệu khẩn cấp
 	 */
 	void uedp_task_norm_set_urgent(task_id_t tid);
+
+	/**
+	 * @brief Đăng ký một tin nhắn khẩn cấp từ một tác vụ đến một tác vụ khác trong hệ thống UEDP,
+	 * 				cho phép tin nhắn được đưa vào hàng đợi của tác vụ đích ngay lập tức sử dụng S-LnF 
+	 * @param tid ID của tác vụ đích nhận tin nhắn khẩn cấp
+	 * @param msg Con trỏ đến tin nhắn cần đăng ký
+	 * @return RETR_STAT Trạng thái của việc đăng ký tin nhắn khẩn cấp
+	 */
+	RETR_STAT uedp_task_norm_post_urgent(task_id_t tid, uedp_msg_t* msg);
 
 #endif //__TASK_H__
 
