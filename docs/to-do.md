@@ -89,7 +89,11 @@
 - [x] Bổ sung tài liệu thiết kế chi tiết cho cơ chế S-LnF (Safe LIFO-nested FIFO) để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của cơ chế này trong việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả trong hệ thống.
 - [x] Triển khai thiết kế trên FIFO API để hỗ trợ việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả, đồng thời đảm bảo rằng các tin nhắn được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
 - [x] Tích hợp cơ chế S-LnF vào urgent call của task kèm theo self-post messaging để đảm bảo rằng các tin nhắn khẩn cấp được xử lý ngay lập tức mà không phải chờ đợi các tin nhắn cũ trong task queue, đồng thời vẫn đảm bảo rằng các tin nhắn khẩn cấp được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
-- [ ] Bổ sung testing cho cơ chế S-LnF để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả trong hệ thống.
+- [x] Bổ sung testing cho cơ chế S-LnF để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả trong hệ thống.
+- [x] Sửa lỗi thiếu xóa bit ưu tiên khẩn cấp khi urgent call được xử lý xong để đảm bảo rằng task có thể trở về trạng thái bình thường sau khi hoàn thành công việc khẩn cấp và tránh tình trạng task bị giữ mãi ở trạng thái ưu tiên cao một cách không cần thiết.
+- [x] Rename cơ chế PE gốc thành non=S-LnF APE (non-supported LIFO-nested FIFO Atomic Priority Escalation) để làm rõ tính chất Atomic của cơ chế PE gốc nhưng không hỗ trợ LIFO-nested FIFO, đồng thời phân biệt rõ hơn với cơ chế S-LnF mới được bổ sung, trình bày chi tiết trong tài liệu thiết kế để làm rõ sự khác biệt giữa hai cơ chế này và lý do tại sao cơ chế S-LnF được bổ sung để đảm bảo tính an toàn và hiệu quả trong việc xử lý các tin nhắn khẩn cấp trong hệ thống.
+- [x] Rename cơ chế PE mới thành S-LnF APE (Safe LIFO-nested FIFO Atomic Priority Escalation) để làm rõ tính chất an toàn và hỗ trợ LIFO-nested FIFO của cơ chế này, đồng thời phân biệt rõ hơn với cơ chế PE gốc.
+- [ ] Import lại README của v1.1.0 để sửa đổi và bổ sung thông tin về cơ chế S-LnF và các tính năng mới của phiên bản 1.1.1, đồng thời làm rõ hơn về các cải tiến và lợi ích của cơ chế S-LnF trong việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả trong hệ thống.
 - [ ] Ra mắt phiên bản 1.1.1 của lõi μEDP với đầy đủ tính năng S-LnF và tài liệu hướng dẫn sử dụng.
 
 ### Phiên bản 1.1.2: The Kconfig Configuration
