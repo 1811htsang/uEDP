@@ -98,7 +98,7 @@ void pal_exit_critical(void) {
   
 }
 
-ui8 pal_math_get_highest_bit16(ui16 mask) {
+ui8 pal_math_get_highest_bit32(ui32 mask) {
   
 }
 

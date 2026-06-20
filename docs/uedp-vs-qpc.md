@@ -59,7 +59,7 @@ Cả hai mô hình đều nhắm tới hiệu suất tối đa thông qua việc
 | Tiêu chí | uEDP (Current Implementation) | QP/C (SRS Reference) |
 | :--- | :--- | :--- |
 | **Cấu trúc dữ liệu** | Sử dụng biến Bitmap `g_task_norm_ready` (16-bit). | Sử dụng "Ready-mask" (8 đến 64 bit). |
-| **Thuật toán** | `pal_math_get_highest_bit16` dựa trên lệnh **CLZ** (Cortex-M) hoặc `__builtin_clz` (Linux). | **SRS_QP_QV_22 / SRS_QP_QK_31:** Yêu cầu sử dụng cơ chế "Deterministic task selection" (thường là bitmask lookup). |
+| **Thuật toán** | `pal_math_get_highest_bit32` dựa trên lệnh **CLZ** (Cortex-M) hoặc `__builtin_clz` (Linux). | **SRS_QP_QV_22 / SRS_QP_QK_31:** Yêu cầu sử dụng cơ chế "Deterministic task selection" (thường là bitmask lookup). |
 | **Độ phức tạp** | **O(1)**. Tốc độ không đổi bất kể số lượng Task. | **O(1)**. Tối ưu hóa cho các MCU cấp thấp. |
 
 #### 2. Mô hình thực thi và Chiếm quyền (Preemption Model)

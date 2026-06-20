@@ -33,6 +33,7 @@
    *            cho phép hệ thống UEDP quản lý tối đa 16 tác vụ khác nhau, 
    *            bao gồm các tác vụ timer, giao tiếp, hệ thống, debug, người dùng và trống.
    */
+
   #define UEDP_TASK_NORM_MAX_SIZE						(16u) 	// 16 tác vụ, từ 0 đến 15
   #define UEDP_TASK_NORM_TIM_ID							(0xE0) // Tác vụ timer
   #define UEDP_TASK_NORM_IF_ID		    			(0xE1) // Tác vụ giao tiếp
@@ -50,6 +51,7 @@
    * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xDx`,
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF)
    */
+
   #define UEDP_TASK_POLL_MAX_SIZE					  (8u) // 8 tác vụ, từ 0 đến 7
   #define UEDP_TASK_POLL_WDG_ID             (0xD0) // Tác vụ "đá" Watchdog để reset chip nếu treo
   #define UEDP_TASK_POLL_SYSLF_ID           (0xD1) // Tác vụ nháy LED Heartbeat (Nhịp tim hệ thống)
@@ -67,24 +69,35 @@
    *            cho phép hệ thống UEDP quản lý tối đa 16 mức độ ưu tiên khác nhau, 
    *            từ mức 0 (ưu tiên thấp nhất) đến mức 15 (ưu tiên cao nhất).
    */
-  #define UEDP_TASK_PRI_MAX_SIZE				(16u)   // 16 mức ưu tiên, từ 0 đến 15
-  #define UEDP_TASK_PRI_LEVEL_0				(0xC0u) // Ưu tiên thấp nhất
-  #define UEDP_TASK_PRI_LEVEL_1				(0xC1u)
-  #define UEDP_TASK_PRI_LEVEL_2				(0xC2u)
-  #define UEDP_TASK_PRI_LEVEL_3				(0xC3u)
-  #define UEDP_TASK_PRI_LEVEL_4				(0xC4u)
-  #define UEDP_TASK_PRI_LEVEL_5				(0xC5u)
-  #define UEDP_TASK_PRI_LEVEL_6				(0xC6u)
-  #define UEDP_TASK_PRI_LEVEL_7				(0xC7u)
-  #define UEDP_TASK_PRI_LEVEL_8				(0xC8u)
-  #define UEDP_TASK_PRI_LEVEL_9				(0xC9u)
-  #define UEDP_TASK_PRI_LEVEL_10			(0xCAu)
-  #define UEDP_TASK_PRI_LEVEL_11			(0xCBu)
-  #define UEDP_TASK_PRI_LEVEL_12			(0xCCu)
-  #define UEDP_TASK_PRI_LEVEL_13			(0xCDu)
-  #define UEDP_TASK_PRI_LEVEL_14			(0xCEu)
-  #define UEDP_TASK_PRI_LEVEL_15			(0xCFu) // Ưu tiên cao nhất
 
+  #define UEDP_TASK_PRI_MAX_SIZE			(24u)   // 24 mức ưu tiên, từ 0 đến 23
+  #define UEDP_TASK_PRI_LEVEL_0				(0xCA0u) // Ưu tiên thấp nhất
+  #define UEDP_TASK_PRI_LEVEL_1				(0xCA1u)
+  #define UEDP_TASK_PRI_LEVEL_2				(0xCA2u)
+  #define UEDP_TASK_PRI_LEVEL_3				(0xCA3u)
+  #define UEDP_TASK_PRI_LEVEL_4				(0xCA4u)
+  #define UEDP_TASK_PRI_LEVEL_5				(0xCA5u)
+  #define UEDP_TASK_PRI_LEVEL_6				(0xCA6u)
+  #define UEDP_TASK_PRI_LEVEL_7				(0xCA7u)
+  #define UEDP_TASK_PRI_LEVEL_8				(0xCA8u)
+  #define UEDP_TASK_PRI_LEVEL_9				(0xCA9u)
+  #define UEDP_TASK_PRI_LEVEL_10			(0xCAAu)
+  #define UEDP_TASK_PRI_LEVEL_11			(0xCABu)
+  #define UEDP_TASK_PRI_LEVEL_12			(0xCACu)
+  #define UEDP_TASK_PRI_LEVEL_13			(0xCADu)
+  #define UEDP_TASK_PRI_LEVEL_14			(0xCAEu)
+  #define UEDP_TASK_PRI_LEVEL_15			(0xCAFu)
+  #define UEDP_TASK_PRI_LEVEL_16			(0xCB0u)
+  #define UEDP_TASK_PRI_LEVEL_17			(0xCB1u)
+  #define UEDP_TASK_PRI_LEVEL_18			(0xCB2u)
+  #define UEDP_TASK_PRI_LEVEL_19			(0xCB3u)
+  #define UEDP_TASK_PRI_LEVEL_20			(0xCB4u)
+  #define UEDP_TASK_PRI_LEVEL_21			(0xCB5u)
+  #define UEDP_TASK_PRI_LEVEL_22			(0xCB6u)
+  #define UEDP_TASK_PRI_LEVEL_23			(0xCB7u)
+  #define UEDP_TASK_PRI_MIN_LEVEL			(0xCA0u) // Mức ưu tiên thấp nhất
+  #define UEDP_TASK_PRI_MAX_LEVEL			(0xCB7u) // Mức ưu tiên cao nhất
+  
   /**
    * @brief Các tín hiệu đặc biệt dành cho quản lý vòng đời trạng thái
    * @attention Các tín hiệu này được thiết kế tuân thủ theo encoding `0xBx`,

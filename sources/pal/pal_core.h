@@ -130,9 +130,9 @@
 
   /**
    * @brief Tìm bit có trọng số cao nhất (Dùng cho Priority Lookup)
-   * @return 0-15 (vị trí bit) hoặc 0xFF nếu mask = 0
+   * @return 0-32 (vị trí bit) hoặc 0xFF nếu mask = 0
    */
-  UEDP_ATTR_WEAK ui8 pal_math_get_highest_bit16(ui16 mask);
+  UEDP_ATTR_WEAK ui8 pal_math_get_highest_bit32(ui32 mask);
 
   /**
    * @brief Lấy tick hệ thống hiện tại (ví dụ: số ms kể từ khi khởi động)
