@@ -47,7 +47,7 @@
 	 * @param buffer_size Kích thước tổng của FIFO
 	 * @param element_size Kích thước của mỗi phần tử trong FIFO
 	 */
-	void		fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_t element_size); 
+	void			fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_t element_size); 
 
 	/**
 	 * @brief Kiểm tra xem FIFO đã được khởi tạo hay chưa
@@ -55,7 +55,7 @@
 	 * @return true Nếu FIFO đã được khởi tạo
 	 * @return false Nếu FIFO chưa được khởi tạo
 	 */
-	bool 		fifo_isinit(fifo_t* fifo);
+	bool 			fifo_isinit(fifo_t* fifo);
 
 	/**
 	 * @brief Lấy số lượng phần tử có thể chứa trong FIFO
@@ -70,7 +70,7 @@
 	 * @return true Nếu FIFO rỗng
 	 * @return false Nếu FIFO không rỗng
 	 */
-	bool		fifo_is_empty(fifo_t* fifo);
+	bool			fifo_is_empty(fifo_t* fifo);
 
 	/**
 	 * @brief Kiểm tra FIFO có đầy hay không
@@ -78,7 +78,7 @@
 	 * @return true Nếu FIFO đầy
 	 * @return false Nếu FIFO không đầy
 	 */
-	bool		fifo_is_full(fifo_t* fifo);
+	bool			fifo_is_full(fifo_t* fifo);
 
 	/**
 	 * @brief Thêm phần tử vào FIFO
@@ -95,5 +95,13 @@
 	 * @return uint32_t Trả về trạng thái của thao tác lấy phần tử ra khỏi FIFO
 	 */
 	uint32_t	fifo_get(fifo_t* fifo, void* data);
+
+	/**
+	 * @brief Thêm phần tử vào đầu FIFO (lật ngược)
+	 * @param fifo Con trỏ đến cấu trúc FIFO cần thêm phần tử
+	 * @param data Con trỏ đến dữ liệu cần thêm vào FIFO
+	 * @return uint32_t Trả về trạng thái của thao tác thêm phần tử vào đầu FIFO
+	 */
+	uint32_t 	fifo_put_head(fifo_t* fifo, void* data);
 
 #endif //__FIFO_H__
