@@ -82,7 +82,7 @@
 - [x] Bổ sung testing cho cơ chế Priority Escalation để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các tình huống khẩn cấp và đảm bảo hiệu suất của hệ thống.
 - [x] Sửa lỗi sai điều kiện reset priority trong scheduler.
 - [x] Bổ sung mức ưu tiên base khi tìm mức ưu tiên mới cho task trong cơ chế Priority Escalation để đảm bảo rằng task không bị lệch khỏi dãy giá trị ưu tiên hợp lệ và tránh tình trạng task bị mất quyền truy cập vào các tài nguyên quan trọng trong hệ thống.
-- [ ] Ra mắt phiên bản 1.1.0 của lõi μEDP với đầy đủ tính năng Priority Escalation cơ bản và tài liệu hướng dẫn sử dụng.
+- [x] Ra mắt phiên bản 1.1.0 của lõi μEDP với đầy đủ tính năng Priority Escalation cơ bản và tài liệu hướng dẫn sử dụng.
 
 ### Phiên bản 1.1.1: The S-LnF (Safe LIFO-nested FIFO) Mechanism
 
