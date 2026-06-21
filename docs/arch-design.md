@@ -371,7 +371,7 @@ Khi dùng trên Linux, callback nên là một wrapper nhận `const char*` rồ
 
 `xprintf` là thư viện bên thứ 3 được tích hợp vào μEDP để đảm bảo việc format log nhất quán và có thể mở rộng. Thiết kế này giúp tránh việc phải viết lại logic format log cho từng nền tảng, đồng thời đảm bảo rằng log được format một cách chính xác và hiệu quả trước khi được xuất ra ngoài qua `rprintf` và `logdp`.
 
-### [PE] Priority Escalation - Tăng ưu tiên tạm thời
+### [APE] Atomic Priority Escalation - Tăng ưu tiên phân tử tạm thời
 
 Về mặt thiết kế ban đầu, μEDP chỉ có tổng số mức ưu tiên là 16, được chia đều cho tất cả các TASK_NORM. Mỗi TASK_NORM được ràng buộc đảm bảo mức ưu tiên duy nhất để tránh lỗi xử lý tín hiệu. Tuy nhiên, với trường hợp 1 TASK_NORM cần được tăng ưu tiên tạm thời để xử lý một tín hiệu quan trọng, thiết kế hiện tại chưa có cơ chế để thực hiện điều này một cách an toàn và hiệu quả.
 
@@ -416,6 +416,18 @@ Câu trả lời là xử lý tin nhắn tự gọi chính nó. Bởi vì nếu 
 Cơ chế bổ sung cho PE sẽ là Safe LIFO-nested FIFO (S-LnF) để đảm bảo rằng các tin nhắn khẩn cấp được xử lý ngay lập tức mà không phải chờ đợi các tin nhắn cũ trong task queue, đồng thời vẫn đảm bảo rằng các tin nhắn khẩn cấp được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
 
 Ở thời điểm phiên bản 1.1.0, cơ chế PE chính thức được triển khai với các API `uedp_task_norm_set_urgent()` và `internal_task_norm_reset_pri()` để tăng và hạ mức ưu tiên tạm thời của TASK_NORM, đồng thời bổ sung logic xử lý pending escalation trong scheduler để đảm bảo rằng các TASK_NORM có thể được tăng ưu tiên tạm thời một cách linh hoạt và hiệu quả trong hệ thống. Tuy nhiên, sự thiếu vắng của cơ chế S-LnF sẽ được bổ sung trong các phiên bản tiếp theo để đảm bảo rằng các tin nhắn khẩn cấp được xử lý một cách an toàn và hiệu quả, đồng thời vẫn đảm bảo rằng các TASK_NORM có thể hoạt động một cách linh hoạt và hiệu quả trong hệ thống.
+
+#### Cập nhật và tiêu chuẩn hóa tên gọi tính năng
+
+Trong phiên bản 1.1.1, cơ chế PE sẽ được cập nhật và tiêu chuẩn hóa tên gọi thành Atomic Priority Escalation (APE) để phản ánh rõ hơn tính chất của việc tăng ưu tiên tạm thời một cách nguyên tử và an toàn trong hệ thống. Đồng thời, cơ chế bổ sung Safe LIFO-nested FIFO (S-LnF) cũng sẽ được triển khai để đảm bảo rằng các tin nhắn khẩn cấp được xử lý một cách an toàn và hiệu quả, đồng thời vẫn đảm bảo rằng các TASK_NORM có thể hoạt động một cách linh hoạt và hiệu quả trong hệ thống.
+
+Cơ chế này ở phiên bản 1.1.0 được tái định nghĩa gọi là non=S-LnF APE (non-supported Safe LIFO-nested FIFO Atomic Priority Escalation) nhằm phản ánh rõ hơn cơ chế này chỉ đảm bảo hoạt động khi TASK_NORM có message queue trống. Nếu TASK_NORM có nhiều tin nhắn trong task queue thì sẽ xảy ra tình trạng ưu tiên ảo, tức là TASK_NORM đã được tăng ưu tiên tạm thời nhưng vẫn phải chờ xử lý các tin nhắn cũ trong task queue, điều này sẽ làm mất đi ý nghĩa của việc tăng ưu tiên tạm thời. Do đó, cơ chế S-LnF sẽ được bổ sung để đảm bảo rằng các tin nhắn khẩn cấp được xử lý ngay lập tức mà không phải chờ đợi các tin nhắn cũ trong task queue, đồng thời vẫn đảm bảo rằng các tin nhắn khẩn cấp được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
+
+Từ phiên bản 1.1.1 trở đi, cơ chế APE sẽ được cập nhật và tiêu chuẩn hóa tên gọi thành Safe LIFO-nested FIFO Atomic Priority Escalation (S-LnF APE) để phản ánh rõ hơn tính chất của việc tăng ưu tiên tạm thời một cách an toàn và hiệu quả trong hệ thống, đồng thời đảm bảo rằng các tin nhắn khẩn cấp được xử lý một cách công bằng và hiệu quả trong hệ thống.
+
+> Vậy tại sao cơ chế non=S-LnF APE và S-LnF APE lại được tái định danh với tính chất Atomic mới ?
+
+Điều này bắt nguồn từ quá trình kiểm tra và chuyển đổi từ non=S-LnF APE sang S-LnF APE. Nhà phát triển đã nhận ra 1 hiện tượng khi thực thi quyền PE xong thì tác vụ được nhận PE trước đó sẽ không được vòng lập lịch chọn xử lý tiếp theo dù có mức ưu tiên cao hơn toàn bộ các TASK_NORM khác. Hiện tượng này diễn ra do việc triển khai PE đã vô tình bổ sung thêm việc clear ready bit của TASK_NORM trước khi thực hiện tăng ưu tiên tạm thời, điều này dẫn đến việc TASK_NORM đã được tăng ưu tiên tạm thời nhưng lại không được chọn thực thi tiếp theo trong vòng lập lịch. Do đó, cơ chế S-LnF APE sẽ được triển khai để đảm bảo rằng các tin nhắn khẩn cấp được xử lý ngay lập tức mà không phải chờ đợi các tin nhắn cũ trong task queue, đồng thời vẫn đảm bảo rằng các tin nhắn khẩn cấp được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
 
 ### [SLNF] Safe LIFO-nested FIFO - Cơ chế xử lý tin nhắn khẩn cấp an toàn
 

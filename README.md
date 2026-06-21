@@ -1,4 +1,4 @@
-# μEDP: Custom Independent Event-Driven Programming Core
+# μEDP: micro Event-Driven Programming Framework (formerly CIEDPC)
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Language: C](https://img.shields.io/badge/Language-Pure%20C-blue.svg)
@@ -6,21 +6,30 @@
 ![Platform: Agnostic](https://img.shields.io/badge/Platform-STM32%20|%20ESP32%20|%20Linux-green.svg)
 ![Status: Active Development](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
 
-**μEDP** is a lightweight, high-performance, event-driven programming kernel based on the **Active Object** model for embedded systems. It is designed to be platform-agnostic, supporting multiple architectures (STM32, ESP32, Linux) with a unified API and architecture.
+**μEDP** (formerly CIEDPC) is a lightweight, high-performance, event-driven programming framework based on the **Active Object** model with a focus on real-time embedded systems. It is designed to be platform-agnostic, OS-centric feature-rich, and highly efficient, making it suitable for a wide range of applications in the embedded domain.
 
 The core goal is to achieve **"Zero-Touch Porting"** — enabling the porting of application logic between platforms (STM32, ESP32, Linux) without changing the core source code.
 
+Future development plans insist on embedding μEDP as the Kernel of a new μE-OS (micro Event-Driven Operating System) that will be built on top of the μEDP framework, providing additional OS-level features while maintaining the core principles of event-driven programming.
+
+Future development plans insist on embedding μEDP as the Kernel of a new μE-OS (micro Event-Driven Operating System) that will be built on top of the μEDP framework, providing additional OS-level features while maintaining the core principles of event-driven programming.
+
 ---
 
-## 🚀 Key Features
+## 🚀 Key Features - Released & Future Development
 
-- Unified Messaging (v1.0.x): Unified message management mechanism.
-- Hybrid State Machine (v1.0.x): TSM and FSM for managing business logic.
-- Safe ISR Injection (v1.0.x): Bridge for injecting interrupt signals into the Core.
-- Priority Escalation (v1.1.0): Software scheduling policy for handling urgent messages.
-- Pub-Sub Engine (v1.2.0): Extends multicast communication between Tasks.
-- itnlog (v1.0.2): System for logging snapshot logic inside the Core.
-- Out-Context Execution - OCE (v1.0.x): Theoretical framework for freeing up CPU for light tasks when the Scheduler is idle.
+- **[SAD]** Separate Architecture Design: Clear layering between App Layer — μEDP Framework — PAL (Platform Abstraction Layer).
+- **[PSP]** Priority Scheduling Policy: Priority-based multitasking scheduling using bitmasks, optimizing response time for events.
+- **[APE]** Safe LIFO-nested FIFO Atomic Priority Escalation : Support for temporary priority escalation for urgent tasks, ensuring critical events are handled promptly without preemption issues using S-LnF (Safe LIFO-nested FIFO) mechanism.
+- **[DMP]** Deterministic Memory Pooling: Minimizing fragmentation and ensuring deterministic behavior for real-time systems with automatic atomic void size scaling of memory pools.
+- **[D2MP]** Data-to-Message Passing : Support for passing values and references (zero-copy), automatically adapting to 32/64-bit pointer sizes.
+- **[HSMC]** Hybrid State Machine Control: Integration of mode management (TSM) and micrologic (FSM) for clear system organization.
+- **[PPLP]** Plug-N-Play Logging Pipeline: Three-layer logging system `itnlog` → `logdp` → `rprintf/xprintf` supporting safe log collection and forwarding from Core to backend.
+- **[MPS]** Modular Porting Support: Abstracted hardware access and services in the PAL, enabling easy porting to new platforms with predefined interfaces and configurations.
+- **[OCE]** Out-Context Execution Service: Support for executing tasks in an out-of-context manner, allowing for flexible task management and execution.
+- **[IOMS]** I/O Mapping Shell: A shell for mapping certain operations to I/O hardware, enabling command-based control and interaction with hardware components.
+- **[PSE]** Pub/Sub Engine: A publish-subscribe mechanism for decoupled communication between tasks, allowing for flexible and scalable event handling.
+- **[SOCI]** Safe Out-Core Interaction: Ensuring safe and efficient interaction between the Core infrastructure and the external data flow, preventing issues such as data corruption and ensuring Core stability.
 
 ---
 
@@ -34,7 +43,7 @@ graph LR
         Logic[Main App Logic app.c]
     end
 
-    subgraph Core[μEDP Core ]
+    subgraph Core[μEDP Core]
         Task[Task Scheduler & Task Objects]
         Msg[Message Pools & Manager]
         Timer[Timer Service]
@@ -63,7 +72,7 @@ graph LR
 
 ```text
 μEDP/
-├── core/                 # Definition and implementation of the core logic of μEDP
+├── core/                 # Definition and implementation of the core logic of CIEDPC
 │   ├── inc/              # Message, Task, Timer, Itnlog, FSM, TSM
 │   │   └── uedp_core.h   # Definition of signals, constants and core data structures of μEDP
 │   └── src/              # Implementation of scheduler logic, timer engine, message manager, FSM/TSM engine, etc.
@@ -96,11 +105,11 @@ graph LR
 
 ## 📝 Documentation
 
-Information about the API, memory pool planning, and porting guides to other MCUs can be found in the [User Manual](./docs/user-manual.md).
+Information about the API, memory pool planning, and porting guides to other MCUs can be found in the [User Manual](./docs/user-manual.md). Please note that some documentation is still in progress, and the current version may not cover all features or details. The documentation will be updated as the project progresses, and contributions from the community are welcome to help improve and expand the documentation.
 
-A comparison analysis between the event-driven model (μEDP) and RTOS is available in [μEDP vs FreeRTOS](./docs/uedp-vs-freertos.md).
+A comparison analysis between the event-driven model (μEDP/CIEDPC) and RTOS is available in [μEDP vs FreeRTOS](./docs/uedp-vs-freertos.md).
 
-A detailed analysis between the μEDP and the QP/C framework is available in [μEDP vs QP/C](./docs/uedp-vs-qpc.md).
+A detailed analysis between the μEDP/CIEDPC and the QP/C framework is available in [μEDP vs QP/C](./docs/uedp-vs-qpc.md).
 
 If you want to see the documentation in progress, switch to the `docs` branch to view the documents that are currently being drafted and updated. Please also note that the documentation is currently supporting Vietnamese, and English documentation will be added in the future as the project progresses or with contributions from the community.
 
@@ -114,6 +123,6 @@ This project is developed by **Shang Huang (Huynh Thanh Sang)**. Contributions f
 
 ---
 
-## Roadmap tương lai
+## Future Development Roadmap
 
 All design roadmaps are stored in [to-do.md](./docs/to-do.md) to track the progress and development plans for new features, improvements, and related documentation. For more detailed updates, switch to the `docs` branch to view the documents that are currently being drafted and updated.
