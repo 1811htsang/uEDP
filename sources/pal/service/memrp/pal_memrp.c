@@ -12,7 +12,13 @@
 #include "pal_memrp.h"
 #include "uedp_task.h"
 #include "uedp_msg.h"
+#include "pal_rprintf.h"
 #include "fifo.h"
+
+/**
+ * @brief Khai báo biến nội bộ để lưu trữ thông tin về dịch vụ redirect print của PAL layer
+ */
+sta pal_rprintf_service_t internal_rprintf_service = {0};
 
 void pal_memrp_report(pal_memrp_info_t* info) {
   if (info == NULL) {
@@ -20,8 +26,13 @@ void pal_memrp_report(pal_memrp_info_t* info) {
   }
 
   internal_uedp_msg_pool_get_info(info->type, info);
+}
 
-  // Sau khi điền đầy đủ thông tin vào cấu trúc info, in báo cáo ra console hoặc gửi đến hệ thống giám sát
-  printf("[MEMRP] Name: %s, Used: %d, Max Used: %d, Total: %d\n",
-         info->name, info->used, info->max_used, info->total);
+void pal_memrp_set_output(pal_memrp_output_fn output_fn) {
+  if (output_fn == NULL) {
+    return; // Nếu hàm callback không hợp lệ, không thực hiện thiết lập
+  }
+
+  // Thiết lập hàm callback để xuất thông tin bộ nhớ ra đích đến đã định nghĩa
+  internal_rprintf_service.write = (void (*)(const uint8_t*, uint16_t))output_fn;
 }
