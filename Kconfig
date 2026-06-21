@@ -1,0 +1,115 @@
+mainmenu "μEDP Configuration"
+
+menu "Message Allocation Pool"
+  config UEDP_MSG_BLANK_QUEUE_SIZE
+    int "Blank pool queue size"
+    default 8
+    help
+      Size of the BLANK pool queue. 
+
+  config UEDP_MSG_ISR_QUEUE_SIZE
+    int "ISR pool queue size"
+    default 16
+    help
+      Size of the ISR pool queue. 
+
+  config UEDP_MSG_ALLOC_QUEUE_SIZE
+    int "Alloc pool queue size"
+    default 8
+    help
+      Size of the ALLOC pool queue. 
+
+  choice
+    prompt "N factor for Alloc data size"
+    default _UEDP_MSG_ALLOC_N_2
+    help
+      Choose the N factor to calculate the size of the ALLOC pool: sizeof(void*) * N(unsigned)
+
+    config _UEDP_MSG_ALLOC_N_1
+      bool "1"
+    config _UEDP_MSG_ALLOC_N_2
+      bool "2"
+    config _UEDP_MSG_ALLOC_N_4
+      bool "4"
+    config _UEDP_MSG_ALLOC_N_8
+      bool "8"
+    config _UEDP_MSG_ALLOC_N_16
+      bool "16"
+    config _UEDP_MSG_ALLOC_N_32
+      bool "32"
+  endchoice
+
+  config UEDP_MSG_ALLOC_N_VALUE
+    int
+    default 1 if _UEDP_MSG_ALLOC_N_1
+    default 2 if _UEDP_MSG_ALLOC_N_2
+    default 4 if _UEDP_MSG_ALLOC_N_4
+    default 8 if _UEDP_MSG_ALLOC_N_8
+    default 16 if _UEDP_MSG_ALLOC_N_16
+    default 32 if _UEDP_MSG_ALLOC_N_32
+
+  config UEDP_MSG_EXTAL_QUEUE_SIZE
+    int "Extal pool queue size"
+    default 8
+    help
+      Size of the EXTAL pool queue. 
+
+  choice
+    prompt "N factor for Extal data size"
+    default _UEDP_MSG_EXTAL_N_2
+    help
+      Choose the N factor to calculate the size of the EXTAL pool: sizeof(void*) * N(unsigned)
+
+    config _UEDP_MSG_EXTAL_N_1
+      bool "1"
+    config _UEDP_MSG_EXTAL_N_2
+      bool "2"
+    config _UEDP_MSG_EXTAL_N_4
+      bool "4"
+    config _UEDP_MSG_EXTAL_N_8
+      bool "8"
+    config _UEDP_MSG_EXTAL_N_16
+      bool "16"
+    config _UEDP_MSG_EXTAL_N_32
+      bool "32"
+  endchoice
+
+  config UEDP_MSG_EXTAL_N_VALUE
+    int
+    default 1 if _UEDP_MSG_EXTAL_N_1
+    default 2 if _UEDP_MSG_EXTAL_N_2
+    default 4 if _UEDP_MSG_EXTAL_N_4
+    default 8 if _UEDP_MSG_EXTAL_N_8
+    default 16 if _UEDP_MSG_EXTAL_N_16
+    default 32 if _UEDP_MSG_EXTAL_N_32
+endmenu
+
+menu "Task Message Queue"
+  config UEDP_TASK_MSG_QUEUE_SIZE
+    int "Task message queue size"
+    default 8
+    help
+      Size of the message queue for each task. This determines how many messages a task can have pending in its queue at any given time.
+endmenu
+
+menu "Timer Quantity"
+  config UEDP_TIMER_MAX_NODES
+    int "Number of timers"
+    default 8
+    help
+      Number of timers that can run simultaneously.
+endmenu
+
+menu "Internal Log Quantity"
+  config UEDP_ITNLOG_MAX_LOG_ENTRIES
+    int "Number of log entries"
+    default 32
+    help
+      Number of log entries that can be stored.
+
+  config UEDP_ITNLOG_FLUSH_THRESHOLD
+    int "Threshold for log entries"
+    default 28
+    help
+      Threshold for the number of log entries to trigger a flush (export) of logs outside.
+endmenu
