@@ -66,7 +66,7 @@ void pal_exit_critical(void) {
     pthread_mutex_unlock(&uedp_mutex);
 }
 
-ui8 pal_math_get_highest_bit16(ui16 mask) {
+ui8 pal_math_get_highest_bit32(ui32 mask) {
     if (mask == 0) return 0xFF;
     /* 31 - CLZ của 32-bit mang lại vị trí bit cao nhất (0-15) */
     return (ui8)(31 - __builtin_clz((uint32_t)mask));

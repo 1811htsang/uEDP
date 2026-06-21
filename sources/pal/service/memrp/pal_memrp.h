@@ -35,6 +35,8 @@
     ui8 total;
   } pal_memrp_info_t;
 
+  typedef void (*pal_memrp_output_fn)(pal_memrp_info_t* info);
+
   /**
    * @brief Hàm báo cáo thông tin bộ nhớ của một target cụ thể
    * @param info Con trỏ đến cấu trúc chứa thông tin bộ nhớ cần báo cáo, bao gồm target, used, max_used và total
@@ -42,12 +44,12 @@
   void pal_memrp_report(pal_memrp_info_t* info);
 
   /**
-   * @brief Hàm báo cáo thông tin bộ nhớ của tất cả các target đã được định nghĩa trong hệ thống UEDP
+   * @brief Hàm thiết lập callback cho phép đưa memrp vào PPLP
    */
-  void pal_memrp_report_all(void);
+  void pal_memrp_set_output(pal_memrp_output_fn output_fn);
 
   /**
-	 * @brief Hàm này được định nghĩa là weak để cho phép người dùng tùy chỉnh cách lấy thông tin bộ nhớ của Stack nếu cần thiết.
+	 * @brief Hàm này được định nghĩa là weak để cho phép người dùng tùy chỉnh cách lấy thông tin bộ nhớ phần cứng nếu cần thiết.
 	 */
 	UEDP_ATTR_WEAK void pal_memrp_get_sys_info(ui32 *rom_used, ui32 *ram_used, ui32 *stack_curr);
 
