@@ -94,7 +94,7 @@
 - [x] Rename cơ chế PE gốc thành non=S-LnF APE (non-supported LIFO-nested FIFO Atomic Priority Escalation) để làm rõ tính chất Atomic của cơ chế PE gốc nhưng không hỗ trợ LIFO-nested FIFO, đồng thời phân biệt rõ hơn với cơ chế S-LnF mới được bổ sung, trình bày chi tiết trong tài liệu thiết kế để làm rõ sự khác biệt giữa hai cơ chế này và lý do tại sao cơ chế S-LnF được bổ sung để đảm bảo tính an toàn và hiệu quả trong việc xử lý các tin nhắn khẩn cấp trong hệ thống.
 - [x] Rename cơ chế PE mới thành S-LnF APE (Safe LIFO-nested FIFO Atomic Priority Escalation) để làm rõ tính chất an toàn và hỗ trợ LIFO-nested FIFO của cơ chế này, đồng thời phân biệt rõ hơn với cơ chế PE gốc.
 - [x] Import lại README của v1.1.0 để sửa đổi và bổ sung thông tin về cơ chế S-LnF và các tính năng mới của phiên bản 1.1.1, đồng thời làm rõ hơn về các cải tiến và lợi ích của cơ chế S-LnF trong việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả trong hệ thống.
-- [ ] Ra mắt phiên bản 1.1.1 của lõi μEDP với đầy đủ tính năng S-LnF và tài liệu hướng dẫn sử dụng.
+- [x] Ra mắt phiên bản 1.1.1 của lõi μEDP với đầy đủ tính năng S-LnF và tài liệu hướng dẫn sử dụng.
 
 ### Phiên bản 1.1.2: The Kconfig Configuration
 
