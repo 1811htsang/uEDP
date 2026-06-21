@@ -53,3 +53,15 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Obsidian vault
+sketch/.obsidian
+
+# Test build output
+sources/test/*/build/
+
+# VSCode settings
+.vscode/settings.json
+
+# Test build folder
+sources/test/*
