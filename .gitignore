@@ -65,3 +65,6 @@ sources/test/*/build/
 
 # Test build folder
 sources/test/*
+
+# Python cache
+sources/common/kconfiglib/__pycache__/

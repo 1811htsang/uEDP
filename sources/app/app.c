@@ -31,8 +31,8 @@ uint32_t system_action_count = 0x0u;
  *            và kích thước trong app_decl.h để tránh lỗi
  *            multiple definition hoặc thiếu định nghĩa khi biên dịch
  */
-
-// Điền các khai báo tại đây
+// KCONFIG_MSG_QUEUE_START
+// KCONFIG_MSG_QUEUE_END
 
 /**
  * @brief Định nghĩa các buffer dữ liệu để truyền các tin nhắn kích thước lớn
@@ -40,14 +40,44 @@ uint32_t system_action_count = 0x0u;
  *        Việc này giúp giảm tải bộ nhớ bằng cách không sao chép dữ liệu 
  *        mà chỉ truyền địa chỉ của biến chứa dữ liệu.
  */
-
-// Điền các khai báo tại đây
+// KCONFIG_MSG_BUFFER_START
+// KCONFIG_MSG_BUFFER_END
 
 /**
- * @brief Định nghĩa bảng task 
+ * @brief Định nghĩa bảng task NORM
  */
+// KCONFIG_TASK_NORM_TABLE_START
+// KCONFIG_TASK_NORM_TABLE_END
 
-// Điền các khai báo tại đây
+/**
+ * @brief Định nghĩa bảng task POLL
+ */
+// KCONFIG_TASK_POLL_TABLE_START
+// KCONFIG_TASK_POLL_TABLE_END
+
+/**
+ * @brief Định nghĩa bảng chuyển trạng thái cho state
+ */
+// KCONFIG_TSM_TRANS_START
+// KCONFIG_TSM_TRANS_END
+
+/**
+ * @brief Định nghĩa bảng TSM
+ */
+// KCONFIG_TSM_TABLE_START
+// KCONFIG_TSM_TABLE_END
+
+/**
+ * @brief Định nghĩa TSM cho tác vụ
+ */
+// KCONFIG_TSM_TASK_START
+// KCONFIG_TSM_TASK_END
+
+/**
+ * @brief Định nghĩa FSM cho tác vụ
+ */
+// KCONFIG_FSM_TASK_START
+// KCONFIG_FSM_TASK_END
 
 /**
  * @brief Các khai báo khác (nếu có)
@@ -62,25 +92,43 @@ uint32_t system_action_count = 0x0u;
 // Điền các khai báo tại đây
 
 /**
+ * @brief Khai báo handler cho task USR, task A và task B
+ */
+
+// KCONFIG_TASK_HANDLER_DECL_START
+// KCONFIG_TASK_HANDLER_DECL_END
+
+/**
+ * @brief Khai báo hàm on-entry/exit cho các trạng thái của TSM (nếu có)
+ */
+
+// KCONFIG_TSM_ENTRY_EXIT_DECL_START
+// KCONFIG_TSM_ENTRY_EXIT_DECL_END
+
+/**
+ * @brief Khai báo các state handler cho FSM của task USR, task A và task B (nếu có)
+ */
+
+// KCONFIG_FSM_STATE_HANDLERS_DECL_START
+// KCONFIG_FSM_STATE_HANDLERS_DECL_END
+
+/**
  * @brief Định nghĩa handler cho task USR, task A và task B
  */
 
-// Điền các khai báo tại đây
+// KCONFIG_TASK_HANDLER_START
+// KCONFIG_TASK_HANDLER_END
 
 /**
  * @brief Định nghĩa các hàm on-entry/exit cho các trạng thái của TSM (nếu có)
  */
 
-// Điền các khai báo tại đây
+// KCONFIG_TSM_ENTRY_EXIT_START
+// KCONFIG_TSM_ENTRY_EXIT_END
 
 /**
  * @brief Định nghĩa các state handler cho FSM của task USR, task A và task B (nếu có)
  */
 
-// Điền các khai báo tại đây
-
-/**
- * @brief Định nghĩa các hàm khác (nếu có)
- */
-
-// Điền các khai báo tại đây
+// KCONFIG_FSM_STATE_HANDLERS_START
+// KCONFIG_FSM_STATE_HANDLERS_END
