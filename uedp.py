@@ -13,78 +13,145 @@ import menuconfig
 import argparse
 
 # Global variables to hold user input values (if needed)
-num_tasks = 8
-num_signals = 8
-num_msg_queue = 8 # Depend on num_tasks
-num_handlers = 8 # Depend on num_tasks
-is_use_fsm = False # If yes, kconfig need to add configuration about number of states for each task, number of fsm depend on number of tasks
-is_use_tsm = False # If yes, kconfig need to add configuration about on-entry/exit, on state handlers, etc.
+DEFAULT_VALS = {
+  "num_tasks_norm": 8,
+  "num_tasks_poll": 8,
+  "num_signals": 10,
+  "is_use_fsm": False,
+  "is_use_tsm": False,
+  "num_tsm_states": 0,
+  "num_fsm_states": 0
+}
 
 # Add pipeline for user input to gen tasks, signal handling, etc.
 def user_input():
   # Number of tasks to generate
-  print('[INFO] Number of tasks to generate (default: 8): ', end='')
-  num_tasks = input()
-  if num_tasks.strip() == '':
-    num_tasks = 8
-  else:
-    num_tasks = int(num_tasks)
-  
+  print(f'[INFO] Number of tasks norm to generate (default: {DEFAULT_VALS["num_tasks_norm"]}): ', end='')
+  val = input().strip()
+  num_tasks_norm = int(val) if val != '' else DEFAULT_VALS["num_tasks_norm"]
+
+  # Number of tasks poll to generate
+  print(f'[INFO] Number of tasks poll to generate (default: {DEFAULT_VALS["num_tasks_poll"]}): ', end='')
+  val = input().strip()
+  num_tasks_poll = int(val) if val != '' else DEFAULT_VALS["num_tasks_poll"]
+
   # Number of signals to generate
-  print('[INFO] Number of signals to generate (default: 10): ', end='')
-  num_signals = input()
-  if num_signals.strip() == '':
-    num_signals = 10
-  else:
-    num_signals = int(num_signals)
+  print(f'[INFO] Number of signals to generate (default: {DEFAULT_VALS["num_signals"]}): ', end='')
+  val = input().strip()
+  num_signals = int(val) if val != '' else DEFAULT_VALS["num_signals"]
 
-  # Number of message queues to generate
-  # Depend on number of tasks so it can be auto generated
-  num_msg_queue = num_tasks
-
-  # Number of handlers to generate
-  # Depend on number of tasks so it can be auto generated
-  num_handlers = num_tasks
-
-  # Ask user if they want to use FSM
+  # Ask user if they want to use FSM/TSM
   print('[INFO] Do you want to use FSM? (y/n, default: n): ', end='')
-  if input().strip().lower() == 'y':
-    is_use_fsm = True
-  else:
-    is_use_fsm = False
-  
-  # Ask user if they want to use TSM
+  is_use_fsm = input().strip().lower() == 'y'
+
   print('[INFO] Do you want to use TSM? (y/n, default: n): ', end='')
-  if input().strip().lower() == 'y':
-    is_use_tsm = True
-  else:
-    is_use_tsm = False
+  is_use_tsm = input().strip().lower() == 'y'
+
+  num_tsm_states = 0
+  if is_use_tsm:
+    print(f'[INFO] Number of TSM states to generate (default: {num_tasks_norm}): ', end='')
+    val = input().strip()
+    num_tsm_states = int(val) if val != '' else num_tasks_norm
+
+  num_fsm_states = 0
+  if is_use_fsm:
+    print(f'[INFO] Number of FSM states to generate (default: {num_tasks_norm}): ', end='')
+    val = input().strip()
+    num_fsm_states = int(val) if val != '' else num_tasks_norm
+
+  # TRẢ VỀ CÁC GIÁ TRỊ ĐÃ NHẬP
+  return num_tasks_norm, num_tasks_poll, num_signals, is_use_fsm, is_use_tsm, num_tsm_states, num_fsm_states
 
 # Function to generate blank task declarations based on user input
 # Remember that task generation auto set the ID from 0xE6u, 0xE7u, ... to 0xEFu
-def task_declaration(num_tasks):
+def task_norm_declaration(num_tasks_norm, num_tsm_states, num_fsm_states):
   # Generate task declarations in Kconfig format
   kconfig_content = []
-  for i in range(1, num_tasks + 1):
-    kconfig_content.append(f'menu \"Task #{i} configuration\"')
-    kconfig_content.append(f'\tconfig TASK_NORM_{i}_NAME')
-    kconfig_content.append(f'\t\tstring "Name of task #{i}"')
-    kconfig_content.append(f'\t\tdefault "TASK_NORM_{i}_ID"\n')
-    kconfig_content.append(f'\tconfig TASK_NORM_{i}_PRIO')
-    kconfig_content.append(f'\t\tstring "Priority of task #{i}"')
-    kconfig_content.append(f'\t\tdefault "UEDP_TASK_PRI_LEVEL_0"')
-    kconfig_content.append(f'\t\tdepends on TASK_NORM_{i}_NAME != ""\n')
-    kconfig_content.append(f'\tconfig MSG_QUEUE_{i}_NAME')
-    kconfig_content.append(f'\t\tstring "Name of message queue #{i}"')
-    kconfig_content.append(f'\t\tdefault "MSG_QUEUE_{i}_ID"\n')
-    kconfig_content.append(f'\t\tdepends on TASK_NORM_{i}_NAME != ""\n')
-    kconfig_content.append(f'\tconfig HANDLER_{i}_NAME')
-    kconfig_content.append(f'\t\tstring "Name of handler #{i}"')
-    kconfig_content.append(f'\t\tdefault "HANDLER_{i}_ID"\n')
-    kconfig_content.append(f'\t\tdepends on TASK_NORM_{i}_NAME != ""\n')
-    kconfig_content.append(f'endmenu\n')
+  kconfig_content.append('menu "Task Norm configuration"\n')
+
+  for i in range(1, num_tasks_norm + 1):
+    kconfig_content.append(f'\tmenu \"Task #{i} configuration\"')
+
+    kconfig_content.append(f'\t\tconfig TASK_NORM_{i}_NAME') # Config name
+    kconfig_content.append(f'\t\t\tstring "Name of task #{i}"')
+    kconfig_content.append(f'\t\t\tdefault "TASK_NORM_{i}_ID"\n') 
+
+    kconfig_content.append(f'\t\tconfig TASK_NORM_{i}_PRIO') # Config priority
+    kconfig_content.append(f'\t\t\tstring "Priority of task #{i}"')
+    kconfig_content.append(f'\t\t\tdefault "UEDP_TASK_PRI_LEVEL_0"')
+    kconfig_content.append(f'\t\t\tdepends on TASK_NORM_{i}_NAME != ""\n')
+
+    kconfig_content.append(f'\t\tconfig MSG_QUEUE_{i}_NAME') # Config message queue name
+    kconfig_content.append(f'\t\t\tstring "Name of message queue #{i}"')
+    kconfig_content.append(f'\t\t\tdefault "MSG_QUEUE_{i}_ID"')
+    kconfig_content.append(f'\t\t\tdepends on TASK_NORM_{i}_NAME != ""\n')
+
+    kconfig_content.append(f'\t\tconfig HANDLER_{i}_NAME') # Config handler name
+    kconfig_content.append(f'\t\t\tstring "Name of handler #{i}"')
+    kconfig_content.append(f'\t\t\tdefault "HANDLER_{i}_ID"')
+    kconfig_content.append(f'\t\t\tdepends on TASK_NORM_{i}_NAME != ""\n')
+
+    kconfig_content.append(f'\t\tconfig TASK_NORM_{i}_USE_TSM') # Config TSM flag
+    kconfig_content.append(f'\t\t\tbool "Use TSM for task #{i}"')
+    kconfig_content.append(f'\t\t\tdefault n')
+    kconfig_content.append(f'\t\t\tdepends on TASK_NORM_{i}_NAME != ""\n')
+
+    kconfig_content.append(f'\t\tconfig TSM_TASK_{i}') # Config TSM name
+    kconfig_content.append(f'\t\t\tstring "Name of TSM task #{i}"')
+    kconfig_content.append(f'\t\t\tdefault "TSM_TASK_{i}_ID"')
+    kconfig_content.append(f'\t\t\tdepends on TASK_NORM_{i}_NAME != "" && TASK_NORM_{i}_USE_TSM \n')
+
+    for j in range(1, num_tsm_states + 1):
+      kconfig_content.append(f'\t\tconfig TSM_TASK_{i}_STATE_{j}') # Config TSM state name
+      kconfig_content.append(f'\t\t\tstring "Name of TSM task #{i} state #{j}"')
+      kconfig_content.append(f'\t\t\tdefault "TSM_TASK_{i}_STATE_{j}_ID"')
+      kconfig_content.append(f'\t\t\tdepends on TASK_NORM_{i}_NAME != "" && TASK_NORM_{i}_USE_TSM \n')
+
+    kconfig_content.append(f'\t\tconfig TASK_NORM_{i}_USE_FSM') # Config FSM flag
+    kconfig_content.append(f'\t\t\tbool "Use FSM for task #{i}"')
+    kconfig_content.append(f'\t\t\tdefault n')
+    kconfig_content.append(f'\t\t\tdepends on TASK_NORM_{i}_NAME != ""\n')
+
+    kconfig_content.append(f'\t\tconfig FSM_TASK_{i}') # Config FSM name
+    kconfig_content.append(f'\t\t\tstring "Name of FSM task #{i}"')
+    kconfig_content.append(f'\t\t\tdefault "FSM_TASK_{i}_ID"')
+    kconfig_content.append(f'\t\t\tdepends on TASK_NORM_{i}_NAME != "" && TASK_NORM_{i}_USE_FSM \n')
+
+    for j in range(1, num_fsm_states + 1):
+      kconfig_content.append(f'\t\tconfig FSM_TASK_{i}_STATE_{j}') # Config FSM state name
+      kconfig_content.append(f'\t\t\tstring "Name of FSM task #{i} state #{j}"')
+      kconfig_content.append(f'\t\t\tdefault "FSM_TASK_{i}_STATE_{j}_ID"')
+      kconfig_content.append(f'\t\t\tdepends on TASK_NORM_{i}_NAME != "" && TASK_NORM_{i}_USE_FSM \n')
+
+    kconfig_content.append(f'\tendmenu\n')
+
+  kconfig_content.append(f'endmenu\n')
   
   with open("sources/app/kconfig/decl.kconfig", "w", encoding="utf-8") as f:
+    f.write("\n".join(kconfig_content))
+
+def task_poll_declaration(num_tasks_poll):
+  # Generate task declarations in Kconfig format
+  kconfig_content = []
+  kconfig_content.append('menu "Task Poll configuration"\n')
+
+  for i in range(1, num_tasks_poll + 1):
+    kconfig_content.append(f'\tmenu \"Task Poll #{i} configuration\"')
+
+    kconfig_content.append(f'\t\tconfig TASK_POLL_{i}_NAME') # Config name
+    kconfig_content.append(f'\t\t\tstring "Name of task poll #{i}"')
+    kconfig_content.append(f'\t\t\tdefault "TASK_POLL_{i}_ID"\n') 
+
+    kconfig_content.append(f'\t\tconfig TASK_POLL_{i}_ABILITY') # Config ability
+    kconfig_content.append(f'\t\t\tbool "Ability of task poll #{i}"')
+    kconfig_content.append(f'\t\t\tdefault "n"')
+    kconfig_content.append(f'\t\t\tdepends on TASK_POLL_{i}_NAME != ""\n')
+
+    kconfig_content.append(f'\tendmenu\n')
+
+  kconfig_content.append(f'endmenu\n')
+  
+  with open("sources/app/kconfig/decl.kconfig", "a", encoding="utf-8") as f:
     f.write("\n".join(kconfig_content))
 
 # Function to generate blank signal declarations based on user input
@@ -92,12 +159,16 @@ def task_declaration(num_tasks):
 def signal_declaration(num_signals):
   # Generate signal declarations in Kconfig format
   kconfig_content = []
+  kconfig_content.append('menu "Signal configuration"\n')
+
   for i in range(1, num_signals + 1):
-    kconfig_content.append(f'menu \"Signal #{i} configuration\"')
-    kconfig_content.append(f'\tconfig SIG_TSK_{i}_NAME')
-    kconfig_content.append(f'\t\tstring "Name of signal #{i}"')
-    kconfig_content.append(f'\t\tdefault "SIG_TSK_{i}_ID"\n')
-    kconfig_content.append(f'endmenu\n')
+    kconfig_content.append(f'\tmenu \"Signal #{i} configuration\"')
+    kconfig_content.append(f'\t\tconfig SIG_TSK_{i}_NAME')
+    kconfig_content.append(f'\t\t\tstring "Name of signal #{i}"')
+    kconfig_content.append(f'\t\t\tdefault "SIG_TSK_{i}_ID"\n')
+    kconfig_content.append(f'\tendmenu\n')
+
+  kconfig_content.append(f'endmenu\n')
   
   with open("sources/app/kconfig/decl.kconfig", "a", encoding="utf-8") as f:
     f.write("\n".join(kconfig_content))
@@ -172,33 +243,34 @@ def update_core_cfg_header(kconf, header_path):
   return True
 
 def main():
-  # Giả lập xử lý đối số menuconfig giống câu trước
   os.environ["KCONFIG_CONFIG"] = ".config"
   
-  # Gọi hàm user_input để lấy thông tin từ người dùng
-  user_input()
+  # LẤY GIÁ TRỊ TỪ HÀM NHẬP
+  (n_norm, n_poll, n_sig, use_fsm, use_tsm, n_tsm_st, n_fsm_st) = user_input()
 
-  # Gọi hàm task_declaration và signal_declaration để tạo các file Kconfig tương ứng
-  task_declaration(num_tasks)
-  signal_declaration(num_signals)
+  # Tạo file mới (ghi đè "w" lần đầu để xóa nội dung cũ)
+  # Sau đó các hàm tiếp theo dùng "a" để ghi tiếp vào
+  # Ở đây tôi sửa lại logic ghi file để an toàn hơn:
+  
+  # 1. Reset file
+  open("sources/app/kconfig/decl.kconfig", "w").close()
 
-  # Khởi tạo kconfig
+  # 2. Gọi các hàm tạo với giá trị mới
+  task_norm_declaration(n_norm, n_tsm_st, n_fsm_st)
+  task_poll_declaration(n_poll)
+  signal_declaration(n_sig)
+
+  # Khởi tạo kconfiglib
   kconf = kconfiglib.Kconfig("Kconfig")
-  
-  # Nếu có file .config cũ thì load lên trước
   if os.path.exists(".config"):
-    kconf.load_config(".config")
+      kconf.load_config(".config")
 
-  # Mở giao diện menuconfig cho người dùng chỉnh sửa
   menuconfig.menuconfig(kconf)
+  kconf.write_config(".config")
   
-  # Sau khi người dùng Lưu và Thoát:
-  kconf.write_config(".config") # Vẫn lưu .config để giữ trạng thái cho lần sau
-  
-  # Gọi hàm tự chế để ghi vào đúng vị trí trong core_cfg.h
   header_target = os.path.join("sources", "app", "config", "core_cfg.h")
   if update_core_cfg_header(kconf, header_target):
-    print(f"\n[SUCCESS] Cấu hình đã được chèn thành công vào {header_target}!")
+      print(f"\n[SUCCESS] Cấu hình đã được chèn thành công vào {header_target}!")
 
 if __name__ == "__main__":
   main()

@@ -85,10 +85,10 @@
 	// KCONFIG_DECL_TASK_HANDLER_END
 
 	/**
-	 * @brief Khai báo các hàm on-entry/exit cho các trạng thái FSM (nếu có)
+	 * @brief Khai báo các hàm on-entry/exit cho các trạng thái TSM (nếu có)
 	 */
-	// KCONFIG_DECL_FSM_ENTRY_EXIT_START
-	// KCONFIG_DECL_FSM_ENTRY_EXIT_END
+	// KCONFIG_DECL_TSM_ENTRY_EXIT_START
+	// KCONFIG_DECL_TSM_ENTRY_EXIT_END
 
 	/**
 	 * @brief Khai báo các hàm on-state cho các trạng thái TSM (nếu có)
