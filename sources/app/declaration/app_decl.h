@@ -30,8 +30,8 @@
 	 * #define TASK_NORM_A_ID (0xE6u)
 	 * #define TASK_NORM_B_ID (0xE7u)
 	 */
-
-	// Điền các khai báo tại đây
+	// KCONFIG_DECL_TASK_START
+	// KCONFIG_DECL_TASK_END
 
 	/**
 	 * @brief Khai báo tín hiệu giao tiếp giữa các tác vụ
@@ -44,8 +44,8 @@
 	 * #define SIG_TSK_A_TO_B    (0x03u)
 	 * #define SIG_TSK_B_TO_A    (0x04u)
 	 */
-
-	// Điền các khai báo tại đây
+	// KCONFIG_DECL_SIGNAL_START
+	// KCONFIG_DECL_SIGNAL_END
 
 	/**
 	 * @brief Khai báo message queue cho các tác vụ
@@ -57,8 +57,8 @@
 	 * extern uedp_msg_t* a_q_mem[8];
 	 * extern uedp_msg_t* b_q_mem[8];
 	 */
-
-	// Điền các khai báo tại đây
+	// KCONFIG_DECL_MSG_QUEUE_START
+	// KCONFIG_DECL_MSG_QUEUE_END
 
 	/**
 	 * @brief Khai báo biến đếm hoạt động của hệ thống
@@ -81,26 +81,26 @@
 	 * 							có định dạng `void task_poll_x_handler()`,
 	 * 							trong đó x là tên tác vụ polling.
 	 */
-
-	// Điền các khai báo tại đây
+	// KCONFIG_DECL_TASK_HANDLER_START
+	// KCONFIG_DECL_TASK_HANDLER_END
 
 	/**
 	 * @brief Khai báo các hàm on-entry/exit cho các trạng thái FSM (nếu có)
 	 */
-
-	// Điền các khai báo tại đây
+	// KCONFIG_DECL_FSM_ENTRY_EXIT_START
+	// KCONFIG_DECL_FSM_ENTRY_EXIT_END
 
 	/**
 	 * @brief Khai báo các hàm on-state cho các trạng thái TSM (nếu có)
 	 */
-
-	// Điền các khai báo tại đây
+	// KCONFIG_DECL_TSM_STATE_START
+	// KCONFIG_DECL_TSM_STATE_END
 
 	/**
 	 * @brief Khai báo các state_handler cho các trạng thái FSM (nếu có)
 	 */
-
-	// Điền các khai báo tại đây
+	// KCONFIG_DECL_FSM_STATE_HANDLERS_START
+	// KCONFIG_DECL_FSM_STATE_HANDLERS_END
 
 	/**
 	 * @brief Khai báo khác (nếu có)

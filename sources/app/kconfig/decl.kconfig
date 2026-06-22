@@ -1,0 +1,246 @@
+menu "Task #1 configuration"
+	config TASK_NORM_1_NAME
+		string "Name of task #1"
+		default "TASK_NORM_1_ID"
+
+	config TASK_NORM_1_PRIO
+		string "Priority of task #1"
+		default "UEDP_TASK_PRI_LEVEL_0"
+		depends on TASK_NORM_1_NAME != ""
+
+	config MSG_QUEUE_1_NAME
+		string "Name of message queue #1"
+		default "MSG_QUEUE_1_ID"
+
+		depends on TASK_NORM_1_NAME != ""
+
+	config HANDLER_1_NAME
+		string "Name of handler #1"
+		default "HANDLER_1_ID"
+
+		depends on TASK_NORM_1_NAME != ""
+
+endmenu
+
+menu "Task #2 configuration"
+	config TASK_NORM_2_NAME
+		string "Name of task #2"
+		default "TASK_NORM_2_ID"
+
+	config TASK_NORM_2_PRIO
+		string "Priority of task #2"
+		default "UEDP_TASK_PRI_LEVEL_0"
+		depends on TASK_NORM_2_NAME != ""
+
+	config MSG_QUEUE_2_NAME
+		string "Name of message queue #2"
+		default "MSG_QUEUE_2_ID"
+
+		depends on TASK_NORM_2_NAME != ""
+
+	config HANDLER_2_NAME
+		string "Name of handler #2"
+		default "HANDLER_2_ID"
+
+		depends on TASK_NORM_2_NAME != ""
+
+endmenu
+
+menu "Task #3 configuration"
+	config TASK_NORM_3_NAME
+		string "Name of task #3"
+		default "TASK_NORM_3_ID"
+
+	config TASK_NORM_3_PRIO
+		string "Priority of task #3"
+		default "UEDP_TASK_PRI_LEVEL_0"
+		depends on TASK_NORM_3_NAME != ""
+
+	config MSG_QUEUE_3_NAME
+		string "Name of message queue #3"
+		default "MSG_QUEUE_3_ID"
+
+		depends on TASK_NORM_3_NAME != ""
+
+	config HANDLER_3_NAME
+		string "Name of handler #3"
+		default "HANDLER_3_ID"
+
+		depends on TASK_NORM_3_NAME != ""
+
+endmenu
+
+menu "Task #4 configuration"
+	config TASK_NORM_4_NAME
+		string "Name of task #4"
+		default "TASK_NORM_4_ID"
+
+	config TASK_NORM_4_PRIO
+		string "Priority of task #4"
+		default "UEDP_TASK_PRI_LEVEL_0"
+		depends on TASK_NORM_4_NAME != ""
+
+	config MSG_QUEUE_4_NAME
+		string "Name of message queue #4"
+		default "MSG_QUEUE_4_ID"
+
+		depends on TASK_NORM_4_NAME != ""
+
+	config HANDLER_4_NAME
+		string "Name of handler #4"
+		default "HANDLER_4_ID"
+
+		depends on TASK_NORM_4_NAME != ""
+
+endmenu
+
+menu "Task #5 configuration"
+	config TASK_NORM_5_NAME
+		string "Name of task #5"
+		default "TASK_NORM_5_ID"
+
+	config TASK_NORM_5_PRIO
+		string "Priority of task #5"
+		default "UEDP_TASK_PRI_LEVEL_0"
+		depends on TASK_NORM_5_NAME != ""
+
+	config MSG_QUEUE_5_NAME
+		string "Name of message queue #5"
+		default "MSG_QUEUE_5_ID"
+
+		depends on TASK_NORM_5_NAME != ""
+
+	config HANDLER_5_NAME
+		string "Name of handler #5"
+		default "HANDLER_5_ID"
+
+		depends on TASK_NORM_5_NAME != ""
+
+endmenu
+
+menu "Task #6 configuration"
+	config TASK_NORM_6_NAME
+		string "Name of task #6"
+		default "TASK_NORM_6_ID"
+
+	config TASK_NORM_6_PRIO
+		string "Priority of task #6"
+		default "UEDP_TASK_PRI_LEVEL_0"
+		depends on TASK_NORM_6_NAME != ""
+
+	config MSG_QUEUE_6_NAME
+		string "Name of message queue #6"
+		default "MSG_QUEUE_6_ID"
+
+		depends on TASK_NORM_6_NAME != ""
+
+	config HANDLER_6_NAME
+		string "Name of handler #6"
+		default "HANDLER_6_ID"
+
+		depends on TASK_NORM_6_NAME != ""
+
+endmenu
+
+menu "Task #7 configuration"
+	config TASK_NORM_7_NAME
+		string "Name of task #7"
+		default "TASK_NORM_7_ID"
+
+	config TASK_NORM_7_PRIO
+		string "Priority of task #7"
+		default "UEDP_TASK_PRI_LEVEL_0"
+		depends on TASK_NORM_7_NAME != ""
+
+	config MSG_QUEUE_7_NAME
+		string "Name of message queue #7"
+		default "MSG_QUEUE_7_ID"
+
+		depends on TASK_NORM_7_NAME != ""
+
+	config HANDLER_7_NAME
+		string "Name of handler #7"
+		default "HANDLER_7_ID"
+
+		depends on TASK_NORM_7_NAME != ""
+
+endmenu
+
+menu "Task #8 configuration"
+	config TASK_NORM_8_NAME
+		string "Name of task #8"
+		default "TASK_NORM_8_ID"
+
+	config TASK_NORM_8_PRIO
+		string "Priority of task #8"
+		default "UEDP_TASK_PRI_LEVEL_0"
+		depends on TASK_NORM_8_NAME != ""
+
+	config MSG_QUEUE_8_NAME
+		string "Name of message queue #8"
+		default "MSG_QUEUE_8_ID"
+
+		depends on TASK_NORM_8_NAME != ""
+
+	config HANDLER_8_NAME
+		string "Name of handler #8"
+		default "HANDLER_8_ID"
+
+		depends on TASK_NORM_8_NAME != ""
+
+endmenu
+menu "Signal #1 configuration"
+	config SIG_TSK_1_NAME
+		string "Name of signal #1"
+		default "SIG_TSK_1_ID"
+
+endmenu
+
+menu "Signal #2 configuration"
+	config SIG_TSK_2_NAME
+		string "Name of signal #2"
+		default "SIG_TSK_2_ID"
+
+endmenu
+
+menu "Signal #3 configuration"
+	config SIG_TSK_3_NAME
+		string "Name of signal #3"
+		default "SIG_TSK_3_ID"
+
+endmenu
+
+menu "Signal #4 configuration"
+	config SIG_TSK_4_NAME
+		string "Name of signal #4"
+		default "SIG_TSK_4_ID"
+
+endmenu
+
+menu "Signal #5 configuration"
+	config SIG_TSK_5_NAME
+		string "Name of signal #5"
+		default "SIG_TSK_5_ID"
+
+endmenu
+
+menu "Signal #6 configuration"
+	config SIG_TSK_6_NAME
+		string "Name of signal #6"
+		default "SIG_TSK_6_ID"
+
+endmenu
+
+menu "Signal #7 configuration"
+	config SIG_TSK_7_NAME
+		string "Name of signal #7"
+		default "SIG_TSK_7_ID"
+
+endmenu
+
+menu "Signal #8 configuration"
+	config SIG_TSK_8_NAME
+		string "Name of signal #8"
+		default "SIG_TSK_8_ID"
+
+endmenu

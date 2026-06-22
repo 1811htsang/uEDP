@@ -1,15 +1,106 @@
+# Add lib
 import os
 import sys
 
-# Tự động tìm và thêm đường dẫn của thư mục sources/common/kconfiglib vào Python path
+# Find Kconfiglib path relative to this script and add it to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 kconfig_dir = os.path.join(current_dir, "sources", "common", "kconfiglib")
 sys.path.insert(0, kconfig_dir)
 
-# Bây giờ bạn có thể import thoải mái mà không sợ máy người dùng thiếu thư viện
+# Import kconfiglib và menuconfig after add to sys.path
 import kconfiglib
 import menuconfig
 import argparse
+
+# Global variables to hold user input values (if needed)
+num_tasks = 8
+num_signals = 8
+num_msg_queue = 8 # Depend on num_tasks
+num_handlers = 8 # Depend on num_tasks
+is_use_fsm = False # If yes, kconfig need to add configuration about number of states for each task, number of fsm depend on number of tasks
+is_use_tsm = False # If yes, kconfig need to add configuration about on-entry/exit, on state handlers, etc.
+
+# Add pipeline for user input to gen tasks, signal handling, etc.
+def user_input():
+  # Number of tasks to generate
+  print('[INFO] Number of tasks to generate (default: 8): ', end='')
+  num_tasks = input()
+  if num_tasks.strip() == '':
+    num_tasks = 8
+  else:
+    num_tasks = int(num_tasks)
+  
+  # Number of signals to generate
+  print('[INFO] Number of signals to generate (default: 10): ', end='')
+  num_signals = input()
+  if num_signals.strip() == '':
+    num_signals = 10
+  else:
+    num_signals = int(num_signals)
+
+  # Number of message queues to generate
+  # Depend on number of tasks so it can be auto generated
+  num_msg_queue = num_tasks
+
+  # Number of handlers to generate
+  # Depend on number of tasks so it can be auto generated
+  num_handlers = num_tasks
+
+  # Ask user if they want to use FSM
+  print('[INFO] Do you want to use FSM? (y/n, default: n): ', end='')
+  if input().strip().lower() == 'y':
+    is_use_fsm = True
+  else:
+    is_use_fsm = False
+  
+  # Ask user if they want to use TSM
+  print('[INFO] Do you want to use TSM? (y/n, default: n): ', end='')
+  if input().strip().lower() == 'y':
+    is_use_tsm = True
+  else:
+    is_use_tsm = False
+
+# Function to generate blank task declarations based on user input
+# Remember that task generation auto set the ID from 0xE6u, 0xE7u, ... to 0xEFu
+def task_declaration(num_tasks):
+  # Generate task declarations in Kconfig format
+  kconfig_content = []
+  for i in range(1, num_tasks + 1):
+    kconfig_content.append(f'menu \"Task #{i} configuration\"')
+    kconfig_content.append(f'\tconfig TASK_NORM_{i}_NAME')
+    kconfig_content.append(f'\t\tstring "Name of task #{i}"')
+    kconfig_content.append(f'\t\tdefault "TASK_NORM_{i}_ID"\n')
+    kconfig_content.append(f'\tconfig TASK_NORM_{i}_PRIO')
+    kconfig_content.append(f'\t\tstring "Priority of task #{i}"')
+    kconfig_content.append(f'\t\tdefault "UEDP_TASK_PRI_LEVEL_0"')
+    kconfig_content.append(f'\t\tdepends on TASK_NORM_{i}_NAME != ""\n')
+    kconfig_content.append(f'\tconfig MSG_QUEUE_{i}_NAME')
+    kconfig_content.append(f'\t\tstring "Name of message queue #{i}"')
+    kconfig_content.append(f'\t\tdefault "MSG_QUEUE_{i}_ID"\n')
+    kconfig_content.append(f'\t\tdepends on TASK_NORM_{i}_NAME != ""\n')
+    kconfig_content.append(f'\tconfig HANDLER_{i}_NAME')
+    kconfig_content.append(f'\t\tstring "Name of handler #{i}"')
+    kconfig_content.append(f'\t\tdefault "HANDLER_{i}_ID"\n')
+    kconfig_content.append(f'\t\tdepends on TASK_NORM_{i}_NAME != ""\n')
+    kconfig_content.append(f'endmenu\n')
+  
+  with open("sources/app/kconfig/decl.kconfig", "w", encoding="utf-8") as f:
+    f.write("\n".join(kconfig_content))
+
+# Function to generate blank signal declarations based on user input
+# Remember that signal generation auto set the value from 0x01u, 0x02u, ... to 0xFFu
+def signal_declaration(num_signals):
+  # Generate signal declarations in Kconfig format
+  kconfig_content = []
+  for i in range(1, num_signals + 1):
+    kconfig_content.append(f'menu \"Signal #{i} configuration\"')
+    kconfig_content.append(f'\tconfig SIG_TSK_{i}_NAME')
+    kconfig_content.append(f'\t\tstring "Name of signal #{i}"')
+    kconfig_content.append(f'\t\tdefault "SIG_TSK_{i}_ID"\n')
+    kconfig_content.append(f'endmenu\n')
+  
+  with open("sources/app/kconfig/decl.kconfig", "a", encoding="utf-8") as f:
+    f.write("\n".join(kconfig_content))
 
 def update_core_cfg_header(kconf, header_path):
   """Hàm đọc cấu hình từ Kconfig và chèn vào vị trí chỉ định trong file .h"""
@@ -84,6 +175,13 @@ def main():
   # Giả lập xử lý đối số menuconfig giống câu trước
   os.environ["KCONFIG_CONFIG"] = ".config"
   
+  # Gọi hàm user_input để lấy thông tin từ người dùng
+  user_input()
+
+  # Gọi hàm task_declaration và signal_declaration để tạo các file Kconfig tương ứng
+  task_declaration(num_tasks)
+  signal_declaration(num_signals)
+
   # Khởi tạo kconfig
   kconf = kconfiglib.Kconfig("Kconfig")
   
