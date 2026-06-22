@@ -50,6 +50,8 @@
 	 * { SIG_USR_STOP,      STATE_BLINK_IDLE,      NULL },
 	 * { SIG_USR_START,     UEDP_TSM_STATE_STAY, NULL } // Đã ACTIVE rồi thì START đứng yên
 	 * };
+	 * @note Ở đây chỉ extern tên gọi, không cần triển khai nội dung, 
+	 * người dùng tự triển khai nội dung ở app.c
 	 */
 	// KCONFIG_APPCFG_STATE_TRANS_START
 	// KCONFIG_APPCFG_STATE_TRANS_END
@@ -64,6 +66,8 @@
 	 * 	{ STATE_BLINK_IDLE,   fn_on_idle_entry,   NULL,              blink_idle_trans,   1 },
 	 * 	{ STATE_BLINK_ACTIVE, fn_on_active_entry, fn_on_active_exit, blink_active_trans, 2 }
 	 * };
+	 * @note Ở đây chỉ extern tên gọi, không cần triển khai nội dung, 
+	 * người dùng tự triển khai nội dung ở app.c
 	 */
 	// KCONFIG_APPCFG_TSM_TABLE_START
 	// KCONFIG_APPCFG_TSM_TABLE_END

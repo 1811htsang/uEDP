@@ -23,15 +23,26 @@
 	#include "uedp_timer.h"
 
 	/**
-	 * @brief Khai báo tác vụ
+	 * @brief Khai báo tác vụ norm
 	 * @attention Tác vụ phải khai báo đúng định dạng `0xEx`
 	 * 						x bắt đầu từ 6 trở đi. Giới hạn tối đa là 0xEF (15 tác vụ)
 	 * @example
 	 * #define TASK_NORM_A_ID (0xE6u)
 	 * #define TASK_NORM_B_ID (0xE7u)
 	 */
-	// KCONFIG_DECL_TASK_START
-	// KCONFIG_DECL_TASK_END
+	// KCONFIG_DECL_TASK_NORM_START
+	// KCONFIG_DECL_TASK_NORM_END
+
+	/**
+	 * @brief Khai báo tác vụ poll
+	 * @attention Tác vụ phải khai báo đúng định dạng `0xDx`
+	 * 						x bắt đầu từ 4 trở đi. Giới hạn tối đa là 0xDF (8 tác vụ)
+	 * @example
+	 * #define TASK_POLL_A_ID (0xD4u)
+	 * #define TASK_POLL_B_ID (0xD5u)
+	 */
+	// KCONFIG_DECL_TASK_POLL_START
+	// KCONFIG_DECL_TASK_POLL_END
 
 	/**
 	 * @brief Khai báo tín hiệu giao tiếp giữa các tác vụ

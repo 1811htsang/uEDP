@@ -16,44 +16,43 @@ from sources.common.kconfiglib import kconfiglib
 from sources.common.kconfiglib import menuconfig
 import argparse
 
-# [5] Import user input function from pyspec
-from sources.common.pyspec.usrinp import user_input
-from sources.common.pyspec.tsknrmdcl import task_norm_declaration
-from sources.common.pyspec.tskpoldcl import task_poll_declaration
-from sources.common.pyspec.sigdcl import signal_declaration
+# [5] Define marker for app_cfg.h
+KCONFIG_DECL_TASK_NORM_START = "// KCONFIG_DECL_TASK_NORM_START"
+KCONFIG_DECL_TASK_NORM_END = "// KCONFIG_DECL_TASK_NORM_END"
 
-# [6] Global variables to hold user input values (if needed)
-DEFAULT_VALS = {
-  "num_tasks_norm": 8,
-  "num_tasks_poll": 8,
-  "num_signals": 10,
-  "is_use_fsm": False,
-  "is_use_tsm": False,
-  "num_tsm_states": 0,
-  "num_fsm_states": 0
-}
+KCONFIG_DECL_TASK_POLL_START = "// KCONFIG_DECL_TASK_POLL_START"
+KCONFIG_DECL_TASK_POLL_END = "// KCONFIG_DECL_TASK_POLL_END"
 
-def update_core_cfg_header(kconf, header_path):
-  """Hàm đọc cấu hình từ Kconfig và chèn vào vị trí chỉ định trong file .h"""
-  if not os.path.exists(header_path):
-    print(f"[ERROR] Không tìm thấy file gốc tại: {header_path}")
+KCONFIG_DECL_SIGNAL_START = "// KCONFIG_DECL_SIGNAL_START"
+KCONFIG_DECL_SIGNAL_END = "// KCONFIG_DECL_SIGNAL_END"
+
+KCONFIG_DECL_MSG_QUEUE_START = "// KCONFIG_DECL_MSG_QUEUE_START"
+KCONFIG_DECL_MSG_QUEUE_END = "// KCONFIG_DECL_MSG_QUEUE_END"
+
+# Function to generate app_cfg.h declaration based on Kconfig configuration
+def app_cfg_gen(kconf, target):
+  # 1. Find the target file
+  if not os.path.exists(target):
+    print(f"[ERROR] File not found at sources/app/config: {target}")
     return False
 
-  # 1. Tạo chuỗi nội dung cấu hình từ Kconfig với format của C
-  # kconfiglib hỗ trợ duyệt qua các symbol đang hoạt động
-  kconfig_lines = []
+  # 2. Generate appcfg content based on Kconfig configuration
+  appcfg_kconfig_lines = []
   
-  # Định nghĩa ký tự thụt lề (ở đây là 2 khoảng trắng - hoặc thay bằng "\t" nếu bạn muốn)
-  indent = "  " 
+  # 3. Define indentation (here using 2 spaces, can be changed to "\t" if preferred)
+  indent = "\t" 
+
+  # 4. Define prefix map
+  prefix_map = {
+    "APPCFG_" : "app_cfg.h"
+  }
 
   for sym in kconf.unique_defined_syms:
-    # Bỏ qua các symbol không được chọn hoặc là kiểu không xác định
-    if sym.config_string == "":
+    # Ignore blank or undefined symbols
+    if sym.config_string == "" or sym.name.startswith("_"):
       continue
 
-    # Bỏ qua các symbol có tên bắt đầu bằng "_" (thường là các symbol nội bộ hoặc không cần thiết)
-    if sym.name.startswith("_"):
-      continue
+    line_content = ""
 
     if sym.name == "UEDP_MSG_ALLOC_N_VALUE":
       n_val = sym.str_value  # Lấy ra chuỗi số (ví dụ: "8")
@@ -77,7 +76,7 @@ def update_core_cfg_header(kconf, header_path):
   kconfig_content = "\n".join(kconfig_lines)
 
   # 2. Đọc file file header hiện tại
-  with open(header_path, "r", encoding="utf-8") as f:
+  with open(target, "r", encoding="utf-8") as f:
     file_content = f.read()
 
   # 3. Tìm vị trí cặp thẻ Anchor để thay thế nội dung ở giữa
@@ -85,7 +84,7 @@ def update_core_cfg_header(kconf, header_path):
   end_marker = "// KCONFIG_CORECFG_END"
 
   if start_marker not in file_content or end_marker not in file_content:
-    print(f"[ERROR] Không tìm thấy cặp thẻ đánh dấu {start_marker} trong file {header_path}!")
+    print(f"[ERROR] Không tìm thấy cặp thẻ đánh dấu {start_marker} trong file {target}!")
     return False
 
   # Tách file làm 3 phần: Trước marker, nội dung kconfig mới, Sau marker
@@ -97,40 +96,7 @@ def update_core_cfg_header(kconf, header_path):
   new_file_content = f"{before_part}\n{kconfig_content}\n{indent}{end_marker}{after_part}"
 
   # 4. Ghi đè lại vào file
-  with open(header_path, "w", encoding="utf-8") as f:
+  with open(target, "w", encoding="utf-8") as f:
     f.write(new_file_content)
       
   return True
-
-def main():
-  os.environ["KCONFIG_CONFIG"] = ".config"
-  
-  # LẤY GIÁ TRỊ TỪ HÀM NHẬP
-  (n_norm, n_poll, n_sig, use_fsm, use_tsm, n_tsm_st, n_fsm_st) = user_input(DEFAULT_VALS)
-
-  # Tạo file mới (ghi đè "w" lần đầu để xóa nội dung cũ)
-  # Sau đó các hàm tiếp theo dùng "a" để ghi tiếp vào
-  # Ở đây tôi sửa lại logic ghi file để an toàn hơn:
-  
-  # 1. Reset file
-  open("sources/app/kconfig/decl.kconfig", "w").close()
-
-  # 2. Gọi các hàm tạo với giá trị mới
-  task_norm_declaration(n_norm, n_tsm_st, n_fsm_st)
-  task_poll_declaration(n_poll)
-  signal_declaration(n_sig)
-
-  # Khởi tạo kconfiglib
-  kconf = kconfiglib.Kconfig("Kconfig")
-  if os.path.exists(".config"):
-    kconf.load_config(".config")
-
-  menuconfig.menuconfig(kconf)
-  kconf.write_config(".config")
-  
-  header_target = os.path.join("sources", "app", "config", "core_cfg.h")
-  if update_core_cfg_header(kconf, header_target):
-    print(f"\n[SUCCESS] Cấu hình đã được chèn thành công vào {header_target}!")
-
-if __name__ == "__main__":
-  main()

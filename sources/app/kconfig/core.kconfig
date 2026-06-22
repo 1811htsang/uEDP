@@ -1,17 +1,17 @@
 menu "Message Allocation Pool"
-  config UEDP_MSG_BLANK_QUEUE_SIZE
+  config CORE_UEDP_MSG_BLANK_QUEUE_SIZE
     int "Blank pool queue size"
     default 8
     help
       Size of the BLANK pool queue. 
 
-  config UEDP_MSG_ISR_QUEUE_SIZE
+  config CORE_UEDP_MSG_ISR_QUEUE_SIZE
     int "ISR pool queue size"
     default 16
     help
       Size of the ISR pool queue. 
 
-  config UEDP_MSG_ALLOC_QUEUE_SIZE
+  config CORE_UEDP_MSG_ALLOC_QUEUE_SIZE
     int "Alloc pool queue size"
     default 8
     help
@@ -37,7 +37,7 @@ menu "Message Allocation Pool"
       bool "32"
   endchoice
 
-  config UEDP_MSG_ALLOC_N_VALUE
+  config CORE_UEDP_MSG_ALLOC_N_VALUE
     int
     default 1 if _UEDP_MSG_ALLOC_N_1
     default 2 if _UEDP_MSG_ALLOC_N_2
@@ -46,7 +46,7 @@ menu "Message Allocation Pool"
     default 16 if _UEDP_MSG_ALLOC_N_16
     default 32 if _UEDP_MSG_ALLOC_N_32
 
-  config UEDP_MSG_EXTAL_QUEUE_SIZE
+  config CORE_UEDP_MSG_EXTAL_QUEUE_SIZE
     int "Extal pool queue size"
     default 8
     help
@@ -72,7 +72,7 @@ menu "Message Allocation Pool"
       bool "32"
   endchoice
 
-  config UEDP_MSG_EXTAL_N_VALUE
+  config CORE_UEDP_MSG_EXTAL_N_VALUE
     int
     default 1 if _UEDP_MSG_EXTAL_N_1
     default 2 if _UEDP_MSG_EXTAL_N_2
@@ -83,7 +83,7 @@ menu "Message Allocation Pool"
 endmenu
 
 menu "Task Message Queue"
-  config UEDP_TASK_MSG_QUEUE_SIZE
+  config CORE_UEDP_TASK_MSG_QUEUE_SIZE
     int "Task message queue size"
     default 8
     help
@@ -91,7 +91,7 @@ menu "Task Message Queue"
 endmenu
 
 menu "Timer Quantity"
-  config UEDP_TIMER_MAX_NODES
+  config CORE_UEDP_TIMER_MAX_NODES
     int "Number of timers"
     default 8
     help
@@ -99,13 +99,13 @@ menu "Timer Quantity"
 endmenu
 
 menu "Internal Log Quantity"
-  config UEDP_ITNLOG_MAX_LOG_ENTRIES
+  config CORE_UEDP_ITNLOG_MAX_LOG_ENTRIES
     int "Number of log entries"
     default 32
     help
       Number of log entries that can be stored.
 
-  config UEDP_ITNLOG_FLUSH_THRESHOLD
+  config CORE_UEDP_ITNLOG_FLUSH_THRESHOLD
     int "Threshold for log entries"
     default 28
     help
