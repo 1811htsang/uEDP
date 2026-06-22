@@ -67,4 +67,5 @@ sources/test/*/build/
 sources/test/*
 
 # Python cache
-sources/common/kconfiglib/__pycache__/
+sources/common/kconfiglib/__pycache__/*
+sources/common/pyspec/__pycache__/*

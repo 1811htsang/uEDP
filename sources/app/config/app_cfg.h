@@ -51,8 +51,8 @@
 	 * { SIG_USR_START,     UEDP_TSM_STATE_STAY, NULL } // Đã ACTIVE rồi thì START đứng yên
 	 * };
 	 */
-
-	extern const tsm_trans_t state_trans_table[];
+	// KCONFIG_APPCFG_STATE_TRANS_START
+	// KCONFIG_APPCFG_STATE_TRANS_END
 
 	/**
 	 * @brief Định nghĩa bảng TSM cho task Blinker
@@ -65,8 +65,8 @@
 	 * 	{ STATE_BLINK_ACTIVE, fn_on_active_entry, fn_on_active_exit, blink_active_trans, 2 }
 	 * };
 	 */
-
-	extern const tsm_state_desc_t tsm_table[];
+	// KCONFIG_APPCFG_TSM_TABLE_START
+	// KCONFIG_APPCFG_TSM_TABLE_END
 
 	/**
 	 * @brief Định nghĩa TSM cho tác vụ
@@ -75,8 +75,8 @@
 	 * @note Người dùng tự định nghĩa TSM, có thể xóa dòng 71 và thay thế bằng
 	 * 			 triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM cho tác vụ
 	 */
-
-	extern uedp_tsm_t app_tsm;
+	// KCONFIG_APPCFG_TSM_OJB_START
+	// KCONFIG_APPCFG_TSM_OJB_END
 
 	/**
 	 * @brief Định nghĩa FSM cho tác vụ
@@ -85,8 +85,8 @@
 	 * @note Người dùng tự định nghĩa FSM, có thể xóa dòng 81 và thay thế bằng
 	 * 			 triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng FSM cho tác vụ
 	 */
-
-	extern uedp_fsm_t app_fsm;
+	// KCONFIG_APPCFG_FSM_OJB_START
+	// KCONFIG_APPCFG_FSM_OJB_END
 
 #endif //__APP_CFG_H__
 
