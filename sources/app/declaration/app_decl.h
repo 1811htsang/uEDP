@@ -82,18 +82,16 @@
 	extern uint32_t system_action_count;
 
 	/**
-	 * @brief Khai báo các hàm handler cho các task
-	 * @attention Mỗi tác vụ phải có một hàm handler tương ứng 
-	 * 						để xử lý các tin nhắn nhận được. 
-	 * 						Với các task_norm thì hàm handler 
-	 * 							có định dạng `void task_norm_x_handler(uedp_msg_t* msg)`,
-	 * 							trong đó x là tên tác vụ.
-	 * 						Với các task_poll thì hàm handler 
-	 * 							có định dạng `void task_poll_x_handler()`,
-	 * 							trong đó x là tên tác vụ polling.
+	 * @brief Khai báo các hàm handler cho các task norm
 	 */
-	// KCONFIG_DECL_TASK_HANDLER_START
-	// KCONFIG_DECL_TASK_HANDLER_END
+	// KCONFIG_DECL_TASK_NORM_HANDLER_START
+	// KCONFIG_DECL_TASK_NORM_HANDLER_END
+
+	/**
+	 * @brief Khai báo các hàm handler cho các task poll
+	 */
+	// KCONFIG_DECL_TASK_POLL_HANDLER_START
+	// KCONFIG_DECL_TASK_POLL_HANDLER_END
 
 	/**
 	 * @brief Khai báo các hàm on-entry/exit cho các trạng thái TSM (nếu có)

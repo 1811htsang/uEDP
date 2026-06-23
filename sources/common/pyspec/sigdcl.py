@@ -9,9 +9,9 @@ def signal_declaration(num_signals):
 
   for i in range(1, num_signals + 1):
     kconfig_content.append(f'\tmenu \"Signal #{i} configuration\"')
-    kconfig_content.append(f'\t\tconfig DECL_SIG_TSK_{i}_NAME')
+    kconfig_content.append(f'\t\tconfig DECL_SIG_{i}_NAME')
     kconfig_content.append(f'\t\t\tstring "Name of signal #{i}"')
-    kconfig_content.append(f'\t\t\tdefault "SIG_TSK_{i}_ID"\n')
+    kconfig_content.append(f'\t\t\tdefault "SIG_{i}_ID"\n')
     kconfig_content.append(f'\tendmenu\n')
 
   kconfig_content.append(f'endmenu\n')

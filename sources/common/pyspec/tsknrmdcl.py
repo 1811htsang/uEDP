@@ -51,20 +51,20 @@ def task_norm_declaration(num_tasks_norm, num_tsm_states, num_fsm_states):
     kconfig_content.append(f'\t\tconfig APPCFG_TSM_TASK_{i}') 
     kconfig_content.append(f'\t\t\tstring "Name of TSM task #{i}"')
     kconfig_content.append(f'\t\t\tdefault "TSM_TASK_{i}_ID"')
-    kconfig_content.append(f'\t\t\tdepends on DECL_TASK_NORM_{i}_NAME != "" && TASK_NORM_{i}_USE_TSM \n')
+    kconfig_content.append(f'\t\t\tdepends on DECL_TASK_NORM_{i}_NAME != "" && COND_TASK_NORM_{i}_USE_TSM \n')
 
     # Config TSM state name
     for j in range(1, num_tsm_states + 1):
       kconfig_content.append(f'\t\tconfig APPCFG_TSM_TASK_{i}_STATE_{j}')
       kconfig_content.append(f'\t\t\tstring "Name of TSM task #{i} state #{j}"')
       kconfig_content.append(f'\t\t\tdefault "TSM_TASK_{i}_STATE_{j}_ID"')
-      kconfig_content.append(f'\t\t\tdepends on DECL_TASK_NORM_{i}_NAME != "" && TASK_NORM_{i}_USE_TSM \n')
+      kconfig_content.append(f'\t\t\tdepends on DECL_TASK_NORM_{i}_NAME != "" && COND_TASK_NORM_{i}_USE_TSM \n')
 
     # Config FSM use flag
     kconfig_content.append(f'\t\tconfig COND_TASK_NORM_{i}_USE_FSM') 
     kconfig_content.append(f'\t\t\tbool "Use FSM for task #{i}"')
     kconfig_content.append(f'\t\t\tdefault n')
-    kconfig_content.append(f'\t\t\tdepends on TASK_NORM_{i}_NAME != ""\n')
+    kconfig_content.append(f'\t\t\tdepends on DECL_TASK_NORM_{i}_NAME != ""\n')
     
     # Config FSM name
     kconfig_content.append(f'\t\tconfig APPCFG_FSM_TASK_{i}')

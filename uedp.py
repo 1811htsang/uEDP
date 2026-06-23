@@ -9,11 +9,11 @@ pyspec_dir = os.path.join(current_dir, "sources", "common", "pyspec")
 
 # [3] Python inserter
 sys.path.insert(0, kconfig_dir)
-sys.path.insert(0, pyspec_dir)
+sys.path.insert(1, pyspec_dir)
 
 # [4] Import kconfiglib và menuconfig after add to sys.path
-from sources.common.kconfiglib import kconfiglib
-from sources.common.kconfiglib import menuconfig
+import kconfiglib
+import menuconfig
 import argparse
 
 # [5] Import user input function from pyspec
@@ -21,6 +21,8 @@ from sources.common.pyspec.usrinp import user_input
 from sources.common.pyspec.tsknrmdcl import task_norm_declaration
 from sources.common.pyspec.tskpoldcl import task_poll_declaration
 from sources.common.pyspec.sigdcl import signal_declaration
+from sources.common.pyspec.appcfgpen import app_cfg_gen
+from sources.common.pyspec.appdeclgen import msg_queue_gen, sig_gen, tsk_norm_handler_gen, tsk_norm_gen, tsk_poll_gen, tsk_poll_handler_gen
 
 # [6] Global variables to hold user input values (if needed)
 DEFAULT_VALS = {
@@ -55,11 +57,11 @@ def update_core_cfg_header(kconf, header_path):
     if sym.name.startswith("_"):
       continue
 
-    if sym.name == "UEDP_MSG_ALLOC_N_VALUE":
+    if sym.name == "CORE_UEDP_MSG_ALLOC_N_VALUE":
       n_val = sym.str_value  # Lấy ra chuỗi số (ví dụ: "8")
       kconfig_lines.append(f"{indent}#define UEDP_MSG_ALLOC_DATA_MAX (sizeof(void*) * {n_val}u)")
       continue # Bỏ qua logic xử lý mặc định bên dưới để không bị trùng lặp
-    elif sym.name == "UEDP_MSG_EXTAL_N_VALUE":
+    elif sym.name == "CORE_UEDP_MSG_EXTAL_N_VALUE":
       n_val = sym.str_value  # Lấy ra chuỗi số (ví dụ: "8")
       kconfig_lines.append(f"{indent}#define UEDP_MSG_EXTAL_DATA_MAX (sizeof(void*) * {n_val}u)")
       continue # Bỏ qua logic xử lý mặc định bên dưới để không bị trùng lặp
@@ -128,9 +130,37 @@ def main():
   menuconfig.menuconfig(kconf)
   kconf.write_config(".config")
   
-  header_target = os.path.join("sources", "app", "config", "core_cfg.h")
-  if update_core_cfg_header(kconf, header_target):
-    print(f"\n[SUCCESS] Cấu hình đã được chèn thành công vào {header_target}!")
+  corecfg_target = os.path.join("sources", "app", "config", "core_cfg.h")
+  if update_core_cfg_header(kconf, corecfg_target):
+    print(f"\n[SUCCESS] Cấu hình đã được chèn thành công vào {corecfg_target}!")
+
+  appcfg_target = os.path.join("sources", "app", "config", "app_cfg.h")
+  if app_cfg_gen(kconf, appcfg_target):
+    print(f"\n[SUCCESS] Cấu hình FSM/TSM đã được chèn thành công vào {appcfg_target}!")
+
+  appdecl_tsk_norm_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if tsk_norm_gen(kconf, appdecl_tsk_norm_target):
+    print(f"\n[SUCCESS] Định nghĩa task norm đã được chèn thành công vào {appdecl_tsk_norm_target}!")
+
+  appdecl_tsk_poll_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if tsk_poll_gen(kconf, appdecl_tsk_poll_target):
+    print(f"\n[SUCCESS] Định nghĩa task poll đã được chèn thành công vào {appdecl_tsk_poll_target}!")
+
+  appdecl_sig_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if sig_gen(kconf, appdecl_sig_target):
+    print(f"\n[SUCCESS] Định nghĩa signal đã được chèn thành công vào {appdecl_sig_target}!")
+
+  appdecl_msg_queue_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if msg_queue_gen(kconf, appdecl_msg_queue_target):
+    print(f"\n[SUCCESS] Định nghĩa message queue đã được chèn thành công vào {appdecl_msg_queue_target}!")
+
+  appdecl_tsk_norm_handler_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if tsk_norm_handler_gen(kconf, appdecl_tsk_norm_handler_target):
+    print(f"\n[SUCCESS] Định nghĩa task norm handler đã được chèn thành công vào {appdecl_tsk_norm_handler_target}!")
+
+  appdecl_tsk_poll_handler_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if tsk_poll_handler_gen(kconf, appdecl_tsk_poll_handler_target):
+    print(f"\n[SUCCESS] Định nghĩa task poll handler đã được chèn thành công vào {appdecl_tsk_poll_handler_target}!")
 
 if __name__ == "__main__":
   main()
