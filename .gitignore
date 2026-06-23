@@ -66,8 +66,6 @@ sources/test/*/build/
 # Test build folder
 sources/test/*
 
-# Kconfiglib cache
-sources/common/kconfiglib/__pycache__/
-
-# pyspec cache
-sources/common/pyspec/__pycache__/
+# Python cache
+sources/common/kconfiglib/__pycache__/*
+sources/common/pyspec/__pycache__/*

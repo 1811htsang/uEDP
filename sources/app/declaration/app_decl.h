@@ -23,15 +23,28 @@
 	#include "uedp_timer.h"
 
 	/**
-	 * @brief Khai báo tác vụ
+	 * @brief Khai báo tác vụ norm
 	 * @attention Tác vụ phải khai báo đúng định dạng `0xEx`
 	 * 						x bắt đầu từ 6 trở đi. Giới hạn tối đa là 0xEF (15 tác vụ)
 	 * @example
 	 * #define TASK_NORM_A_ID (0xE6u)
 	 * #define TASK_NORM_B_ID (0xE7u)
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
+	// KCONFIG_DECL_TASK_NORM_START
+	// KCONFIG_DECL_TASK_NORM_END
 
-	// Điền các khai báo tại đây
+	/**
+	 * @brief Khai báo tác vụ poll
+	 * @attention Tác vụ phải khai báo đúng định dạng `0xDx`
+	 * 						x bắt đầu từ 4 trở đi. Giới hạn tối đa là 0xDF (8 tác vụ)
+	 * @example
+	 * #define TASK_POLL_A_ID (0xD4u)
+	 * #define TASK_POLL_B_ID (0xD5u)
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
+	 */
+	// KCONFIG_DECL_TASK_POLL_START
+	// KCONFIG_DECL_TASK_POLL_END
 
 	/**
 	 * @brief Khai báo tín hiệu giao tiếp giữa các tác vụ
@@ -43,9 +56,10 @@
 	 * #define SIG_USR_STOP      (0x02u)
 	 * #define SIG_TSK_A_TO_B    (0x03u)
 	 * #define SIG_TSK_B_TO_A    (0x04u)
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
-
-	// Điền các khai báo tại đây
+	// KCONFIG_DECL_SIGNAL_START
+	// KCONFIG_DECL_SIGNAL_END
 
 	/**
 	 * @brief Khai báo message queue cho các tác vụ
@@ -56,9 +70,10 @@
 	 * extern uedp_msg_t* usr_q_mem[8];
 	 * extern uedp_msg_t* a_q_mem[8];
 	 * extern uedp_msg_t* b_q_mem[8];
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
-
-	// Điền các khai báo tại đây
+	// KCONFIG_DECL_MSG_QUEUE_START
+	// KCONFIG_DECL_MSG_QUEUE_END
 
 	/**
 	 * @brief Khai báo biến đếm hoạt động của hệ thống
@@ -71,36 +86,39 @@
 	extern uint32_t system_action_count;
 
 	/**
-	 * @brief Khai báo các hàm handler cho các task
-	 * @attention Mỗi tác vụ phải có một hàm handler tương ứng 
-	 * 						để xử lý các tin nhắn nhận được. 
-	 * 						Với các task_norm thì hàm handler 
-	 * 							có định dạng `void task_norm_x_handler(uedp_msg_t* msg)`,
-	 * 							trong đó x là tên tác vụ.
-	 * 						Với các task_poll thì hàm handler 
-	 * 							có định dạng `void task_poll_x_handler()`,
-	 * 							trong đó x là tên tác vụ polling.
+	 * @brief Khai báo các hàm handler cho các task norm
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
-
-	// Điền các khai báo tại đây
+	// KCONFIG_DECL_TASK_NORM_HANDLER_START
+	// KCONFIG_DECL_TASK_NORM_HANDLER_END
 
 	/**
-	 * @brief Khai báo các hàm on-entry/exit cho các trạng thái FSM (nếu có)
+	 * @brief Khai báo các hàm handler cho các task poll
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
+	// KCONFIG_DECL_TASK_POLL_HANDLER_START
+	// KCONFIG_DECL_TASK_POLL_HANDLER_END
 
-	// Điền các khai báo tại đây
+	/**
+	 * @brief Khai báo các hàm on-entry/exit cho các trạng thái TSM (nếu có)
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
+	 */
+	// KCONFIG_DECL_TSM_ENTRY_EXIT_START
+	// KCONFIG_DECL_TSM_ENTRY_EXIT_END
 
 	/**
 	 * @brief Khai báo các hàm on-state cho các trạng thái TSM (nếu có)
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
-
-	// Điền các khai báo tại đây
+	// KCONFIG_DECL_TSM_STATE_START
+	// KCONFIG_DECL_TSM_STATE_END
 
 	/**
 	 * @brief Khai báo các state_handler cho các trạng thái FSM (nếu có)
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
-
-	// Điền các khai báo tại đây
+	// KCONFIG_DECL_FSM_STATE_HANDLERS_START
+	// KCONFIG_DECL_FSM_STATE_HANDLERS_END
 
 	/**
 	 * @brief Khai báo khác (nếu có)
