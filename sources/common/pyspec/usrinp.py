@@ -24,10 +24,16 @@ def user_input(DEFAULT_VALS):
 
   # Ask user if they want to use FSM/TSM
   print('[INFO] Do you want to use FSM? (y/n, default: n): ', end='')
-  is_use_fsm = input().strip().lower() == 'y'
+  if input().strip().lower() == 'y':
+    is_use_fsm = True
+  else:
+    is_use_fsm = False
 
   print('[INFO] Do you want to use TSM? (y/n, default: n): ', end='')
-  is_use_tsm = input().strip().lower() == 'y'
+  if input().strip().lower() == 'y':
+    is_use_tsm = True
+  else:
+    is_use_tsm = False
 
   num_tsm_states = 0
   if is_use_tsm:

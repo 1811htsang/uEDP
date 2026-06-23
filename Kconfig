@@ -11,7 +11,3 @@ endmenu
 menu "Declaration"
   source "sources/app/kconfig/decl.kconfig"
 endmenu
-
-menu "App Config"
-  source "sources/app/kconfig/app.kconfig"
-endmenu

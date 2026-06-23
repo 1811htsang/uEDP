@@ -2,6 +2,8 @@
 import os
 import sys
 
+from sources.common.pyspec.appcfgpen import KCONFIG_APPCFG_TSM_TABLE_START
+
 # [2] Config specifier
 current_dir = os.path.dirname(os.path.abspath(__file__))
 kconfig_dir = os.path.join(current_dir, "sources", "common", "kconfiglib")
@@ -35,13 +37,22 @@ KCONFIG_DECL_TASK_NORM_HANDLER_END = "// KCONFIG_DECL_TASK_NORM_HANDLER_END"
 KCONFIG_DECL_TASK_POLL_HANDLER_START = "// KCONFIG_DECL_TASK_POLL_HANDLER_START"
 KCONFIG_DECL_TASK_POLL_HANDLER_END = "// KCONFIG_DECL_TASK_POLL_HANDLER_END"
 
+KCONFIG_DECL_TSM_ENTRY_EXIT_START = "// KCONFIG_DECL_TSM_ENTRY_EXIT_START"
+KCONFIG_DECL_TSM_ENTRY_EXIT_END = "// KCONFIG_DECL_TSM_ENTRY_EXIT_END"
+
+KCONFIG_DECL_TSM_STATE_START = "// KCONFIG_DECL_TSM_STATE_START"
+KCONFIG_DECL_TSM_STATE_END = "// KCONFIG_DECL_TSM_STATE_END"
+
+KCONFIG_DECL_FSM_STATE_HANDLERS_START = "// KCONFIG_DECL_FSM_STATE_HANDLERS_START"
+KCONFIG_DECL_FSM_STATE_HANDLERS_END = "// KCONFIG_DECL_FSM_STATE_HANDLERS_END"
+
 def tsk_norm_gen(kconf, target):
   # 1. Find the target file
   if not os.path.exists(target):
-    print(f"[ERROR] File not found at sources/app/config: {target}")
+    print(f"[ERROR] File not found at sources/app/declaration: {target}")
     return False
 
-  # 2. Generate appcfg content based on Kconfig configuration
+  # 2. Generate appdecl content based on Kconfig configuration
   appdecl_tsk_norm_kconfig_lines = []
   
   # 3. Define indentation (here using 2 spaces, can be changed to "\t" if preferred)
@@ -108,10 +119,10 @@ def tsk_norm_gen(kconf, target):
 def tsk_poll_gen(kconf, target):
   # 1. Find the target file
   if not os.path.exists(target):
-    print(f"[ERROR] File not found at sources/app/config: {target}")
+    print(f"[ERROR] File not found at sources/app/declaration: {target}")
     return False
 
-  # 2. Generate appcfg content based on Kconfig configuration
+  # 2. Generate appdecl content based on Kconfig configuration
   appdecl_tsk_poll_kconfig_lines = []
   
   # 3. Define indentation (here using 2 spaces, can be changed to "\t" if preferred)
@@ -178,10 +189,10 @@ def tsk_poll_gen(kconf, target):
 def sig_gen(kconf, target):
   # 1. Find the target file
   if not os.path.exists(target):
-    print(f"[ERROR] File not found at sources/app/config: {target}")
+    print(f"[ERROR] File not found at sources/app/declaration: {target}")
     return False
 
-  # 2. Generate appcfg content based on Kconfig configuration
+  # 2. Generate appdecl content based on Kconfig configuration
   appdecl_sig_kconfig_lines = []
   
   # 3. Define indentation (here using 2 spaces, can be changed to "\t" if preferred)
@@ -248,10 +259,10 @@ def sig_gen(kconf, target):
 def msg_queue_gen(kconf, target):
   # 1. Find the target file
   if not os.path.exists(target):
-    print(f"[ERROR] File not found at sources/app/config: {target}")
+    print(f"[ERROR] File not found at sources/app/declaration: {target}")
     return False
 
-  # 2. Generate appcfg content based on Kconfig configuration
+  # 2. Generate appdecl content based on Kconfig configuration
   appdecl_msg_queue_kconfig_lines = []
   
   # 3. Define indentation (here using 2 spaces, can be changed to "\t" if preferred)
@@ -316,10 +327,10 @@ def msg_queue_gen(kconf, target):
 def tsk_norm_handler_gen(kconf, target):
   # 1. Find the target file
   if not os.path.exists(target):
-    print(f"[ERROR] File not found at sources/app/config: {target}")
+    print(f"[ERROR] File not found at sources/app/declaration: {target}")
     return False
 
-  # 2. Generate appcfg content based on Kconfig configuration
+  # 2. Generate appdecl content based on Kconfig configuration
   appdecl_tsk_handler_kconfig_lines = []
   
   # 3. Define indentation (here using 2 spaces, can be changed to "\t" if preferred)
@@ -380,10 +391,10 @@ def tsk_norm_handler_gen(kconf, target):
 def tsk_poll_handler_gen(kconf, target):
   # 1. Find the target file
   if not os.path.exists(target):
-    print(f"[ERROR] File not found at sources/app/config: {target}")
+    print(f"[ERROR] File not found at sources/app/declaration: {target}")
     return False
 
-  # 2. Generate appcfg content based on Kconfig configuration
+  # 2. Generate appdecl content based on Kconfig configuration
   appdecl_tsk_handler_kconfig_lines = []
   
   # 3. Define indentation (here using 2 spaces, can be changed to "\t" if preferred)
@@ -441,7 +452,234 @@ def tsk_poll_handler_gen(kconf, target):
 
   return True
 
+def tsm_entryexit_gen(kconf, target):
+  # 1. Find the target file
+  if not os.path.exists(target):
+    print(f"[ERROR] File not found at sources/app/declaration: {target}")
+    return False
+
+  # 2. Generate appdecl content based on Kconfig configuration
+  appdecl_tsmentryexit_kconfig_lines = []
+  
+  # 3. Define indentation (here using 2 spaces, can be changed to "\t" if preferred)
+  indent = "\t" 
+
+  # 4. Generate state transition content based on Kconfig configuration
+  for sym in kconf.unique_defined_syms:
+    # Ignore blank or undefined symbols
+    if sym.config_string == "" or sym.name.startswith("_"):
+      continue
+
+    # Only process symbols that start with "APPCFG_TSM_TASK_"
+    if not sym.name.startswith("APPCFG_TSM_TASK_"):
+      continue
+
+    # Extract the relevant part of the symbol name after "APPCFG_"
+    relevant_name = sym.name[len("APPCFG_"):]
+
+    # Generate the line content based on the symbol type and value
+    # Must be like APPCFG_TSM_TASK_{i}_STATE_{j}
+    if not "_STATE_" in relevant_name:
+      continue  # Skip state symbols, only process task symbols
+    if sym.type == kconfiglib.STRING:
+      # 1st line content is like "void tsm_task_1_state_1_id_on_entry(uedp_msg_t* msg)"
+      # 2nd line content is like "void tsm_task_1_state_1_id_on_exit(uedp_msg_t* msg)"
+      line_content = f"{indent}void {sym.str_value.lower()}_on_entry(uedp_msg_t* msg);"
+      line_content += f"\n{indent}void {sym.str_value.lower()}_on_exit(uedp_msg_t* msg);\n"
+    else:
+      continue  # Skip unsupported types
+
+    # Append the generated line to the list
+    appdecl_tsmentryexit_kconfig_lines.append(line_content)
+
+  # 5. Join the lines into a single string to insert into the target file
+  kconfig_content = "\n".join(appdecl_tsmentryexit_kconfig_lines)
+
+  # 6. Find the position to insert in the target file
+  with open(target, "r", encoding="utf-8") as f:
+    file_content = f.read()
+
+  if KCONFIG_DECL_TSM_ENTRY_EXIT_START not in file_content or KCONFIG_DECL_TSM_ENTRY_EXIT_END not in file_content:
+    print(f"[ERROR] Marker {KCONFIG_DECL_TSM_ENTRY_EXIT_START} not found in file {target}!")
+    return False
+  
+  # 7. Split the file content into three parts: before the start marker, the new content, and after the end marker
+  parts = file_content.split(KCONFIG_DECL_TSM_ENTRY_EXIT_START)
+  before_part = parts[0] + KCONFIG_DECL_TSM_ENTRY_EXIT_START
+  after_part = parts[1].split(KCONFIG_DECL_TSM_ENTRY_EXIT_END)[1]
+
+  # 8. Join the parts back together to form the new file content
+  new_file_content = f"{before_part}\n\n{kconfig_content}\n{indent}{KCONFIG_DECL_TSM_ENTRY_EXIT_END}{after_part}"
+
+  # 9. Write the updated content back to the file
+  with open(target, "w", encoding="utf-8") as f:
+    f.write(new_file_content)
+
+  return True
+
+def tsm_on_state_gen(kconf, target):
+  # 1. Find the target file
+  if not os.path.exists(target):
+    print(f"[ERROR] File not found at sources/app/declaration: {target}")
+    return False
+
+  # 2. Generate appdecl content based on Kconfig configuration
+  appdecl_tsmonstate_kconfig_lines = []
+  
+  # 3. Define indentation (here using 2 spaces, can be changed to "\t" if preferred)
+  indent = "\t" 
+
+  # 4. Generate state transition content based on Kconfig configuration
+  for sym in kconf.unique_defined_syms:
+    # Ignore blank or undefined symbols
+    if sym.config_string == "" or sym.name.startswith("_"):
+      continue
+
+    # Only process symbols that start with "APPCFG_TSM_TASK_"
+    if not sym.name.startswith("APPCFG_TSM_TASK_"):
+      continue
+
+    # Extract the relevant part of the symbol name after "APPCFG_"
+    relevant_name = sym.name[len("APPCFG_"):]
+
+    # Generate the line content based on the symbol type and value
+    # Must be like APPCFG_TSM_TASK_{i}_STATE_{j}
+    if not "_STATE_" in relevant_name:
+      continue  # Skip state symbols, only process task symbols
+    if sym.type == kconfiglib.STRING:
+      # 1st line content is like "void tsm_task_1_state_1_id_on_state(uedp_msg_t* msg)"
+      line_content = f"{indent}void {sym.str_value.lower()}_on_state(uedp_msg_t* msg);"
+    else:
+      continue  # Skip unsupported types
+
+    # Append the generated line to the list
+    appdecl_tsmonstate_kconfig_lines.append(line_content)
+
+  # 5. Join the lines into a single string to insert into the target file
+  kconfig_content = "\n".join(appdecl_tsmonstate_kconfig_lines)
+
+  # 6. Find the position to insert in the target file
+  with open(target, "r", encoding="utf-8") as f:
+    file_content = f.read()
+
+  if KCONFIG_DECL_TSM_STATE_START not in file_content or KCONFIG_DECL_TSM_STATE_END not in file_content:
+    print(f"[ERROR] Marker {KCONFIG_DECL_TSM_STATE_START} not found in file {target}!")
+    return False
+  
+  # 7. Split the file content into three parts: before the start marker, the new content, and after the end marker
+  parts = file_content.split(KCONFIG_DECL_TSM_STATE_START)
+  before_part = parts[0] + KCONFIG_DECL_TSM_STATE_START
+  after_part = parts[1].split(KCONFIG_DECL_TSM_STATE_END)[1]
+
+  # 8. Join the parts back together to form the new file content
+  new_file_content = f"{before_part}\n\n{kconfig_content}\n\n{indent}{KCONFIG_DECL_TSM_STATE_END}{after_part}"
+
+  # 9. Write the updated content back to the file
+  with open(target, "w", encoding="utf-8") as f:
+    f.write(new_file_content)
+
+  return True
+
+def fsm_state_gen(kconf, target):
+  # 1. Find the target file
+  if not os.path.exists(target):
+    print(f"[ERROR] File not found at sources/app/declaration: {target}")
+    return False
+
+  # 2. Generate appdecl content based on Kconfig configuration
+  appdecl_fsm_state_kconfig_lines = []
+  
+  # 3. Define indentation (here using 2 spaces, can be changed to "\t" if preferred)
+  indent = "\t" 
+
+  # 4. Generate state transition content based on Kconfig configuration
+  for sym in kconf.unique_defined_syms:
+    # Ignore blank or undefined symbols
+    if sym.config_string == "" or sym.name.startswith("_"):
+      continue
+
+    # Only process symbols that start with "APPCFG_FSM_STATE_"
+    if not sym.name.startswith("APPCFG_FSM_TASK_"):
+      continue
+
+    # Extract the relevant part of the symbol name after "APPCFG_"
+    relevant_name = sym.name[len("APPCFG_"):]
+
+    # Generate the line content based on the symbol type and value
+    # Must be like APPCFG_FSM_TASK_{i}_STATE_{j}
+    if not "_STATE_" in relevant_name:
+      continue  # Skip state symbols, only process task symbols
+    if sym.type == kconfiglib.STRING:
+      # 1st line content is like "void fsm_task_1_state_1_id_on_state(uedp_msg_t* msg)"
+      line_content = f"{indent}void {sym.str_value.lower()}_handler(uedp_msg_t* msg);"
+    else:
+      continue  # Skip unsupported types
+
+    # Append the generated line to the list
+    appdecl_fsm_state_kconfig_lines.append(line_content)
+
+  # 5. Join the lines into a single string to insert into the target file
+  kconfig_content = "\n".join(appdecl_fsm_state_kconfig_lines)
+
+  # 6. Find the position to insert in the target file
+  with open(target, "r", encoding="utf-8") as f:
+    file_content = f.read()
+
+  if KCONFIG_DECL_FSM_STATE_HANDLERS_START not in file_content or KCONFIG_DECL_FSM_STATE_HANDLERS_END not in file_content:
+    print(f"[ERROR] Marker {KCONFIG_DECL_FSM_STATE_HANDLERS_START} not found in file {target}!")
+    return False
+  
+  # 7. Split the file content into three parts: before the start marker, the new content, and after the end marker
+  parts = file_content.split(KCONFIG_DECL_FSM_STATE_HANDLERS_START)
+  before_part = parts[0] + KCONFIG_DECL_FSM_STATE_HANDLERS_START
+  after_part = parts[1].split(KCONFIG_DECL_FSM_STATE_HANDLERS_END)[1]
+
+  # 8. Join the parts back together to form the new file content
+  new_file_content = f"{before_part}\n\n{kconfig_content}\n\n{indent}{KCONFIG_DECL_FSM_STATE_HANDLERS_END}{after_part}"
+
+  # 9. Write the updated content back to the file
+  with open(target, "w", encoding="utf-8") as f:
+    f.write(new_file_content)
+
+  return True
+
 # Function to generate app_cfg.h declaration based on Kconfig configuration
 def app_decl_gen(kconf, target):
   
+  appdecl_tsk_norm_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if tsk_norm_gen(kconf, appdecl_tsk_norm_target):
+    print(f"\n[SUCCESS] Task norm declaration has been generated in {appdecl_tsk_norm_target}!")
+
+  appdecl_tsk_poll_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if tsk_poll_gen(kconf, appdecl_tsk_poll_target):
+    print(f"\n[SUCCESS] Task poll declaration has been generated in {appdecl_tsk_poll_target}!")
+
+  appdecl_sig_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if sig_gen(kconf, appdecl_sig_target):
+    print(f"\n[SUCCESS] Signal declaration has been generated in {appdecl_sig_target}!")
+
+  appdecl_msg_queue_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if msg_queue_gen(kconf, appdecl_msg_queue_target):
+    print(f"\n[SUCCESS] Message queue declaration has been generated in {appdecl_msg_queue_target}!")
+
+  appdecl_tsk_norm_handler_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if tsk_norm_handler_gen(kconf, appdecl_tsk_norm_handler_target):
+    print(f"\n[SUCCESS] Task norm handler declaration has been generated in {appdecl_tsk_norm_handler_target}!")
+
+  appdecl_tsk_poll_handler_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if tsk_poll_handler_gen(kconf, appdecl_tsk_poll_handler_target):
+    print(f"\n[SUCCESS] Task poll handler declaration has been generated in {appdecl_tsk_poll_handler_target}!")
+
+  appdecl_tsm_entry_exit_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if tsm_entryexit_gen(kconf, appdecl_tsm_entry_exit_target):
+    print(f"\n[SUCCESS] TSM on-entry/exit declaration has been generated in {appdecl_tsm_entry_exit_target}!")
+
+  appdecl_tsm_on_state_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if tsm_on_state_gen(kconf, appdecl_tsm_on_state_target):
+    print(f"\n[SUCCESS] TSM on-state declaration has been generated in {appdecl_tsm_on_state_target}!")
+
+  appdecl_fsm_state_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  if fsm_state_gen(kconf, appdecl_fsm_state_target):
+    print(f"\n[SUCCESS] FSM state declaration has been generated in {appdecl_fsm_state_target}!")
+
   return True

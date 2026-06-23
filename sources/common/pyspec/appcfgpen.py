@@ -244,7 +244,7 @@ def tsm_trans_gen(kconf, target):
     relevant_name = sym.name[len("APPCFG_"):]
 
     # Generate the line content based on the symbol type and value
-    # Must be like APPCFG_TSM_TASK_{i}, If APPCFG_TSM_TASK_{i}_STATE_{j} then skip
+    # Must be like APPCFG_TSM_TASK_{i}_STATE_{j}
     if not "_STATE_" in relevant_name:
       continue  # Skip state symbols, only process task symbols
     if sym.type == kconfiglib.STRING:
