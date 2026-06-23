@@ -1,0 +1,7 @@
+menu "Log Dispatcher Configuration"
+  config PAL_LOGDP_MAX_OUTPUT_FN
+    int "Log output functions"
+    default 8
+    help
+      Number of log output functions that can be registered.
+endmenu
