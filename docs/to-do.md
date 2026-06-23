@@ -98,9 +98,11 @@
 
 ### Phiên bản 1.1.2: The Kconfig Configuration
 
-- [ ] Sửa lỗi memrp để cho phép redirect cấu hình vào pipeline của itnlog và loại bỏ printf
-- [ ] Bổ sung Kconfig để hỗ trợ cấu hình các tính năng của lõi μEDP một cách dễ dàng thông qua một giao diện cấu hình trực quan, giúp người dùng có thể tùy chỉnh các thông số của hệ thống mà không cần phải chỉnh sửa trực tiếp trong code.
+- [x] Sửa lỗi memrp để cho phép redirect cấu hình vào pipeline của itnlog và loại bỏ printf
+- [x] Bổ sung Kconfig để hỗ trợ cấu hình các tính năng của lõi μEDP một cách dễ dàng thông qua một giao diện cấu hình trực quan, giúp người dùng có thể tùy chỉnh các thông số của hệ thống mà không cần phải chỉnh sửa trực tiếp trong code.
 - [ ] Bổ sung tài liệu thiết kế chi tiết cho Kconfig để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc cấu hình hệ thống một cách dễ dàng và trực quan hơn.
+- [ ] Bổ sung video để hướng dẫn sử dụng Kconfig để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của tính năng này trong việc hỗ trợ việc cấu hình hệ thống một cách dễ dàng và trực quan hơn.
+- [ ] Bổ sung video về cách hoạt động của uEDP trong 1 ví dụ thực tế để minh họa cách thức hoạt động của lõi μEDP trong việc xử lý các tác vụ và sự kiện trong hệ thống, giúp người dùng hiểu rõ hơn về cách thức hoạt động và lợi ích của lõi μEDP trong các ứng dụng nhúng.
 - [ ] Ra mắt phiên bản 1.1.2 của lõi μEDP với đầy đủ tính năng Kconfig và tài liệu hướng dẫn sử dụng.
 
 ### Phiên bản 1.1.3: The Out-Context Execution Service
