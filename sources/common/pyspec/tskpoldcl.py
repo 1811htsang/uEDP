@@ -15,12 +15,8 @@ def task_poll_declaration(num_tasks_poll):
     kconfig_content.append(f'\t\tconfig DECL_TASK_POLL_{i}_NAME') 
     kconfig_content.append(f'\t\t\tstring "Name of task poll #{i}"')
     kconfig_content.append(f'\t\t\tdefault "TASK_POLL_{i}_ID"\n') 
-
-    # Config ability
-    kconfig_content.append(f'\t\tconfig DECL_TASK_POLL_{i}_ABILITY') 
-    kconfig_content.append(f'\t\t\tbool "Ability of task poll #{i}"')
-    kconfig_content.append(f'\t\t\tdefault "n"')
-    kconfig_content.append(f'\t\t\tdepends on DECL_TASK_POLL_{i}_NAME != ""\n')
+    kconfig_content.append(f'\t\t\thelp\n')
+    kconfig_content.append(f'\t\t\t\tThis is the name of task poll, please use upper case.\n')
 
     # Config handler name
     kconfig_content.append(f'\t\tconfig DECL_POLL_HANDLER_{i}_NAME') 
