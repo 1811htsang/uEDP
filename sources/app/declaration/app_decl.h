@@ -29,6 +29,7 @@
 	 * @example
 	 * #define TASK_NORM_A_ID (0xE6u)
 	 * #define TASK_NORM_B_ID (0xE7u)
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
 	// KCONFIG_DECL_TASK_NORM_START
 	// KCONFIG_DECL_TASK_NORM_END
@@ -40,6 +41,7 @@
 	 * @example
 	 * #define TASK_POLL_A_ID (0xD4u)
 	 * #define TASK_POLL_B_ID (0xD5u)
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
 	// KCONFIG_DECL_TASK_POLL_START
 	// KCONFIG_DECL_TASK_POLL_END
@@ -54,6 +56,7 @@
 	 * #define SIG_USR_STOP      (0x02u)
 	 * #define SIG_TSK_A_TO_B    (0x03u)
 	 * #define SIG_TSK_B_TO_A    (0x04u)
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
 	// KCONFIG_DECL_SIGNAL_START
 	// KCONFIG_DECL_SIGNAL_END
@@ -67,6 +70,7 @@
 	 * extern uedp_msg_t* usr_q_mem[8];
 	 * extern uedp_msg_t* a_q_mem[8];
 	 * extern uedp_msg_t* b_q_mem[8];
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
 	// KCONFIG_DECL_MSG_QUEUE_START
 	// KCONFIG_DECL_MSG_QUEUE_END
@@ -83,30 +87,35 @@
 
 	/**
 	 * @brief Khai báo các hàm handler cho các task norm
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
 	// KCONFIG_DECL_TASK_NORM_HANDLER_START
 	// KCONFIG_DECL_TASK_NORM_HANDLER_END
 
 	/**
 	 * @brief Khai báo các hàm handler cho các task poll
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
 	// KCONFIG_DECL_TASK_POLL_HANDLER_START
 	// KCONFIG_DECL_TASK_POLL_HANDLER_END
 
 	/**
 	 * @brief Khai báo các hàm on-entry/exit cho các trạng thái TSM (nếu có)
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
 	// KCONFIG_DECL_TSM_ENTRY_EXIT_START
 	// KCONFIG_DECL_TSM_ENTRY_EXIT_END
 
 	/**
 	 * @brief Khai báo các hàm on-state cho các trạng thái TSM (nếu có)
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
 	// KCONFIG_DECL_TSM_STATE_START
 	// KCONFIG_DECL_TSM_STATE_END
 
 	/**
 	 * @brief Khai báo các state_handler cho các trạng thái FSM (nếu có)
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
 	// KCONFIG_DECL_FSM_STATE_HANDLERS_START
 	// KCONFIG_DECL_FSM_STATE_HANDLERS_END
