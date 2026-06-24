@@ -14,6 +14,12 @@ Future development plans insist on embedding μEDP as the Kernel of a new μE-OS
 
 Future development plans insist on embedding μEDP as the Kernel of a new μE-OS (micro Event-Driven Operating System) that will be built on top of the μEDP framework, providing additional OS-level features while maintaining the core principles of event-driven programming.
 
+Video demonstrations of μEDP in action can be found at [docs/videos](./docs/videos/uedp-introduction-v112.webm).
+
+Also, documentations refer to section [Documentation](#-documentation) for more details.
+
+Feel free to star the projetct and contribute to its development. Your support is greatly appreciated!
+
 ---
 
 ## 🚀 Key Features - Released & Future Development
