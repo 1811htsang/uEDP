@@ -96,11 +96,14 @@
 - [x] Import lại README của v1.1.0 để sửa đổi và bổ sung thông tin về cơ chế S-LnF và các tính năng mới của phiên bản 1.1.1, đồng thời làm rõ hơn về các cải tiến và lợi ích của cơ chế S-LnF trong việc xử lý các tin nhắn khẩn cấp một cách an toàn và hiệu quả trong hệ thống.
 - [x] Ra mắt phiên bản 1.1.1 của lõi μEDP với đầy đủ tính năng S-LnF và tài liệu hướng dẫn sử dụng.
 
-### Phiên bản 1.1.2: The Kconfig Configuration
+### Phiên bản 1.1.2: The Kconfig-Docker Integration
 
-- [ ] Sửa lỗi memrp để cho phép redirect cấu hình vào pipeline của itnlog và loại bỏ printf
-- [ ] Bổ sung Kconfig để hỗ trợ cấu hình các tính năng của lõi μEDP một cách dễ dàng thông qua một giao diện cấu hình trực quan, giúp người dùng có thể tùy chỉnh các thông số của hệ thống mà không cần phải chỉnh sửa trực tiếp trong code.
-- [ ] Bổ sung tài liệu thiết kế chi tiết cho Kconfig để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc cấu hình hệ thống một cách dễ dàng và trực quan hơn.
+- [x] Sửa lỗi memrp để cho phép redirect cấu hình vào pipeline của itnlog và loại bỏ printf
+- [x] Bổ sung Kconfig để hỗ trợ cấu hình các tính năng của lõi μEDP một cách dễ dàng thông qua một giao diện cấu hình trực quan, giúp người dùng có thể tùy chỉnh các thông số của hệ thống mà không cần phải chỉnh sửa trực tiếp trong code.
+- [x] Bổ sung tài liệu thiết kế chi tiết cho Kconfig để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc cấu hình hệ thống một cách dễ dàng và trực quan hơn.
+- [ ] Bổ sung cấu hình Docker để hỗ trợ việc chạy môi trường phát triển và testing của lõi μEDP trên các nền tảng khác nhau một cách dễ dàng và nhất quán, giúp người dùng có thể triển khai và kiểm thử hệ thống một cách nhanh chóng mà không gặp phải các vấn đề về môi trường phát triển.
+- [ ] Bổ sung video để hướng dẫn sử dụng Kconfig để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của tính năng này trong việc hỗ trợ việc cấu hình hệ thống một cách dễ dàng và trực quan hơn.
+- [ ] Bổ sung video về cách hoạt động của uEDP trong 1 ví dụ thực tế để minh họa cách thức hoạt động của lõi μEDP trong việc xử lý các tác vụ và sự kiện trong hệ thống, giúp người dùng hiểu rõ hơn về cách thức hoạt động và lợi ích của lõi μEDP trong các ứng dụng nhúng.
 - [ ] Ra mắt phiên bản 1.1.2 của lõi μEDP với đầy đủ tính năng Kconfig và tài liệu hướng dẫn sử dụng.
 
 ### Phiên bản 1.1.3: The Out-Context Execution Service
