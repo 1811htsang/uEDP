@@ -1,0 +1,89 @@
+menu "Task Norm configuration"
+
+	menu "Task #1 configuration"
+		config DECL_TASK_NORM_1_NAME
+			string "Name of task #1"
+			default "TASK_NORM_1_ID"
+
+		config DECL_MSG_QUEUE_1_NAME
+			string "Name of message queue #1"
+			default "MSG_QUEUE_1_ID"
+			depends on DECL_TASK_NORM_1_NAME != ""
+
+		config DECL_NORM_HANDLER_1_NAME
+			string "Name of handler #1"
+			default "NORM_HANDLER_1_ID"
+			depends on DECL_TASK_NORM_1_NAME != ""
+
+	endmenu
+
+	menu "Task #2 configuration"
+		config DECL_TASK_NORM_2_NAME
+			string "Name of task #2"
+			default "TASK_NORM_2_ID"
+
+		config DECL_MSG_QUEUE_2_NAME
+			string "Name of message queue #2"
+			default "MSG_QUEUE_2_ID"
+			depends on DECL_TASK_NORM_2_NAME != ""
+
+		config DECL_NORM_HANDLER_2_NAME
+			string "Name of handler #2"
+			default "NORM_HANDLER_2_ID"
+			depends on DECL_TASK_NORM_2_NAME != ""
+
+	endmenu
+
+endmenu
+menu "Task Poll configuration"
+
+	menu "Task Poll #1 configuration"
+		config DECL_TASK_POLL_1_NAME
+			string "Name of task poll #1"
+			default "TASK_POLL_1_ID"
+
+			help
+
+				This is the name of task poll, please use upper case.
+
+		config DECL_POLL_HANDLER_1_NAME
+			string "Name of handler #1"
+			default "POLL_HANDLER_1_ID"
+			depends on DECL_TASK_POLL_1_NAME != ""
+
+	endmenu
+
+	menu "Task Poll #2 configuration"
+		config DECL_TASK_POLL_2_NAME
+			string "Name of task poll #2"
+			default "TASK_POLL_2_ID"
+
+			help
+
+				This is the name of task poll, please use upper case.
+
+		config DECL_POLL_HANDLER_2_NAME
+			string "Name of handler #2"
+			default "POLL_HANDLER_2_ID"
+			depends on DECL_TASK_POLL_2_NAME != ""
+
+	endmenu
+
+endmenu
+menu "Signal configuration"
+
+	menu "Signal #1 configuration"
+		config DECL_SIG_1_NAME
+			string "Name of signal #1"
+			default "SIG_1_ID"
+
+	endmenu
+
+	menu "Signal #2 configuration"
+		config DECL_SIG_2_NAME
+			string "Name of signal #2"
+			default "SIG_2_ID"
+
+	endmenu
+
+endmenu

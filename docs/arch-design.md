@@ -122,7 +122,7 @@ Lưu ý khi tích hợp:
 - `pal_rprintf_flush_entry()` chỉ thực sự xuất dữ liệu khi `is_ready()` trả về `true`.
 - Định dạng mặc định của `rprintf` là một dòng có timestamp, task ID, signal ID và message, được tạo bằng `xfprintf()` thay vì ghép chuỗi thủ công.
 
-## IV. Logic thiết kế chi tiết
+## Logic thiết kế chi tiết
 
 ### [DMP] Deterministic Memory Pooling - Quản lý bộ nhớ tin nhắn với cấp phát tĩnh độc lập vào kiến trúc
 
@@ -523,3 +523,11 @@ Kết luận:
 Thiết kế này là tạm thời để giải quyết vấn đề về việc xử lý các tác vụ phụ trợ một cách an toàn và hiệu quả trong khi vẫn đảm bảo rằng các tác vụ chính của hệ thống có thể hoạt động một cách ổn định và nhạy bén.
 
 Ở μE-OS thì sẽ nâng cấp thành AOCE (Advance OCE) với SCB (Service Control Block) để quản lý các dịch vụ OCE một cách linh hoạt hơn và xử lý ưu tiên theo mức > theo thời gian, kèm theo cơ chế leaning expetime, quantum và error callback.
+
+## Công cụ hỗ trợ phát triển (Development Tools)
+
+### [KwDI] Kconfig with Docker Integration - Tích hợp Kconfig với Docker
+
+Kconfig là một công cụ cấu hình phổ biến trong các dự án Linux kernel và các dự án nhúng khác. Nó cho phép người dùng dễ dàng cấu hình các tính năng của phần mềm thông qua một giao diện dòng lệnh hoặc giao diện đồ họa. Trong μEDP, Kconfig được tích hợp với Docker để cung cấp một môi trường phát triển nhất quán và dễ dàng triển khai trên nhiều nền tảng khác nhau.
+
+Với Docker, người dùng có thể dễ dàng tạo ra các container chứa đầy đủ các công cụ cần thiết để biên dịch và chạy μEDP, đồng thời đảm bảo rằng môi trường phát triển là nhất quán trên tất cả các máy tính thông qua việc sử dụng môi trường linux phát triển ban đầu của nhà phát triển. Điều này giúp giảm thiểu các vấn đề liên quan đến sự khác biệt về môi trường phát triển giữa các máy tính khác nhau, đồng thời giúp người dùng dễ dàng triển khai và kiểm tra các tính năng mới của μEDP mà không cần phải lo lắng về việc cài đặt và cấu hình các công cụ phát triển trên máy tính của mình.
