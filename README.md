@@ -12,8 +12,6 @@ The core goal is to achieve **"Zero-Touch Porting"** — enabling the porting of
 
 Future development plans insist on embedding μEDP as the Kernel of a new μE-OS (micro Event-Driven Operating System) that will be built on top of the μEDP framework, providing additional OS-level features while maintaining the core principles of event-driven programming.
 
-Future development plans insist on embedding μEDP as the Kernel of a new μE-OS (micro Event-Driven Operating System) that will be built on top of the μEDP framework, providing additional OS-level features while maintaining the core principles of event-driven programming.
-
 Video demonstrations of μEDP in action can be found at [docs/videos](./docs/videos/uedp-introduction-v112.webm).
 
 Also, documentations refer to section [Documentation](#-documentation) for more details.
@@ -78,33 +76,34 @@ graph LR
 
 ```text
 μEDP/
-├── core/                 # Definition and implementation of the core logic of CIEDPC
-│   ├── inc/              # Message, Task, Timer, Itnlog, FSM, TSM
-│   │   └── uedp_core.h   # Definition of signals, constants and core data structures of μEDP
-│   └── src/              # Implementation of scheduler logic, timer engine, message manager, FSM/TSM engine, etc.
-├── pal/                  # BACKEND (Abstract Layer)
-│   ├── pal_core.h        # Unified declaration for the entire PAL and system services
-│   ├── services/         # Hardware Services (logdp, memrp, rprintf)
-│   │   ├── logdp/        # pal_logdp.h contains the declaration for the Log Dispatcher service for routing logs
-│   │   ├── memrp/        # pal_memrp.h contains the declaration for the memory profiling API
-│   │   └── rprintf/      # pal_rprintf.h contains the declaration for the rprintf API for platform-specific implementation
-│   └── arch/             # Implementation (Detailed source code for each chip)
-│       ├── stm32f103/    # stm32_f103_arch.c/h contains the implementation functions for STM32F103
-│       ├── stm32h723/    # stm32h723_arch.c/h contains the implementation functions for STM32H723
-│       ├── esp32_wr32/   # esp32_wr32_arch.c/h contains the implementation functions for ESP32-WROOM-32
-│       ├── esp32_s3/     # esp32_s3_arch.c/h contains the implementation functions for ESP32-S3
-│       └── linux/        # linux_arch.c/h contains the implementation functions for Linux simulation
-├── app/                  # Definition of application logic, including tasks and FSM created by the user
-│   ├── config/           # Contains application configuration and user configuration
-│   │   ├── app_cfg.h     # Contains required configurations such as task table, timer, signals, etc.
-│   │   ├── core_cfg.h    # Contains required configurations for the core such as pool size, number of tasks, timers, etc.
-│   │   └── pal_cfg.h     # Contains required configurations for the PAL such as pool size, number of services, etc.
-│   ├── declaration/      # Main implementation of the user application logic
-│   ├── interface/        # Definition and implementation of interfaces with external signals (task_if)
-│   └── app.c             # Main implementation of the user application logic
-└── common/               # Various utilities and common data structures used throughout the project
-    ├── container/        # Data structures like FIFO, Ring Buffer, Linked List implemented in pure C
-    └── xprintf/          # Custom xprintf library for advanced log formatting
+├── core/                        # Định nghĩa và triển khai logic chính của μEDP
+│   ├── inc/                     # uedp_msg.h, uedp_task.h, uedp_timer.h, uedp_fsm.h, uedp_tsm.h
+│   │   └── uedp_core.h          # Định nghĩa các tín hiệu, hằng số và cấu trúc dữ liệu cốt lõi của μEDP
+│   └── src/                     # Triển khai logic scheduler, timer engine, message manager
+├── pal/                         # BACKEND (Lớp trừu tượng)
+│   ├── pal_core.h               # Khai báo thống nhất chung cho toàn bộ PAL và các dịch vụ hệ thống
+│   ├── services/                # Hardware Services (Mapping phần cứng)
+│   │   ├── logdp/               # pal_logdp.h chứa các khai báo API log để triển khai bộ dispatch log ra nhiều backend
+│   │   ├── memrp/               # pal_memrp.h chứa các khai báo API memory profiling để triển khai trên từng nền tảng
+│   │   └── rprintf/             # pal_rprintf.h chứa các khai báo API rprintf để triển khai trên từng nền tảng
+│   └── arch/                    # Implementation (Mã nguồn chi tiết từng chip)
+│       └── .../                 # Mỗi nền tảng sẽ có một thư mục riêng để triển khai
+├── app/                         # Định nghĩa logic ứng dụng, bao gồm các tác vụ và FSM do người dùng tạo ra
+│   ├── config/                  # Chứa cấu hình ứng dụng, Core và PAL
+│   ├── declaration/             # Khai báo các thiết kế cho logic nghiệp vụ
+│   ├── interface/               # Chứa các triển khai cho truyền tín hiệu từ ngoài vào Core
+│   ├── kconfig/                 # Chứa các cấu hình cho ứng dụng bằng Kconfig
+│   └── app.c                    # Implementation chính của logic hoạt động của ứng dụng người dùng
+├── common/                      # Các tiện ích và cấu trúc dữ liệu chung được sử dụng trong toàn bộ dự án
+│   ├── container/               # Các cấu trúc dữ liệu như FIFO, Ring Buffer, Linked List được triển khai thuần C
+│   ├── kconfiglib/              # Chứa cấu hình thực thi Kconfig terminal
+│   ├── pyspec/                  # Cấu hình python để sinh code từ Kconfig terminal
+│   └── xprintf/                 # Thư viện xprintf sử dụng cho việc format chuỗi log và xuất ra nhiều backend khác nhau
+└── test/                        # Các test case mẫu để kiểm tra các tính năng của μEDP
+    ├── test01/                  # Test cơ bản với các tác vụ ISR và TSM 
+    ├── test02/                  # Test với các tính năng như message pooling và memrp
+    ├── test03/                  # Test với các tính năng như message pooling và memrp
+    └── test04/                  # Test với tính năng itnlog
 ```
 
 ---
@@ -117,7 +116,9 @@ A comparison analysis between the event-driven model (μEDP/CIEDPC) and RTOS is 
 
 A detailed analysis between the μEDP/CIEDPC and the QP/C framework is available in [μEDP vs QP/C](./docs/uedp-vs-qpc.md).
 
-If you want to see the documentation in progress, switch to the `docs` branch to view the documents that are currently being drafted and updated. Please also note that the documentation is currently supporting Vietnamese, and English documentation will be added in the future as the project progresses or with contributions from the community.
+If you want to see the documentation in progress, switch to the `docs` branch to view the documents that are currently being drafted and updated.
+
+Please also note that the documentation is currently supporting Vietnamese, and English documentation will be added in the future as the project progresses or with contributions from the community.
 
 ---
 

@@ -103,7 +103,7 @@
 - [x] Bổ sung tài liệu thiết kế chi tiết cho Kconfig để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc cấu hình hệ thống một cách dễ dàng và trực quan hơn.
 - [x] Bổ sung cấu hình Docker để hỗ trợ việc chạy môi trường phát triển và testing của lõi μEDP trên các nền tảng khác nhau một cách dễ dàng và nhất quán, giúp người dùng có thể triển khai và kiểm thử hệ thống một cách nhanh chóng mà không gặp phải các vấn đề về môi trường phát triển.
 - [x] Bổ sung video để hướng dẫn sử dụng Kconfig để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của tính năng này trong việc hỗ trợ việc cấu hình hệ thống một cách dễ dàng và trực quan hơn.
-- [ ] Ra mắt phiên bản 1.1.2 của lõi μEDP với đầy đủ tính năng Kconfig và tài liệu hướng dẫn sử dụng.
+- [x] Ra mắt phiên bản 1.1.2 của lõi μEDP với đầy đủ tính năng Kconfig và tài liệu hướng dẫn sử dụng.
 
 ### Phiên bản 1.1.3: The Out-Context Execution Service
 
