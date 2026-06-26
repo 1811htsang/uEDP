@@ -461,7 +461,7 @@ Giá trị của `head` sẽ là vị trí của phần tử đầu tiên trong 
 
 Cập nhật thêm 1 hàm `fifo_put_head()` để thực hiện insert lật ngược vào đầu danh sách, trong đó `head` sẽ được cập nhật theo công thức `head = (head - 1 + capacity) % capacity` để đảm bảo FIFO, đồng thời vẫn đảm bảo O(1) cho cả insert và remove. API này sẽ được sử dụng trong cơ chế S-LnF để đảm bảo rằng các tin nhắn khẩn cấp được xử lý ngay lập tức mà không phải chờ đợi các tin nhắn cũ trong task queue, đồng thời vẫn đảm bảo rằng các tin nhắn khẩn cấp được xử lý theo thứ tự ưu tiên một cách công bằng và hiệu quả trong hệ thống.
 
-### [OCE] Out-Context Execution - Thực thi ngoài ngữ cảnh
+### [OCE] Out-Context Execution - Thực thi ngoài ngữ cảnh - Chuẩn bị cho phiên bản 1.1.3
 
 Out-Context Execution (OCE) là một thiết kế quan trọng trong μEDP nhằm đảm bảo rằng các tác vụ phụ trợ như thao tác bộ nhớ, quản lý giao thức mạng. Thiết kế này giúp duy trì tính ổn định và hiệu suất của hệ thống bằng cách tách biệt rõ ràng giữa các tác vụ chính và các tác vụ phụ trợ.
 
