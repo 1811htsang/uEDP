@@ -101,10 +101,9 @@
 - [x] Sửa lỗi memrp để cho phép redirect cấu hình vào pipeline của itnlog và loại bỏ printf
 - [x] Bổ sung Kconfig để hỗ trợ cấu hình các tính năng của lõi μEDP một cách dễ dàng thông qua một giao diện cấu hình trực quan, giúp người dùng có thể tùy chỉnh các thông số của hệ thống mà không cần phải chỉnh sửa trực tiếp trong code.
 - [x] Bổ sung tài liệu thiết kế chi tiết cho Kconfig để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc cấu hình hệ thống một cách dễ dàng và trực quan hơn.
-- [ ] Bổ sung cấu hình Docker để hỗ trợ việc chạy môi trường phát triển và testing của lõi μEDP trên các nền tảng khác nhau một cách dễ dàng và nhất quán, giúp người dùng có thể triển khai và kiểm thử hệ thống một cách nhanh chóng mà không gặp phải các vấn đề về môi trường phát triển.
-- [ ] Bổ sung video để hướng dẫn sử dụng Kconfig để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của tính năng này trong việc hỗ trợ việc cấu hình hệ thống một cách dễ dàng và trực quan hơn.
-- [ ] Bổ sung video về cách hoạt động của uEDP trong 1 ví dụ thực tế để minh họa cách thức hoạt động của lõi μEDP trong việc xử lý các tác vụ và sự kiện trong hệ thống, giúp người dùng hiểu rõ hơn về cách thức hoạt động và lợi ích của lõi μEDP trong các ứng dụng nhúng.
-- [ ] Ra mắt phiên bản 1.1.2 của lõi μEDP với đầy đủ tính năng Kconfig và tài liệu hướng dẫn sử dụng.
+- [x] Bổ sung cấu hình Docker để hỗ trợ việc chạy môi trường phát triển và testing của lõi μEDP trên các nền tảng khác nhau một cách dễ dàng và nhất quán, giúp người dùng có thể triển khai và kiểm thử hệ thống một cách nhanh chóng mà không gặp phải các vấn đề về môi trường phát triển.
+- [x] Bổ sung video để hướng dẫn sử dụng Kconfig để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của tính năng này trong việc hỗ trợ việc cấu hình hệ thống một cách dễ dàng và trực quan hơn.
+- [x] Ra mắt phiên bản 1.1.2 của lõi μEDP với đầy đủ tính năng Kconfig và tài liệu hướng dẫn sử dụng.
 
 ### Phiên bản 1.1.3: The Out-Context Execution Service
 
@@ -121,19 +120,21 @@
 - [ ] Bổ sung tài liệu phát triển chức năng Priority Degradation của μE-OS để giảm mức ưu tiên của command được kích hoạt thông qua IOMS sau một khoảng thời gian nhất định để tránh tình trạng task bị chiếm dụng quá lâu do các tín hiệu vật lý liên tục kích hoạt cùng một chức năng, giúp đảm bảo tính ổn định và hiệu quả của hệ thống khi xử lý các tín hiệu vật lý.
 - [ ] Ra mắt phiên bản 1.1.4 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho IOMS và tính năng viot, idempotency cùng với tài liệu hướng dẫn sử dụng, tài liệu phát triển cho chức năng Priority Degradation của μE-OS để hỗ trợ việc sử dụng IOMS một cách hiệu quả và ổn định trong các ứng dụng yêu cầu tương tác thời gian thực thông qua các tín hiệu vật lý.
 
-### Phiên bản 1.1.5: The Hardware Accelerated Scheduling
+### Phiên bản 1.2.0: The Preparation for μE-OS
 
+- [ ] Thêm tài liệu thiết kế đưa smoltcp vào μEDP để bổ sung khả năng xử lý mạng tương thích hướng sự kiện, giúp mở rộng khả năng của lõi μEDP trong việc xử lý các ứng dụng mạng và giao tiếp với các thiết bị khác trong hệ thống.
+- [ ] Thêm tài liệu thiết kế chi tiết bootloader - μDB để bổ trợ cho việc triển khai μE-OS trong tương lai, giúp đảm bảo rằng hệ thống có thể khởi động một cách ổn định và hiệu quả trên các nền tảng phần cứng khác nhau.
 - [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
 - [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng của bộ điều phối phần cứng như NVIC và xử lý vấn đề về ISR nesting & preemption để đảm bảo hệ thống hoạt động ổn định và hiệu quả khi xử lý các sự kiện thời gian thực.
-- [ ] Ra mắt phiên bản 1.1.5 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
+- [ ] Ra mắt phiên bản 1.2.0 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
 
-### Phiên bản 1.2.0: The Pub/Sub Engine
+### Phiên bản 1.2.1: The Pub/Sub Engine
 
 - [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc phát triển các ứng dụng phức tạp với nhiều tác vụ tương tác với nhau một cách linh hoạt hơn.
 - [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một sự kiện có thể phát tới nhiều task đã đăng ký.
-- [ ] Ra mắt phiên bản 1.2.0 của lõi μEDP với đầy đủ tính năng Pub/Sub engine và tài liệu hướng dẫn sử dụng.
+- [ ] Ra mắt phiên bản 1.2.1 của lõi μEDP với đầy đủ tính năng Pub/Sub engine và tài liệu hướng dẫn sử dụng.
 
-### Phiên bản 1.2.1: The Safe Out-Core Interaction
+### Phiên bản 1.2.2: The Safe Out-Core Interaction
 
 - [ ] Bổ sung tài liệu chi tiết cho thiết kế Safe Out-Core Interaction nhằm đảm bảo các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, nhằm đảm bảo tính ổn định và an toàn của hệ thống khi xử lý các tín hiệu từ bên ngoài.
 - [ ] Refine tính năng SOCI với OCE để đảm bảo rằng các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, đồng thời đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
