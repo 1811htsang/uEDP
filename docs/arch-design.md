@@ -484,6 +484,29 @@ Lưu ý rằng OCE ở μEDP chỉ đơn giản là cơ chế để người dù
 
 Ở μE-OS thì sẽ nâng cấp thành AOCE (Advance OCE) với SCB (Service Control Block) để quản lý các dịch vụ OCE một cách linh hoạt hơn và xử lý ưu tiên theo mức > theo thời gian, kèm theo cơ chế leaning expetime, quantum và error callback. Điều này sẽ giúp μE-OS hoàn thiện triển khai OCE một cách chuyên nghiệp hơn, đồng thời cung cấp cho người dùng nhiều công cụ hơn để quản lý và tối ưu hóa các dịch vụ phụ trợ trong hệ thống.
 
+#### Kiến trúc thiết kế
+
+Dựa trên các vòng thảo luận dự trù cho triển khai AOCE, kiến trúc thiết kế nền tảng trên μEDP sẽ được chia thành hai phần chính:
+
+- Scheduler sau Task Scheduler: Đây là phần xử lý việc quản lý các dịch vụ OCE, bao gồm việc kiểm tra trạng thái của hệ thống và xác định khi nào có thể thực thi các dịch vụ OCE mà không làm gián đoạn các tác vụ chính.
+- SCB (Service Control Block): Đây là phần quản lý các dịch vụ OCE, bao gồm việc lưu trữ thông tin về các dịch vụ, trạng thái của chúng, và các cơ chế để xử lý ưu tiên, thời gian thực thi, và các callback lỗi. SCB sẽ giúp đảm bảo rằng các dịch vụ OCE được thực thi một cách hiệu quả và an toàn, đồng thời cung cấp cho người dùng khả năng kiểm soát và tối ưu hóa các dịch vụ này theo nhu cầu của ứng dụng.
+
+#### Scheduler
+
+Bộ scheduler sẽ được thiết kế để thực hiện cơ chế FCFS (First-Come, First-Served) cho các dịch vụ OCE. Khi tất cả các Norm Task và Polling Task đã được xử lý xong, scheduler sẽ kiểm tra trạng thái của hệ thống để xác định khi nào có thể thực thi các dịch vụ OCE mà không làm gián đoạn các tác vụ chính. Scheduler sẽ quản lý một hàng đợi các dịch vụ OCE và thực hiện việc gọi callback tương ứng với từng dịch vụ theo thứ tự chúng được đăng ký.
+
+Lưu ý rằng, sau mỗi lần thực thi ocesvc chính là 1 vòng lập lịch chính, do đó chỉ có 1 services được thực thi trong 1 vòng lập lịch. Nếu có nhiều services được đăng ký, scheduler sẽ thực hiện cơ chế FCFS để đảm bảo rằng các dịch vụ được thực thi theo thứ tự chúng được đăng ký, đồng thời đảm bảo rằng các dịch vụ này không làm gián đoạn các tác vụ chính và tận dụng nhịp nghỉ của CPU để thực hiện các công việc phụ trợ một cách hiệu quả.
+
+#### SCB (Service Control Block)
+
+SCB là một cấu trúc dữ liệu quan trọng trong kiến trúc AOCE, được thiết kế để quản lý các dịch vụ OCE một cách hiệu quả và linh hoạt. Mỗi SCB sẽ chứa thông tin về một dịch vụ OCE cụ thể, bao gồm:
+
+- ID dịch vụ
+- Hàm callback để thực thi dịch vụ
+- Trạng thái của dịch vụ (ready, running, completed, error)
+
+Việc bổ sung trạng thái của ocesvc nhằm mục tiêu cân nhắc đưa xử lý error callback trước vào μEDP Core, tránh xử lý ở μE-OS.
+
 #### Phân biệt TASK_POLL và ocesvc
 
 - **Task Polling (Application Domain):** Là một phần của logic ứng dụng nhưng không dựa trên tin nhắn. Nó vẫn nằm trong danh sách quản lý của Scheduler.
@@ -523,6 +546,8 @@ Kết luận:
 Thiết kế này là tạm thời để giải quyết vấn đề về việc xử lý các tác vụ phụ trợ một cách an toàn và hiệu quả trong khi vẫn đảm bảo rằng các tác vụ chính của hệ thống có thể hoạt động một cách ổn định và nhạy bén.
 
 Ở μE-OS thì sẽ nâng cấp thành AOCE (Advance OCE) với SCB (Service Control Block) để quản lý các dịch vụ OCE một cách linh hoạt hơn và xử lý ưu tiên theo mức > theo thời gian, kèm theo cơ chế leaning expetime, quantum và error callback.
+
+### [SIF] Safe Input Filter - Bộ lọc đầu vào an toàn = old [SOCI]
 
 ## Công cụ hỗ trợ phát triển (Development Tools)
 
