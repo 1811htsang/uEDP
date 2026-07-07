@@ -504,8 +504,38 @@ SCB là một cấu trúc dữ liệu quan trọng trong kiến trúc AOCE, đư
 - ID dịch vụ
 - Hàm callback để thực thi dịch vụ
 - Trạng thái của dịch vụ (ready, running, completed, error)
+- Biến dữ liệu overload để đa hình hóa dữ liệu cho từng dịch vụ OCE được đăng ký từ tác vụ chính.
+- Con trỏ đến SCB tiếp theo trong danh sách liên kết để quản lý nhiều dịch vụ OCE.
 
 Việc bổ sung trạng thái của ocesvc nhằm mục tiêu cân nhắc đưa xử lý error callback trước vào μEDP Core, tránh xử lý ở μE-OS.
+
+Trạng thái dịch vụ được dự trù như sau:
+
+```c
+typedef enum {
+  OCESVC_STATE_IDLE = 0,    /* Dịch vụ đang nghỉ */
+  OCESVC_STATE_READY,       /* Được trigger, đang chờ đến lượt */
+  OCESVC_STATE_RUNNING,     /* Đang thực thi bước hiện tại */
+  OCESVC_STATE_COMPLETED,   /* Đã hoàn thành toàn bộ công việc */
+  OCESVC_STATE_ERROR        /* Gặp sự cố trong quá trình thực thi */
+} ocesvc_state_t;
+```
+
+Ngoài ra SCB sẽ được triển khai ở dạng danh sách liên kết (linked list) để dễ dàng quản lý các dịch vụ OCE, cho phép thêm, xóa, và duyệt qua các dịch vụ một cách linh hoạt. Mỗi SCB sẽ được liên kết với một dịch vụ OCE cụ thể và sẽ được scheduler sử dụng để xác định khi nào dịch vụ đó có thể được thực thi mà không làm gián đoạn các tác vụ chính. Điều này phù hợp với thiết kế scheduling FCFS của μEDP, nơi mà các dịch vụ OCE được thực thi trong một ngữ cảnh riêng biệt và chỉ khi hệ thống hoàn toàn rảnh rỗi.
+
+#### Hoàn thiện triển khai AOCE
+
+SCB được dự trù sẽ được triển khai với các cơ chế sau:
+
+```c
+typedef struct ocesvc_t {
+  uint8_t         id;             
+  ocesvc_state_t  state;          
+  void (*handler)(struct ocesvc_t* me); 
+  void*           context;        
+  struct ocesvc_t* next;          /* Danh sách liên kết đơn cho hàng đợi FCFS */
+} ocesvc_t;
+```
 
 #### Phân biệt TASK_POLL và ocesvc
 
