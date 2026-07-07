@@ -109,7 +109,8 @@
 
 - [x] Refine tài liệu hướng dẫn sử dụng OCE service để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc xử lý các sự kiện quan trọng một cách kịp thời và hiệu quả hơn.
 - [x] Bổ sung thiết kế nhúng SCB vào lõi μEDP để hỗ trợ việc quản lý các dịch vụ OCE một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
-- [ ] Hoàn thiện API cho linked list để hỗ trợ nền tảng cho các tính năng.
+- [x] Hoàn thiện API cho linked list để hỗ trợ nền tảng cho các tính năng.
+- [ ] Bổ sung test cho llist để đảm bảo tính ổn định và hiệu quả của cơ chế linked list trong việc quản lý các sự kiện và dữ liệu liên quan đến OCE service.
 - [ ] Bổ sung cơ chế OCE đơn giản để làm khung hỗ trợ cho AOCE (Advance OCE) trong tương lai. Cơ chế này tích hợp sẵn khi task scheduler hoàn thành 1 vòng lặp lịch thì thoát ra và tự động chạy OCE service để xử lý các sự kiện đã đăng ký, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler. Tuy nhiên ở AOCE sẽ bổ sung try-catch để đảm bảo OCE thực thi khi không có task nào sẵn sàng chạy, nhằm tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
 - [ ] Triển khai thiết kế với cơ chế OCE có dispatch, register và unregister để hỗ trợ việc đăng ký và hủy đăng ký các sự kiện cần xử lý trong OCE service, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
 - [ ] Bổ sung testing cho cơ chế OCE để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các sự kiện quan trọng một cách kịp thời và hiệu quả hơn.
