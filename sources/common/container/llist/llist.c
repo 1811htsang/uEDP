@@ -12,24 +12,72 @@
 #include <stdio.h>
 #include "llist.h"
 
+#define LLIST_MAX_NODES 64U
+
+static llist_node_t llist_node_pool[LLIST_MAX_NODES];
+static llist_node_t* llist_free_list = NULL;
+
+static void llist_pool_init(void) {
+  if (llist_free_list != NULL) {
+    return;
+  }
+
+  for (uint32_t i = 0; i < (LLIST_MAX_NODES - 1U); i++) {
+    llist_node_pool[i].next = &llist_node_pool[i + 1U];
+  }
+
+  llist_node_pool[LLIST_MAX_NODES - 1U].next = NULL;
+  llist_free_list = &llist_node_pool[0];
+}
+
+static llist_node_t* llist_alloc_node(void) {
+  llist_pool_init();
+
+  if (llist_free_list == NULL) {
+    return NULL;
+  }
+
+  llist_node_t* node = llist_free_list;
+  llist_free_list = llist_free_list->next;
+  node->next = NULL;
+  return node;
+}
+
+static void llist_free_node(llist_node_t* node) {
+  if (node == NULL) {
+    return;
+  }
+
+  node->next = llist_free_list;
+  llist_free_list = node;
+}
+
 void llist_init(llist_t* list) {
+  if (list == NULL) {
+    return;
+  }
+
   list->head = NULL;
   list->tail = NULL;
   list->size = 0;
 }
 
 bool llist_is_empty(llist_t* list) {
+  if (list == NULL) {
+    return true;
+  }
+
   return (list->size == 0) ? true : false;
 }
 
 void llist_append(llist_t* list, void* data) {
   if (data == NULL || list == NULL) {
-    return; // Không thêm dữ liệu NULL vào linked list
+    return;
   }
 
   llist_node_t* cnter_node = list->head;
 
-  while (cnter_node->next != NULL) {
+  while (cnter_node != NULL) {
     if (cnter_node->data == data) {
       return; // Dữ liệu đã tồn tại trong linked list, không thêm lại
       /**
@@ -43,16 +91,26 @@ void llist_append(llist_t* list, void* data) {
     cnter_node = cnter_node->next;
   }
 
-  llist_node_t* node = list->head;
+  llist_node_t* node = llist_alloc_node();
+  if (node == NULL) {
+    return;
+  }
+
   node->data = data;
   node->next = NULL;
-  cnter_node->next = node;
+  if (list->head == NULL) {
+    list->head = node;
+    list->tail = node;
+  } else {
+    list->tail->next = node;
+    list->tail = node;
+  }
   list->size++;
 }
 
 bool llist_remove(llist_t* list, void* data) {
   if (list == NULL || data == NULL) {
-    return false; // Không thể xóa dữ liệu NULL hoặc từ linked list NULL
+    return false;
   }
 
   llist_node_t* cnter_node = list->head;
@@ -66,13 +124,24 @@ bool llist_remove(llist_t* list, void* data) {
       } else {
         prev_node->next = cnter_node->next;
       }
-      cnter_node = NULL; // Xử lý NULL pointer để tránh memory leak
+
+      if (cnter_node == list->tail) {
+        list->tail = prev_node;
+      }
+
+      llist_free_node(cnter_node);
       list->size--;
-      return true; // Xóa thành công
+
+      if (list->size == 0) {
+        list->head = NULL;
+        list->tail = NULL;
+      }
+
+      return true;
     }
     prev_node = cnter_node;
     cnter_node = cnter_node->next;
   }
 
-  return false; // Dữ liệu không tồn tại trong linked list
+  return false;
 }
