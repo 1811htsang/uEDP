@@ -179,7 +179,7 @@ def main():
   os.environ["MENUCONFIG_STYLE"] = "custom"
   
   # LẤY GIÁ TRỊ TỪ HÀM NHẬP
-  (n_norm, n_poll, n_sig, use_fsm, use_tsm, n_tsm_st, n_fsm_st) = user_input(DEFAULT_VALS)
+  (n_norm, n_poll, n_sig, use_fsm, use_tsm, n_tsm_st, n_fsm_st, n_hw_api) = user_input(DEFAULT_VALS)
 
   # Tạo file mới (ghi đè "w" lần đầu để xóa nội dung cũ)
   # Sau đó các hàm tiếp theo dùng "a" để ghi tiếp vào
