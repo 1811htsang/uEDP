@@ -9,7 +9,7 @@ endmenu
 menu "Hardware Specifier"
   config PAL_NAME
     string "Hardware Name"
-    default "uEDP"
+    default "hw"
     help
       Hardware name for identification. Code generation will be in lower case.
 endmenu

@@ -23,6 +23,8 @@ from sources.common.pyspec.tskpoldcl import task_poll_declaration
 from sources.common.pyspec.sigdcl import signal_declaration
 from sources.common.pyspec.appcfgpen import app_cfg_gen
 from sources.common.pyspec.appdeclgen import fsm_state_gen, msg_queue_gen, sig_gen, tsk_norm_handler_gen, tsk_norm_gen, tsk_poll_gen, tsk_poll_handler_gen, tsm_entryexit_gen, tsm_on_state_gen, app_decl_gen
+from sources.common.pyspec.hwapidcl import hardware_api_declaration
+from sources.common.pyspec.palarchgen import pal_arch_gen
 
 # [6] Global variables to hold user input values (if needed)
 DEFAULT_VALS = {
@@ -32,7 +34,8 @@ DEFAULT_VALS = {
   "is_use_fsm": False,
   "is_use_tsm": False,
   "num_tsm_states": 0,
-  "num_fsm_states": 0
+  "num_fsm_states": 0, 
+  "num_hw_api": 0
 }
 
 def corecfg_gen(kconf, header_path):
@@ -192,6 +195,7 @@ def main():
   task_norm_declaration(n_norm, n_tsm_st, n_fsm_st, use_tsm, use_fsm)
   task_poll_declaration(n_poll)
   signal_declaration(n_sig)
+  hardware_api_declaration(n_hw_api)
 
   # Khởi tạo kconfiglib
   kconf = kconfiglib.Kconfig("Kconfig")
@@ -216,6 +220,10 @@ def main():
   appdecl_target = os.path.join("sources", "app", "declaration", "app_decl.h")
   if app_decl_gen(kconf, appdecl_target):
     print(f"\n[SUCCESS] App declaration has been generated in {appdecl_target}!")
+
+  palarch_target = os.path.join("sources", "pal", "arch")
+  if pal_arch_gen(kconf, palarch_target):
+    print(f"\n[SUCCESS] PAL arch folder has been generated in {palarch_target}!")
 
 if __name__ == "__main__":
   main()
