@@ -76,7 +76,8 @@ def _api_function_name(prefix: str, api_name: str) -> str:
 
 
 def _render_empty_function(signature: str) -> str:
-	return f"{signature} {{\n\n}}"
+	normalized_signature = signature.strip().rstrip(";")
+	return f"{normalized_signature} {{\n\n}}"
 
 
 def _render_header(hw_name: str, pal_name: str, api_names: list[str]) -> str:
