@@ -59,6 +59,11 @@
   /**
    * @brief Hàm đăng ký dịch vụ OCE vào bộ điều khiển dịch vụ OCE
    * @param svc Con trỏ đến dịch vụ OCE cần đăng ký
+   * @note Hàm này sẽ gán ID cho dịch vụ OCE và đặt trạng thái của nó thành READY.
+   * @attention ID của dịch vụ OCE sẽ được tự động tăng dần từ 0, 
+   * và không được trùng lặp với các dịch vụ OCE khác đã đăng ký.
+   * Nghĩa là dù người dùng đăng ký OCE với ID bất kỳ, 
+   * nhưng hệ thống sẽ gán lại ID cho OCE theo thứ tự tăng dần.
    */
   void ocesvc_register(ocesvc_t* svc);
 
@@ -72,5 +77,13 @@
    * @brief Hàm thực thi dịch vụ OCE theo cơ chế FCFS
    */
   void ocesvc_scheduler();
+
+  /**
+   * @brief Hàm khởi tạo bộ điều khiển dịch vụ OCE
+   * @note Hàm này cần được gọi trước khi sử dụng bất kỳ dịch vụ OCE nào.
+   * Thực hiện việc khởi tạo danh sách liên kết đơn và đặt fill_size về 0.
+   * @attention Node đầu tiên của danh sách liên kết đơn có id là -1 để đánh dấu danh sách rỗng.
+   */
+  void ocesvc_ctrl_init();
 
 #endif // __OCESVC_H__
