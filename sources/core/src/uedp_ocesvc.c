@@ -113,19 +113,21 @@ void ocesvc_unregister(ocesvc_t* svc) {
 
 void ocesvc_scheduler() {
   // Lấy head của danh sách liên kết đơn và duyệt qua từng dịch vụ OCE
-  ocesvc_t* current = ocesvc_list.head;
+  llist_node_t* current = ocesvc_list.head;
   if (current == NULL) {
     return; // Nếu danh sách rỗng, không làm gì cả
   }
-  // Chỉ node đầu tiên trong danh sách có trạng thái READY mới được thực thi
-  while (current != NULL && current->state != OCESVC_STATE_READY) {
+  // Chỉ service đầu tiên trong danh sách có trạng thái READY mới được thực thi
+  while (current != NULL) {
+    ocesvc_t* svc = (ocesvc_t*)current->data;
+    if (svc != NULL && svc->state == OCESVC_STATE_READY && svc->handler != NULL) {
+      svc->state = OCESVC_STATE_RUNNING;
+      svc->handler(svc);
+      // Sau khi thực thi xong, chuyển trạng thái sang COMPLETED
+      svc->state = OCESVC_STATE_COMPLETED;
+      return;
+    }
     current = current->next;
-  }
-  if (current != NULL && current->handler != NULL) {
-    current->state = OCESVC_STATE_RUNNING;
-    current->handler(current);
-    // Sau khi thực thi xong, chuyển trạng thái sang COMPLETED
-    current->state = OCESVC_STATE_COMPLETED;
   }
 }
 
