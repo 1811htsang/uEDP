@@ -114,7 +114,7 @@
 - [x] Bổ sung Kconfig cho tự động gen hàm thực thi Core.
 - [x] Hoàn thiện thiết kế ocesvc để hỗ trợ việc quản lý các dịch vụ OCE một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
 - [x] Triển khai thiết kế với cơ chế OCE có dispatch, register và unregister để hỗ trợ việc đăng ký và hủy đăng ký các sự kiện cần xử lý trong OCE service, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
-- [ ] Tìm hiểu và triển khai test framework tự động để kiểm tra tính ổn định của framework.
+- [ ] Tìm hiểu và triển khai PLTF - Portable Local Test Framework tự động để kiểm tra tính ổn định của framework.
 - [ ] Bổ sung testing cho cơ chế OCE để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các sự kiện quan trọng một cách kịp thời và hiệu quả hơn.
 - [ ] Ra mắt phiên bản 1.1.3 của lõi μEDP với đầy đủ tính năng OCE service và tài liệu hướng dẫn sử dụng.
 
