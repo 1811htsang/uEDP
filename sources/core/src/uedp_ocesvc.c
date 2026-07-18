@@ -1,0 +1,145 @@
+/**
+ * @file uedp_ocesvc.c
+ * @author Shang Huang
+ * @brief 
+ * @version 0.1
+ * @date 2026-07-08
+ * @copyright Copyright (c) 2026
+ */
+#include <stdint.h>
+#include <stdbool.h>
+#include "uedp_core.h"
+#include "uedp_task.h"
+#include "llist.h"
+#include "uedp_ocesvc.h"
+
+sta uint8_t id_counter = 0; // Biến đếm ID cho các dịch vụ OCE
+sta ocesvc_ctrl_t ocesvc_ctrl; // Bộ điều khiển dịch vụ OCE
+sta ocesvc_t head = {
+  .context = NULL,
+  .handler = NULL,
+  .id = UINT8_MAX, // ID sentinel được giữ riêng cho node đầu danh sách
+  .next = NULL,
+  .state = OCESVC_STATE_IDLE
+}; // Node đầu tiên của danh sách liên kết đơn, dùng làm sentinel cho danh sách rỗng
+sta llist_t ocesvc_list = {NULL}; // Danh sách liên kết đơn cho các dịch vụ OCE
+
+static bool ocesvc_has_id(uint8_t id) {
+  llist_node_t* current = ocesvc_list.head;
+
+  while (current != NULL) {
+    ocesvc_t* svc = (ocesvc_t*)current->data;
+    if (svc != NULL && svc->id == id) {
+      return true;
+    }
+    current = current->next;
+  }
+
+  return false;
+}
+
+static bool ocesvc_find_free_id(uint8_t start_id, uint8_t* out_id) {
+  if (out_id == NULL) {
+    return false;
+  }
+
+  for (uint16_t offset = 0; offset < UINT8_MAX; offset++) {
+    uint8_t candidate = (uint8_t)((start_id + offset) % UINT8_MAX);
+    if (!ocesvc_has_id(candidate)) {
+      *out_id = candidate;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+static void ocesvc_sync_fill_size(void) {
+  if (ocesvc_list.size == 0U) {
+    ocesvc_ctrl.fill_size = 0U;
+    return;
+  }
+
+  ocesvc_ctrl.fill_size = (uint8_t)(ocesvc_list.size - 1U);
+}
+
+void ocesvc_register(ocesvc_t* svc) {
+  if (svc == NULL) {
+    return;
+  }
+
+  if (svc == &head) {
+    return;
+  }
+
+  uint8_t allocated_id = 0U;
+  if (!ocesvc_find_free_id(id_counter, &allocated_id)) {
+    return;
+  }
+
+  uint32_t previous_size = ocesvc_list.size;
+  llist_append(&ocesvc_list, svc);
+  if (ocesvc_list.size == previous_size) {
+    return;
+  }
+
+  svc->id = allocated_id;
+  svc->state = OCESVC_STATE_READY;
+  svc->next = NULL;
+  ocesvc_sync_fill_size();
+  id_counter = (uint8_t)((allocated_id + 1U) % UINT8_MAX);
+}
+
+void ocesvc_unregister(ocesvc_t* svc) {
+  if (svc == NULL) {
+    return;
+  }
+
+  if (svc == &head) {
+    return;
+  }
+
+  // Xóa dịch vụ OCE khỏi danh sách liên kết đơn
+  if (llist_remove(&ocesvc_list, svc)) {
+    svc->state = OCESVC_STATE_IDLE;
+    svc->next = NULL;
+    ocesvc_sync_fill_size();
+
+    if (ocesvc_ctrl.fill_size == 0U) {
+      id_counter = 0U;
+    }
+  }
+}
+
+void ocesvc_scheduler() {
+  // Lấy head của danh sách liên kết đơn và duyệt qua từng dịch vụ OCE
+  llist_node_t* current = ocesvc_list.head;
+  if (current == NULL) {
+    return; // Nếu danh sách rỗng, không làm gì cả
+  }
+  // Chỉ service đầu tiên trong danh sách có trạng thái READY mới được thực thi
+  while (current != NULL) {
+    ocesvc_t* svc = (ocesvc_t*)current->data;
+    if (svc != NULL && svc->state == OCESVC_STATE_READY && svc->handler != NULL) {
+      svc->state = OCESVC_STATE_RUNNING;
+      svc->handler(svc);
+      // Sau khi thực thi xong, chuyển trạng thái sang COMPLETED
+      svc->state = OCESVC_STATE_COMPLETED;
+      return;
+    }
+    current = current->next;
+  }
+}
+
+void ocesvc_ctrl_init() {
+  ocesvc_ctrl.head = &head;
+  ocesvc_ctrl.fill_size = 0;
+  id_counter = 0;
+  head.context = NULL;
+  head.handler = NULL;
+  head.id = UINT8_MAX;
+  head.next = NULL;
+  head.state = OCESVC_STATE_IDLE;
+  llist_init(&ocesvc_list);
+  llist_append(&ocesvc_list, &head); // Thêm node đầu tiên vào danh sách liên kết đơn
+}

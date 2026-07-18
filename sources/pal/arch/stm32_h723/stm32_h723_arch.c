@@ -6,7 +6,6 @@
  * @date 2026-04-20
  * @copyright MIT License
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

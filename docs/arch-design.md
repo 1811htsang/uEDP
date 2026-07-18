@@ -463,26 +463,26 @@ Cập nhật thêm 1 hàm `fifo_put_head()` để thực hiện insert lật ng�
 
 ### [OCE] Out-Context Execution - Thực thi ngoài ngữ cảnh
 
-Out-Context Execution (OCE) là một thiết kế quan trọng trong μEDP nhằm đảm bảo rằng các tác vụ phụ trợ như thao tác bộ nhớ, quản lý giao thức mạng. Thiết kế này giúp duy trì tính ổn định và hiệu suất của hệ thống bằng cách tách biệt rõ ràng giữa các tác vụ chính và các tác vụ phụ trợ.
+Out-Context Execution (OCE) là lớp dịch vụ hậu trường của μEDP, dùng cho các công việc không nên chạy trong đường đi chính của Norm Task và Polling Task, ví dụ như flush log, đồng bộ dữ liệu, hoặc các tác vụ I/O nền. Mục tiêu của lớp này là tận dụng khoảng rảnh của CPU mà không làm ảnh hưởng đến tính thời gian của scheduler chính.
 
-Các dịch vụ thuộc về OCE được định danh là `ocesvc` và có phân vùng bộ nhớ riêng biệt để đảm bảo rằng các tác vụ này không can thiệp vào bộ nhớ của các tác vụ chính. Các dịch vụ OCE được thực thi trong một ngữ cảnh riêng biệt, có thể là một task polling hoặc một thread riêng, tùy thuộc vào nền tảng và yêu cầu cụ thể của ứng dụng.
+Trong implementation hiện tại, mỗi service OCE được mô hình hóa bằng `ocesvc_t` và được quản lý qua một danh sách liên kết đơn nội bộ. Danh sách này có một node sentinel `head` để giữ trạng thái rỗng và làm mốc duyệt, trong đó `head.id` được giữ ở `UINT8_MAX` để không trùng với ID hợp lệ của service.
 
-Ở mức thiết kế framework như μEDP thì OCE được triển khai đơn giản nằm ngoài vòng lặp chính của scheduler để đảm bảo rằng các tác vụ chính (Norm Task) và các tác vụ polling (Polling Task) đã được xử lý xong xuôi trước khi OCE bắt đầu thực thi. Điều này giúp đảm bảo rằng các tác vụ phụ trợ không làm gián đoạn hoặc ảnh hưởng đến hiệu suất của các tác vụ chính, đồng thời tận dụng được nhịp nghỉ của CPU để thực hiện các công việc phụ trợ một cách hiệu quả.
+Các đặc điểm chính của thiết kế hiện tại:
 
-Ví dụ cơ bản:
+- `ocesvc_t` đóng vai trò là SCB tối giản cho một service OCE.
+- `ocesvc_ctrl_t` giữ con trỏ `head` và `fill_size` của các service thật, không tính sentinel.
+- `ocesvc_register()` chỉ commit `id`, `state`, `next`, và `fill_size` sau khi append vào list thành công.
+- `ocesvc_unregister()` chỉ xóa service đã đăng ký, không cho phép tháo sentinel `head`.
+- `ocesvc_scheduler()` thực thi theo FCFS và chỉ chạy tối đa một service READY trong một vòng scheduler.
 
-```c
-while (1) {
-  ciedpc_task_scheduler(); // Xử lý tất cả các Norm Task và Polling Task
-  if (STAT_NRDY) { // Nếu không còn Task nào ready
-    // Gọi các tác vụ cần thực thi trong OCE
-  }
-}
-```
+Luồng vận hành đề xuất là:
 
-Lưu ý rằng OCE ở μEDP chỉ đơn giản là cơ chế để người dùng tự khai báo dịch vụ phụ trợ mà không làm gián đoạn các tác vụ chính. Người dùng có thể triển khai các dịch vụ OCE theo nhu cầu của ứng dụng, nhưng cần đảm bảo rằng các dịch vụ này được thiết kế để thực thi nhanh chóng và hiệu quả, tránh việc chiếm dụng quá nhiều thời gian của CPU, đồng thời có thể được cấu hình để chạy theo các điều kiện nhất định (ví dụ: chỉ chạy khi nhịp rảnh đủ dài).
+1. Scheduler chính xử lý xong Norm Task và Polling Task.
+2. Nếu hệ thống còn thời gian rảnh, OCE scheduler duyệt từ `head->next` và tìm service READY đầu tiên.
+3. Service đó được chuyển sang `RUNNING`, gọi handler, rồi chuyển sang `COMPLETED` sau khi xử lý xong.
+4. Nếu không có service READY, OCE không chiếm thêm thời gian CPU.
 
-Ở μE-OS thì sẽ nâng cấp thành AOCE (Advance OCE) với SCB (Service Control Block) để quản lý các dịch vụ OCE một cách linh hoạt hơn và xử lý ưu tiên theo mức > theo thời gian, kèm theo cơ chế leaning expetime, quantum và error callback. Điều này sẽ giúp μE-OS hoàn thiện triển khai OCE một cách chuyên nghiệp hơn, đồng thời cung cấp cho người dùng nhiều công cụ hơn để quản lý và tối ưu hóa các dịch vụ phụ trợ trong hệ thống.
+Thiết kế này giữ OCE tách biệt với đường đi thời gian thực của Core, nhưng vẫn đủ đơn giản để triển khai trên nhiều nền tảng. Ở giai đoạn sau, μE-OS có thể mở rộng từ mô hình này sang AOCE với các trường bổ sung như priority, quantum, timeout và error callback, nhưng nền tảng hiện tại vẫn nên được hiểu là FCFS service dispatch trên linked list.
 
 #### Phân biệt TASK_POLL và ocesvc
 
@@ -514,15 +514,17 @@ Kết luận:
 - **Độ phức tạp của vòng lặp chính:** Phải quản lý thêm một lớp thực thi bên ngoài `ciedpc_task_scheduler()`.
 - **Nguy cơ trễ nhịp sau:** Nếu OCE thực hiện một việc quá nặng (như ghi file lớn vào SD Card mà không chia nhỏ), nó sẽ làm chậm thời điểm bắt đầu của vòng lập lịch tiếp theo. Điều này được triển khai bằng SCB trong AOCE để phân chia công việc thành các quantum nhỏ hơn và có cơ chế timeout để tránh việc OCE chiếm dụng quá lâu.
 
-#### Thiết kế triển khai
+#### Thiết kế triển khai hiện tại
 
-- Scheduler sau khi xử lý xong tất cả các Task Norm và Task Polling sẽ kiểm tra nếu `STAT_NRDY` (không còn Task nào ready), thì sẽ gọi `uedp_ocesvc_dispatch()`.
-- `uedp_ocesvc_dispatch()` sẽ kiểm tra một hàng đợi OCE nội bộ để xem có dịch vụ nào cần thực thi không. Nếu có, nó sẽ gọi callback tương ứng với dịch vụ đó để thực hiện công việc cần thiết.
-- Các dịch vụ OCE sẽ được thiết kế để thực thi nhanh chóng và hiệu quả, tránh việc chiếm dụng quá nhiều thời gian của CPU, đồng thời có thể được cấu hình để chạy theo các điều kiện nhất định (ví dụ: chỉ chạy khi nhịp rảnh đủ dài).
+- Scheduler sau khi xử lý xong tất cả các Task Norm và Task Polling sẽ chuyển sang OCE khi hệ thống còn rảnh.
+- OCE scheduler duyệt danh sách liên kết nội bộ, tìm service READY đầu tiên, và chỉ thực thi tối đa một service trong mỗi vòng scheduler.
+- Cách triển khai này giữ OCE ở mức FCFS đơn giản, không cần một hàng đợi riêng ngoài linked list hiện có.
 
-Thiết kế này là tạm thời để giải quyết vấn đề về việc xử lý các tác vụ phụ trợ một cách an toàn và hiệu quả trong khi vẫn đảm bảo rằng các tác vụ chính của hệ thống có thể hoạt động một cách ổn định và nhạy bén.
+Thiết kế này đủ để phục vụ các dịch vụ hậu trường nhẹ và có thể mở rộng dần lên AOCE khi μE-OS cần thêm priority, quantum, timeout, và error callback.
 
-Ở μE-OS thì sẽ nâng cấp thành AOCE (Advance OCE) với SCB (Service Control Block) để quản lý các dịch vụ OCE một cách linh hoạt hơn và xử lý ưu tiên theo mức > theo thời gian, kèm theo cơ chế leaning expetime, quantum và error callback.
+Ở μE-OS thì sẽ nâng cấp thành AOCE (Advance OCE) với SCB (Service Control Block) để quản lý các dịch vụ OCE một cách linh hoạt hơn và xử lý ưu tiên theo thời gian, kèm theo cơ chế expected execution time, quantum và error callback.
+
+### [SIF] Safe Input Filter - Bộ lọc đầu vào an toàn = old [SOCI]
 
 ## Công cụ hỗ trợ phát triển (Development Tools)
 
