@@ -3,7 +3,7 @@
  * @author Shang Huang
  * @brief Application configuration header file
  * @version 0.1
- * @date {{}}
+ * @date {{current_date}}
  * @copyright MIT License
  */
 #ifndef __APP_CFG_H__
