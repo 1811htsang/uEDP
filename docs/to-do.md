@@ -110,11 +110,11 @@
 - [x] Refine tài liệu hướng dẫn sử dụng OCE service để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc xử lý các sự kiện quan trọng một cách kịp thời và hiệu quả hơn.
 - [x] Bổ sung thiết kế nhúng SCB vào lõi μEDP để hỗ trợ việc quản lý các dịch vụ OCE một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
 - [x] Hoàn thiện API cho linked list để hỗ trợ nền tảng cho các tính năng.
-- [ ] Bổ sung test cho llist để đảm bảo tính ổn định và hiệu quả của cơ chế linked list trong việc quản lý các sự kiện và dữ liệu liên quan đến OCE service.
-- [ ] Bổ sung Kconfig cho tự động gen hàm thực thi Core.
-- [ ] Đưa cấu hình chạy mặc định của Core vào 1 hàm duy nhất để tránh việc phải chỉnh sửa nhiều chỗ trong code khi muốn thay đổi cấu hình chạy mặc định của Core, giúp đảm bảo tính nhất quán và dễ dàng quản lý cấu hình của hệ thống.
-- [ ] Bổ sung cơ chế OCE đơn giản để làm khung hỗ trợ cho AOCE (Advance OCE) trong tương lai. Cơ chế này tích hợp sẵn khi task scheduler hoàn thành 1 vòng lặp lịch thì thoát ra và tự động chạy OCE service để xử lý các sự kiện đã đăng ký, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler. Tuy nhiên ở AOCE sẽ bổ sung try-catch để đảm bảo OCE thực thi khi không có task nào sẵn sàng chạy, nhằm tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
-- [ ] Triển khai thiết kế với cơ chế OCE có dispatch, register và unregister để hỗ trợ việc đăng ký và hủy đăng ký các sự kiện cần xử lý trong OCE service, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
+- [x] Bổ sung test cho llist để đảm bảo tính ổn định và hiệu quả của cơ chế linked list trong việc quản lý các sự kiện và dữ liệu liên quan đến OCE service.
+- [x] Bổ sung Kconfig cho tự động gen hàm thực thi Core.
+- [x] Hoàn thiện thiết kế ocesvc để hỗ trợ việc quản lý các dịch vụ OCE một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
+- [x] Triển khai thiết kế với cơ chế OCE có dispatch, register và unregister để hỗ trợ việc đăng ký và hủy đăng ký các sự kiện cần xử lý trong OCE service, giúp đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
+- [ ] Tìm hiểu và triển khai PLTF - Portable Local Test Framework tự động để kiểm tra tính ổn định của framework.
 - [ ] Bổ sung testing cho cơ chế OCE để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các sự kiện quan trọng một cách kịp thời và hiệu quả hơn.
 - [ ] Ra mắt phiên bản 1.1.3 của lõi μEDP với đầy đủ tính năng OCE service và tài liệu hướng dẫn sử dụng.
 
@@ -139,12 +139,12 @@
 - [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một sự kiện có thể phát tới nhiều task đã đăng ký.
 - [ ] Ra mắt phiên bản 1.2.1 của lõi μEDP với đầy đủ tính năng Pub/Sub engine và tài liệu hướng dẫn sử dụng.
 
-### Phiên bản 1.2.2: The Safe Out-Core Interaction
+### Phiên bản 1.2.2: The Safe Input Filter
 
-- [ ] Bổ sung tài liệu chi tiết cho thiết kế Safe Out-Core Interaction nhằm đảm bảo các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, nhằm đảm bảo tính ổn định và an toàn của hệ thống khi xử lý các tín hiệu từ bên ngoài.
+- [ ] Bổ sung tài liệu chi tiết cho thiết kế Safe Input Filter nhằm đảm bảo các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, nhằm đảm bảo tính ổn định và an toàn của hệ thống khi xử lý các tín hiệu từ bên ngoài.
 - [ ] Refine tính năng SOCI với OCE để đảm bảo rằng các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, đồng thời đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
-- [ ] Hoàn thiện thiết kế Safe Out-Core Interaction.
-- [ ] Ra mắt phiên bản 1.2.1 của lõi μEDP với đầy đủ tính năng Safe Out-Core Interaction và tài liệu hướng dẫn sử dụng.
+- [ ] Hoàn thiện thiết kế Safe Input Filter.
+- [ ] Ra mắt phiên bản 1.2.2 của lõi μEDP với đầy đủ tính năng Safe Input Filter và tài liệu hướng dẫn sử dụng.
 
 Sau phiên bản này, μEDP (μEDP) sẽ bắt đầu chuyển đổi thành μE-OS với thiết kế mới và các tính năng nâng cao như HAS (Hardware Accelerated Scheduling), TIM (Tickless Idle Mode), uvfs (Micro-Virtual File System), compmng (Component Manager), SHA (Safe Heap Allocation), ESD (Execution Space Division), MPU/MMU Integration, SSI (Secure Signal Injection), AOCE (Advance Out-Context Execution), DIOMS (Degradable IOMS), ...
 
