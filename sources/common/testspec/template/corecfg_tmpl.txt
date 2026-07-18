@@ -16,7 +16,7 @@
    * #define UEDP_MSG_ALLOC_DATA_MAX   (sizeof(void*) * 8u) // auto arrange depended on architecture
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
-	// KCONFIG_CORECFG_START
-  // KCONFIG_CORECFG_END
+	
+  {{corecfg_spec}}
 
 #endif //__CORE_CFG_H__
