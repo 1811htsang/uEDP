@@ -72,3 +72,6 @@ sources/common/pyspec/__pycache__/*
 
 # ESP-IDF
 eim_config.toml
+
+# Sample config file
+.config
