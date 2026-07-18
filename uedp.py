@@ -205,25 +205,25 @@ def main():
   menuconfig.menuconfig(kconf)
   kconf.write_config(".config")
   
-  corecfg_target = os.path.join("sources", "app", "config", "core_cfg.h")
-  if corecfg_gen(kconf, corecfg_target):
-    print(f"\n[SUCCESS] Core config has been generated in {corecfg_target}!")
+  # corecfg_target = os.path.join("sources", "app", "config", "core_cfg.h")
+  # if corecfg_gen(kconf, corecfg_target):
+  #   print(f"\n[SUCCESS] Core config has been generated in {corecfg_target}!")
 
-  palcfg_target = os.path.join("sources", "app", "config", "pal_cfg.h")
-  if palcfg_gen(kconf, palcfg_target):
-    print(f"\n[SUCCESS] PAL config has been generated in {palcfg_target}!")
+  # palcfg_target = os.path.join("sources", "app", "config", "pal_cfg.h")
+  # if palcfg_gen(kconf, palcfg_target):
+  #   print(f"\n[SUCCESS] PAL config has been generated in {palcfg_target}!")
 
-  appcfg_target = os.path.join("sources", "app", "config", "app_cfg.h")
-  if app_cfg_gen(kconf, appcfg_target):
-    print(f"\n[SUCCESS] App config has been generated in {appcfg_target}!")
+  # appcfg_target = os.path.join("sources", "app", "config", "app_cfg.h")
+  # if app_cfg_gen(kconf, appcfg_target):
+  #   print(f"\n[SUCCESS] App config has been generated in {appcfg_target}!")
 
-  appdecl_target = os.path.join("sources", "app", "declaration", "app_decl.h")
-  if app_decl_gen(kconf, appdecl_target):
-    print(f"\n[SUCCESS] App declaration has been generated in {appdecl_target}!")
+  # appdecl_target = os.path.join("sources", "app", "declaration", "app_decl.h")
+  # if app_decl_gen(kconf, appdecl_target):
+  #   print(f"\n[SUCCESS] App declaration has been generated in {appdecl_target}!")
 
-  palarch_target = os.path.join("sources", "pal", "arch")
-  if pal_arch_gen(kconf, palarch_target):
-    print(f"\n[SUCCESS] PAL arch folder has been generated in {palarch_target}!")
+  # palarch_target = os.path.join("sources", "pal", "arch")
+  # if pal_arch_gen(kconf, palarch_target):
+  #   print(f"\n[SUCCESS] PAL arch folder has been generated in {palarch_target}!")
 
 if __name__ == "__main__":
   main()

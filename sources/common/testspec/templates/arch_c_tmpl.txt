@@ -69,7 +69,11 @@ void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
 }
 
 /**
- * @brief Implementation cho stm32_arch.h
+ * @brief Implementation custom API cho {{arch_name}}.h
  */
 
-{{arch_api_gen}}
+{% for api in arch_apis %}<return_type> {{arch_name}}_{{api}} (<parameters>) {
+
+}
+
+{% endfor %}
