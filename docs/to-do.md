@@ -119,12 +119,16 @@
 
 ### Phiên bản 1.2.0: The Infrastructure Preparation for μE-OS
 
+- [x] Chỉnh sửa lại pyspec (Python Specifier - Bộ chỉ định tham số Python) cũ từ tính năng KwDI để đưa vào sử dụng kết hợp với PLTF.
+- [x] Triển khai testspec (Test Specifier - Bổ chỉ định tham số test) mới chứa cfparsers (config parsers) với việc tích hợp pipeline từ pyspec được điều chỉnh và template.
+- [ ] Bổ sung bộ điều khiển chung để tích hợp pyspec + testspec tự động cho PLTF.
+- [ ] Triển khai thiết kế lên Docker.
+- [ ] Hoàn thiện thiết kế tlcover (Test Level Coverager) để cho phép chỉ định mức kiểm tra.
 - [ ] Thêm tài liệu thiết kế đưa smoltcp vào μEDP để bổ sung khả năng xử lý mạng tương thích hướng sự kiện, giúp mở rộng khả năng của lõi μEDP trong việc xử lý các ứng dụng mạng và giao tiếp với các thiết bị khác trong hệ thống.
 - [ ] Thêm tài liệu thiết kế chi tiết bootloader - μDB để bổ trợ cho việc triển khai μE-OS trong tương lai, giúp đảm bảo rằng hệ thống có thể khởi động một cách ổn định và hiệu quả trên các nền tảng phần cứng khác nhau.
 - [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
 - [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng của bộ điều phối phần cứng như NVIC và xử lý vấn đề về ISR nesting & preemption để đảm bảo hệ thống hoạt động ổn định và hiệu quả khi xử lý các sự kiện thời gian thực.
 - [ ] Bổ sung tài liệu thiết kế PLTF (Portable Local Test Framework) nhằm cung cấp khả năng kiểm thử tự động đa quy mô.
-- [ ] Thực hiện triển khai thiết kế PLTF.
 - [ ] Ra mắt phiên bản 1.2.0 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
 
 ### Phiên bản 1.2.1: The Pub/Sub Engine
