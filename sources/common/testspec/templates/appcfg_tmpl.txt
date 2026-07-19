@@ -31,20 +31,11 @@
    * @attention Với n tác vụ thì có n entry trong bảng tác vụ và tác vụ polling
    * @attention Lưu ý rằng UEDP_TASK_NORM_USR_ID và UEDP_TASK_NORM_EOT_ID là 2 ID đặc biệt bắt buộc phải có
    * @note Người dùng tự định nghĩa bảng tác vụ và tác vụ polling nhưng vẫn giữ nguyên
-   * 			 khai báo tên bảng tác vụ và tác vụ polling. Phần implementation nội bộ
-   * 			 do người dùng tự triển khai hoặc có thể giữ nguyên nếu không sử dụng tác vụ polling.
+   *   khai báo tên bảng tác vụ và tác vụ polling. Phần implementation nội bộ
+   *   do người dùng tự triển khai hoặc có thể giữ nguyên nếu không sử dụng tác vụ polling.
    * @example 
-   * task_norm_t app_task_table[] = {
-   * 	{ UEDP_TASK_NORM_USR_ID,  UEDP_TASK_PRI_LEVEL_8, task_norm_usr_handler, {0}, usr_q_mem  },
-   * 	{ TASK_NORM_A_ID,           UEDP_TASK_PRI_LEVEL_7, task_norm_a_handler,   {0}, a_q_mem    },
-   * 	{ TASK_NORM_B_ID,           UEDP_TASK_PRI_LEVEL_6, task_norm_b_handler,   {0}, b_q_mem    },
-   * 	{ UEDP_TASK_NORM_EOT_ID,  UEDP_TASK_PRI_LEVEL_0, NULL,                  {0}, NULL       }
-   * };
-   *
-   * task_poll_t app_poll_table[] = {
-   * 	{ UEDP_TASK_POLL_MEMRP_ID , 0, task_poll_memrp_handler },
-   * 	{ UEDP_TASK_POLL_EOT_ID, 0, NULL }
-   * };
+   *   task_norm_t app_task_table[];
+   *   task_poll_t app_poll_table[];
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
    */
 
@@ -55,15 +46,11 @@
    * @brief Định nghĩa bảng chuyển trạng thái cho state
    * @attention Với n state thì có n bảng chuyển trạng thái
    * @note Người dùng tự định nghĩa bảng, có thể xóa dòng 47 và thay thế bằng
-   * 			 triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM
+   *   triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM
    * @example
-   * extern tsm_trans_t blink_active_trans[] = {
-   * { SIG_INTERNAL_TICK, UEDP_TSM_STATE_STAY, fn_active_logic },
-   * { SIG_USR_STOP,      STATE_BLINK_IDLE,      NULL },
-   * { SIG_USR_START,     UEDP_TSM_STATE_STAY, NULL } // Đã ACTIVE rồi thì START đứng yên
-   * };
+   *   extern tsm_trans_t blink_active_trans[];
    * @note Ở đây chỉ extern tên gọi, không cần triển khai nội dung, 
-   * người dùng tự triển khai nội dung ở app.c
+   *   người dùng tự triển khai nội dung ở app.c
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
    */
   
@@ -73,14 +60,11 @@
    * @brief Định nghĩa bảng TSM cho task Blinker
    * @attention Với n state thì có n entry trong bảng TSM
    * @note Người dùng tự định nghĩa bảng, có thể xóa dòng 61 và thay thế bằng
-   * 			 triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM
+   *   triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM
    * @example
-   * extern tsm_state_desc_t blinker_tsm_table[] = {
-   * 	{ STATE_BLINK_IDLE,   fn_on_idle_entry,   NULL,              blink_idle_trans,   1 },
-   * 	{ STATE_BLINK_ACTIVE, fn_on_active_entry, fn_on_active_exit, blink_active_trans, 2 }
-   * };
+   *   extern tsm_state_desc_t blinker_tsm_table[];
    * @note Ở đây chỉ extern tên gọi, không cần triển khai nội dung, 
-   * người dùng tự triển khai nội dung ở app.c
+   *   người dùng tự triển khai nội dung ở app.c
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
    */
   
@@ -89,9 +73,9 @@
   /**
    * @brief Định nghĩa TSM cho tác vụ
    * @attention Với n tác vụ sử dụng TSM thì có n định nghĩa TSM.
-   * 						Tuy nhiên mỗi task không nhất thiết phải sử dụng TSM
+   *   Tuy nhiên mỗi task không nhất thiết phải sử dụng TSM
    * @note Người dùng tự định nghĩa TSM, có thể xóa dòng 71 và thay thế bằng
-   * 			 triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM cho tác vụ
+   *   triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM cho tác vụ
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
    */
   
@@ -100,9 +84,9 @@
   /**
    * @brief Định nghĩa FSM cho tác vụ
    * @attention Với n tác vụ sử dụng FSM thì có n định nghĩa FSM.
-   * 						Tuy nhiên mỗi task không nhất thiết phải sử dụng FSM
+   *   Tuy nhiên mỗi task không nhất thiết phải sử dụng FSM
    * @note Người dùng tự định nghĩa FSM, có thể xóa dòng 81 và thay thế bằng
-   * 			 triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng FSM cho tác vụ
+   *   triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng FSM cho tác vụ
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
    */
   

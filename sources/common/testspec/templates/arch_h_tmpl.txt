@@ -1,9 +1,9 @@
 /**
- * @file {{arch_name}}.h
+ * @file {{arch_name}}_arch.h
  * @author Shang Huang
  * @brief Header file for {{arch_name}} Platform Abstraction Layer in UEDP
  * @version 0.1
- * @date 2026-04-20
+ * @date {{current_date}}
  * @copyright MIT License
  */
 #ifndef __{{arch_name_upperc}}_ARCH_H__
