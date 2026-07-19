@@ -69,6 +69,10 @@ sources/test/*
 # Python cache
 sources/common/kconfiglib/__pycache__/*
 sources/common/pyspec/__pycache__/*
+sources/common/testspec/cfparsers/__pycache__/*
 
 # ESP-IDF
 eim_config.toml
+
+# Sample config file
+.config
