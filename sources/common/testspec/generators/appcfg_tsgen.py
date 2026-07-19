@@ -1,14 +1,28 @@
+import sys
+import os
 from jinja2 import Environment, FileSystemLoader
-
 env = Environment(loader = FileSystemLoader('./sources/common/testspec/templates'))
 template = env.get_template('appcfg_tmpl.txt')
-
+cur_trm_dir = os.path.dirname("uEDP")
+config_dir = os.path.join(cur_trm_dir, ".config")
+cur_file_dir = os.path.dirname(os.path.abspath(__file__))
+parent_file_dir = os.path.dirname(cur_file_dir)
+sys.path.insert(0, config_dir)
+if parent_file_dir not in sys.path:
+  sys.path.append(parent_file_dir)
+from cfparsers import cfigf_cps
+context = cfigf_cps.parse_config(config_dir)
 output = template.render(
-  current_date='16 May 2025', 
-  appcfg_libs = ['stdio.h', 'stdint.h', 'math.h'], 
-  appcfg_tsm_state_trans = ['blink_active_trans', 'idle_active_trans'],
-  appcfg_tsm_tables = ['blinker_tsm_table', 'idle_tsm_table'],
-  appcfg_tsm_objects = ['blinker_tsm', 'idle_tsm'],
-  appcfg_fsm_objects = ['blinker_fsm', 'idle_fsm']
+  current_date = context["current_date"], 
+  appcfg_libs = context["appcfg_libs"], 
+  appcfg_tsm_state_trans = context["appcfg_tsm_state_trans"],
+  appcfg_tsm_tables = context["appcfg_tsm_tables"],
+  appcfg_tsm_objects = context["appcfg_tsm_objects"],
+  appcfg_fsm_objects = context["appcfg_fsm_objects"]
 )
-print(output)
+# For debug
+  # print(output)
+# Create file
+output_dir = os.path.join(cur_trm_dir, "sources", "app", "config")
+with open(output_dir + "/app_cfg.h", "w", encoding="utf-8") as f:
+  f.write(output)
