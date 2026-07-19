@@ -12,6 +12,8 @@ def signal_declaration(num_signals):
     kconfig_content.append(f'\t\tconfig DECL_SIG_{i}_NAME')
     kconfig_content.append(f'\t\t\tstring "Name of signal #{i}"')
     kconfig_content.append(f'\t\t\tdefault "SIG_{i}_ID"\n')
+    kconfig_content.append(f'\t\t\thelp\n')
+    kconfig_content.append(f'\t\t\t\tThis is the name of signal, please use upper case.\n')
     kconfig_content.append(f'\tendmenu\n')
 
   kconfig_content.append(f'endmenu\n')
