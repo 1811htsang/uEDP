@@ -31,7 +31,7 @@ DEFAULT_VALS = {
 }
 def main():
   os.environ["KCONFIG_CONFIG"] = ".config"
-  os.environ["MENUCONFIG_STYLE"] = "custom"
+  os.environ["MENUCONFIG_STYLE"] = "aquatic"
   # Input holder from collector api
   (n_norm, n_poll, n_sig, use_fsm, use_tsm, n_tsm_st, n_fsm_st, n_hw_api) = user_input(DEFAULT_VALS)
   # Override decl file for new config
