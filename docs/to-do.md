@@ -121,9 +121,10 @@
 
 - [x] Chỉnh sửa lại pyspec (Python Specifier - Bộ chỉ định tham số Python) cũ từ tính năng KwDI để đưa vào sử dụng kết hợp với PLTF.
 - [x] Triển khai testspec (Test Specifier - Bổ chỉ định tham số test) mới chứa cfparsers (config parsers) với việc tích hợp pipeline từ pyspec được điều chỉnh và template.
-- [ ] Bổ sung bộ điều khiển chung để tích hợp pyspec + testspec tự động cho PLTF.
-- [ ] Triển khai thiết kế lên Docker.
-- [ ] Hoàn thiện thiết kế tlcover (Test Level Coverager) để cho phép chỉ định mức kiểm tra.
+- [x] Bổ sung bộ điều khiển chung (tsgen) để tích hợp pyspec + testspec tự động cho PLTF.
+- [x] Triển khai thiết kế lên Docker.
+- [x] Bổ sung triển khai thiết kế với Docker Compose để tự động build, chỉ định services, containers và các thông số môi trường cần thiết cho việc triển khai và kiểm thử lõi μEDP trên các nền tảng khác nhau một cách dễ dàng và nhất quán.
+- [ ] Hoàn thiện thiết kế TLC (Test Level Coverager) để cho phép chỉ định mức kiểm tra từ ut (unit), ct (component), st (system) và it (integration) nhằm đảm bảo rằng các tính năng của lõi μEDP được kiểm thử đầy đủ và hiệu quả trên các mức độ khác nhau của hệ thống.
 - [ ] Thêm tài liệu thiết kế đưa smoltcp vào μEDP để bổ sung khả năng xử lý mạng tương thích hướng sự kiện, giúp mở rộng khả năng của lõi μEDP trong việc xử lý các ứng dụng mạng và giao tiếp với các thiết bị khác trong hệ thống.
 - [ ] Thêm tài liệu thiết kế chi tiết bootloader - μDB để bổ trợ cho việc triển khai μE-OS trong tương lai, giúp đảm bảo rằng hệ thống có thể khởi động một cách ổn định và hiệu quả trên các nền tảng phần cứng khác nhau.
 - [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
