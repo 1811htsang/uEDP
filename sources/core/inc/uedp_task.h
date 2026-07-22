@@ -185,5 +185,33 @@
 	 */
 	RETR_STAT uedp_task_norm_post_urgent(task_id_t tid, uedp_msg_t* msg);
 
+	/**
+	 * @brief Lấy con trỏ đến máy trạng thái toàn cục của tác vụ message-driven
+	 * @param tid ID của tác vụ message-driven cần lấy máy trạng thái toàn cục
+	 * @return uedp_tsm_t* Con trỏ đến máy trạng thái toàn cục của tác vụ message-driven
+	 */
+	uedp_tsm_t* uedp_task_norm_get_tsm(task_id_t tid);
+
+	/**
+	 * @brief Thiết lập con trỏ đến máy trạng thái toàn cục của tác vụ message-driven
+	 * @param tid ID của tác vụ message-driven cần thiết lập máy trạng thái toàn cục
+	 * @param tsm Con trỏ đến máy trạng thái toàn cục cần thiết lập
+	 */
+	void uedp_task_norm_set_tsm(task_id_t tid, uedp_tsm_t* tsm);
+
+	/**
+	 * @brief Lấy con trỏ đến máy trạng thái cục bộ của tác vụ message-driven
+	 * @param tid ID của tác vụ message-driven cần lấy máy trạng thái cục bộ
+	 * @return uedp_fsm_t* Con trỏ đến máy trạng thái cục bộ của tác vụ message-driven
+	 */
+	uedp_fsm_t* uedp_task_norm_get_fsm(task_id_t tid);
+
+	/**
+	 * @brief Thiết lập con trỏ đến máy trạng thái cục bộ của tác vụ message-driven
+	 * @param tid ID của tác vụ message-driven cần thiết lập máy trạng thái cục bộ
+	 * @param fsm Con trỏ đến máy trạng thái cục bộ cần thiết lập
+	 */
+	void uedp_task_norm_set_fsm(task_id_t tid, uedp_fsm_t* fsm);
+
 #endif //__TASK_H__
 
