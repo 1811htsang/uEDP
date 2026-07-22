@@ -450,3 +450,33 @@ void internal_uedp_task_norm_put_head_to_queue(task_id_t tid, uedp_msg_t* msg) {
   // Exit critical section
   pal_exit_critical();
 }
+
+uedp_tsm_t* uedp_task_norm_get_tsm(task_id_t tid) {
+  task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
+  if (task) {
+    return task->tsm; // Trả về con trỏ đến máy trạng thái toàn cục của tác vụ nếu tìm thấy
+  }
+  return NULL; // Trả về NULL nếu không tìm thấy tác vụ nào có ID tương
+}
+
+void uedp_task_norm_set_tsm(task_id_t tid, uedp_tsm_t* tsm) {
+  task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
+  if (task) {
+    task->tsm = tsm;
+  }
+}
+
+uedp_fsm_t* uedp_task_norm_get_fsm(task_id_t tid) {
+  task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
+  if (task) {
+    return task->fsm;
+  }
+  return NULL;
+}
+
+void uedp_task_norm_set_fsm(task_id_t tid, uedp_fsm_t* fsm) {
+  task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
+  if (task) {
+    task->fsm = fsm;
+  }
+}

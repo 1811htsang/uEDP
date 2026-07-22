@@ -80,6 +80,8 @@
 		bool urgent_pending;
 		pf_task_norm task_norm;
 		fifo_t msg_queue; 
+		uedp_fsm_t* fsm;
+		uedp_tsm_t* tsm;
 		uedp_msg_t** msg_queue_buffer;
 	} task_norm_t;
 
