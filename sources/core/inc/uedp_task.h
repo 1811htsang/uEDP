@@ -15,8 +15,6 @@
 	#include <stdint.h>
 	#include <stdbool.h>
 	#include "uedp_core.h"
-	#include "uedp_fsm.h"
-	#include "uedp_tsm.h"
 	#include "fifo.h" 
 
 	/**
@@ -29,13 +27,22 @@
 	typedef struct uedp_msg_t uedp_msg_t;
 
 	/**
-	 * @brief Định nghĩa các hằng số để quản lý kích thước 
-	 * 				của hàng đợi đối tượng tác vụ và hàng đợi ngắt
-	 * @attention Trong thiết kế hệ thống thì bắt buộc phải có hàng đợi dành cho ISR 
-	 * 						nhằm đảm bảo tính đồng bộ, an toàn và độc lập phần cứng khi xử lý các sự kiện ngắt
+	 * @brief Khai báo kiểu dữ liệu để quản lý máy trạng thái toàn cục tác vụ trong hệ thống UEDP
+	 * @attention `uedp_tsm_t` được gọi ở đây để thực thi forward declaration, 
+	 * 						cho phép sử dụng con trỏ đến `uedp_tsm_t` trong các khai báo sau này 
+	 * 						mà không cần phải định nghĩa chi tiết của `uedp_tsm_t` tại thời điểm này, 
+	 * 						giúp tránh các vấn đề về phụ thuộc lẫn nhau giữa các cấu trúc dữ liệu trong hệ thống UEDP.
 	 */
-	#define QUEUE_OBJ_SIZE		(512) // Kích thước của hàng đợi đối tượng
-	#define QUEUE_ISR_SIZE		(128) // Kích thước của hàng đợi ngắt
+	typedef struct uedp_tsm_t uedp_tsm_t;
+
+	/**
+	 * @brief Khai báo kiểu dữ liệu để quản lý máy trạng thái cục bộ tác vụ trong hệ thống UEDP
+	 * @attention `uedp_fsm_t` được gọi ở đây để thực thi forward declaration, 
+	 * 						cho phép sử dụng con trỏ đến `uedp_fsm_t` trong các khai báo sau này 
+	 * 						mà không cần phải định nghĩa chi tiết của `uedp_fsm_t` tại thời điểm này, 
+	 * 						giúp tránh các vấn đề về phụ thuộc lẫn nhau giữa các cấu trúc dữ liệu trong hệ thống UEDP.
+	 */
+	typedef struct uedp_fsm_t uedp_fsm_t;
 
 	/**
 	 * @brief Định nghĩa các kiểu dữ liệu để quản lý ID 
