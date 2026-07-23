@@ -26,6 +26,8 @@ RUN pip install --no-cache-dir \
 RUN mkdir -p /uedp-libs/
 # Create folder /test for PLTF
 RUN mkdir -p /uedp-test/
+# Install gosu to setup user
+RUN apt-get update && apt-get install -y gosu && rm -rf /var/lib/apt/lists/*
 # Select /uedp in docker space
 WORKDIR /uedp-libs
 # Setup color for environment

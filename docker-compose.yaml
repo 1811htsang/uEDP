@@ -4,7 +4,7 @@ services:
     container_name: uedp_udc
     stdin_open: true
     tty: true
-    user: "${MY_UID:-1000}:${MY_GID:-1000}"
     volumes:
       - .:/uedp-libs
     working_dir: /uedp-libs
+    hostname: container_env
