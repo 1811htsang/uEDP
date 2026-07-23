@@ -71,6 +71,7 @@ sources/common/kconfiglib/__pycache__/*
 sources/common/pyspec/__pycache__/*
 sources/common/testspec/cfparsers/__pycache__/*
 sources/common/testspec/generators/__pycache__/*
+sources/common/testspec/generators/__pycache__/*
 
 # ESP-IDF
 eim_config.toml
