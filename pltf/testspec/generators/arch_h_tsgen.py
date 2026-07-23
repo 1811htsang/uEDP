@@ -9,17 +9,19 @@ def main():
   sys.path.insert(0, config_dir)
   if parent_file_dir not in sys.path:
     sys.path.append(parent_file_dir)
-  from cfparsers import cfigf_cps
-  context = cfigf_cps.parse_config(config_dir)
-  env = Environment(loader = FileSystemLoader('./sources/common/testspec/templates'))
-  template = env.get_template('palcfg_tmpl.txt')
+  from cfparsers import dotcfg_cfp
+  context = dotcfg_cfp.parse_config(config_dir)
+  env = Environment(loader = FileSystemLoader('./pltf/templates'))
+  template = env.get_template('arch_h_tmpl.txt')
   output = template.render(
     current_date = context["current_date"],
-    pal_configs = context['pal_configs'] 
+    arch_name = context['arch_name'],
+    arch_name_upperc = context['arch_name_upperc'],
+    arch_apis = context['arch_apis'] 
   )
   # For debug
     # print(output)
   # Create file
-  output_dir = os.path.join(cur_trm_dir, "sources", "app", "config")
-  with open(output_dir + "/pal_cfg.h", "w", encoding="utf-8") as f:
+  output_dir = os.path.join(cur_trm_dir, "sources", "pal", "arch", context['arch_name'])
+  with open(output_dir + "/" + context['arch_name'] + "_arch.h", "w", encoding="utf-8") as f:
     f.write(output)

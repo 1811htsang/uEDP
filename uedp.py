@@ -13,11 +13,11 @@ import kconfiglib
 import menuconfig
 import argparse
 # [5] Import user input function from pyspec
-from sources.common.pyspec.usrinp_pspec import user_input
-from sources.common.pyspec.tnorm_pspec import task_norm_declaration
-from sources.common.pyspec.tpoll_pspec import task_poll_declaration
-from sources.common.pyspec.sig_pspec import signal_declaration
-from sources.common.pyspec.hwapi_pspec import hardware_api_declaration
+from pltf.pyspec.usrinp_pspec import user_input
+from pltf.pyspec.tnorm_pspec import task_norm_declaration
+from pltf.pyspec.tpoll_pspec import task_poll_declaration
+from pltf.pyspec.sig_pspec import signal_declaration
+from pltf.pyspec.hwapi_pspec import hardware_api_declaration
 # [6] Global variables to hold user input values (if needed)
 DEFAULT_VALS = {
   "num_tasks_norm": 8,

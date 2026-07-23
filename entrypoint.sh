@@ -4,7 +4,7 @@ set -e
 echo "[ENTRY] call menuconfig"
 python uedp.py menuconfig
 echo "[ENTRY] call testspec.generator"
-python sources/common/testspec/generators/tsgen.py
+python pltf/testspec/generators/tsgen.py
 echo -e "[DONE]"
 echo -e "You can:"
 echo -e "\t[cd /uedp-test] for PLTF development"

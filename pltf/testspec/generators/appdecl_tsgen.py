@@ -9,9 +9,9 @@ def main():
   sys.path.insert(0, config_dir)
   if parent_file_dir not in sys.path:
     sys.path.append(parent_file_dir)
-  from cfparsers import cfigf_cps
-  context = cfigf_cps.parse_config(config_dir)
-  env = Environment(loader = FileSystemLoader('./sources/common/testspec/templates'))
+  from cfparsers import dotcfg_cfp
+  context = dotcfg_cfp.parse_config(config_dir)
+  env = Environment(loader = FileSystemLoader('./pltf/templates'))
   template = env.get_template('appdecl_tmpl.txt')
   output = template.render(
     current_date = context["current_date"],

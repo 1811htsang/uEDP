@@ -10,8 +10,8 @@ def main():
   sys.path.insert(0, config_dir)
   if parent_file_dir not in sys.path:
     sys.path.append(parent_file_dir)
-  from cfparsers import cfigf_cps
-  context = cfigf_cps.parse_config(config_dir)
+  from cfparsers import dotcfg_cfp
+  context = dotcfg_cfp.parse_config(config_dir)
   # Create folder for arch
   try:
     os.makedirs(arch_dir + f"/{context["arch_name"]}", exist_ok=True)
