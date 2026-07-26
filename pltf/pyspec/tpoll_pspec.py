@@ -23,6 +23,8 @@ def task_poll_declaration(num_tasks_poll):
     kconfig_content.append(f'\t\t\tstring "Name of handler #{i}"')
     kconfig_content.append(f'\t\t\tdefault "POLL_HANDLER_{i}_ID"')
     kconfig_content.append(f'\t\t\tdepends on DECL_TASK_POLL_{i}_NAME != ""\n')
+    kconfig_content.append(f'\t\t\thelp\n')
+    kconfig_content.append(f'\t\t\t\tThis is the name of task poll handler, in generation will in format void <value>_phler();.\n')
 
     kconfig_content.append(f'\tendmenu\n')
 

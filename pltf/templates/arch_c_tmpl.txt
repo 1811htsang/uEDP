@@ -1,15 +1,15 @@
 /**
- * @file {{arch_name}}.c
+ * @file {{arch_name}}_arch.c
  * @author Shang Huang
  * @brief Source file for {{arch_name}} Platform Abstraction Layer in UEDP
  * @version 0.1
- * @date 2026-04-20
+ * @date {{current_date}}
  * @copyright MIT License
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "{{arch_name}}.h"
+#include "{{arch_name}}_arch.h"
 #include "uedp_core.h"
 #include "uedp_task.h"
 #include "uedp_msg.h"
@@ -69,7 +69,11 @@ void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
 }
 
 /**
- * @brief Implementation cho stm32_arch.h
+ * @brief Implementation custom API cho {{arch_name}}.h
  */
 
-{{arch_api_gen}}
+{% for api in arch_apis %}<return_type> {{arch_name}}_{{api}} (<parameters>) {
+
+}
+
+{% endfor %}

@@ -36,6 +36,7 @@ def user_input(DEFAULT_VALS):
   else:
     is_use_tsm = False
 
+  # Number of TSM/FSM state to generate
   num_tsm_states = 0
   if is_use_tsm:
     print(f'[INFO] Number of TSM states to generate (default: {num_tasks_norm}): ', end='')
@@ -48,6 +49,7 @@ def user_input(DEFAULT_VALS):
     val = input().strip()
     num_fsm_states = int(val) if val != '' else num_tasks_norm
 
+  # Number of hardware API to generate
   num_hw_api = 0
   print('[INFO] Do you want to generate Hardware API? (y/n, default: n): ', end='')
   if input().strip().lower() == 'y':
@@ -55,5 +57,5 @@ def user_input(DEFAULT_VALS):
     val = input().strip()
     num_hw_api = int(val) if val != '' else DEFAULT_VALS["num_hw_api"]
 
-  # TRẢ VỀ CÁC GIÁ TRỊ ĐÃ NHẬP
+  # Return type
   return num_tasks_norm, num_tasks_poll, num_signals, is_use_fsm, is_use_tsm, num_tsm_states, num_fsm_states, num_hw_api

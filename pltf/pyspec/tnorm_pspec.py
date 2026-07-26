@@ -21,19 +21,25 @@ def task_norm_declaration(num_tasks_norm, num_tsm_states, num_fsm_states, is_tsm
     # Config name
     kconfig_content.append(f'\t\tconfig DECL_TASK_NORM_{i}_NAME') 
     kconfig_content.append(f'\t\t\tstring "Name of task #{i}"')
-    kconfig_content.append(f'\t\t\tdefault "TASK_NORM_{i}_ID"\n') 
+    kconfig_content.append(f'\t\t\tdefault "TASK_NORM_{i}_ID"\n')
+    kconfig_content.append(f'\t\t\thelp\n')
+    kconfig_content.append(f'\t\t\t\tThis is the name of task norm, please use upper case.\n') 
 
     # Config message queue name
     kconfig_content.append(f'\t\tconfig DECL_MSG_QUEUE_{i}_NAME')
     kconfig_content.append(f'\t\t\tstring "Name of message queue #{i}"')
     kconfig_content.append(f'\t\t\tdefault "MSG_QUEUE_{i}_ID"')
     kconfig_content.append(f'\t\t\tdepends on DECL_TASK_NORM_{i}_NAME != ""\n')
+    kconfig_content.append(f'\t\t\thelp\n')
+    kconfig_content.append(f'\t\t\t\tThis is the name of task norm message queue, format output as extern uedp_msg_t* <value>_msgq[UEDP_MSG_BLANK_QUEUE_SIZE];.\n')
 
     # Config handler name
     kconfig_content.append(f'\t\tconfig DECL_NORM_HANDLER_{i}_NAME') 
     kconfig_content.append(f'\t\t\tstring "Name of handler #{i}"')
     kconfig_content.append(f'\t\t\tdefault "NORM_HANDLER_{i}_ID"')
     kconfig_content.append(f'\t\t\tdepends on DECL_TASK_NORM_{i}_NAME != ""\n')
+    kconfig_content.append(f'\t\t\thelp\n')
+    kconfig_content.append(f'\t\t\t\tThis is the name of task norm handler, format output as void <value>_nhler(uedp_msg_t* msg);.\n')
 
     # Config TSM use flag
     if is_tsm_enabled == True:

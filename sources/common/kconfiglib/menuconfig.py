@@ -325,18 +325,6 @@ _STYLES = {
     frame=fg:white,bg:cyan
     body=fg:white,bg:blue
     edit=fg:black,bg:white
-    """, 
-
-    "custom": """
-    text=white
-    path=grey
-    separator=black
-    list=grey
-    help=grey
-    selection=standout
-    frame=brightgrey
-    body=grey
-    edit=fg:black,bg:white
     """
 }
 

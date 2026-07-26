@@ -1,0 +1,100 @@
+# hsmc_logic.yaml
+project: "PingPong_State-Based"
+
+ssi_policies:
+  - id: POLICY_SENSOR_STREAMS
+    allow_from: [KID_TASK_SENSOR_A, KID_TASK_SENSOR_B]
+    signals: [KID_SIG_DATA, KID_SIG_STATUS]
+sif_rules:
+  - id: RULE_TEMP_RANGE
+    check: RANGE
+    min: -40
+    max: 125
+    on_fail: LOG_AND_DROP # Hành động khi vi phạm
+  - id: RULE_HUMIDITY_RANGE
+    check: RANGE
+    min: 0
+    max: 100
+    on_fail: LOG_AND_DROP # Hành động khi vi phạm
+
+logic_flow:
+  # --- TASK USR ---
+  - task: KID_TASK_USR
+    tsm:
+      initial: STATE_USR_IDLE
+      states:
+        - id: STATE_USR_IDLE
+          transitions:
+            - when: KID_SIG_USR_START
+              go_to: STATE_USR_WAITING
+              steps:
+                - action: post_msg
+                  to: KID_TASK_A
+                  sig: KID_SIG_USR_START
+        - id: STATE_USR_WAITING
+          transitions:
+            - when: KID_SIG_USR_STOP
+              go_to: STATE_USR_IDLE
+              steps:
+                - action: log
+                  msg: "Process Terminated."
+
+  # --- TASK A (Xử lý trạng thái thông minh) ---
+  - task: KID_TASK_A
+    tsm:
+      initial: STATE_A_IDLE
+      states:
+        - id: STATE_A_IDLE
+          transitions:
+            - when: KID_SIG_USR_START
+              go_to: STATE_A_WAIT_B
+              steps:
+                - action: post_msg
+                  to: KID_TASK_B
+                  sig: KID_SIG_0x12
+                  
+        - id: STATE_A_WAIT_B
+          transitions:
+            - when: KID_SIG_0x34
+              go_to: STAY # Vẫn ở trạng thái chờ B nhưng ghi log
+              steps:
+                - action: log
+                  msg: "A: Received 0x34, still waiting for 0xFF..."
+            - when: KID_SIG_0xFF
+              go_to: STATE_A_IDLE # Xong việc, quay về Idle
+              steps:
+                - action: post_msg
+                  to: KID_TASK_B
+                  sig: KID_SIG_0xAA
+    ssi_binding: POLICY_SENSOR_STREAMS
+
+  # --- TASK B ---
+  - task: KID_TASK_B
+    tsm:
+      initial: STATE_B_IDLE
+      states:
+        - id: STATE_B_IDLE
+          transitions:
+            - when: KID_SIG_0x12
+              go_to: STATE_B_BUSY
+              steps:
+                - action: post_msg
+                  to: KID_TASK_A
+                  sig: KID_SIG_0x34
+                - action: post_msg
+                  to: KID_TASK_A
+                  sig: KID_SIG_0xFF
+                  
+        - id: STATE_B_BUSY
+          transitions:
+            - when: KID_SIG_0xAA
+              go_to: STATE_B_IDLE
+              steps:
+                - action: post_msg
+                  to: KID_TASK_USR
+                  sig: KID_SIG_USR_STOP
+    inputs:
+      - signal: KID_SIG_TEMP
+        filter: RULE_TEMP_RANGE # Liên kết với bộ lọc vùng
+      - signal: KID_SIG_HUMIDITY
+        filter: RULE_HUMIDITY_RANGE # Liên kết với bộ lọc vùng
