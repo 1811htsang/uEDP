@@ -7,4 +7,6 @@ with open('pltf/testspec/cfparsers/test.yaml', 'r') as file:
 print("Data read from 'test.yaml':")
 pprint.pprint(data)
 print("\nTask USR info:")
-pprint.pprint(data['application_logic'][0])
+pprint.pprint(data['logic_flow'][0])
+print("\nSIF rules info:")
+pprint.pprint(data['sif_rules'])

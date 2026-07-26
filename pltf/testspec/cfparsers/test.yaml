@@ -1,7 +1,23 @@
 # hsmc_logic.yaml
 project: "PingPong_State-Based"
 
-application_logic:
+ssi_policies:
+  - id: POLICY_SENSOR_STREAMS
+    allow_from: [KID_TASK_SENSOR_A, KID_TASK_SENSOR_B]
+    signals: [KID_SIG_DATA, KID_SIG_STATUS]
+sif_rules:
+  - id: RULE_TEMP_RANGE
+    check: RANGE
+    min: -40
+    max: 125
+    on_fail: LOG_AND_DROP # Hành động khi vi phạm
+  - id: RULE_HUMIDITY_RANGE
+    check: RANGE
+    min: 0
+    max: 100
+    on_fail: LOG_AND_DROP # Hành động khi vi phạm
+
+logic_flow:
   # --- TASK USR ---
   - task: KID_TASK_USR
     tsm:
@@ -50,6 +66,7 @@ application_logic:
                 - action: post_msg
                   to: KID_TASK_B
                   sig: KID_SIG_0xAA
+    ssi_binding: POLICY_SENSOR_STREAMS
 
   # --- TASK B ---
   - task: KID_TASK_B
@@ -76,3 +93,8 @@ application_logic:
                 - action: post_msg
                   to: KID_TASK_USR
                   sig: KID_SIG_USR_STOP
+    inputs:
+      - signal: KID_SIG_TEMP
+        filter: RULE_TEMP_RANGE # Liên kết với bộ lọc vùng
+      - signal: KID_SIG_HUMIDITY
+        filter: RULE_HUMIDITY_RANGE # Liên kết với bộ lọc vùng
