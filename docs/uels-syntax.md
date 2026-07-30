@@ -137,6 +137,8 @@ task_definition:
             type: PERIODIC
 ```
 
+Lưu ý rằng cú pháp này dùng để làm ví dụ mẫu, không phải là cú pháp chính thức của μE-LS. Người dùng cần tham khảo tài liệu chính thức để biết các quy tắc và cú pháp đầy đủ.
+
 ### Lưu ý khi thiết kế PLD Parser (Python)
 
 - **Dấu ngoặc kép:** Không bắt buộc đối với chuỗi đơn giản, nhưng nên dùng nếu chuỗi chứa ký tự đặc biệt (như `:`, `{`, `}`, `[`, `]`, `,`, `&`, `*`, `#`, `?`, `|`, `-`, `<`, `>`, `=`, `!`, `%`, `@`).
@@ -186,23 +188,31 @@ Về tổng quát, Task Norm gồm các khai báo như sau:
 
 - `task`: ID của Task NORM (ví dụ: `KID_TASK_SENSOR`).
 - `tsm`: Định nghĩa trạng thái thông minh (State Machine) của Task.
-  - `states`: Danh sách các trạng thái và các chuyển đổi giữa chúng.
+  - `tstates`: Danh sách các trạng thái và các chuyển đổi giữa chúng.
     - `id`: ID của trạng thái (tức tên trạng thái).
     - `trans`: Các chuyển đổi từ trạng thái này sang trạng thái khác dựa trên tín hiệu nhận được.
       - `sig`: Tín hiệu kích hoạt chuyển đổi trạng thái kế tiếp.
       - `goto`: Trạng thái đích sau khi chuyển đổi.
-    - `on_entry`: Các hành động thực hiện khi Task vào trạng thái này. Dùng cho việc khởi tạo, thiết lập bộ hẹn giờ, gửi tin nhắn, ...
-    - `on_exit`: Các hành động thực hiện khi Task rời khỏi trạng thái này. Dùng cho việc dọn dẹp, hủy bỏ các bộ hẹn giờ, giải phóng tài nguyên, ...
+    - `on_ntry`: Các hành động thực hiện khi Task vào trạng thái này. Dùng cho việc khởi tạo, thiết lập bộ hẹn giờ, gửi tin nhắn, ...
       - `steps`: Danh sách các hành động cần thực hiện khi rời khỏi trạng thái.
         - `action`: Hành động cụ thể (ví dụ: `post_msg`, `timer_set`, ...).
         - `to`: Đích đến của hành động (ví dụ: Task nhận tin nhắn).
         - `sig`: Tín hiệu gửi đi (nếu hành động là gửi tin nhắn).
         - `data`: Dữ liệu gửi kèm (nếu hành động là gửi tin nhắn).
+    - `on_exit`: Các hành động thực hiện khi Task rời khỏi trạng thái này. Dùng cho việc dọn dẹp, hủy bỏ các bộ hẹn giờ, giải phóng tài nguyên, ...
+      - Tương tự như `on_entry`, nhưng được thực hiện khi Task rời khỏi trạng thái này.
     - `on_active`: Các hành động thực hiện khi Task đang ở trạng thái này. Dùng cho việc kiểm tra điều kiện, xử lý dữ liệu, gửi tin nhắn định kỳ, ...
       - Tương tự như `on_entry` và `on_exit`, nhưng được thực hiện liên tục khi Task đang ở trạng thái này.
 - `fsm`: Định nghĩa trạng thái hữu hạn (Finite State Machine) của Task. Tương tự như `tsm`, nhưng thường được sử dụng cho các Task có hành vi đơn giản hơn và cần quản lý luồng trạng thái cục bộ hơn.
+  - `fstates`: Danh sách các trạng thái và các chuyển đổi giữa chúng.
+    - `id`: ID của trạng thái (tức tên trạng thái).
+    - `on_recv`: Chuyển đổi trạng thái dựa trên tín hiệu nhận được.
+      - `action`: Hành động cụ thể (ví dụ: `post_msg`, `timer_set`, ...).
+        - Nếu hành động là single-step thì dùng `act`, nếu hành động là multi-step thì dùng `steps`.
+      - `sig`: Tín hiệu kích hoạt chuyển đổi trạng thái kế tiếp.
+      - `goto`: Trạng thái đích sau khi chuyển đổi.
 
 <!-- 
   Comment:
-    Bổ sung tiếp về phần FSM và cách phối hợp giữa TSM và FSM trong thiết kế Task Norm. Cần làm rõ cách các trạng thái và chuyển đổi được quản lý, cũng như cách các hành động được thực hiện trong từng trạng thái. Đi ngủ để tiếp tục viết phần này vào ngày mai.
+    Tạm thời chuyển sang triển khai thử cấu trúc khai báo của task.
  -->
