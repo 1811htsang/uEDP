@@ -21,51 +21,101 @@ logic_flow:
   # --- TASK USR ---
   - task: KID_TASK_USR
     tsm:
-      initial: STATE_USR_IDLE
-      states:
+      tstates:
         - id: STATE_USR_IDLE
-          transitions:
-            - when: KID_SIG_USR_START
-              go_to: STATE_USR_WAITING
-              steps:
-                - action: post_msg
-                  to: KID_TASK_A
-                  sig: KID_SIG_USR_START
+          trans:
+            - sig: KID_SIG_USR_START
+              goto: STATE_USR_WAITING
+          on_ntry:
+            steps:
+              - action: log()
+                msg: "Process Started."
+              - action: sys_start()
+                to: KID_TASK_A
+                sig: KID_SIG_USR_START
+          on_active:
+            steps:
+              - action: log()
+                msg: "Process is running..."
+          on_exit:
+            steps:
+              - action: log()
+                msg: "Process is exiting..."
         - id: STATE_USR_WAITING
-          transitions:
-            - when: KID_SIG_USR_STOP
-              go_to: STATE_USR_IDLE
-              steps:
-                - action: log
-                  msg: "Process Terminated."
+          trans:
+            - sig: KID_SIG_USR_STOP
+              goto: STATE_USR_IDLE
+          on_ntry:
+            steps:
+              - action: log()
+                msg: "Waiting for Task A and Task B to complete..."
+          on_active:
+            steps:
+              - action: log()
+                msg: "Waiting for Task A and Task B to complete..."
+          on_exit:
+            steps:
+              - action: log()
+                msg: "Process is stopping..."
 
   # --- TASK A (Xử lý trạng thái thông minh) ---
   - task: KID_TASK_A
     tsm:
-      initial: STATE_A_IDLE
-      states:
+      tstates:
         - id: STATE_A_IDLE
-          transitions:
-            - when: KID_SIG_USR_START
-              go_to: STATE_A_WAIT_B
-              steps:
-                - action: post_msg
-                  to: KID_TASK_B
-                  sig: KID_SIG_0x12
+          trans:
+            - sig: KID_SIG_USR_START
+              goto: STATE_A_WAIT_B
+          on_ntry:
+            steps:
+              - action: log()
+                msg: "A: Received USR_START, start for post msg to B..."
+          on_active:
+            steps:
+              - action: log()
+                msg: "A: Active, waiting for B's response..."
+              - action: post_msg()
+                to: KID_TASK_B
+                sig: KID_SIG_0x12
+          on_exit:
+            steps:
+              - action: log()
+                msg: "A: Exiting idle state."
                   
         - id: STATE_A_WAIT_B
-          transitions:
-            - when: KID_SIG_0x34
-              go_to: STAY # Vẫn ở trạng thái chờ B nhưng ghi log
-              steps:
-                - action: log
-                  msg: "A: Received 0x34, still waiting for 0xFF..."
-            - when: KID_SIG_0xFF
-              go_to: STATE_A_IDLE # Xong việc, quay về Idle
-              steps:
-                - action: post_msg
-                  to: KID_TASK_B
-                  sig: KID_SIG_0xAA
+          trans:
+            - sig: KID_SIG_0x34
+              goto: STAY # Vẫn ở trạng thái chờ B nhưng ghi log
+              on_ntry:
+                steps:
+                  - action: log()
+                    msg: "A: Entry STATE_A_WAIT_B, waiting for 0xFF..."
+              on_active:
+                steps:
+                  - action: log
+                    msg: "A: Received 0x34, still waiting for 0xFF..."
+              on_exit:
+                steps:
+                  - action: log
+                    msg: "A: Exiting STATE_A_WAIT_B."
+            - sig: KID_SIG_0xFF
+              goto: STATE_A_IDLE # Xong việc, quay về Idle
+              on_ntry:
+                steps:
+                  - action: log()
+                    msg: "A: Entry STATE_A_WAIT_B, received 0xFF, going back to IDLE."
+              on_active:
+                steps:
+                  - action: post_msg()
+                    to: KID_TASK_B
+                    sig: KID_SIG_0xAA
+              on_exit:
+                steps:
+                  - action: log
+                    msg: "A: Exiting STATE_A_WAIT_B, going back to IDLE."
+    inputs:
+      - signal: KID_SIG_DATA
+        filter: RULE_TEMP_RANGE # Liên kết với bộ lọc vùng
     ssi_binding: POLICY_SENSOR_STREAMS
 
   # --- TASK B ---
@@ -75,8 +125,8 @@ logic_flow:
       states:
         - id: STATE_B_IDLE
           transitions:
-            - when: KID_SIG_0x12
-              go_to: STATE_B_BUSY
+            - sig: KID_SIG_0x12
+              goto: STATE_B_BUSY
               steps:
                 - action: post_msg
                   to: KID_TASK_A
@@ -87,8 +137,8 @@ logic_flow:
                   
         - id: STATE_B_BUSY
           transitions:
-            - when: KID_SIG_0xAA
-              go_to: STATE_B_IDLE
+            - sig: KID_SIG_0xAA
+              goto: STATE_B_IDLE
               steps:
                 - action: post_msg
                   to: KID_TASK_USR
