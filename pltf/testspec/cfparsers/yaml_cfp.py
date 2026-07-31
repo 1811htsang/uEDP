@@ -9,5 +9,5 @@ pp = PrettyPrinter(
   depth=None,    # Limit nesting depth (None = no limit)
   sort_dicts=False  # Sort dictionary keys alphabetically
 )
-print("\nTask USR info:")
-pp.pprint(data['applg'][2])
+print("\nTask A info:")
+pp.pprint(data['applg'][1])
