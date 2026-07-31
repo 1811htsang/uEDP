@@ -125,6 +125,8 @@
 - [x] Triển khai thiết kế lên Docker.
 - [x] Bổ sung triển khai thiết kế với Docker Compose để tự động build, chỉ định services, containers và các thông số môi trường cần thiết cho việc triển khai và kiểm thử lõi μEDP trên các nền tảng khác nhau một cách dễ dàng và nhất quán.
 - [x] Bổ sung tài liệu mô tả thiết kế kiến trúc (ver eng) để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
+- [x] Kiểm tra và đánh giá thiết kế syntax YAML của PLD/μE-LS cho Task và HSMC để đảm bảo rằng cú pháp được thiết kế một cách hợp lý, dễ đọc và dễ hiểu, đồng thời hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách hiệu quả.
+- [ ] Thiết kế syntax cho SII, PPLP, APE, OCE và triển khai cfparsers cho YAML
 - [ ] Triển khai tài liệu thiết kế các tính năng từ KwDI sang PLTF để hỗ trợ việc phát triển và kiểm thử các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn.
 - [ ] Bổ sung thiết kế PLD (Parse-able Logic Descriptor) với YAML để hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả logic này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Kiểm tra bổ sung API ngược để cho phép Kconfig output có thể dùng cho PLD và ngược lại.
