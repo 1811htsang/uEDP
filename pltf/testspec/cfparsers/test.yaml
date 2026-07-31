@@ -1,24 +1,10 @@
-# hsmc_logic.yaml
-project: "PingPong_State-Based"
+# test.yaml
+project: "uEDP"
 
-ssi_policies:
-  - id: POLICY_SENSOR_STREAMS
-    allow_from: [KID_TASK_SENSOR_A, KID_TASK_SENSOR_B]
-    signals: [KID_SIG_DATA, KID_SIG_STATUS]
-sif_rules:
-  - id: RULE_TEMP_RANGE
-    check: RANGE
-    min: -40
-    max: 125
-    on_fail: LOG_AND_DROP # Hành động khi vi phạm
-  - id: RULE_HUMIDITY_RANGE
-    check: RANGE
-    min: 0
-    max: 100
-    on_fail: LOG_AND_DROP # Hành động khi vi phạm
-
-logic_flow:
-  # --- TASK USR ---
+applg:
+  # ==========================================
+  # 1. TASK USR: QUẢN LÝ KHỞI CHẠY HỆ THỐNG (TSM)
+  # ==========================================
   - task: KID_TASK_USR
     tsm:
       tstates:
@@ -26,39 +12,24 @@ logic_flow:
           trans:
             - sig: KID_SIG_USR_START
               goto: STATE_USR_WAITING
-          on_ntry:
+
+        - id: STATE_USR_WAITING
+          on_ntry: # Khi vừa vào trạng thái chờ, kích hoạt Task A
             steps:
-              - action: log()
-                msg: "Process Started."
-              - action: sys_start()
+              - action: post_msg
                 to: KID_TASK_A
                 sig: KID_SIG_USR_START
-          on_active:
-            steps:
-              - action: log()
-                msg: "Process is running..."
-          on_exit:
-            steps:
-              - action: log()
-                msg: "Process is exiting..."
-        - id: STATE_USR_WAITING
           trans:
             - sig: KID_SIG_USR_STOP
               goto: STATE_USR_IDLE
-          on_ntry:
-            steps:
-              - action: log()
-                msg: "Waiting for Task A and Task B to complete..."
-          on_active:
-            steps:
-              - action: log()
-                msg: "Waiting for Task A and Task B to complete..."
           on_exit:
             steps:
-              - action: log()
-                msg: "Process is stopping..."
+              - action: log
+                data: "System Task USR: Sequence Finished."
 
-  # --- TASK A (Xử lý trạng thái thông minh) ---
+  # ==========================================
+  # 2. TASK A: ĐIỀU PHỐI TRUNG GIAN (TSM)
+  # ==========================================
   - task: KID_TASK_A
     tsm:
       tstates:
@@ -66,85 +37,51 @@ logic_flow:
           trans:
             - sig: KID_SIG_USR_START
               goto: STATE_A_WAIT_B
-          on_ntry:
+
+        - id: STATE_A_WAIT_B
+          on_ntry: # Gửi tín hiệu 0x12 cho B ngay khi vào trạng thái
             steps:
-              - action: log()
-                msg: "A: Received USR_START, start for post msg to B..."
-          on_active:
-            steps:
-              - action: log()
-                msg: "A: Active, waiting for B's response..."
-              - action: post_msg()
+              - action: post_msg
                 to: KID_TASK_B
                 sig: KID_SIG_0x12
-          on_exit:
-            steps:
-              - action: log()
-                msg: "A: Exiting idle state."
-                  
-        - id: STATE_A_WAIT_B
           trans:
             - sig: KID_SIG_0x34
-              goto: STAY # Vẫn ở trạng thái chờ B nhưng ghi log
-              on_ntry:
-                steps:
-                  - action: log()
-                    msg: "A: Entry STATE_A_WAIT_B, waiting for 0xFF..."
-              on_active:
-                steps:
-                  - action: log
-                    msg: "A: Received 0x34, still waiting for 0xFF..."
-              on_exit:
-                steps:
-                  - action: log
-                    msg: "A: Exiting STATE_A_WAIT_B."
+              goto: STATE_A_WAIT_B # Stay: Tự bỏ qua bằng cách giữ nguyên trạng thái
             - sig: KID_SIG_0xFF
-              goto: STATE_A_IDLE # Xong việc, quay về Idle
-              on_ntry:
-                steps:
-                  - action: log()
-                    msg: "A: Entry STATE_A_WAIT_B, received 0xFF, going back to IDLE."
-              on_active:
-                steps:
-                  - action: post_msg()
-                    to: KID_TASK_B
-                    sig: KID_SIG_0xAA
-              on_exit:
-                steps:
-                  - action: log
-                    msg: "A: Exiting STATE_A_WAIT_B, going back to IDLE."
-    inputs:
-      - signal: KID_SIG_DATA
-        filter: RULE_TEMP_RANGE # Liên kết với bộ lọc vùng
-    ssi_binding: POLICY_SENSOR_STREAMS
+              goto: STATE_A_IDLE
+          on_active: # Logging định kỳ nếu cần thiết
+            act:
+              action: log
+              data: "Task A is waiting for B..."
+          on_exit: # Khi thoát khỏi trạng thái chờ (do nhận 0xFF), gửi 0xAA cho B
+            steps:
+              - action: post_msg
+                to: KID_TASK_B
+                sig: KID_SIG_0xAA
 
-  # --- TASK B ---
+  # ==========================================
+  # 3. TASK B: XỬ LÝ PHẢN HỒI CHI TIẾT (FSM)
+  # ==========================================
   - task: KID_TASK_B
-    tsm:
-      initial: STATE_B_IDLE
-      states:
+    fsm:
+      fstates:
         - id: STATE_B_IDLE
-          transitions:
+          on_recv:
             - sig: KID_SIG_0x12
               goto: STATE_B_BUSY
-              steps:
+              steps: # Multi-step: Gửi đồng thời 0x34 và 0xFF cho A
                 - action: post_msg
                   to: KID_TASK_A
                   sig: KID_SIG_0x34
                 - action: post_msg
                   to: KID_TASK_A
                   sig: KID_SIG_0xFF
-                  
+
         - id: STATE_B_BUSY
-          transitions:
+          on_recv:
             - sig: KID_SIG_0xAA
               goto: STATE_B_IDLE
-              steps:
-                - action: post_msg
-                  to: KID_TASK_USR
-                  sig: KID_SIG_USR_STOP
-    inputs:
-      - signal: KID_SIG_TEMP
-        filter: RULE_TEMP_RANGE # Liên kết với bộ lọc vùng
-      - signal: KID_SIG_HUMIDITY
-        filter: RULE_HUMIDITY_RANGE # Liên kết với bộ lọc vùng
+              act: # Single-step: Gửi tín hiệu STOP kết thúc hệ thống
+                action: post_msg
+                to: KID_TASK_USR
+                sig: KID_SIG_USR_STOP
