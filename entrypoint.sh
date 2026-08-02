@@ -20,7 +20,7 @@ echo "[INFO] Running as uedp_user (UID: $USER_ID)"
 echo "[ENTRY] call menuconfig"
 python uedp.py menuconfig
 echo "[ENTRY] call testspec.generator"
-python pltf/testspec/generators/tsgen.py
+python -m pltf.testspec.generators.tsgen
 echo -e "[DONE]"
 echo -e "You can:"
 echo -e "\t[cd /uedp-test] for PLTF development"

@@ -1,18 +1,10 @@
-# [1] Add lib
 import os
-import sys
-import pprint
-
-from jinja2 import Template, Environment, FileSystemLoader
 from datetime import datetime
 
-# [2] Config specifier
+# [1] Config specifier
 current_dir = os.path.dirname("uEDP")
 config_dir = os.path.join(current_dir, ".config")
 arch_dir = "sources/pal/arch"
-
-# [3] Python inserter
-sys.path.insert(0, config_dir)
 
 counters = {"norm": 0xE6, "poll": 0xD4, "sig": 0x01}
 
@@ -123,5 +115,5 @@ def parse_config(config_path):
   return context
 
 # For debug
-pprint.pprint(parse_config(config_dir))
-print("\n\n")
+# pprint.pprint(parse_config(config_dir))
+# print("\n\n")
