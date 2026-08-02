@@ -184,14 +184,80 @@ Về tổng quát, Task Norm gồm các khai báo như sau:
 Ví dụ về một Task Norm với TSM:
 
 ```yaml
+- tnorm: KID_TASK_USR
+  tsm:
+  - id: STATE_USR_IDLE
+    trans:
+    - sig: KID_SIG_USR_START
+      goto: STATE_USR_WAITING
+    on_ntry: NULL
+    on_actv: NULL
+    on_exit: NULL
+  - id: STATE_USR_WAITING
+    trans:
+    - sig: KID_SIG_USR_STOP
+      goto: STATE_USR_IDLE
+    on_ntry: # Khi vừa vào trạng thái chờ, kích hoạt Task A
+      steps:
+      - actv: post_msg
+        to: KID_TASK_A
+        sig: KID_SIG_USR_START
+        data: NULL
+    on_actv: # Khi active, gửi log thông báo đang chờ tín hiệu STOP
+      steps:
+      - actv: log
+        to: KID_TASK_USR
+        sig: KID_SIG_LOG
+        data: "System Task USR: Waiting for STOP signal..."
+    on_exit: # Khi rời khỏi trạng thái chờ, gửi log thông báo kết thúc
+      steps:
+      - actv: log
+        to: KID_TASK_USR
+        sig: KID_SIG_LOG
+        data: "System Task USR: Sequence Finished."
 ```
 
 Ví dụ về một Task Norm với FSM:
 
 ```yaml
+- tnorm: KID_TASK_B
+  fsm:
+  - id: STATE_B_IDLE
+    on_recv:
+    - sig: KID_SIG_0x12
+      goto: STATE_B_BUSY
+      steps: # Multi-step: Gửi đồng thời 0x34 và 0xFF cho A
+      - actv: post_msg
+        to: KID_TASK_A
+        sig: KID_SIG_0x34
+        data: NULL
+      - actv: post_msg
+        to: KID_TASK_A
+        sig: KID_SIG_0xFF
+        data: NULL
+  - id: STATE_B_BUSY
+    on_recv:
+    - sig: KID_SIG_0xAA
+      goto: STATE_B_IDLE
+      act: # Single-step: Gửi tín hiệu STOP kết thúc hệ thống
+        actv: post_msg
+        to: KID_TASK_USR
+        sig: KID_SIG_USR_STOP
+```
+
+Đối với task Poll, cấu trúc khai báo sẽ đơn giản hơn, chủ yếu tập trung vào việc định nghĩa các hành vi kiểm tra định kỳ.
+
+Có thể định nghĩa một task Poll như sau:
+
+```yaml
+- tpoll: KID_TASK_POLL
+  steps:
+  - actv: poll_led
+    ???
+
 ```
 
 <!-- 
   Comment:
-    Tạm thời chuyển sang triển khai thử cấu trúc khai báo của task.
+    Bổ sung thêm tag cho tpoll
  -->
