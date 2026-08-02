@@ -2,7 +2,8 @@
 project: "uEDP"
 
 applg:
-  - task: KID_TASK_USR
+  norm:
+  - tnorm: KID_TASK_USR
     tsm:
     - id: STATE_USR_IDLE
       trans:
@@ -33,7 +34,7 @@ applg:
           to: KID_TASK_USR
           sig: KID_SIG_LOG
           data: "System Task USR: Sequence Finished."
-  - task: KID_TASK_A
+  - tnorm: KID_TASK_A
     tsm:
     - id: STATE_A_IDLE
       trans:
@@ -66,7 +67,7 @@ applg:
             to: KID_TASK_B
             sig: KID_SIG_0xAA
             data: NULL
-  - task: KID_TASK_B
+  - tnorm: KID_TASK_B
     fsm:
     - id: STATE_B_IDLE
       on_recv:
@@ -89,3 +90,8 @@ applg:
           actv: post_msg
           to: KID_TASK_USR
           sig: KID_SIG_USR_STOP
+  poll:
+  isr:
+  escal:
+  logpip:
+  outcx:
