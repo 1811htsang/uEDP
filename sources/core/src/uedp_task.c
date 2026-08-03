@@ -1,9 +1,9 @@
 ﻿/**
  * @file uedp_task.c
- * @author Shang Huang
+ * @author Hai Minh
  * @brief Implementation of task management for UEDP system
  * @version 0.1
- * @date 2026-04-16
+ * @date 2026-08-04
  * @copyright MIT License
  */
 #include <string.h>
@@ -11,6 +11,7 @@
 #include "uedp_task.h"
 #include "uedp_msg.h"
 #include "fifo.h"
+#include "uedp_fcr.h"
 
 /**
  * @brief Khai báo các biến toàn cục quản lý thông tin của các tác vụ trong hệ thống UEDP
@@ -198,13 +199,13 @@ void internal_uedp_task_norm_put_to_queue(task_id_t tid, uedp_msg_t* msg) {
   // Kiểm tra xem tác vụ có tồn tại trong bảng tác vụ hay không
   task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
   if (task == NULL) {
-    // Nếu tác vụ không tồn tại, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
+    UEDP_FCR_RAISE(UEDP_FCR_TASK_INVALID_ID); // tid không khớp bất kỳ task nào trong bảng
     return;
   }
 
   // Kiểm tra fifo của tác vụ đã được khởi tạo chưa
   if (!fifo_isinit(&task->msg_queue)) {
-    // Nếu fifo chưa được khởi tạo, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "message queue của task chưa được khởi tạo (fifo_isinit == false)");
     return;
   }
 
@@ -212,7 +213,9 @@ void internal_uedp_task_norm_put_to_queue(task_id_t tid, uedp_msg_t* msg) {
   pal_enter_critical();
 
   // Đưa tin nhắn vào hàng đợi của tác vụ
-  fifo_put(&task->msg_queue, (uedp_msg_t*)(&msg));
+  if (fifo_put(&task->msg_queue, (uedp_msg_t*)(&msg)) == RET_FIFO_NG) {
+    UEDP_FCR_RAISE(UEDP_FCR_TASK_QUEUE_FULL); // Hàng đợi tin nhắn của task đã đầy, msg bị mất
+  }
 
   // Exit critical section
   pal_exit_critical();
