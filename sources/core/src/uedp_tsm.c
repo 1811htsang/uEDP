@@ -1,15 +1,16 @@
 ﻿/**
  * @file uedp_tsm.c
- * @author Shang Huang
+ * @author Hai Minh
  * @brief Implementation of Transition State Machine (TSM) management for UEDP system
  * @version 0.1
- * @date 2026-04-17
+ * @date 2026-08-04
  * 
  * @copyright MIT License
  * 
  */
 #include "uedp_tsm.h"
 #include "uedp_msg.h"
+#include "uedp_fcr.h"
 
 void uedp_tsm_init(
 	uedp_tsm_t* tsm_table, const tsm_state_desc_t* state_des_table, 
@@ -101,6 +102,9 @@ void uedp_tsm_dispatch(uedp_tsm_t* tsm_table, uedp_msg_t* msg) {
 				return; // Dispatch chỉ thực thi 1 lần
 			}
 		}
+
+		// Duyệt hết bảng transitions của state hiện tại mà không tìm thấy sig phù hợp
+		UEDP_FCR_RAISE(UEDP_FCR_SM_INVALID_TRANS);
 	}
 }
 
