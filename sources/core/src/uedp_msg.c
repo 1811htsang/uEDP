@@ -1,9 +1,9 @@
 ﻿/**
  * @file uedp_msg.c
- * @author Shang Huang
+ * @author Hai Minh
  * @brief Implementation of message management for UEDP system
  * @version 0.1
- * @date 2026-04-16
+ * @date 2026-08-04
  * 
  * @copyright MIT License
  * 
@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include "uedp_core.h"
 #include "uedp_msg.h"
+#include "uedp_fcr.h"
 #include "pal_memrp.h"
 #include "fifo.h"
 
@@ -128,6 +129,7 @@ uedp_msg_t* uedp_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 	uedp_msg_pool_header_t* pool_header = internal_uedp_msg_find_best_pool(size);
 
 	if (pool_header == NULL) {
+		UEDP_FCR_RAISE(UEDP_FCR_MSG_POOL_EXHAUSTED); // Không tìm được Pool phù hợp cho kích thước yêu cầu -> coi như hết chỗ
 		return NULL;
 	}
 
@@ -271,7 +273,12 @@ void internal_uedp_msg_pool_init(
  * @param header Chứa thông tin quản lý của Pool
  */
 uedp_msg_t* internal_uedp_msg_pool_pop(uedp_msg_pool_header_t* header) {
-	if (!header || !header->free_list) {
+	if (!header) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "internal_uedp_msg_pool_pop: header con trỏ NULL");
+		return NULL;
+	}
+	if (!header->free_list) {
+		UEDP_FCR_RAISE(UEDP_FCR_MSG_POOL_EXHAUSTED); // free_list rỗng -> Pool đã hết chỗ trống
 		return NULL; // Pool trống hoặc không hợp lệ
 	}
 
