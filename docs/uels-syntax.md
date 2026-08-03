@@ -149,7 +149,7 @@ Lưu ý rằng cú pháp này dùng để làm ví dụ mẫu, không phải là
 
 Cú pháp μE-LS được thiết kế để mô tả các cấu trúc logic trong hệ thống μE(DP)/-OS, bao gồm các khối như Task, State Machine (TSM), Signal, Policy, và các hành động (Action Snippets). Các cấu hình như Pool, Queue và Timer được cấu hình tự động bởi Kconfig + pre-PLTF + Jinja2, do đó không cần khai báo trong μE-LS. Tuy nhiên, người dùng có thể tùy chỉnh các thông số này thông qua Kconfig.
 
-### Tác vụ với tính năng HSMC
+### Task - Tác vụ
 
 Tác vụ (Task) cùng với tin nhắn (Message) và tín hiệu (Signal) là các khối cơ bản trong μE(DP)/-OS. Mỗi Task có thể được định nghĩa với các thuộc tính như ID, Priority, Stack Size, và các hành vi thông qua TSM/FSM. Ngoài ra ở các phiên bản mới, Task cũng sẽ được bổ sung các cơ chế đặc biệt như SSI, SIF, ... để hỗ trợ các tính năng OS nâng cao.
 
@@ -247,15 +247,41 @@ Ví dụ về một Task Norm với FSM:
 
 Đối với task Poll, cấu trúc khai báo sẽ đơn giản hơn, chủ yếu tập trung vào việc định nghĩa các hành vi kiểm tra định kỳ.
 
-Có thể định nghĩa một task Poll như sau:
+- `tpoll`: ID của Task POLL (ví dụ: `KID_TASK_POLL`).
+- `steps`: Danh sách các hành động cần thực hiện trong mỗi chu kỳ poll.
+  - `actv`: Hành động cụ thể (ví dụ: `poll_led`, `poll_sensor`, ...).
+    - `to`: Đích đến của hành động (nếu có).
+    - `sig`: Tín hiệu gửi đi (nếu có).
+    - `data`: Dữ liệu gửi kèm (nếu có).
+
+Do API hiện tại cho phép gửi message mà không cần xét chủ thể nên phải tính thêm phần to/sig/data cho các bước poll. Nếu không có thì để NULL.
+
+1 ví dụ về một Task Poll:
 
 ```yaml
 - tpoll: KID_TASK_POLL
   steps:
-  - actv: poll_led
-    ???
-
+  - actv: poll_led 
+    to: NULL
+    sig: NULL
+    data: NULL
 ```
+
+### ISR - Dịch vụ ngắt
+
+Dịch vụ ngắt là một khối logic quan trọng trong hệ thống μE(DP)/-OS, cho phép xử lý các sự kiện ngắt từ phần cứng hoặc phần mềm. Trong thiết kế môi trường phần cứng đơn nhân, ISR và Task là 2 khối logic có tính tranh chấp cao, do đó cần được thiết kế cẩn thận để tránh các vấn đề về đồng bộ hóa và hiệu suất.
+
+Ở API thủ công, ISR được thiết kế API riêng biệt nhằm đảm bảo xử lý ngắn gọn nhưng vẫn đáp ứng logic của Task.
+
+Cấu trúc khai báo ISR trong μE-LS bao gồm các thành phần sau:
+
+- `isr`: ID của ISR (ví dụ: `KID_ISR_TIMER`).
+  - `actv`: Hành động cụ thể mà ISR thực hiện khi được kích hoạt (ví dụ: `post_msg`, `timer_set`, ...).
+    - `to`: Đích đến của hành động (ví dụ: Task nhận tin nhắn).
+    - `sig`: Tín hiệu gửi đi (nếu hành động là gửi tin nhắn).
+    - `data`: Dữ liệu gửi kèm (nếu hành động là gửi tin nhắn).
+
+Syntax này đảm bảo sự ràng buộc ISR chỉ có một hành động duy nhất, giúp giảm thiểu thời gian xử lý ngắt và tránh các vấn đề về đồng bộ hóa với các Task khác.
 
 <!-- 
   Comment:
