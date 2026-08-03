@@ -158,7 +158,7 @@ Trong thiết kế, tác vụ được chia thành 2 loại là task Norm (tnorm
 Về tổng quát, Task Norm gồm các khai báo như sau:
 
 - `tnorm`: ID của Task NORM (ví dụ: `KID_TASK_SENSOR`).
-- `tsm`: Định nghĩa trạng thái thông minh (State Machine) của Task.
+- `tsm`: Định nghĩa trạng thái thông minh (State Machine) của Task. Cho phép khai báo `tsmobj` name đại diện để quản lý và assign vào Task. TSM cho phép Task có nhiều trạng thái và chuyển đổi giữa các trạng thái dựa trên tín hiệu nhận được.
   - `id`: ID của trạng thái (tức tên trạng thái).
   - `trans`: Các chuyển đổi từ trạng thái này sang trạng thái khác dựa trên tín hiệu nhận được.
     - `sig`: Tín hiệu kích hoạt chuyển đổi trạng thái kế tiếp.
@@ -173,7 +173,7 @@ Về tổng quát, Task Norm gồm các khai báo như sau:
     - Tương tự như `on_entry`, nhưng được thực hiện khi Task rời khỏi trạng thái này.
   - `on_actv`: Các hành động thực hiện khi Task đang ở trạng thái này. Dùng cho việc kiểm tra điều kiện, xử lý dữ liệu, gửi tin nhắn định kỳ, ...
     - Tương tự như `on_entry` và `on_exit`, nhưng được thực hiện liên tục khi Task đang ở trạng thái này.
-- `fsm`: Định nghĩa trạng thái hữu hạn (Finite State Machine) của Task. Tương tự như `tsm`, nhưng thường được sử dụng cho các Task có hành vi đơn giản hơn và cần quản lý luồng trạng thái cục bộ hơn.
+- `fsm`: Định nghĩa trạng thái hữu hạn (Finite State Machine) của Task. Tương tự như `tsm`, nhưng thường được sử dụng cho các Task có hành vi đơn giản hơn và cần quản lý luồng trạng thái cục bộ hơn. Cho phép khai báo `fsmobj` name đại diện để quản lý và assign vào Task. FSM cho phép Task có nhiều trạng thái và chuyển đổi giữa các trạng thái dựa trên tín hiệu nhận được.
   - `id`: ID của trạng thái (tức tên trạng thái).
   - `on_recv`: Chuyển đổi trạng thái dựa trên tín hiệu nhận được.
     - `sig`: Tín hiệu kích hoạt chuyển đổi trạng thái kế tiếp.
@@ -185,7 +185,7 @@ Ví dụ về một Task Norm với TSM:
 
 ```yaml
 - tnorm: KID_TASK_USR
-  tsm:
+  tsm: usr_tsm_obj
   - id: STATE_USR_IDLE
     trans:
     - sig: KID_SIG_USR_START
@@ -221,7 +221,7 @@ Ví dụ về một Task Norm với FSM:
 
 ```yaml
 - tnorm: KID_TASK_B
-  fsm:
+  fsm: fsm_b_obj
   - id: STATE_B_IDLE
     on_recv:
     - sig: KID_SIG_0x12
@@ -283,7 +283,28 @@ Cấu trúc khai báo ISR trong μE-LS bao gồm các thành phần sau:
 
 Syntax này đảm bảo sự ràng buộc ISR chỉ có một hành động duy nhất, giúp giảm thiểu thời gian xử lý ngắt và tránh các vấn đề về đồng bộ hóa với các Task khác.
 
+### APE - Lời gọi vượt quyền tạm thời
+
+APE hay S-LnF APE là cơ chế được triển khai ở phiên bản 1.1.0 và 1.1.1 để hỗ trợ tnorm có thể gọi các hàm vượt quyền tạm thời (Privilege Escalation) trong môi trường μE(DP)/-OS. Cấu trúc khai báo APE gốc đã hỗ trợ API cơ bản `uedp_task_norm_post_urgent` và `uedp_task_norm_set_urgent` để bổ sung cả dạng non=S-LnF và S-LnF.
+
+Cú pháp khai báo APE trong μE-LS được hỗ trợ chỉ dành cho tnorm nên sẽ không có phần khai báo riêng cho tpoll. Trong đó, khai báo APE của tnorm sẽ nằm ngang hàng với khai báo HSMC hoặc có thể biến thành 1 value trong `actv`.
+
+Ví dụ:
+
+```yaml
+- tnorm: KID_TASK_USR
+  tsm: usr_tsm_obj
+  - ...
+  escal: true 
+  - on_sig: SIG_CALL_URGENT
+    actv: uedp_task_norm_post_urgent
+    to: KID_TASK_A
+    sig: KID_SIG_URGENT
+    data: NULL
+```
+
 <!-- 
   Comment:
-    Bổ sung thêm tag cho tpoll
+    - Hoàn thiện APE cho tnorm, bổ sung các hành vi gọi hàm vượt quyền tạm thời.
+    - Bổ sung thiết kế nếu sử dụng dạng non-HSMC, cho phép chỉ định hành vi của tnorm với các tín hiệu tương ứng.
  -->
