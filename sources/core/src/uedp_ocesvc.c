@@ -1,9 +1,9 @@
 /**
  * @file uedp_ocesvc.c
- * @author Shang Huang
+ * @author Hai Minh
  * @brief 
  * @version 0.1
- * @date 2026-07-08
+ * @date 2026-08-04
  * @copyright Copyright (c) 2026
  */
 #include <stdint.h>
@@ -12,6 +12,7 @@
 #include "uedp_task.h"
 #include "llist.h"
 #include "uedp_ocesvc.h"
+#include "uedp_fcr.h"
 
 sta uint8_t id_counter = 0; // Biến đếm ID cho các dịch vụ OCE
 sta ocesvc_ctrl_t ocesvc_ctrl; // Bộ điều khiển dịch vụ OCE
@@ -74,6 +75,7 @@ void ocesvc_register(ocesvc_t* svc) {
 
   uint8_t allocated_id = 0U;
   if (!ocesvc_find_free_id(id_counter, &allocated_id)) {
+    UEDP_FCR_RAISE(UEDP_FCR_OCE_REGISTRY_FULL); // Không còn ID trống để đăng ký thêm service (đã dùng hết 0x00-0xFE)
     return;
   }
 
