@@ -1,13 +1,14 @@
 /**
  * @file pal_logdp.c
- * @author Shang Huang
+ * @author Hai Minh
  * @brief Implementation of the Log Dispatching service for the PAL layer in UEDP
  * @version 0.1
- * @date 2026-06-01
+ * @date 2026-08-04
  * @copyright MIT License
  */
 #include "uedp_core.h"
 #include "uedp_itnlog.h"
+#include "uedp_fcr.h"
 #include "pal_core.h"
 #include "pal_logdp.h"
 
@@ -23,9 +24,9 @@ void pal_logdp_register(logdp_output_fn output_fn) {
       break;
     }
   }
-  // Nếu bảng đã đầy, có thể thêm xử lý lỗi hoặc ghi log cảnh báo ở đây
+  // Nếu bảng đã đầy, đưa qua FCR để ghi log + xử lý theo bảng hành động (SYS_PANIC)
   if (logdp_output_fns[LOGDP_MAX_OUTPUT_FN - 1] != NULL) {
-    pal_sys_fatal(__FILE__, __LINE__, "[LOGDP] Output function table is full."); // Ghi log lỗi nếu đã đạt đến giới hạn đăng ký
+    UEDP_FCR_RAISE(UEDP_FCR_PAL_LOGDP_TABLE_FULL);
   }
 }
 
