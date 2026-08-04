@@ -1,6 +1,6 @@
 /**
  * @file uedp_timer.c
- * @author Hai Minh
+ * @author Shang Huang
  * @brief Implementation of timer management for UEDP system
  * @version 0.1
  * @date 2026-08-04
