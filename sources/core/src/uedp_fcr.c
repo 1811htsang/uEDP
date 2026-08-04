@@ -1,6 +1,6 @@
 /**
  * @file uedp_fcr.c
- * @author Shang Huang
+ * @author Hai Minh
  * @brief Implementation of Fatal Code Return (FCR) - định danh và xử lý lỗi nghiêm trọng
  * @version 0.1
  * @date 2026-08-01

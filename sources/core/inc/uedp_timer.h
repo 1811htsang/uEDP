@@ -4,9 +4,7 @@
  * @brief Timer management definitions and utilities for UEDP system
  * @version 0.1
  * @date 2026-04-18
- * 
  * @copyright MIT License
- * 
  */
 #ifndef __UEDP_TIMER_H__
 	#define __UEDP_TIMER_H__

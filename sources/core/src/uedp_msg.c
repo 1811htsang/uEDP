@@ -1,6 +1,6 @@
 ﻿/**
  * @file uedp_msg.c
- * @author Hai Minh
+ * @author Shang Huang
  * @brief Implementation of message management for UEDP system
  * @version 0.1
  * @date 2026-08-04

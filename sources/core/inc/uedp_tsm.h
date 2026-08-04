@@ -4,9 +4,7 @@
  * @brief Header file for Transition State Machine (TSM) management in UEDP system
  * @version 0.1
  * @date 2026-04-17
- * 
  * @copyright MIT License
- * 
  */
 #ifndef __UEDP_TSM_H__
 	#define __UEDP_TSM_H__

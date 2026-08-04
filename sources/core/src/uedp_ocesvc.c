@@ -1,7 +1,7 @@
 /**
  * @file uedp_ocesvc.c
- * @author Hai Minh
- * @brief 
+ * @author Shang Huang
+ * @brief Implementation of OCE Service (OCE)
  * @version 0.1
  * @date 2026-08-04
  * @copyright Copyright (c) 2026
