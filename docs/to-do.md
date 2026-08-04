@@ -117,6 +117,12 @@
 - [x] Bổ sung testing cho cơ chế OCE để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các sự kiện quan trọng một cách kịp thời và hiệu quả hơn.
 - [x] Ra mắt phiên bản 1.1.3 của lõi μEDP với đầy đủ tính năng OCE service và tài liệu hướng dẫn sử dụng.
 
+### Phiên bản 1.1.4: The 1.1.3a Release
+
+- [x] Bổ sung state machine attribute cho task norm để chỉ định máy trạng thái và hình thức quản lý directly từ task pointer selector, để hỗ trợ việc quản lý các trạng thái của task một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các task được xử lý theo đúng logic và trạng thái của chúng trong hệ thống.
+- [x] Bổ sung API tương ứng để thực hiện get/set state machine attribute cho task norm, nhằm hỗ trợ việc quản lý các trạng thái của task một cách hiệu quả và linh hoạt hơn.
+- [x] Ra mắt phiên bản 1.1.4 của lõi μEDP.
+
 ### Phiên bản 1.2.0: The Infrastructure Preparation for μE-OS
 
 - [x] Chỉnh sửa lại pyspec (Python Specifier - Bộ chỉ định tham số Python) cũ từ tính năng KwDI để đưa vào sử dụng kết hợp với PLTF.
