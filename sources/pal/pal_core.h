@@ -108,7 +108,9 @@
   /**
    * @brief Định nghĩa số lượng hàm callback tối đa có thể đăng ký để xuất dữ liệu log trong hệ thống UEDP
    */
-  #define PAL_LOGDP_MAX_OUTPUT_FN  (4u) // Số lượng hàm callback tối đa có thể đăng ký để xuất dữ liệu log
+  #ifndef LOGDP_MAX_OUTPUT_FN
+    #define LOGDP_MAX_OUTPUT_FN  (8u) // Số lượng hàm callback tối đa có thể đăng ký để xuất dữ liệu log
+  #endif
 
   /**
    * @brief Định nghĩa kiểu dữ liệu con trỏ hàm trả về void và không nhận tham số,

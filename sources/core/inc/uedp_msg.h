@@ -21,7 +21,17 @@
 	#include "uedp_core.h"
 	#include "uedp_task.h"
 
-	typedef struct pal_memrp_info_t pal_memrp_info_t; // Forward declaration để tránh include vòng
+	/**
+	 * @brief Forward declaration for task id
+	 */
+
+	typedef ui16	task_id_t; 	// ID của tác vụ
+
+	/**
+	 * @brief Forward declaration for memory pool info
+	 */
+
+	typedef struct pal_memrp_info_t pal_memrp_info_t;
 
 	/**
 	 * @brief Định nghĩa các loại Pool tin nhắn (Nội bộ Core sử dụng)
@@ -174,5 +184,12 @@
 	 *            info->max_used sẽ là số lượng tin nhắn tối đa đã từng được sử dụng trong alloc_pool, info->total sẽ là tổng số tin nhắn có thể chứa trong alloc_pool.
 	 */
 	void internal_uedp_msg_pool_get_info(uedp_msg_type_t pool_id, pal_memrp_info_t* info);
+
+	/**
+	 * @brief Thiết lập ID của tác vụ nguồn gửi tin nhắn
+	 * @param msg: Con trỏ đến tin nhắn cần thiết lập ID nguồn
+	 * @param src_task_id: ID của tác vụ nguồn gửi tin nhắn
+	 */
+	void uedp_msg_set_src_task_id(uedp_msg_t* msg, task_id_t src_task_id);
 
 #endif //__UEDP_MSG_H__

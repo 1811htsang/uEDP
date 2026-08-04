@@ -1,0 +1,13 @@
+mainmenu "μEDP Configuration"
+
+menu "Core Config"
+  source "sources/app/kconfig/core.kconfig"
+endmenu
+
+menu "PAL Config"
+  source "sources/app/kconfig/pal.kconfig"
+endmenu
+
+menu "Declaration"
+  source "sources/app/kconfig/decl.kconfig"
+endmenu

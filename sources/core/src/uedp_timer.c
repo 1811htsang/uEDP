@@ -1,9 +1,9 @@
 /**
  * @file uedp_timer.c
- * @author Shang Huang
+ * @author Hai Minh
  * @brief Implementation of timer management for UEDP system
  * @version 0.1
- * @date 2026-04-18
+ * @date 2026-08-04
  * 
  * @copyright MIT License
  * 
@@ -15,6 +15,7 @@
 #include "uedp_core.h"
 #include "uedp_timer.h"
 #include "uedp_task.h"
+#include "uedp_fcr.h"
 
 /**
  * @brief Cấu trúc quản lý toàn bộ hệ thống Timer
@@ -79,11 +80,13 @@ RETR_STAT uedp_timer_set(ui16 tid, ui8 sig, ui32 ms, uedp_timer_type_t type) {
 	}
 
 	if (timer_ctrl.active_count >= UEDP_TIMER_MAX_NODES) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_TIMER_POOL_EXHAUSTED, "đã đạt UEDP_TIMER_MAX_NODES timer đang active");
 		pal_exit_critical();
 		return STAT_BUSY; // Đã đạt đến giới hạn số lượng timer hoạt động
 	}
 
 	if (!timer_ctrl.free_list) {
+		UEDP_FCR_RAISE(UEDP_FCR_TIMER_POOL_EXHAUSTED); // Không còn nút timer nào rảnh trong Pool
 		pal_exit_critical();
 		return STAT_BUSY; // Không còn nút timer nào rảnh trong Pool
 	}

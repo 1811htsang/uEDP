@@ -31,7 +31,6 @@ uint32_t system_action_count = 0x0u;
  *            và kích thước trong app_decl.h để tránh lỗi
  *            multiple definition hoặc thiếu định nghĩa khi biên dịch
  */
-
 // Điền các khai báo tại đây
 
 /**
@@ -40,17 +39,40 @@ uint32_t system_action_count = 0x0u;
  *        Việc này giúp giảm tải bộ nhớ bằng cách không sao chép dữ liệu 
  *        mà chỉ truyền địa chỉ của biến chứa dữ liệu.
  */
-
 // Điền các khai báo tại đây
 
 /**
- * @brief Định nghĩa bảng task 
+ * @brief Định nghĩa bảng task NORM
  */
-
 // Điền các khai báo tại đây
 
 /**
- * @brief Các khai báo khác (nếu có)
+ * @brief Định nghĩa bảng task POLL
+ */
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa bảng chuyển trạng thái cho state (trans_desc)
+ */
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa bảng TSM (state_desc)
+ */
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa TSM cho tác vụ (obj)
+ */
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa FSM cho tác vụ (obj)
+ */
+// Điền các khai báo tại đây
+
+/**
+ * @brief Các khai báo tham số khác (nếu có)
  */
 
 // Điền các khai báo tại đây
@@ -62,25 +84,37 @@ uint32_t system_action_count = 0x0u;
 // Điền các khai báo tại đây
 
 /**
- * @brief Định nghĩa handler cho task USR, task A và task B
+ * @brief Định nghĩa handler cho task norm
  */
 
 // Điền các khai báo tại đây
 
 /**
- * @brief Định nghĩa các hàm on-entry/exit cho các trạng thái của TSM (nếu có)
+ * @brief Định nghĩa handler cho task poll
  */
 
 // Điền các khai báo tại đây
 
 /**
- * @brief Định nghĩa các state handler cho FSM của task USR, task A và task B (nếu có)
+ * @brief Định nghĩa hàm on-entry/exit cho các trạng thái của TSM
  */
 
 // Điền các khai báo tại đây
 
 /**
- * @brief Định nghĩa các hàm khác (nếu có)
+ * @brief Định nghĩa hàm on-state cho các trạng thái của TSM
+ */
+
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa các state handler cho FSM
+ */
+
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa hàm khác
  */
 
 // Điền các khai báo tại đây

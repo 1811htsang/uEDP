@@ -42,6 +42,7 @@
   #define ITNLOG_TAG_FSM  "FSM"
   #define ITNLOG_TAG_TSM  "TSM"
   #define ITNLOG_TAG_TIM  "TIM"
+  #define ITNLOG_TAG_FCR  "FCR"
 
   /**
    * @brief Định nghĩa cấu trúc log

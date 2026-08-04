@@ -1,0 +1,97 @@
+# test.yaml
+project: "uEDP"
+
+applg:
+  norm:
+  - tnorm: KID_TASK_USR
+    tsm:
+    - id: STATE_USR_IDLE
+      trans:
+      - sig: KID_SIG_USR_START
+        goto: STATE_USR_WAITING
+      on_ntry: NULL
+      on_actv: NULL
+      on_exit: NULL
+    - id: STATE_USR_WAITING
+      trans:
+      - sig: KID_SIG_USR_STOP
+        goto: STATE_USR_IDLE
+      on_ntry: # Khi vừa vào trạng thái chờ, kích hoạt Task A
+        steps:
+        - actv: post_msg
+          to: KID_TASK_A
+          sig: KID_SIG_USR_START
+          data: NULL
+      on_actv:
+        steps:
+        - actv: log
+          to: KID_TASK_USR
+          sig: KID_SIG_LOG
+          data: "System Task USR: Waiting for STOP signal..."
+      on_exit:
+        steps:
+        - actv: log
+          to: KID_TASK_USR
+          sig: KID_SIG_LOG
+          data: "System Task USR: Sequence Finished."
+  - tnorm: KID_TASK_A
+    tsm:
+    - id: STATE_A_IDLE
+      trans:
+      - sig: KID_SIG_USR_START
+        goto: STATE_A_WAIT_B
+      on_ntry: NULL
+      on_actv: NULL
+      on_exit: NULL
+    - id: STATE_A_WAIT_B
+      trans:
+      - sig: KID_SIG_0x34
+        goto: STATE_A_WAIT_B # Stay: Tự bỏ qua bằng cách giữ nguyên trạng thái
+      - sig: KID_SIG_0xFF
+        goto: STATE_A_IDLE
+      on_ntry: # Gửi tín hiệu 0x12 cho B ngay khi vào trạng thái
+        steps:
+        - actv: post_msg
+          to: KID_TASK_B
+          sig: KID_SIG_0x12
+          data: NULL
+      on_actv: # Logging định kỳ nếu cần thiết
+        act: # Single-step: Ghi log thông báo đang chờ B
+          actv: log
+          to: KID_TASK_A
+          sig: KID_SIG_LOG
+          data: "Task A is waiting for B..."
+      on_exit: # Khi thoát khỏi trạng thái chờ (do nhận 0xFF), gửi 0xAA cho B
+        steps:
+          - actv: post_msg
+            to: KID_TASK_B
+            sig: KID_SIG_0xAA
+            data: NULL
+  - tnorm: KID_TASK_B
+    fsm:
+    - id: STATE_B_IDLE
+      on_recv:
+      - sig: KID_SIG_0x12
+        goto: STATE_B_BUSY
+        steps: # Multi-step: Gửi đồng thời 0x34 và 0xFF cho A
+        - actv: post_msg
+          to: KID_TASK_A
+          sig: KID_SIG_0x34
+          data: NULL
+        - actv: post_msg
+          to: KID_TASK_A
+          sig: KID_SIG_0xFF
+          data: NULL
+    - id: STATE_B_BUSY
+      on_recv:
+      - sig: KID_SIG_0xAA
+        goto: STATE_B_IDLE
+        act: # Single-step: Gửi tín hiệu STOP kết thúc hệ thống
+          actv: post_msg
+          to: KID_TASK_USR
+          sig: KID_SIG_USR_STOP
+  poll:
+  isr:
+  escal:
+  logpip:
+  outcx:

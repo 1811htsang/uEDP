@@ -16,6 +16,17 @@
 	// Điền các thư viện cần thiết cho ứng dụng tại đây
 
 	/**
+	 * @brief Bổ sung các forward declaration
+	 */
+
+	typedef struct task_norm_t task_norm_t;
+	typedef struct task_poll_t task_poll_t;
+	typedef struct tsm_trans_t tsm_trans_t;
+	typedef struct tsm_state_desc_t tsm_state_desc_t;
+	typedef struct uedp_tsm_t uedp_tsm_t;
+	typedef struct uedp_fsm_t uedp_fsm_t;
+
+	/**
 	 * @brief Khai báo danh sách tác vụ và tác vụ polling của ứng dụng
 	 * @attention Với n tác vụ thì có n entry trong bảng tác vụ và tác vụ polling
 	 * @attention Lưu ý rằng UEDP_TASK_NORM_USR_ID và UEDP_TASK_NORM_EOT_ID là 2 ID đặc biệt bắt buộc phải có
@@ -34,6 +45,7 @@
 	 * 	{ UEDP_TASK_POLL_MEMRP_ID , 0, task_poll_memrp_handler },
 	 * 	{ UEDP_TASK_POLL_EOT_ID, 0, NULL }
 	 * };
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
 
 	extern task_norm_t app_task_table[];
@@ -50,9 +62,12 @@
 	 * { SIG_USR_STOP,      STATE_BLINK_IDLE,      NULL },
 	 * { SIG_USR_START,     UEDP_TSM_STATE_STAY, NULL } // Đã ACTIVE rồi thì START đứng yên
 	 * };
+	 * @note Ở đây chỉ extern tên gọi, không cần triển khai nội dung, 
+	 * người dùng tự triển khai nội dung ở app.c
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
-
-	extern const tsm_trans_t state_trans_table[];
+	// KCONFIG_APPCFG_STATE_TRANS_START
+	// KCONFIG_APPCFG_STATE_TRANS_END
 
 	/**
 	 * @brief Định nghĩa bảng TSM cho task Blinker
@@ -64,9 +79,12 @@
 	 * 	{ STATE_BLINK_IDLE,   fn_on_idle_entry,   NULL,              blink_idle_trans,   1 },
 	 * 	{ STATE_BLINK_ACTIVE, fn_on_active_entry, fn_on_active_exit, blink_active_trans, 2 }
 	 * };
+	 * @note Ở đây chỉ extern tên gọi, không cần triển khai nội dung, 
+	 * người dùng tự triển khai nội dung ở app.c
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
-
-	extern const tsm_state_desc_t tsm_table[];
+	// KCONFIG_APPCFG_TSM_TABLE_START
+	// KCONFIG_APPCFG_TSM_TABLE_END
 
 	/**
 	 * @brief Định nghĩa TSM cho tác vụ
@@ -74,9 +92,10 @@
 	 * 						Tuy nhiên mỗi task không nhất thiết phải sử dụng TSM
 	 * @note Người dùng tự định nghĩa TSM, có thể xóa dòng 71 và thay thế bằng
 	 * 			 triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM cho tác vụ
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
-
-	extern uedp_tsm_t app_tsm;
+	// KCONFIG_APPCFG_TSM_OJB_START
+	// KCONFIG_APPCFG_TSM_OJB_END
 
 	/**
 	 * @brief Định nghĩa FSM cho tác vụ
@@ -84,9 +103,10 @@
 	 * 						Tuy nhiên mỗi task không nhất thiết phải sử dụng FSM
 	 * @note Người dùng tự định nghĩa FSM, có thể xóa dòng 81 và thay thế bằng
 	 * 			 triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng FSM cho tác vụ
+	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib
 	 */
-
-	extern uedp_fsm_t app_fsm;
+	// KCONFIG_APPCFG_FSM_OJB_START
+	// KCONFIG_APPCFG_FSM_OJB_END
 
 #endif //__APP_CFG_H__
 

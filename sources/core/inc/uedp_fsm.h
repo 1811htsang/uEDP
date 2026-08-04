@@ -16,6 +16,7 @@
 	 */
 	#include <stdint.h>
 	#include "uedp_core.h"
+	#include "uedp_fcr.h"
 
 	/**
 	 * @brief Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống UEDP
@@ -70,6 +71,8 @@
 	stinl void uedp_fsm_dispatch(uedp_fsm_t* me, uedp_msg_t* msg) {
 		if (me && me->state && msg) {
 			me->state(msg);
+		} else if (me && msg && !me->state) {
+			UEDP_FCR_RAISE(UEDP_FCR_SM_NULL_HANDLER); // FSM chưa được uedp_fsm_init() hoặc bị go_next(NULL)
 		}
 	}
 

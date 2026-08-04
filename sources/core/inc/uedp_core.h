@@ -19,14 +19,6 @@
   #include "pal_core.h"
 
   /**
-   * @brief Định nghĩa phiên bản của hệ thống UEDP
-   */
-
-  #define UEDP_VERSION_MAJOR    (1)
-  #define UEDP_VERSION_MINOR    (0)
-  #define UEDP_CORE_NAME        "UEDP"
-
-  /**
    * @brief Định nghĩa các hằng số cho ID của tác vụ bình thường
    * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xEx`, 
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
