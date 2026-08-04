@@ -62,6 +62,7 @@ void uedp_timer_init(void) {
 
 RETR_STAT uedp_timer_set(ui16 tid, ui8 sig, ui32 ms, uedp_timer_type_t type) {
 	if (ms == 0 || type > UEDP_TIMER_PERIODIC) {
+		// FCR tag for Hai Minh, clear this after FCR injection
 		return STAT_ERROR; // Tham số không hợp lệ
 	}
 
@@ -123,6 +124,7 @@ RETR_STAT uedp_timer_remove(ui16 tid, ui8 sig) {
 	if (!check) {
 		// Exit critical section
 		pal_exit_critical();
+		// FCR tag for Hai Minh, clear this after FCR injection
 		return STAT_NRDY; // Không tìm thấy timer với cặp Task ID và Signal này
 	}
 
@@ -159,6 +161,7 @@ RETR_STAT uedp_timer_remove(ui16 tid, ui8 sig) {
 	// Exit critical section
 	pal_exit_critical();
 
+	// FCR tag for Hai Minh, clear this after FCR injection
 	return STAT_ERROR; // Không tìm thấy timer với cặp Task ID và Signal đã cho
 }
 

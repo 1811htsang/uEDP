@@ -143,6 +143,7 @@ uedp_msg_t* uedp_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 		msg->sig = sig;
 		msg->ref_count = 1; // mặc định 1 tham chiếu khi tạo mới
 	} else {
+		// FCR tag for Hai Minh, clear this after FCR injection
 		// Pool đã hết, có thể log lỗi hoặc thực hiện hành động khắc phục
 		internal_uedp_msg_pool_panic(pool_header - &g_blank_pool_ctrl); // Tính toán pool_id dựa trên offset
 	}
@@ -151,7 +152,7 @@ uedp_msg_t* uedp_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 }
 
 void uedp_msg_free(uedp_msg_t* msg) {
-	if (!msg || !uedp_msg_is_valid_ptr(msg)) return;
+	if (!msg || !uedp_msg_is_valid_ptr(msg)) return; // FCR tag for Hai Minh, clear this after FCR injection
 
 	msg->next = NULL;
 
@@ -168,6 +169,7 @@ void uedp_msg_free(uedp_msg_t* msg) {
 			header = &g_extal_pool_ctrl;
 			break;
 		default:
+			// FCR tag for Hai Minh, clear this after FCR injection
 			return; // Loại tin nhắn không hợp lệ, không thực hiện giải phóng
 			break;
 	}
@@ -204,12 +206,14 @@ void internal_uedp_msg_pool_init(
 ) {
 	// Kiểm tra đầu vào
 	if (!header || !pool) {
+		// FCR tag for Hai Minh, clear this after FCR injection
 		return;
 	}
 
 	// Kiểm tra nếu init Blank Pool thì không cần xử lý thêm, chỉ có Blank Pool mới có thể có data_mem là NULL và data_size là 0, 
 	// các Pool khác nếu không có vùng dữ liệu thì sẽ không khởi tạo Pool vì sẽ lãng phí bộ nhớ.
 	if (pool_type != UEDP_MSG_TYPE_BLANK && !data_mem) {
+		// FCR tag for Hai Minh, clear this after FCR injection
 		return;
 	}
 
@@ -222,6 +226,7 @@ void internal_uedp_msg_pool_init(
 	 * 				sẽ dẫn đến việc phân bố dữ liệu	không đều.
 	 */
 	if (data_size > 0 && (data_max % data_size != 0 || data_size > data_max)) {
+		// FCR tag for Hai Minh, clear this after FCR injection
 		return;
 	}
 
@@ -310,6 +315,7 @@ uedp_msg_t* internal_uedp_msg_pool_pop(uedp_msg_pool_header_t* header) {
  */
 void internal_uedp_msg_pool_push(uedp_msg_pool_header_t* header, uedp_msg_t* msg) {
 	if (!header || !msg) {
+		// FCR tag for Hai Minh, clear this after FCR injection
 		return; // Pool không hợp lệ hoặc tin nhắn không hợp lệ
 	}
 
@@ -341,6 +347,7 @@ uedp_msg_pool_header_t* internal_uedp_msg_find_best_pool(ui16 size) {
 	} else if (size <= UEDP_MSG_ALLOC_DATA_MAX) {
 		return &g_alloc_pool_ctrl; // Pool Alloc
 	} else {
+		// FCR tag for Hai Minh, clear this after FCR injection
 		return NULL; // Không có Pool nào phù hợp
 	}
 }
@@ -363,6 +370,7 @@ void uedp_msg_drain_isr_pool(void) {
 			uedp_task_norm_post_msg(msg->des_task_id, msg);
 		} else {
 			// Xử lý tình huống cấp phát tin nhắn thất bại, có thể log lỗi hoặc thực hiện hành động khắc phục
+			// FCR tag for Hai Minh, clear this after FCR injection
 			internal_uedp_msg_pool_panic(UEDP_MSG_ISR_QUEUE_SIZE); // Sử dụng một mã lỗi đặc biệt cho Pool ISR
 		}
 	}
@@ -379,6 +387,7 @@ void uedp_msg_drain_isr_pool(void) {
  */
 bool uedp_msg_is_valid_ptr(uedp_msg_t* msg) {
 	if (!msg) {
+		// FCR tag for Hai Minh, clear this after FCR injection
 		return false; // Con trỏ NULL không hợp lệ
 	}
 
@@ -398,7 +407,8 @@ bool uedp_msg_is_valid_ptr(uedp_msg_t* msg) {
  * @param pool_id ID của Pool tin nhắn bị lỗi, có thể là UEDP_MSG_TYPE_BLANK, UEDP_MSG_TYPE_NORM, UEDP_MSG_TYPE_ALLOC hoặc UEDP_MSG_TYPE_EXTAL
  */
 void internal_uedp_msg_pool_panic(ui8 pool_id) {
-
+	// FCR tag for Hai Minh, clear this after FCR injection (optional if you want to add specific action to this API)
+	// or else, remove is acceptable
 }
 
 RETR_STAT internal_uedp_msg_enqueue_isr_sig(task_id_t tid, ui16 sig) {
@@ -421,7 +431,7 @@ RETR_STAT internal_uedp_msg_enqueue_isr_sig(task_id_t tid, ui16 sig) {
 }
 
 void internal_uedp_msg_pool_get_info(uedp_msg_type_t pool_id, pal_memrp_info_t* info) {
-	if (!info) return;
+	if (!info) return; // FCR tag for Hai Minh, clear this after FCR injection
 
 	switch (pool_id) {
 		case UEDP_MSG_TYPE_BLANK:
@@ -458,7 +468,7 @@ void internal_uedp_msg_pool_get_info(uedp_msg_type_t pool_id, pal_memrp_info_t* 
 			info->total = UEDP_MSG_ISR_QUEUE_SIZE; // Tổng số phần tử có thể chứa trong FIFO
 			break;
 		default:
-			printf("Invalid pool ID: %d\n", pool_id);
+			printf("Invalid pool ID: %d\n", pool_id); // FCR tag for Hai Minh, clear this after FCR injection
 			break;
 	}
 }

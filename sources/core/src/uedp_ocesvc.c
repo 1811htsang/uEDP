@@ -41,6 +41,7 @@ static bool ocesvc_has_id(uint8_t id) {
 
 static bool ocesvc_find_free_id(uint8_t start_id, uint8_t* out_id) {
   if (out_id == NULL) {
+    // FCR tag for Hai Minh, clear this after FCR injection
     return false;
   }
 
@@ -66,10 +67,12 @@ static void ocesvc_sync_fill_size(void) {
 
 void ocesvc_register(ocesvc_t* svc) {
   if (svc == NULL) {
+    // FCR tag for Hai Minh, clear this after FCR injection
     return;
   }
 
   if (svc == &head) {
+    // FCR tag for Hai Minh, clear this after FCR injection
     return;
   }
 
@@ -82,6 +85,7 @@ void ocesvc_register(ocesvc_t* svc) {
   uint32_t previous_size = ocesvc_list.size;
   llist_append(&ocesvc_list, svc);
   if (ocesvc_list.size == previous_size) {
+    // FCR tag for Hai Minh, clear this after FCR injection
     return;
   }
 
@@ -94,10 +98,12 @@ void ocesvc_register(ocesvc_t* svc) {
 
 void ocesvc_unregister(ocesvc_t* svc) {
   if (svc == NULL) {
+    // FCR tag for Hai Minh, clear this after FCR injection
     return;
   }
 
   if (svc == &head) {
+    // FCR tag for Hai Minh, clear this after FCR injection
     return;
   }
 
@@ -117,6 +123,7 @@ void ocesvc_scheduler() {
   // Lấy head của danh sách liên kết đơn và duyệt qua từng dịch vụ OCE
   llist_node_t* current = ocesvc_list.head;
   if (current == NULL) {
+    // FCR tag for Hai Minh, clear this after FCR injection
     return; // Nếu danh sách rỗng, không làm gì cả
   }
   // Chỉ service đầu tiên trong danh sách có trạng thái READY mới được thực thi

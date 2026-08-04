@@ -18,6 +18,7 @@ void uedp_fsm_go_next(uedp_fsm_t* me, state_handler target) {
   // Kiểm tra tính hợp lệ của con trỏ FSM và trạng thái mục tiêu
   if (!me || !target) {
     pal_exit_critical();
+    // FCR tag for Hai Minh, clear this after FCR injection
     return; 
   }
 
@@ -53,7 +54,8 @@ void uedp_fsm_go_back(uedp_fsm_t* me) {
   // Kiểm tra tính hợp lệ của con trỏ FSM và đảm bảo có trạng thái trong lịch sử để quay lại
   if (!me || !me->state || me->history_count == 0) {
     pal_exit_critical();
-    return; 
+    // FCR tag for Hai Minh, clear this after FCR injection
+    return;
   }
 
   // Cập nhật chỉ số lịch sử để trỏ đến trạng thái trước đó
@@ -64,6 +66,7 @@ void uedp_fsm_go_back(uedp_fsm_t* me) {
 
   // Đảm bảo rằng trạng thái trước đó không phải là NULL trước khi quay lại
   if (!previous_state) {
+    // FCR tag for Hai Minh, clear this after FCR injection
     return; 
   }
 

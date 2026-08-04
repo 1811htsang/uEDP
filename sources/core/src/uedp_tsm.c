@@ -18,11 +18,13 @@ void uedp_tsm_init(
 ) {
 	// Kiểm tra tsm_table và state_des_table không phải là NULL
 	if (!tsm_table || !state_des_table) {
+		// FCR tag for Hai Minh, clear this after FCR injection
 		return; 
 	}
 
 	// Kiểm tra initial_state_id hợp lệ
 	if (initial_state_id < UEDP_TSM_STATE_MIN || initial_state_id > UEDP_TSM_STATE_MAX) {
+		// FCR tag for Hai Minh, clear this after FCR injection
 		return;
 	}
 
@@ -35,8 +37,8 @@ void uedp_tsm_init(
 
 	const tsm_state_desc_t* desc = &tsm_table->state_table[initial_state_id - UEDP_TSM_STATE_MIN - UEDP_TSM_STATE_OFFSET];
 	if (desc->on_entry) {
-			uedp_msg_t m = { .sig = UEDP_TSM_SIG_ENTRY };
-			desc->on_entry(&m);
+		uedp_msg_t m = { .sig = UEDP_TSM_SIG_ENTRY };
+		desc->on_entry(&m);
 	}
 }
 
@@ -50,6 +52,7 @@ void uedp_tsm_trans(uedp_tsm_t* tsm_table, tsm_state_id_t state_id) {
 
 		if (state_id == UEDP_TSM_STATE_STAY) {
 			pal_exit_critical();
+			// FCR tag for Hai Minh, clear this after FCR injection
 			return;
 		}
 
@@ -73,8 +76,8 @@ void uedp_tsm_trans(uedp_tsm_t* tsm_table, tsm_state_id_t state_id) {
 		// Thực thi entry trạng thái mới
 		const tsm_state_desc_t* next_desc = &tsm_table->state_table[next_state - UEDP_TSM_STATE_MIN - UEDP_TSM_STATE_OFFSET];
     if (next_desc->on_entry) {
-        uedp_msg_t msg = { .sig = UEDP_TSM_SIG_ENTRY };
-        next_desc->on_entry(&msg);
+			uedp_msg_t msg = { .sig = UEDP_TSM_SIG_ENTRY };
+			next_desc->on_entry(&msg);
     }
 
 		// Gọi callback thông báo cho App về việc trạng thái đã thay đổi
