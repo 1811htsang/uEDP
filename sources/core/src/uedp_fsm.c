@@ -1,9 +1,9 @@
 ﻿/**
  * @file fsm.c
- * @author Shang Huang
+ * @author Hai Minh
  * @brief Triển khai các hàm và logic liên quan đến Finite State Machine (FSM) trong hệ thống UEDP
  * @version 0.1
- * @date 2026-04-16
+ * @date 2026-08-06
  * 
  * @copyright MIT License
  * 
@@ -18,7 +18,7 @@ void uedp_fsm_go_next(uedp_fsm_t* me, state_handler target) {
   // Kiểm tra tính hợp lệ của con trỏ FSM và trạng thái mục tiêu
   if (!me || !target) {
     pal_exit_critical();
-    // FCR tag for Hai Minh, clear this after FCR injection
+    uedp_fcr_raise(UEDP_FCR_SM_NULL_HANDLER, "go_next: null fsm/target");
     return; 
   }
 
@@ -51,10 +51,16 @@ void uedp_fsm_go_back(uedp_fsm_t* me) {
   // Bảo vệ critical section để đảm bảo tính nhất quán khi thay đổi trạng thái của FSM
   pal_enter_critical();
 
-  // Kiểm tra tính hợp lệ của con trỏ FSM và đảm bảo có trạng thái trong lịch sử để quay lại
-  if (!me || !me->state || me->history_count == 0) {
+  // Tách logic kiểm tra: Bắt lỗi NULL FSM hoặc NULL state
+  if (!me || !me->state) {
     pal_exit_critical();
-    // FCR tag for Hai Minh, clear this after FCR injection
+    uedp_fcr_raise(UEDP_FCR_SM_NULL_HANDLER, "go_back: null fsm/state");
+    return;
+  }
+
+  // history_count == 0 là bình thường, không raise FCR để tránh spam panic
+  if (me->history_count == 0) {
+    pal_exit_critical();
     return;
   }
 
@@ -66,7 +72,11 @@ void uedp_fsm_go_back(uedp_fsm_t* me) {
 
   // Đảm bảo rằng trạng thái trước đó không phải là NULL trước khi quay lại
   if (!previous_state) {
-    // FCR tag for Hai Minh, clear this after FCR injection
+    // Sửa lỗi code gốc: Phải gọi pal_exit_critical() trước khi return để tránh treo hệ thống (Deadlock)
+    pal_exit_critical();
+    
+    // Lịch sử có count > 0 nhưng slot bị NULL tức là hỏng bộ nhớ
+    uedp_fcr_raise(UEDP_FCR_SM_NULL_HANDLER, "go_back: corrupt history slot");
     return; 
   }
 

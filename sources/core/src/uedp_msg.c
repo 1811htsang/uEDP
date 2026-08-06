@@ -1,9 +1,9 @@
 ﻿/**
  * @file uedp_msg.c
- * @author Shang Huang
+ * @author Hai Minh
  * @brief Implementation of message management for UEDP system
  * @version 0.1
- * @date 2026-08-04
+ * @date 2026-08-06
  * 
  * @copyright MIT License
  * 
