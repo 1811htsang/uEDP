@@ -146,7 +146,7 @@
 - [x] Thiết kế syntax PPLP cho YAML.
 - [x] Thiết kế syntax APE cho YAML.
 - [x] Thiết kế syntax OCE cho YAML. Bổ sung cân nhắc OCE-execjn cho các phiên bản sau.
-- [ ] Review và refine các syntax SII, PPLP, APE, OCE cho YAML để đảm bảo rằng cú pháp được thiết kế một cách hợp lý, dễ đọc và dễ hiểu, đồng thời hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách hiệu quả.
+- [x] Review và refine các syntax SII, PPLP, APE, OCE cho YAML để đảm bảo rằng cú pháp được thiết kế một cách hợp lý, dễ đọc và dễ hiểu, đồng thời hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách hiệu quả.
 - [ ] Triển khai thiết kế cfparsers để concentrate μE-LS thành C-source code, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Bổ sung thiết kế PLD (Parse-able Logic Descriptor) với YAML để hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả logic này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Kiểm tra bổ sung API ngược để cho phép Kconfig output có thể dùng cho PLD và ngược lại.
