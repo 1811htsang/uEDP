@@ -117,6 +117,20 @@
 - [x] Bổ sung testing cho cơ chế OCE để đảm bảo tính ổn định và hiệu quả của cơ chế này trong việc xử lý các sự kiện quan trọng một cách kịp thời và hiệu quả hơn.
 - [x] Ra mắt phiên bản 1.1.3 của lõi μEDP với đầy đủ tính năng OCE service và tài liệu hướng dẫn sử dụng.
 
+### Phiên bản 1.1.4: The 1.1.3a Release
+
+- [x] Bổ sung state machine attribute cho task norm để chỉ định máy trạng thái và hình thức quản lý directly từ task pointer selector, để hỗ trợ việc quản lý các trạng thái của task một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các task được xử lý theo đúng logic và trạng thái của chúng trong hệ thống.
+- [x] Bổ sung API tương ứng để thực hiện get/set state machine attribute cho task norm, nhằm hỗ trợ việc quản lý các trạng thái của task một cách hiệu quả và linh hoạt hơn.
+- [x] Ra mắt phiên bản 1.1.4 của lõi μEDP.
+
+### Phiên bản 1.1.5: The 1.1.3b Release
+
+- [x] Triển khai thiết kế FCR (Fatal Code Return) kèm tài liệu để hỗ trợ việc định danh các lỗi nghiêm trọng trong μEDP với bảng mã lỗi và các hành động xử lý tương ứng, giúp đảm bảo rằng các lỗi nghiêm trọng được xử lý một cách hiệu quả và an toàn trong hệ thống.
+- [ ] Bổ sung name attribute cho rprintf để phục vụ μE-LS.
+- [ ] Bổ sung tài liệu thiết kế FCR.
+- [ ] Bổ sung API filling task ID và source ID attribute của message (follow commit 6728c..) để hỗ trợ việc định danh các task và nguồn gốc của các tin nhắn trong hệ thống, giúp đảm bảo rằng các tin nhắn được xử lý một cách chính xác và hiệu quả.
+- [ ] Ra mắt phiên bản 1.1.5 của lõi μEDP với đầy đủ tính năng FCR, các bản cập nhật và tài liệu hướng dẫn sử dụng.
+
 ### Phiên bản 1.2.0: The Infrastructure Preparation for μE-OS
 
 - [x] Chỉnh sửa lại pyspec (Python Specifier - Bộ chỉ định tham số Python) cũ từ tính năng KwDI để đưa vào sử dụng kết hợp với PLTF.
@@ -127,9 +141,13 @@
 - [x] Bổ sung tài liệu mô tả thiết kế kiến trúc (ver eng) để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
 - [x] Kiểm tra và đánh giá thiết kế syntax YAML của PLD/μE-LS cho Task và HSMC để đảm bảo rằng cú pháp được thiết kế một cách hợp lý, dễ đọc và dễ hiểu, đồng thời hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách hiệu quả.
 - [x] Triển khai tài liệu thiết kế các tính năng từ KwDI sang PLTF để hỗ trợ việc phát triển và kiểm thử các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn. > Đã trình bày với phiên bản 1.0 và cung cấp các đề xuất mới để cập nhật cho phiên bản 1.2.0.
-- [ ] Triển khai single-call trên cfparsers (testspec.cfpcall) để tránh repetitive call và tăng tốc độ xử lý khi parse các cấu hình logic của μE-LS.
-- [ ] Thiết kế syntax cho SII, PPLP, APE, OCE và triển khai cfparsers cho YAML để hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, đồng thời hỗ trợ việc tự động sinh mã nguồn C từ các mô tả logic này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [ ] Triển khai thiết kế FCR (Fatal Code Return) kèm tài liệu để hỗ trợ việc định danh các lỗi nghiêm trọng trong μEDP với bảng mã lỗi và các hành động xử lý tương ứng, giúp đảm bảo rằng các lỗi nghiêm trọng được xử lý một cách hiệu quả và an toàn trong hệ thống.
+- [x] Triển khai single-call trên cfparsers (testspec.cfpcall) với concentrate import để tránh repetitive call và tăng tốc độ xử lý khi parse các cấu hình logic của μE-LS.
+- [x] Thiết kế syntax SII cho YAML.
+- [x] Thiết kế syntax PPLP cho YAML.
+- [x] Thiết kế syntax APE cho YAML.
+- [x] Thiết kế syntax OCE cho YAML. Bổ sung cân nhắc OCE-execjn cho các phiên bản sau.
+- [x] Review và refine các syntax SII, PPLP, APE, OCE cho YAML để đảm bảo rằng cú pháp được thiết kế một cách hợp lý, dễ đọc và dễ hiểu, đồng thời hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách hiệu quả.
+- [ ] Triển khai thiết kế cfparsers để concentrate μE-LS thành C-source code, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Bổ sung thiết kế PLD (Parse-able Logic Descriptor) với YAML để hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả logic này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Kiểm tra bổ sung API ngược để cho phép Kconfig output có thể dùng cho PLD và ngược lại.
 - [ ] Mở rộng PLD với TSD (Test Scenario Descriptor) để hỗ trợ việc mô tả các kịch bản kiểm thử một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả kịch bản kiểm thử này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các kịch bản kiểm thử cho lõi μEDP.

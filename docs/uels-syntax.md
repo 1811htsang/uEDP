@@ -149,49 +149,479 @@ Lưu ý rằng cú pháp này dùng để làm ví dụ mẫu, không phải là
 
 Cú pháp μE-LS được thiết kế để mô tả các cấu trúc logic trong hệ thống μE(DP)/-OS, bao gồm các khối như Task, State Machine (TSM), Signal, Policy, và các hành động (Action Snippets). Các cấu hình như Pool, Queue và Timer được cấu hình tự động bởi Kconfig + pre-PLTF + Jinja2, do đó không cần khai báo trong μE-LS. Tuy nhiên, người dùng có thể tùy chỉnh các thông số này thông qua Kconfig.
 
-### Tác vụ với tính năng HSMC
+### Hướng đọc nhanh
 
-Tác vụ (Task) cùng với tin nhắn (Message) và tín hiệu (Signal) là các khối cơ bản trong μE(DP)/-OS. Mỗi Task có thể được định nghĩa với các thuộc tính như ID, Priority, Stack Size, và các hành vi thông qua TSM/FSM. Ngoài ra ở các phiên bản mới, Task cũng sẽ được bổ sung các cơ chế đặc biệt như SSI, SIF, ... để hỗ trợ các tính năng OS nâng cao.
+1. Đọc phần quy ước YAML trước để tránh lỗi thụt lề và kiểu dữ liệu.
+2. Đọc phần Task để hiểu `tlist`, `task`, `tsm`, `fsm`, `exec` và `steps`.
+3. Đọc SII, PPLP, APE, OCE để nắm các block mở rộng bám trực tiếp vào core API.
+4. Xem ví dụ tổng hợp ở cuối tài liệu nếu muốn viết cấu hình đầu tiên thật nhanh.
 
-Trong thiết kế, tác vụ được chia thành 2 loại là task Norm (tnorm) và task Poll (tpoll) nhằm phục vụ các mục đích khác nhau. Task Norm thường được sử dụng cho các tác vụ có trạng thái và hành vi phức tạp, trong khi Task Poll thường được sử dụng cho các tác vụ đơn giản, chủ yếu thực hiện kiểm tra định kỳ hoặc xử lý dữ liệu từ các nguồn bên ngoài.
+### Bản đồ syntax -> core
 
-Về tổng quát, Task Norm gồm các khai báo như sau:
+| Khối | Ý nghĩa | Syntax chính | Syntax phụ / tùy chỉnh | Core mapping |
+| --- | --- | --- | --- | --- |
+| Task Norm | Task có trạng thái hoặc xử lý message | `tlist -> task -> tsm/fsm/exec/escal` | `tsm`, `fsm`, `exec`, `escal`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps`, `cact` | `uedp_task_norm_create()`, `uedp_task_norm_post_msg()` |
+| Task Poll | Task vòng lặp nhẹ, không theo message | `tlist -> task -> poll/steps` | `poll`, `steps`, `actv`, `to`, `sig`, `data`, `ability` | `uedp_task_poll_create()`, `uedp_task_poll_set_ability()` |
+| SII | Đưa signal từ ISR vào hệ thống | `isr -> to/sig` | `to`, `sig` | `uedp_task_norm_post_isr()`, `uedp_msg_drain_isr_pool()` |
+| PPLP | Cấu hình logging pipeline | `pplp -> itnlog -> level/tag/output` | `level`, `tag`, `output.backend`, `output.sink`, `log.timestamp`, `log.msg` | `uedp_itnlog_set_filter()`, `uedp_itnlog_set_output()` |
+| APE | Gọi urgent message / priority escalation | `escal -> trigger -> post_urgent` | `mode: slnf`, `mode: non-slnf`, `scope: self`, `keep_queue_order`, `extra_rounds`, `post_urgent` | `uedp_task_norm_post_urgent()`, `uedp_task_norm_set_urgent()` |
+| OCE | Service chạy ngoài luồng logic chính | `outexec -> name/handler/context/state` | `name`, `handler`, `context`, `state` | `ocesvc_register()`, `ocesvc_scheduler()` |
 
-- `tnorm`: ID của Task NORM (ví dụ: `KID_TASK_SENSOR`).
-- `tsm`: Định nghĩa trạng thái thông minh (State Machine) của Task.
-  - `id`: ID của trạng thái (tức tên trạng thái).
-  - `trans`: Các chuyển đổi từ trạng thái này sang trạng thái khác dựa trên tín hiệu nhận được.
-    - `sig`: Tín hiệu kích hoạt chuyển đổi trạng thái kế tiếp.
-    - `goto`: Trạng thái đích sau khi chuyển đổi.
-  - `on_ntry`: Các hành động thực hiện khi Task vào trạng thái này. Dùng cho việc khởi tạo, thiết lập bộ hẹn giờ, gửi tin nhắn, ...
-    - `steps`: Danh sách các hành động cần thực hiện khi rời khỏi trạng thái.
-      - `actv`: Hành động cụ thể (ví dụ: `post_msg`, `timer_set`, ...).
-        - `to`: Đích đến của hành động (ví dụ: Task nhận tin nhắn).
-        - `sig`: Tín hiệu gửi đi (nếu hành động là gửi tin nhắn).
-        - `data`: Dữ liệu gửi kèm (nếu hành động là gửi tin nhắn).
-  - `on_exit`: Các hành động thực hiện khi Task rời khỏi trạng thái này. Dùng cho việc dọn dẹp, hủy bỏ các bộ hẹn giờ, giải phóng tài nguyên, ...
-    - Tương tự như `on_entry`, nhưng được thực hiện khi Task rời khỏi trạng thái này.
-  - `on_actv`: Các hành động thực hiện khi Task đang ở trạng thái này. Dùng cho việc kiểm tra điều kiện, xử lý dữ liệu, gửi tin nhắn định kỳ, ...
-    - Tương tự như `on_entry` và `on_exit`, nhưng được thực hiện liên tục khi Task đang ở trạng thái này.
-- `fsm`: Định nghĩa trạng thái hữu hạn (Finite State Machine) của Task. Tương tự như `tsm`, nhưng thường được sử dụng cho các Task có hành vi đơn giản hơn và cần quản lý luồng trạng thái cục bộ hơn.
-  - `id`: ID của trạng thái (tức tên trạng thái).
-  - `on_recv`: Chuyển đổi trạng thái dựa trên tín hiệu nhận được.
-    - `sig`: Tín hiệu kích hoạt chuyển đổi trạng thái kế tiếp.
-      - `goto`: Trạng thái đích sau khi chuyển đổi.
-      - `actv`: Hành động cụ thể (ví dụ: `post_msg`, `timer_set`, ...).
-        - Nếu hành động là single-step thì dùng `act`, nếu hành động là multi-step thì dùng `steps`.
+### Đánh giá so với source code hiện tại
 
-Ví dụ về một Task Norm với TSM:
+Kết luận đối chiếu với core source và testspec hiện tại là: syntax đang dùng trong tài liệu phải giữ nguyên theo trục `on_ntry`, `on_actv`, `actv`, `cact`, `steps`, `on_recv`, vì đây mới là shape mà generator và ví dụ test hiện tại đang bám vào. Các đề xuất như `on_entry`, `on_active`, `action`, `guard`, hay `data_kind: VALUE/REF` là hợp lý về mặt UX, nhưng hiện mới ở mức đề xuất mở rộng, chưa nên ghi như syntax chính thức của pre-1.2.0.
+
+| Đề xuất | Đánh giá theo source | Hành động trên tài liệu |
+| --- | --- | --- |
+| `on_entry` / `on_active` | Chưa có trong testspec và generator hiện tại vẫn dùng `on_ntry` / `on_actv` | Giữ keyword hiện tại là chính thức, có thể ghi thêm alias đề xuất ở ghi chú |
+| `action` thay cho `actv` | Core ví dụ và parser hiện tại vẫn dùng `actv` | Không đổi syntax chính, chỉ có thể nhắc đây là tên gợi nhớ cho UX tương lai |
+| `guard` trong `trans` | Chưa thấy support ở core TSM/FSM hiện tại | Ghi là hướng mở rộng, không đưa vào grammar chính thức |
+| `data_kind: VALUE/REF` cho `post_msg` | Core đã có D2MP và API `uedp_msg_set_data_val/ref`, nhưng chưa có trường PLD tương ứng | Mô tả ở phần mở rộng/D2MP, không coi là field bắt buộc của μE-LS hiện tại |
+| APE local theo từng tnorm | Khớp với source: mỗi tnorm có `urgent_pending`, `base_pri`, `cur_pri` và API `set_urgent/post_urgent` | Giữ nguyên và nhấn mạnh là khai báo cục bộ theo task |
+| `exec` và `on_recv` | Không trùng nghĩa: `exec` là hành vi phẳng, `on_recv` là dispatch của FSM | Giữ tách biệt để bảo toàn mô hình hiện tại |
+
+Từ đánh giá này, hành động cần làm trên tài liệu là:
+
+1. Giữ syntax hiện tại làm chuẩn chính thức.
+2. Thêm ghi chú rõ ràng cho các alias / trường mở rộng chỉ ở mức định hướng
+3. Không nâng các field UX mới thành grammar bắt buộc nếu chưa có support trong parser và generator.
+
+### Task - Tác vụ
+
+Trong μE-LS, mỗi task được khai báo trong danh sách `tlist`. Một task có thể đi theo một trong ba nhánh chính: `tsm` nếu cần state machine dạng bảng, `fsm` nếu cần dispatch theo handler, hoặc `exec`/`poll` nếu chỉ cần hành vi tuyến tính.
+
+`task` là định danh logic do PLTF sinh ra từ Kconfig; `tnorm` và `tpoll` là hai kiểu hành vi, không phải hai hệ syntax tách biệt. Các cấu hình Pool, Queue, Timer và Stack vẫn thuộc Kconfig, nên μE-LS chỉ mô tả hành vi và quan hệ giữa task, signal, action.
+
+Về tổng quát, một task Norm nên được viết theo cấu trúc sau:
 
 ```yaml
+project: "uEDP"
+tlist:
+- task: KID_TASK_USR
+  tsm:
+  - id: STATE_USR_IDLE
+    trans:
+    - sig: KID_SIG_USR_START
+      goto: STATE_USR_WAITING
+    on_ntry: NULL
+    on_actv: NULL
+    on_exit: NULL
+  - id: STATE_USR_WAITING
+    trans:
+    - sig: KID_SIG_USR_STOP
+      goto: STATE_USR_IDLE
+    on_ntry:
+      steps:
+      - actv: post_msg
+        to: KID_TASK_A
+        sig: KID_SIG_USR_START
+        data: NULL
+    on_actv:
+      steps:
+      - actv: log
+        to: KID_TASK_USR
+        sig: KID_SIG_LOG
+        data: "System Task USR: Waiting for STOP signal..."
+    on_exit:
+      steps:
+      - actv: log
+        to: KID_TASK_USR
+        sig: KID_SIG_LOG
+        data: "System Task USR: Sequence Finished."
 ```
 
-Ví dụ về một Task Norm với FSM:
+`tsm` nên được dùng khi task cần quản lý vòng đời trạng thái rõ ràng và có thể sinh ra `on_entry`, `on_exit` và `on_active` ở tầng codegen. `fsm` nên được dùng khi task chỉ cần dispatch theo tín hiệu với state handler trực tiếp.
+
+Ví dụ FSM nên viết theo kiểu sau:
 
 ```yaml
+project: "uEDP"
+tlist:
+- task: KID_TASK_B
+  fsm:
+  - id: STATE_B_IDLE
+    on_recv:
+    - sig: KID_SIG_0x12
+      goto: STATE_B_BUSY
+      steps:
+      - actv: post_msg
+        to: KID_TASK_A
+        sig: KID_SIG_0x34
+        data: NULL
+      - actv: post_msg
+        to: KID_TASK_A
+        sig: KID_SIG_0xFF
+        data: NULL
+  - id: STATE_B_BUSY
+    on_recv:
+    - sig: KID_SIG_0xAA
+      goto: STATE_B_IDLE
+      cact:
+        actv: post_msg
+        to: KID_TASK_USR
+        sig: KID_SIG_USR_STOP
+        data: NULL
 ```
 
-<!-- 
-  Comment:
-    Tạm thời chuyển sang triển khai thử cấu trúc khai báo của task.
+Nếu một task không cần TSM/FSM thì dùng `exec` để mô tả các hành vi tuyến tính. Đây là lựa chọn phù hợp cho các task đơn giản hoặc các script test nhanh.
+
+```yaml
+project: "uEDP"
+tlist:
+- task: KID_TASK_SIMPLE
+  exec:
+  - on_sig: SIG_A
+    steps:
+    - actv: post_msg
+      to: KID_TASK_B
+      sig: SIG_B
+      data: NULL
+    - actv: log
+      to: KID_TASK_SIMPLE
+      sig: SIG_LOG
+      data: "Task Simple received SIG_A and sent SIG_B to Task B."
+```
+
+Task Poll nên đi theo nhịp polling riêng và chỉ khai báo các bước xử lý tuần tự, không gắn với state machine:
+
+```yaml
+project: "uEDP"
+tlist:
+- task: KID_TASK_POLL
+  poll:
+  - actv: poll_led
+    to: NULL
+    sig: NULL
+    data: NULL
+```
+
+Trong current core, task poll chỉ nên dùng cho logic nhẹ, còn các tác vụ dọn dẹp hệ thống, flush log hoặc đồng bộ nền nên được đẩy sang OCE.
+
+### PPLP - Cấu hình logging pipeline
+
+PPLP khai báo chính sách logging cho Core và backend xuất log. Trong runtime, `itnlog` chỉ giữ filter và callback output; việc flush ra console, UART hoặc file nên đi qua OCE hoặc callback đã đăng ký.
+
+Với thiết kế PPLP, hệ thống được chia ra làm 3 phần là `itnlog` (filter), `logdp` (sink) và `rprintf` (backend). Cấu hình PPLP nên được viết theo kiểu sau:
+
+```yaml
+pplp:
+  itnlog:
+    level: ITNLOG_LEVEL_INFO
+    tag: ITNLOG_TAG_TSK
+    filter: enable
+      level: ITNLOG_LEVEL_FATAL
+      tag: ITNLOG_TAG_TSM
+    output: output_func
+  logdp:
+    register:
+    - func: sink_func_1
+    - func: sink_func_2
+  rprintf:
+  - contract: name // add name
+    init: init_func
+    putc: putc_func
+    write: write_func
+    is_ready: true
+  - contract: ...
+```
+
+Với `itnlog`:
+
+- `level` và `tag` là placeholder để tự động set giá trị cho các log entry.
+- `filter` là danh sách các rule để lọc log theo level và tag.
+- `output` là callback function để xử lý log entry đã lọc. Nếu là PPLP hoàn chỉnh thì `output` sẽ gọi `logdp` để đẩy log ra sink đã đăng ký.
+
+Với `logdp`:
+
+- `register` là danh sách các callback function để xử lý log entry. Mỗi function sẽ nhận log entry và thực hiện hành vi xuất log ra console, UART hoặc file.
+
+Với `rprintf`:
+
+- `contract` là tên của backend xuất log, ví dụ `UART`, `FILE`, `CONSOLE`.
+- `init`, `putc`, `write` là các callback function để khởi tạo, xuất ký tự và xuất chuỗi log.
+- `is_ready` là cờ để kiểm tra backend đã sẵn sàng nhận log hay chưa.
+
+<!-- comment
+- Kiểm tra lại cú pháp logging pipeline, đảm bảo các trường `level`, `tag`, `output` được ánh xạ đúng với core API.
+
+```yaml
+pplp:
+  itnlog:
+    level: ITNLOG_LEVEL_INFO
+    tag: ITNLOG_TAG_TSK
+    filter: enable
+      level: ITNLOG_LEVEL_FATAL
+      tag: ITNLOG_TAG_TSM
+    output: output_func
+  logdp:
+    register:
+    - func: sink_func_1
+    - func: sink_func_2
+  rprintf:
+  - contract: name // add name
+    init: init_func
+    putc: putc_func
+    write: write_func
+    is_ready: true
+  - contract: ...
+```
+
  -->
+
+### ISR - Dịch vụ ngắt
+
+Dịch vụ ngắt là một khối logic quan trọng trong hệ thống μE(DP)/-OS, cho phép xử lý các sự kiện ngắt từ phần cứng hoặc phần mềm. Trong thiết kế môi trường phần cứng đơn nhân, ISR và Task là 2 khối logic có tính tranh chấp cao, do đó cần được thiết kế cẩn thận để tránh các vấn đề về đồng bộ hóa và hiệu suất.
+
+Ở API thủ công, ISR được thiết kế API riêng biệt nhằm đảm bảo xử lý ngắn gọn nhưng vẫn đáp ứng logic của Task.
+
+Cấu trúc khai báo ISR trong μE-LS bao gồm các thành phần sau:
+
+- `isr`: ID của ISR (ví dụ: `KID_ISR_TIMER`).
+- `to`: Task nhận signal từ ISR.
+- `sig`: Signal được đẩy vào FIFO ISR và chuyển thành message ở đầu vòng scheduler.
+
+```yaml
+isr:
+- id: KID_ISR_TIMER
+  to: KID_TASK_TIM
+  sig: KID_SIG_TIM_TICK
+```
+
+Trong core hiện tại, ISR chỉ cần `to` và `sig`; payload `data` chưa được dùng ở đường `uedp_task_norm_post_isr()` và cũng bị cấm sử dụng do ISR không được phép thao tác trực tiếp với vùng dữ liệu của Core.
+
+Syntax này đảm bảo sự ràng buộc ISR chỉ có một hành động duy nhất, giúp giảm thiểu thời gian xử lý ngắt và tránh các vấn đề về đồng bộ hóa với các Task khác.
+
+### APE - Lời gọi vượt quyền tạm thời
+
+APE hay S-LnF APE là cơ chế được triển khai ở phiên bản 1.1.0 và 1.1.1 để hỗ trợ tnorm có thể gọi các hàm vượt quyền tạm thời (Privilege Escalation) trong môi trường μE(DP)/-OS. Trong μE-LS, APE là khai báo cục bộ theo từng tnorm: mỗi task có thể tự định nghĩa trigger APE cho chính nó, và Core chỉ cung cấp cơ chế thực thi tương ứng qua `uedp_task_norm_post_urgent()` và `uedp_task_norm_set_urgent()`.
+
+Cú pháp khai báo APE trong μE-LS được hỗ trợ chỉ dành cho tnorm nên sẽ không có phần khai báo riêng cho tpoll. Một tnorm có thể đặt APE ngang hàng với `tsm`, `fsm` hoặc `exec`, hoặc đưa vào `actv` như một action để tự kích hoạt APE cho chính nó.
+
+```yaml
+escal:
+  enabled: true # if false thì tnorm không có APE
+  mode: slnf
+  trigger:
+  - on_sig: SIG_CALL_URGENT # Kích hoạt APE khi nhận signal này
+    post_urgent: # Tự gọi urgent message cho chính tnorm để thực thi hành vi ưu tiên
+      to: KID_TASK_USR
+      sig: SIG_EXEC_URGENT
+      data: NULL
+```
+
+`post_urgent` tương ứng trực tiếp với `uedp_task_norm_post_urgent()`: message được đẩy vào đầu queue, còn priority escalation được core xử lý bằng `uedp_task_norm_set_urgent()`. Vì APE là local cho từng tnorm, chính tnorm đó phải chịu trách nhiệm xử lý trigger và quyết định khi nào tự tăng ưu tiên cho chính mình.
+
+Ngoài ra, do API hiện tại chưa triển khai restriction policy nên 1 tnorm có thể gọi APE cho chính nó hoặc cho các tnorm khác, miễn là các tnorm đó đã được khai báo APE trong μE-LS. Tuy nhiên, việc gọi APE cho tnorm khác nên được hạn chế để tránh các vấn đề về đồng bộ hóa và ưu tiên xử lý.
+
+Với `mode: non-slnf`, core không cần self-post một message khẩn cấp. Thay vào đó, tnorm được cho phép chạy thêm đúng một vòng nữa theo thứ tự message queue sẵn có của chính nó, rồi mới quay lại trạng thái bình thường. Cách này phù hợp khi người dùng cần ưu tiên xử lý ngữ cảnh hiện tại mà không muốn thay đổi thứ tự queue bằng một urgent message mới.
+
+```yaml
+escal:
+  enabled: true
+  mode: non-slnf
+  trigger:
+  - on_sig: SIG_CALL_IO_BOOST # Kích hoạt APE khi nhận signal này
+    post_urgent: NULL # Không cần tự gửi urgent message mới
+  - on_sig: SIG_URGENT_NEXT # Kích hoạt APE khi nhận signal này
+    post_urgent: NULL # Không cần tự gửi urgent message mới
+```
+
+Ví dụ:
+
+```yaml
+project: "uEDP"
+tlist:
+- task: KID_TASK_USR
+  exec:
+  - on_sig: SIG_CALL_URGENT
+    steps:
+    - actv: post_msg
+      to: KID_TASK_USR
+      sig: SIG_EXEC_URGENT
+      data: NULL
+  - on_sig: SIG_EXEC_URGENT
+    steps:
+    - actv: log
+      to: KID_TASK_USR
+      sig: SIG_LOG
+      data: "Executing urgent action..."
+  escal:
+    enabled: true
+    mode: slnf
+    trigger:
+    - on_sig: SIG_CALL_URGENT # Kích hoạt APE khi nhận signal này
+      post_urgent:
+        to: KID_TASK_USR
+        sig: SIG_EXEC_URGENT
+        data: NULL
+    - on_sig: SIG_URGENT_NEXT # Kích hoạt APE khi nhận signal này
+      post_urgent:
+        to: KID_TASK_USR
+        sig: SIG_EXEC_URGENT
+        data: NULL
+- task: KID_TASK_IO
+  exec:
+  - on_sig: SIG_CALL_IO_BOOST
+    steps:
+    - actv: post_msg
+      to: KID_TASK_IO
+      sig: SIG_EXEC_IO_BOOST
+      data: NULL
+  - on_sig: SIG_EXEC_IO_BOOST
+    steps:
+    - actv: log
+      to: KID_TASK_IO
+      sig: SIG_LOG
+      data: "Executing IO boost action..."
+  escal:
+    enabled: true
+    mode: non-slnf
+    trigger:
+    - on_sig: SIG_CALL_IO_BOOST # Kích hoạt APE khi nhận signal này
+      post_urgent: NULL # Không cần tự gửi urgent message mới
+    - on_sig: SIG_URGENT_NEXT # Kích hoạt APE khi nhận signal này
+      post_urgent: NULL # Không cần tự gửi urgent message mới
+```
+
+Khi dùng `mode: non-slnf`, tnorm không bắt buộc phải tự gửi một urgent message mới. Mục đích là cho phép chính task đó giữ nhịp xử lý thêm một vòng với queue hiện có, nên trigger thường chỉ cần là một signal nội bộ hoặc một action local do cùng task phát ra. Nếu có urgent message mới, nó sẽ được xử lý theo thứ tự FIFO bình thường, không phải ưu tiên.
+
+> Thống nhất cú pháp
+> `trigger` ở cả 2 mode được xem xét làm một danh sách các trigger, mỗi trigger có thể là một signal hoặc một action. Khi trigger được kích hoạt, nếu `post_urgent` không NULL thì sẽ gửi urgent message mới; nếu NULL thì task sẽ tiếp tục xử lý queue hiện tại thêm một vòng nữa.
+
+### OCE - Dịch vụ ngoài ngữ cảnh logic
+
+OCE (Out-Context Execution) là cơ chế được triển khai ở phiên bản 1.1.3 để hỗ trợ tnorm có thể thực hiện các dịch vụ ngoài ngữ cảnh logic (Out-Context Services) trong môi trường μE(DP)/-OS.
+
+```yaml
+outexec:
+- name: OCE_ITNLOG_DUMP
+  handler: itnlog_dump
+  context: pplp_ctx
+  state: READY
+```
+
+Trong core hiện tại, `ocesvc_register()` tự gán `uint8_t id`, vì vậy `name` ở μE-LS nên được hiểu là nhãn logic để PLTF sinh code và debug trace. `handler` phải khớp kiểu `void (*)(ocesvc_t*)`, còn `context` là vùng dữ liệu mà service sẽ dùng khi được scheduler gọi.
+
+OCE nên được dùng cho các việc như flush log, đồng bộ nền, hoặc dọn tài nguyên sau vòng scheduler chính. Nó không nên bị lẫn với task poll vì poll vẫn nằm trong path ứng dụng, còn OCE là service hậu trường của hệ thống.
+
+<!-- comment
+  Trong μE-LS, cú pháp hiện tại không hỗ trợ việc cho phép chỉ định service tiếp theo được gọi sau khi service hiện tại hoàn tất. Nếu muốn mở rộng, có thể thêm trường `next_service` hoặc `callback` để chỉ định service tiếp theo, nhưng hiện tại chưa có support trong core. Do đó, tính năng này sẽ được xem xét trong các phiên bản tương lai của μE-LS.
+ -->
+
+### Template tham chiếu tổng hợp
+
+Khi cần một khung khai báo đầy đủ để tham chiếu nhanh, có thể dùng template sau. Các giá trị `NULL` hoặc placeholder chỉ mang tính gợi ý, người dùng thay thế theo bài toán thực tế.
+
+```yaml
+project: "uEDP"
+tlist:
+- task: KID_TASK_USR
+  tsm:
+  - id: STATE_USR_IDLE
+    trans:
+    - sig: SIG_START
+      goto: STATE_USR_RUN
+    on_ntry: NULL
+    on_actv: NULL
+    on_exit: NULL
+  - id: STATE_USR_RUN
+    trans:
+    - sig: SIG_STOP
+      goto: STATE_USR_IDLE
+    on_ntry:
+      steps:
+      - actv: post_msg
+        to: KID_TASK_A
+        sig: SIG_A
+        data: NULL
+    on_actv:
+      steps:
+      - actv: log
+        to: KID_TASK_USR
+        sig: SIG_LOG
+        data: "Task is running"
+    on_exit:
+      steps:
+      - actv: log
+        to: KID_TASK_USR
+        sig: SIG_LOG
+        data: "Task is stopping"
+
+- task: KID_TASK_A
+  fsm:
+  - id: STATE_A_IDLE
+    on_recv:
+    - sig: SIG_A
+      goto: STATE_A_BUSY
+      steps:
+      - actv: post_msg
+        to: KID_TASK_B
+        sig: SIG_B
+        data: NULL
+  - id: STATE_A_BUSY
+    on_recv:
+    - sig: SIG_B
+      goto: STATE_A_IDLE
+      cact:
+        actv: post_msg
+        to: KID_TASK_USR
+        sig: SIG_DONE
+        data: NULL
+
+- task: KID_TASK_SIMPLE
+  exec:
+  - on_sig: SIG_SIMPLE
+    steps:
+    - actv: post_msg
+      to: KID_TASK_A
+      sig: SIG_A
+      data: NULL
+
+- task: KID_TASK_POLL
+  poll:
+  - actv: poll_led
+    to: NULL
+    sig: NULL
+    data: NULL
+
+isr:
+- id: KID_ISR_TIMER
+  to: KID_TASK_TIM
+  sig: KID_SIG_TIM_TICK
+
+pplp:
+  itnlog:
+    level: ITNLOG_LEVEL_INFO
+    tag: ITNLOG_TAG_TSK
+    filter: enable
+      level: ITNLOG_LEVEL_FATAL
+      tag: ITNLOG_TAG_TSM
+    output: output_func
+  logdp:
+    register:
+    - func: sink_func_1
+    - func: sink_func_2
+  rprintf:
+  - contract: name // add name
+    init: init_func
+    putc: putc_func
+    write: write_func
+    is_ready: true
+  - contract: ...
+
+escal:
+  enabled: true
+  mode: slnf
+  trigger:
+    on_sig: SIG_CALL_URGENT
+    post_urgent:
+      to: KID_TASK_USR
+      sig: SIG_EXEC_URGENT
+      data: NULL
+
+outexec:
+- name: OCE_ITNLOG_DUMP
+  handler: itnlog_dump
+  context: pplp_ctx
+  state: READY
+```

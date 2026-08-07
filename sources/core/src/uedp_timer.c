@@ -3,7 +3,7 @@
  * @author Shang Huang
  * @brief Implementation of timer management for UEDP system
  * @version 0.1
- * @date 2026-08-04
+ * @date 2026-04-18
  * 
  * @copyright MIT License
  * 
@@ -62,6 +62,7 @@ void uedp_timer_init(void) {
 
 RETR_STAT uedp_timer_set(ui16 tid, ui8 sig, ui32 ms, uedp_timer_type_t type) {
 	if (ms == 0 || type > UEDP_TIMER_PERIODIC) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_TIMER_INVALID_PARAM, "timer_set: ms=0 or bad type");
 		return STAT_ERROR; // Tham số không hợp lệ
 	}
 
