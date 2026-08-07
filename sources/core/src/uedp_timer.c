@@ -4,9 +4,7 @@
  * @brief Implementation of timer management for UEDP system
  * @version 0.1
  * @date 2026-04-18
- * 
  * @copyright MIT License
- * 
  */
 #include <string.h>
 #include <stdint.h>
@@ -124,6 +122,9 @@ RETR_STAT uedp_timer_remove(ui16 tid, ui8 sig) {
 	if (!check) {
 		// Exit critical section
 		pal_exit_critical();
+		//FIXME - Sang: Need to consider injection for this, Minh should add new //NOTE under this to decide FCR injection or not
+		//NOTE - Minh:
+
 		return STAT_NRDY; // Không tìm thấy timer với cặp Task ID và Signal này
 	}
 
@@ -159,6 +160,9 @@ RETR_STAT uedp_timer_remove(ui16 tid, ui8 sig) {
 
 	// Exit critical section
 	pal_exit_critical();
+
+	//FIXME - Sang: Need to consider injection for this, Minh should add new //NOTE under this to decide FCR injection or not
+	//NOTE - Minh:
 
 	return STAT_ERROR; // Không tìm thấy timer với cặp Task ID và Signal đã cho
 }
