@@ -123,7 +123,7 @@ RETR_STAT uedp_timer_remove(ui16 tid, ui8 sig) {
 		// Exit critical section
 		pal_exit_critical();
 		//FIXME - Sang: Need to consider injection for this, Minh should add new //NOTE under this to decide FCR injection or not
-		//NOTE - Minh:
+		//NOTE - Minh: DO NOT raise FCR. Calling remove on a non-existent timer can occur naturally if a ONE_SHOT timer has already expired and been automatically removed. This is a valid behavior. 
 
 		return STAT_NRDY; // Không tìm thấy timer với cặp Task ID và Signal này
 	}
@@ -162,8 +162,8 @@ RETR_STAT uedp_timer_remove(ui16 tid, ui8 sig) {
 	pal_exit_critical();
 
 	//FIXME - Sang: Need to consider injection for this, Minh should add new //NOTE under this to decide FCR injection or not
-	//NOTE - Minh:
-
+	//NOTE - Minh: FCR INJECTED. If internal_find found the node but the traversal loop did not (within the same critical section), it indicates that the linked list memory has been corrupted/overwritten. This is a severe structural error. - done
+	UEDP_FCR_RAISE_MSG(UEDP_FCR_TIMER_CORRUPTED, "remove: linked list corrupted");
 	return STAT_ERROR; // Không tìm thấy timer với cặp Task ID và Signal đã cho
 }
 
