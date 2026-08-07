@@ -243,7 +243,7 @@ uedp_msg_t* internal_uedp_task_norm_get_from_queue(task_id_t tid) {
       return msg_ptr;
     }
   }
-  // Hàm này chỉ được scheduler gọi khi đã biết task có tin nhắn đang chờ (ready bit đang bật),
+  //NOTE - Minh: Hàm này chỉ được scheduler gọi khi đã biết task có tin nhắn đang chờ (ready bit đang bật),
   // nên rơi tới đây (task NULL hoặc fifo_get thất bại) là bất thường.
   UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "get_from_queue: unexpected empty/invalid");
   return NULL;
@@ -299,7 +299,7 @@ void internal_uedp_task_norm_clear_ready(task_pri_t pri) {
  * @return task_pri_t Mức độ ưu tiên cao nhất của các tác vụ đang ở trạng thái sẵn sàng, hoặc 0 nếu không có tác vụ nào sẵn sàng
  */
 task_pri_t internal_uedp_task_norm_find_highest_priority(void) {
-  // Kiểm tra nếu không có tác vụ nào sẵn sàng - đây là trạng thái idle BÌNH THƯỜNG,
+  //NOTE - Minh: Kiểm tra nếu không có tác vụ nào sẵn sàng - đây là trạng thái idle BÌNH THƯỜNG,
   // xảy ra ở mỗi vòng scheduler khi hệ thống rảnh, tuyệt đối KHÔNG raise FCR ở đây.
   if (g_task_norm_ready == 0) {
     return 0;
@@ -319,7 +319,7 @@ task_pri_t internal_uedp_task_norm_find_highest_priority(void) {
 void internal_uedp_task_norm_dispatch(task_norm_t* task, uedp_msg_t* msg) {
   // Kiểm tra hợp lệ của task và msg
   if (task == NULL || msg == NULL) {
-    // Chỉ được gọi nội bộ bởi scheduler với tham số đã được kiểm tra trước đó -
+    //NOTE: Minh - Chỉ được gọi nội bộ bởi scheduler với tham số đã được kiểm tra trước đó -
     // rơi vào đây gần như không thể xảy ra, raise cho mục đích phòng vệ (defense-in-depth).
     UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "dispatch: null task/msg");
     return;
@@ -427,7 +427,7 @@ void internal_uedp_task_norm_reset_urgent(task_id_t tid) {
     task->urgent_pending = false; // Đặt lại cờ tín hiệu khẩn cấp đang chờ xử lý về false
     pal_exit_critical(); // Thoát critical section sau khi đã cập nhật trạng thái của tác vụ
   }
-  // task == NULL đã được raise sẵn bên trong internal_uedp_task_get_task_norm_by_id() ở trên,
+  //NOTE: task == NULL đã được raise sẵn bên trong internal_uedp_task_get_task_norm_by_id() ở trên,
   // không cần raise thêm lần nữa ở đây để tránh double-raise.
 }
 
@@ -451,7 +451,7 @@ void internal_uedp_task_norm_put_head_to_queue(task_id_t tid, uedp_msg_t* msg) {
   // Kiểm tra xem tác vụ có tồn tại trong bảng tác vụ hay không
   task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
   if (task == NULL) {
-    // task == NULL đã được raise sẵn bên trong get_task_norm_by_id() ở trên.
+    //NOTE - Minh: task == NULL đã được raise sẵn bên trong get_task_norm_by_id() ở trên.
     return;
   }
 

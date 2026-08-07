@@ -4,9 +4,7 @@
  * @brief Triển khai các hàm và logic liên quan đến Finite State Machine (FSM) trong hệ thống UEDP
  * @version 0.1
  * @date 2026-04-16
- * 
  * @copyright MIT License
- * 
  */
 #include "uedp_fsm.h"
 #include "uedp_msg.h"
@@ -74,7 +72,9 @@ void uedp_fsm_go_back(uedp_fsm_t* me) {
 
   // Đảm bảo rằng trạng thái trước đó không phải là NULL trước khi quay lại
   if (!previous_state) {
+    // Sửa lỗi code gốc: Phải gọi pal_exit_critical() trước khi return để tránh treo hệ thống (Deadlock)
     pal_exit_critical();
+    // Lịch sử có count > 0 nhưng slot bị NULL tức là hỏng bộ nhớ
     UEDP_FCR_RAISE_MSG(UEDP_FCR_SM_NULL_HANDLER, "go_back: corrupt history slot");
     return; 
   }

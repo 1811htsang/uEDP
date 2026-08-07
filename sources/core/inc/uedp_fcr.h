@@ -1,7 +1,7 @@
 /**
  * @file uedp_fcr.h
- * @author Shang Huang
- * @brief Fatal Code Return (FCR) - Định danh và xử lý lỗi nghiêm trọng cho lõi UEDP
+ * @author Hai Minh
+ * @brief Fatal Code Return (FCR) - Declaration for error codes and handling in UEDP core
  * @version 0.1
  * @date 2026-08-01
  * @copyright MIT License
