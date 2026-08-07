@@ -126,6 +126,8 @@
 ### Phiên bản 1.1.5: The 1.1.3b Release
 
 - [x] Triển khai thiết kế FCR (Fatal Code Return) kèm tài liệu để hỗ trợ việc định danh các lỗi nghiêm trọng trong μEDP với bảng mã lỗi và các hành động xử lý tương ứng, giúp đảm bảo rằng các lỗi nghiêm trọng được xử lý một cách hiệu quả và an toàn trong hệ thống.
+- [x] Bổ sung extension Anchor Comment để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu, giúp người phát triển dễ dàng theo dõi và quản lý các phần quan trọng của hệ thống.
+- [ ] Hoàn thiện injection của FCR vào các API để đảm bảo rằng các lỗi nghiêm trọng được phát hiện và xử lý một cách hiệu quả trong hệ thống, đồng thời cung cấp thông tin chi tiết về lỗi và các hành động xử lý tương ứng. //NOTE - Minh đã được review code và bổ sung các anchor để đánh dấu tiếp tục hoàn thiện mục này. Sau khi hoàn thành thì line này sẽ được đánh dấu là done.
 - [ ] Bổ sung name attribute cho rprintf để phục vụ μE-LS.
 - [ ] Bổ sung tài liệu thiết kế FCR.
 - [ ] Bổ sung API filling task ID và source ID attribute của message (follow commit 6728c..) để hỗ trợ việc định danh các task và nguồn gốc của các tin nhắn trong hệ thống, giúp đảm bảo rằng các tin nhắn được xử lý một cách chính xác và hiệu quả.
@@ -147,6 +149,7 @@
 - [x] Thiết kế syntax APE cho YAML.
 - [x] Thiết kế syntax OCE cho YAML. Bổ sung cân nhắc OCE-execjn cho các phiên bản sau.
 - [x] Review và refine các syntax SII, PPLP, APE, OCE cho YAML để đảm bảo rằng cú pháp được thiết kế một cách hợp lý, dễ đọc và dễ hiểu, đồng thời hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách hiệu quả.
+- [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Triển khai thiết kế cfparsers để concentrate μE-LS thành C-source code, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Bổ sung thiết kế PLD (Parse-able Logic Descriptor) với YAML để hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả logic này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Kiểm tra bổ sung API ngược để cho phép Kconfig output có thể dùng cho PLD và ngược lại.
