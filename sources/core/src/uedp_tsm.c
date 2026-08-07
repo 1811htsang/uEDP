@@ -51,7 +51,7 @@ void uedp_tsm_trans(uedp_tsm_t* tsm_table, tsm_state_id_t state_id) {
 	if (tsm_table && (state_id >= UEDP_TSM_STATE_MIN && state_id <= UEDP_TSM_STATE_MAX)) {
 
 		if (state_id == UEDP_TSM_STATE_STAY) {
-			// STAY là hành vi hợp lệ, thường xuyên xảy ra (state tự loop) - không phải lỗi, không raise FCR.
+			//NOTE - Minh: STAY là hành vi hợp lệ, thường xuyên xảy ra (state tự loop) - không phải lỗi, không raise FCR.
 			pal_exit_critical();
 			return;
 		}
