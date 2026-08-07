@@ -123,7 +123,8 @@ void ocesvc_scheduler() {
   // Lấy head của danh sách liên kết đơn và duyệt qua từng dịch vụ OCE
   llist_node_t* current = ocesvc_list.head;
   if (current == NULL) {
-    // Chỉ xảy ra nếu gọi trước ocesvc_ctrl_init() - hiếm gặp, không cần raise FCR ở hot-path.
+    //NOTE - Minh: Chỉ xảy ra nếu gọi trước ocesvc_ctrl_init() - hiếm gặp, không cần raise FCR ở hot-path.
+    //FIXME - Sang: Chỗ này vẫn cần raise với message để đảm bảo cover.
     return; // Nếu danh sách rỗng, không làm gì cả
   }
   // Chỉ service đầu tiên trong danh sách có trạng thái READY mới được thực thi
