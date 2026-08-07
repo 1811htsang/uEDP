@@ -1,6 +1,6 @@
 /**
  * @file uedp_fcr.h
- * @author Hai Minh
+ * @author Shang Huang
  * @brief Fatal Code Return (FCR) - Định danh và xử lý lỗi nghiêm trọng cho lõi UEDP
  * @version 0.1
  * @date 2026-08-01
@@ -58,14 +58,17 @@
   #define UEDP_FCR_MSG_POOL_EXHAUSTED     UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x00) // Pool tin nhắn (BLANK/ALLOC/EXTAL/ISR) đã hết chỗ trống
   #define UEDP_FCR_MSG_INVALID_PTR        UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x01) // Thao tác trên con trỏ tin nhắn không hợp lệ (không thuộc Pool nào)
   #define UEDP_FCR_MSG_ISR_FIFO_FULL      UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x02) // Hàng đợi FIFO nhận tín hiệu ISR đã đầy
+  #define UEDP_FCR_MSG_POOL_MISCONFIG     UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x03) // Tham số cấu hình Pool tin nhắn không hợp lệ lúc init (data_size/data_max/pool NULL)
 
   // [TASK] - 0x91xx
   #define UEDP_FCR_TASK_QUEUE_FULL        UEDP_FCR_CODE(UEDP_FCR_MOD_TASK, 0x00) // Hàng đợi tin nhắn nội bộ của 1 tác vụ đã đầy
   #define UEDP_FCR_TASK_INVALID_ID        UEDP_FCR_CODE(UEDP_FCR_MOD_TASK, 0x01) // ID tác vụ không tồn tại trong bảng tác vụ
   #define UEDP_FCR_TASK_PRI_EXHAUSTED     UEDP_FCR_CODE(UEDP_FCR_MOD_TASK, 0x02) // Hết mức ưu tiên tạm thời khi thực hiện Priority Escalation ([APE])
+  #define UEDP_FCR_TASK_INVALID_PRI       UEDP_FCR_CODE(UEDP_FCR_MOD_TASK, 0x03) // Mức độ ưu tiên (task_pri_t) nằm ngoài dải hợp lệ UEDP_TASK_PRI_LEVEL_0..23
 
   // [TIMER] - 0x92xx
   #define UEDP_FCR_TIMER_POOL_EXHAUSTED   UEDP_FCR_CODE(UEDP_FCR_MOD_TIMER, 0x00) // Hết node trống trong pool timer (UEDP_TIMER_MAX_NODES)
+  #define UEDP_FCR_TIMER_INVALID_PARAM    UEDP_FCR_CODE(UEDP_FCR_MOD_TIMER, 0x01) // Tham số truyền vào uedp_timer_set() không hợp lệ (ms=0 hoặc type sai)
 
   // [SM] (FSM/TSM) - 0x93xx
   #define UEDP_FCR_SM_INVALID_TRANS       UEDP_FCR_CODE(UEDP_FCR_MOD_SM, 0x00) // Không tìm thấy transition hợp lệ cho tín hiệu hiện tại trong TSM
@@ -76,6 +79,8 @@
 
   // [OCE] - 0x95xx
   #define UEDP_FCR_OCE_REGISTRY_FULL      UEDP_FCR_CODE(UEDP_FCR_MOD_OCE, 0x00) // Không thể đăng ký thêm dịch vụ OCE mới
+  #define UEDP_FCR_OCE_INVALID_SVC        UEDP_FCR_CODE(UEDP_FCR_MOD_OCE, 0x01) // Con trỏ ocesvc_t truyền vào register/unregister không hợp lệ (NULL hoặc chính là sentinel head)
+  #define UEDP_FCR_OCE_APPEND_FAILED      UEDP_FCR_CODE(UEDP_FCR_MOD_OCE, 0x02) // llist_append() thất bại khi đăng ký service (lỗi nội bộ linked-list)
 
   // [PAL] - 0x96xx
   #define UEDP_FCR_PAL_LOGDP_TABLE_FULL   UEDP_FCR_CODE(UEDP_FCR_MOD_PAL, 0x00) // Bảng đăng ký callback của logdp đã đầy

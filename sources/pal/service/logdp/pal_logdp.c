@@ -1,9 +1,9 @@
 /**
  * @file pal_logdp.c
- * @author Hai Minh
+ * @author Shang Huang
  * @brief Implementation of the Log Dispatching service for the PAL layer in UEDP
  * @version 0.1
- * @date 2026-08-04
+ * @date 2026-06-01
  * @copyright MIT License
  */
 #include "uedp_core.h"

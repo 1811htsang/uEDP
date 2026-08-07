@@ -4,7 +4,9 @@
  * @brief Finite State Machine definitions and utilities for UEDP system
  * @version 0.1
  * @date 2026-04-16
+ * 
  * @copyright MIT License
+ * 
  */
 #ifndef __UEDP_FSM_H__
 	#define __UEDP_FSM_H__

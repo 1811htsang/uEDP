@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file uedp_tsm.c
  * @author Shang Huang
  * @brief Implementation of Transition State Machine (TSM) management for UEDP system
@@ -18,13 +18,13 @@ void uedp_tsm_init(
 ) {
 	// Kiểm tra tsm_table và state_des_table không phải là NULL
 	if (!tsm_table || !state_des_table) {
-		// FCR tag for Hai Minh, clear this after FCR injection
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_SM_NULL_HANDLER, "tsm_init: null table");
 		return; 
 	}
 
 	// Kiểm tra initial_state_id hợp lệ
 	if (initial_state_id < UEDP_TSM_STATE_MIN || initial_state_id > UEDP_TSM_STATE_MAX) {
-		// FCR tag for Hai Minh, clear this after FCR injection
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_SM_INVALID_TRANS, "tsm_init: bad initial state");
 		return;
 	}
 
@@ -51,8 +51,8 @@ void uedp_tsm_trans(uedp_tsm_t* tsm_table, tsm_state_id_t state_id) {
 	if (tsm_table && (state_id >= UEDP_TSM_STATE_MIN && state_id <= UEDP_TSM_STATE_MAX)) {
 
 		if (state_id == UEDP_TSM_STATE_STAY) {
+			// STAY là hành vi hợp lệ, thường xuyên xảy ra (state tự loop) - không phải lỗi, không raise FCR.
 			pal_exit_critical();
-			// FCR tag for Hai Minh, clear this after FCR injection
 			return;
 		}
 
@@ -110,4 +110,3 @@ void uedp_tsm_dispatch(uedp_tsm_t* tsm_table, uedp_msg_t* msg) {
 		UEDP_FCR_RAISE(UEDP_FCR_SM_INVALID_TRANS);
 	}
 }
-

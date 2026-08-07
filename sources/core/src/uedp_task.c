@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file uedp_task.c
  * @author Shang Huang
  * @brief Implementation of task management for UEDP system
@@ -76,11 +76,11 @@ void uedp_task_poll_create(task_poll_t* task_table) {
 
 RETR_STAT uedp_task_norm_post_msg(task_id_t dest_id, uedp_msg_t* msg) {
   if (dest_id < UEDP_TASK_NORM_MIN_ID || dest_id > UEDP_TASK_NORM_MAX_ID) {
-    // FCR tag for Hai Minh, clear this after FCR injection
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "post_msg: dest_id out of range");
     return STAT_ERROR; // Trả về lỗi nếu dest_id không hợp lệ
   }
   if (!msg) {
-    // FCR tag for Hai Minh, clear this after FCR injection
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "post_msg: null msg");
     return STAT_ERROR; // Trả về lỗi nếu msg là NULL
   }
   internal_uedp_task_norm_put_to_queue(dest_id, msg);
@@ -157,9 +157,7 @@ uedp_msg_t* uedp_task_norm_get_current_msg() {
 
 bool uedp_task_norm_is_ready(task_id_t task_id) {
   if (task_id < UEDP_TASK_NORM_MIN_ID || task_id > UEDP_TASK_NORM_MAX_ID) {
-    // FCR tag for Hai Minh, clear this after FCR injection
-    // Consider for this to be escalated to a fatal instead of just returning false, 
-    // as it indicates a serious issue in the task management system
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "is_ready: task_id out of range");
     return false; // Trả về false nếu task_id không hợp lệ
   }
   task_pri_t pri = 0;
@@ -182,7 +180,7 @@ void uedp_task_norm_get_queue_stats(task_id_t tid, ui8* used, ui8* max) {
 
 void uedp_task_poll_set_ability(task_id_t tid, ui8 ability) {
   if (tid < UEDP_TASK_POLL_MIN_ID || tid > UEDP_TASK_POLL_MAX_ID) {
-    // FCR tag for Hai Minh, clear this after FCR injection
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "poll_set_ability: tid out of range");
     return; // Nếu tid không hợp lệ, không thực hiện gì
   }
 
@@ -205,13 +203,13 @@ void internal_uedp_task_norm_put_to_queue(task_id_t tid, uedp_msg_t* msg) {
   // Kiểm tra xem tác vụ có tồn tại trong bảng tác vụ hay không
   task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
   if (task == NULL) {
-    UEDP_FCR_RAISE(UEDP_FCR_TASK_INVALID_ID); // tid không khớp bất kỳ task nào trong bảng
+    // task == NULL đã được raise sẵn bên trong get_task_norm_by_id() ở trên, không raise lại.
     return;
   }
 
   // Kiểm tra fifo của tác vụ đã được khởi tạo chưa
   if (!fifo_isinit(&task->msg_queue)) {
-    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "message queue của task chưa được khởi tạo (fifo_isinit == false)");
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "put_to_queue: msg_queue not init");
     return;
   }
 
@@ -245,7 +243,9 @@ uedp_msg_t* internal_uedp_task_norm_get_from_queue(task_id_t tid) {
       return msg_ptr;
     }
   }
-  // FCR tag for Hai Minh, clear this after FCR injection
+  // Hàm này chỉ được scheduler gọi khi đã biết task có tin nhắn đang chờ (ready bit đang bật),
+  // nên rơi tới đây (task NULL hoặc fifo_get thất bại) là bất thường.
+  UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "get_from_queue: unexpected empty/invalid");
   return NULL;
 }
 
@@ -257,8 +257,7 @@ uedp_msg_t* internal_uedp_task_norm_get_from_queue(task_id_t tid) {
 void internal_uedp_task_norm_set_ready(task_pri_t pri) {
   // Kiểm tra xem mức độ ưu tiên có hợp lệ hay không (giả sử mức độ ưu tiên hợp lệ là từ 0 đến 23)
   if (pri < UEDP_TASK_PRI_LEVEL_0 || pri > UEDP_TASK_PRI_LEVEL_23) {
-    // Nếu mức độ ưu tiên không hợp lệ, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
-    // FCR tag for Hai Minh, clear this after FCR injection
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_PRI, "set_ready: pri out of range");
     return;
   }
 
@@ -280,8 +279,7 @@ void internal_uedp_task_norm_set_ready(task_pri_t pri) {
 void internal_uedp_task_norm_clear_ready(task_pri_t pri) {
   // Kiểm tra xem mức độ ưu tiên có hợp lệ hay không (giả sử mức độ ưu tiên hợp lệ là từ 0 đến 23)
   if (pri < UEDP_TASK_PRI_LEVEL_0 || pri > UEDP_TASK_PRI_LEVEL_23) {
-    // Nếu mức độ ưu tiên không hợp lệ, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
-    // FCR tag for Hai Minh, clear this after FCR injection
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_PRI, "clear_ready: pri out of range");
     return;
   }
 
@@ -301,10 +299,10 @@ void internal_uedp_task_norm_clear_ready(task_pri_t pri) {
  * @return task_pri_t Mức độ ưu tiên cao nhất của các tác vụ đang ở trạng thái sẵn sàng, hoặc 0 nếu không có tác vụ nào sẵn sàng
  */
 task_pri_t internal_uedp_task_norm_find_highest_priority(void) {
-  // Kiểm tra nếu không có tác vụ nào sẵn sàng
+  // Kiểm tra nếu không có tác vụ nào sẵn sàng - đây là trạng thái idle BÌNH THƯỜNG,
+  // xảy ra ở mỗi vòng scheduler khi hệ thống rảnh, tuyệt đối KHÔNG raise FCR ở đây.
   if (g_task_norm_ready == 0) {
-    // FCR tag for Hai Minh, clear this after FCR injection
-    return 0; // Trả về 0 hoặc một giá trị đặc biệt để biểu thị không có tác vụ nào sẵn sàng
+    return 0;
   }
 
   return (task_pri_t)(pal_math_get_highest_bit32(g_task_norm_ready) + UEDP_TASK_PRI_LEVEL_0);
@@ -321,8 +319,9 @@ task_pri_t internal_uedp_task_norm_find_highest_priority(void) {
 void internal_uedp_task_norm_dispatch(task_norm_t* task, uedp_msg_t* msg) {
   // Kiểm tra hợp lệ của task và msg
   if (task == NULL || msg == NULL) {
-    // Nếu task hoặc msg không hợp lệ, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
-    // FCR tag for Hai Minh, clear this after FCR injection
+    // Chỉ được gọi nội bộ bởi scheduler với tham số đã được kiểm tra trước đó -
+    // rơi vào đây gần như không thể xảy ra, raise cho mục đích phòng vệ (defense-in-depth).
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "dispatch: null task/msg");
     return;
   }
 
@@ -366,7 +365,7 @@ void internal_uedp_task_poll_exec(void) {
 task_norm_t* internal_uedp_task_get_task_norm_by_id(task_id_t tid) {
   // Kiểm tra tid hợp lệ
   if (tid < UEDP_TASK_NORM_MIN_ID || tid > UEDP_TASK_NORM_MAX_ID) {
-    // FCR tag for Hai Minh, clear this after FCR injection
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "get_by_id: tid out of range");
     return NULL; // Trả về NULL nếu tid không hợp lệ
   }
 
@@ -377,7 +376,7 @@ task_norm_t* internal_uedp_task_get_task_norm_by_id(task_id_t tid) {
     }
   }
 
-  // FCR tag for Hai Minh, clear this after FCR injection
+  UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "get_by_id: id not found in table");
   return NULL; // Trả về NULL nếu không tìm thấy tác vụ nào có ID tương ứng
 }
 
@@ -412,6 +411,7 @@ void internal_uedp_task_norm_set_urgent(task_id_t tid) {
     } else {
       task->urgent_pending = true; // Nếu không còn mức độ ưu tiên khẩn cấp nào có sẵn, 
                                   // đánh dấu tác vụ này đang có tín hiệu khẩn cấp đang chờ xử lý
+      UEDP_FCR_RAISE(UEDP_FCR_TASK_PRI_EXHAUSTED); // Hết mức ưu tiên tạm thời (16-23) cho Priority Escalation
     }
 
     pal_exit_critical(); // Thoát critical section sau khi đã cập nhật trạng thái của tác vụ
@@ -427,16 +427,17 @@ void internal_uedp_task_norm_reset_urgent(task_id_t tid) {
     task->urgent_pending = false; // Đặt lại cờ tín hiệu khẩn cấp đang chờ xử lý về false
     pal_exit_critical(); // Thoát critical section sau khi đã cập nhật trạng thái của tác vụ
   }
-  // FCR tag for Hai Minh, clear this after FCR injection
+  // task == NULL đã được raise sẵn bên trong internal_uedp_task_get_task_norm_by_id() ở trên,
+  // không cần raise thêm lần nữa ở đây để tránh double-raise.
 }
 
 RETR_STAT uedp_task_norm_post_urgent(task_id_t tid, uedp_msg_t* msg) {
   if (tid < UEDP_TASK_NORM_MIN_ID || tid > UEDP_TASK_NORM_MAX_ID) {
-    // FCR tag for Hai Minh, clear this after FCR injection
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "post_urgent: tid out of range");
     return STAT_ERROR; // Trả về lỗi nếu tid không hợp lệ
   }
   if (!msg) {
-    // FCR tag for Hai Minh, clear this after FCR injection
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "post_urgent: null msg");
     return STAT_ERROR; // Trả về lỗi nếu msg là NULL
   }
 
@@ -450,15 +451,13 @@ void internal_uedp_task_norm_put_head_to_queue(task_id_t tid, uedp_msg_t* msg) {
   // Kiểm tra xem tác vụ có tồn tại trong bảng tác vụ hay không
   task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
   if (task == NULL) {
-    // Nếu tác vụ không tồn tại, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
-    // FCR tag for Hai Minh, clear this after FCR injection
+    // task == NULL đã được raise sẵn bên trong get_task_norm_by_id() ở trên.
     return;
   }
 
   // Kiểm tra fifo của tác vụ đã được khởi tạo chưa
   if (!fifo_isinit(&task->msg_queue)) {
-    // Nếu fifo chưa được khởi tạo, có thể ghi log lỗi hoặc xử lý theo cách phù hợp
-    // FCR tag for Hai Minh, clear this after FCR injection
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "put_head_to_queue: msg_queue not init");
     return;
   }
 
@@ -466,7 +465,11 @@ void internal_uedp_task_norm_put_head_to_queue(task_id_t tid, uedp_msg_t* msg) {
   pal_enter_critical();
 
   // Đưa tin nhắn vào đầu hàng đợi của tác vụ
-  fifo_put_head(&task->msg_queue, (uedp_msg_t*)(&msg));
+  // Sửa bug: trước đây không kiểm tra return value của fifo_put_head(), khiến msg
+  // bị mất âm thầm nếu queue đã đầy (cùng lớp bug đã fix ở put_to_queue()).
+  if (fifo_put_head(&task->msg_queue, (uedp_msg_t*)(&msg)) == RET_FIFO_NG) {
+    UEDP_FCR_RAISE(UEDP_FCR_TASK_QUEUE_FULL);
+  }
 
   // Exit critical section
   pal_exit_critical();

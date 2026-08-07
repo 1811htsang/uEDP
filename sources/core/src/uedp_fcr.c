@@ -1,6 +1,6 @@
 /**
  * @file uedp_fcr.c
- * @author Hai Minh
+ * @author Shang Huang
  * @brief Implementation of Fatal Code Return (FCR) - định danh và xử lý lỗi nghiêm trọng
  * @version 0.1
  * @date 2026-08-01
@@ -25,14 +25,17 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
   { UEDP_FCR_MSG_POOL_EXHAUSTED,   "MSG pool exhausted",              UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
   { UEDP_FCR_MSG_INVALID_PTR,      "MSG invalid pointer",             UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_MSG_ISR_FIFO_FULL,    "MSG ISR fifo full",               UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
+  { UEDP_FCR_MSG_POOL_MISCONFIG,   "MSG pool misconfigured",          UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
 
   // [TASK]
   { UEDP_FCR_TASK_QUEUE_FULL,      "TASK message queue full",         UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_RESET_TASK },
   { UEDP_FCR_TASK_INVALID_ID,      "TASK invalid ID",                 UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_TASK_PRI_EXHAUSTED,   "TASK priority escalation exhausted", UEDP_FCR_SEV_WARN, UEDP_FCR_ACT_LOG_ONLY  },
+  { UEDP_FCR_TASK_INVALID_PRI,     "TASK invalid priority",           UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
 
   // [TIMER]
   { UEDP_FCR_TIMER_POOL_EXHAUSTED, "TIMER pool exhausted",            UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_TIMER_INVALID_PARAM,  "TIMER invalid param",             UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
 
   // [SM] (FSM/TSM)
   { UEDP_FCR_SM_INVALID_TRANS,     "SM invalid transition",           UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
@@ -43,6 +46,8 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
 
   // [OCE]
   { UEDP_FCR_OCE_REGISTRY_FULL,    "OCE registry full",               UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_OCE_INVALID_SVC,      "OCE invalid service ptr",         UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_OCE_APPEND_FAILED,    "OCE append failed",               UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
 
   // [PAL]
   { UEDP_FCR_PAL_LOGDP_TABLE_FULL, "PAL logdp output table full",     UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
