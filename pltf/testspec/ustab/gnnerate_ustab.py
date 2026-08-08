@@ -2,7 +2,7 @@ import re
 import json
 from .cvert_ustab import ustab_convert_yaml
 
-class ustab:
+class gnnerate_ustab:
   def __init__(self):
     self.ust = {
       "tnorms": {},
@@ -15,85 +15,59 @@ class ustab:
       "POLL": 0xD4,
       "SIG": 0x01
     }
-
   def ustab_parse_kconfig(self, filepath):
     with open(filepath, 'r') as f:
       lines = f.readlines()
-
     for line in lines:
       line = line.strip()
       if not line or line.startswith("#"):
         continue
-
-      # --- 1. PARSE NORM TASKS ---
-      # Tên Task, Queue, Handler
       m = re.match(r'CONFIG_DECL_TASK_NORM_(\d+)_NAME="(.+)"', line)
-      if m: self._get_norm(m.group(1))["id_symbol"] = m.group(2) + "_IDS"
-      
+      if m: self._get_norm(m.group(1))["id_symbol"] = m.group(2) + "_IDS"      
       m = re.match(r'CONFIG_DECL_MSG_QUEUE_(\d+)_NAME="(.+)"', line)
       if m: self._get_norm(m.group(1))["queue_name"] = m.group(2) + "_msgq"
-      
       m = re.match(r'CONFIG_DECL_NORM_HANDLER_(\d+)_NAME="(.+)"', line)
       if m: self._get_norm(m.group(1))["handler"] = m.group(2) + "_nhler"
-
-      # TSM Logic
       m = re.match(r'CONFIG_APPCFG_TSM_TASK_(\d+)="(.+)"', line)
       if m: 
         self._get_norm(m.group(1))["tsm"]["object"] = m.group(2)
         self._get_norm(m.group(1))["tsm"]["table"] = m.group(2) + "_tbl"
-      
       m = re.match(r'CONFIG_APPCFG_TSM_TASK_(\d+)_STATE_(\d+)="(.+)"', line)
       if m: 
         self._get_norm(m.group(1))["tsm"]["states"].append(m.group(3))
         self._get_norm(m.group(1))["tsm"]["state_trans"].append(m.group(3) + "_trans")
-
-      # FSM Logic
       m = re.match(r'CONFIG_APPCFG_FSM_TASK_(\d+)="(.+)"', line)
       if m: self._get_norm(m.group(1))["fsm"]["object"] = m.group(2)
-      
       m = re.match(r'CONFIG_APPCFG_FSM_TASK_(\d+)_STATE_(\d+)="(.+)"', line)
       if m: self._get_norm(m.group(1))["fsm"]["states"].append(m.group(3))
-
-      # --- 2. PARSE POLL TASKS ---
       m = re.match(r'CONFIG_DECL_TASK_POLL_(\d+)_NAME="(.+)"', line)
-      if m: self._get_poll(m.group(1))["id_symbol"] = m.group(2)
-      
+      if m: self._get_poll(m.group(1))["id_symbol"] = m.group(2)     
       m = re.match(r'CONFIG_DECL_POLL_HANDLER_(\d+)_NAME="(.+)"', line)
       if m: self._get_poll(m.group(1))["handler"] = m.group(2)
-
-      # --- 3. PARSE SIGNALS ---
       m = re.match(r'CONFIG_DECL_SIG_(\d+)_NAME="(.+)"', line)
       if m: self._get_sig(m.group(1))["id_symbol"] = m.group(2)
-
     self._apply_hex_values()
     return self.ust
-
   def _get_norm(self, idx):
     if idx not in self.ust["tnorms"]:
       self.ust["tnorms"][idx] = {"tsm": {"states": [], "state_trans": []}, "fsm": {"states": []}}
     return self.ust["tnorms"][idx]
-
   def _get_poll(self, idx):
     if idx not in self.ust["tpolls"]:
       self.ust["tpolls"][idx] = {}
     return self.ust["tpolls"][idx]
-
   def _get_sig(self, idx):
     if idx not in self.ust["sigs"]:
       self.ust["sigs"][idx] = {}
     return self.ust["sigs"][idx]
-
   def _apply_hex_values(self):
-    """Tự động tính toán giá trị HEX dựa trên Index và Offset"""
     for idx, data in self.ust["tnorms"].items():
       data["hex_val"] = hex(self.OFFSETS["NORM"] + int(idx) - 1)
     for idx, data in self.ust["tpolls"].items():
       data["hex_val"] = hex(self.OFFSETS["POLL"] + int(idx) - 1)
     for idx, data in self.ust["sigs"].items():
       data["hex_val"] = hex(self.OFFSETS["SIG"] + int(idx) - 1)
-
-# Thực thi và in kết quả mẫu
-builder = ustab()
+builder = gnnerate_ustab()
 concentrated_context = builder.ustab_parse_kconfig(".config") # Giả sử file tên là .config
 print(json.dumps(concentrated_context, indent=2))
 ustab_convert_yaml(concentrated_context)  # Gọi hàm chuyển đổi sang YAML
