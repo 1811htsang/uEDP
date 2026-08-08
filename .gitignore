@@ -73,6 +73,7 @@ pltf/testspec/cfparsers/__pycache__/*
 pltf/testspec/generators/__pycache__/*
 pltf/testspec/__pycache__/*
 pltf/__pycache__/*
+pltf/testspec/ustab/__pycache__/*
 
 # ESP-IDF
 eim_config.toml
@@ -80,4 +81,5 @@ eim_config.toml
 # Sample config/env file
 .config
 .env
-
+.vscode/*
+config.yaml
