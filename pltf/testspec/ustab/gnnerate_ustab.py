@@ -67,7 +67,10 @@ class gnnerate_ustab:
       data["hex_val"] = hex(self.OFFSETS["POLL"] + int(idx) - 1)
     for idx, data in self.ust["sigs"].items():
       data["hex_val"] = hex(self.OFFSETS["SIG"] + int(idx) - 1)
-builder = gnnerate_ustab()
-concentrated_context = builder.ustab_parse_kconfig(".config") # Giả sử file tên là .config
-print(json.dumps(concentrated_context, indent=2))
-ustab_convert_yaml(concentrated_context)  # Gọi hàm chuyển đổi sang YAML
+# Calling
+def generate_ustab_from_kconfig(kconfig_path):
+  generator = gnnerate_ustab()
+  ustab_data = generator.ustab_parse_kconfig(kconfig_path)
+  return ustab_data
+  # yaml_output = ustab_convert_yaml(ustab_data)
+  # return yaml_output
