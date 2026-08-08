@@ -1,81 +1,99 @@
-import yaml
 import re
-from .cvert_ustab import convert_yaml
+import json
+from .cvert_ustab import ustab_convert_yaml
 
-class USTManager:
-  def __init__(self, yaml_content):
-    # Load YAML gốc
-    self.raw_data = yaml.safe_load(yaml_content)
-    self.task_registry = {}
-    self.signal_map = {}
-
-  def _clean_value(self, val_str):
-    """Hàm phụ trợ để tách ID và giá trị Hex (ví dụ: 'SIG_1_ID (0x01u)' -> 0x01)"""
-    match = re.search(r'\((0x[0-9A-Fa-f]+)u\)', val_str)
-    if match:
-      return match.group(1)
-    return val_str
-
-  def build_registry(self):
-    """
-    Hệ thống lõi để ánh xạ các danh sách rời rạc thành các đối tượng Task tập trung.
-    Logic: Dựa trên chỉ số index của các danh sách để đảm bảo tính nhất quán 
-    mà không cần quan tâm đến tên gọi (task_1 hay task_A).
-    """
-    
-    # 1. Xử lý Task Norm (Lấy số lượng từ tasknorm_defs)
-    tasks = self.raw_data.get('tasknorm_defs', [])
-    handlers = self.raw_data.get('normhler_lists', [])
-    fsm_objs = self.raw_data.get('appcfg_fsm_objects', [])
-    tsm_objs = self.raw_data.get('appcfg_tsm_objects', [])
-    tsm_state_trans = self.raw_data.get('appcfg_tsm_state_trans', [])
-    msg_queues = self.raw_data.get('msgq_defs', [])
-
-    for i in range(len(tasks)):
-      # Tách lấy Key ID (ví dụ: TASK_NORM_1_ID)
-      task_key = tasks[i].split()[0]
-      hex_val = self._clean_value(tasks[i])
-
-      # Tạo Object Task tập trung
-      self.task_registry[task_key] = {
-        "hex": hex_val,
-        "handler": handlers[i] if i < len(handlers) else "NULL",
-        "fsm": fsm_objs[i] if i < len(fsm_objs) else "NULL",
-        "tsm": tsm_objs[i] if i < len(tsm_objs) else "NULL",
-        "msg_queue": msg_queues[i] if i < len(msg_queues) else "NULL"
-      }
-
-    # 2. Xử lý Signal
-    signals = self.raw_data.get('sig_defs', [])
-    for sig in signals:
-      sig_key = sig.split()[0]
-      sig_hex = self._clean_value(sig)
-      self.signal_map[sig_key] = sig_hex
-
-  def get_task_context(self, task_id):
-    """Truy vấn nhanh mọi thông tin của 1 Task bất kỳ"""
-    return self.task_registry.get(task_id, {})
-
-  def export_unified_context(self):
-    """Xuất dữ liệu đã được 'concentrate' để đẩy vào Jinja2"""
-    return {
-        "tasks": self.task_registry,
-        "signals": self.signal_map,
-        "total_tasks": len(self.task_registry)
+class ustab:
+  def __init__(self):
+    self.ust = {
+      "tnorms": {},
+      "tpolls": {},
+      "sigs": {}
+    }
+    # Định nghĩa các base offset theo thiết kế HES của μE-OS
+    self.OFFSETS = {
+      "NORM": 0xE6,
+      "POLL": 0xD4,
+      "SIG": 0x01
     }
 
-# --- TEST MODULE ---
-if __name__ == "__main__":
-  # NOTE - Giả sử đây là nội dung YAML từ cfparsers
-  yaml_content = convert_yaml()
+  def ustab_parse_kconfig(self, filepath):
+    with open(filepath, 'r') as f:
+      lines = f.readlines()
 
-  ust = USTManager(yaml_content)
-  ust.build_registry()
-  
-  # Lấy thông tin tập trung
-  unified_context = ust.export_unified_context()
-  
-  import json
-  import pprint
-  pprint.pprint(unified_context)
-  # print(json.dumps(unified_context))
+    for line in lines:
+      line = line.strip()
+      if not line or line.startswith("#"):
+        continue
+
+      # --- 1. PARSE NORM TASKS ---
+      # Tên Task, Queue, Handler
+      m = re.match(r'CONFIG_DECL_TASK_NORM_(\d+)_NAME="(.+)"', line)
+      if m: self._get_norm(m.group(1))["id_symbol"] = m.group(2) + "_IDS"
+      
+      m = re.match(r'CONFIG_DECL_MSG_QUEUE_(\d+)_NAME="(.+)"', line)
+      if m: self._get_norm(m.group(1))["queue_name"] = m.group(2) + "_msgq"
+      
+      m = re.match(r'CONFIG_DECL_NORM_HANDLER_(\d+)_NAME="(.+)"', line)
+      if m: self._get_norm(m.group(1))["handler"] = m.group(2) + "_nhler"
+
+      # TSM Logic
+      m = re.match(r'CONFIG_APPCFG_TSM_TASK_(\d+)="(.+)"', line)
+      if m: 
+        self._get_norm(m.group(1))["tsm"]["object"] = m.group(2)
+        self._get_norm(m.group(1))["tsm"]["table"] = m.group(2) + "_tbl"
+      
+      m = re.match(r'CONFIG_APPCFG_TSM_TASK_(\d+)_STATE_(\d+)="(.+)"', line)
+      if m: 
+        self._get_norm(m.group(1))["tsm"]["states"].append(m.group(3))
+        self._get_norm(m.group(1))["tsm"]["state_trans"].append(m.group(3) + "_trans")
+
+      # FSM Logic
+      m = re.match(r'CONFIG_APPCFG_FSM_TASK_(\d+)="(.+)"', line)
+      if m: self._get_norm(m.group(1))["fsm"]["object"] = m.group(2)
+      
+      m = re.match(r'CONFIG_APPCFG_FSM_TASK_(\d+)_STATE_(\d+)="(.+)"', line)
+      if m: self._get_norm(m.group(1))["fsm"]["states"].append(m.group(3))
+
+      # --- 2. PARSE POLL TASKS ---
+      m = re.match(r'CONFIG_DECL_TASK_POLL_(\d+)_NAME="(.+)"', line)
+      if m: self._get_poll(m.group(1))["id_symbol"] = m.group(2)
+      
+      m = re.match(r'CONFIG_DECL_POLL_HANDLER_(\d+)_NAME="(.+)"', line)
+      if m: self._get_poll(m.group(1))["handler"] = m.group(2)
+
+      # --- 3. PARSE SIGNALS ---
+      m = re.match(r'CONFIG_DECL_SIG_(\d+)_NAME="(.+)"', line)
+      if m: self._get_sig(m.group(1))["id_symbol"] = m.group(2)
+
+    self._apply_hex_values()
+    return self.ust
+
+  def _get_norm(self, idx):
+    if idx not in self.ust["tnorms"]:
+      self.ust["tnorms"][idx] = {"tsm": {"states": [], "state_trans": []}, "fsm": {"states": []}}
+    return self.ust["tnorms"][idx]
+
+  def _get_poll(self, idx):
+    if idx not in self.ust["tpolls"]:
+      self.ust["tpolls"][idx] = {}
+    return self.ust["tpolls"][idx]
+
+  def _get_sig(self, idx):
+    if idx not in self.ust["sigs"]:
+      self.ust["sigs"][idx] = {}
+    return self.ust["sigs"][idx]
+
+  def _apply_hex_values(self):
+    """Tự động tính toán giá trị HEX dựa trên Index và Offset"""
+    for idx, data in self.ust["tnorms"].items():
+      data["hex_val"] = hex(self.OFFSETS["NORM"] + int(idx) - 1)
+    for idx, data in self.ust["tpolls"].items():
+      data["hex_val"] = hex(self.OFFSETS["POLL"] + int(idx) - 1)
+    for idx, data in self.ust["sigs"].items():
+      data["hex_val"] = hex(self.OFFSETS["SIG"] + int(idx) - 1)
+
+# Thực thi và in kết quả mẫu
+builder = ustab()
+concentrated_context = builder.ustab_parse_kconfig(".config") # Giả sử file tên là .config
+print(json.dumps(concentrated_context, indent=2))
+ustab_convert_yaml(concentrated_context)  # Gọi hàm chuyển đổi sang YAML
