@@ -127,8 +127,8 @@
 
 - [x] Triển khai thiết kế FCR (Fatal Code Return) kèm tài liệu để hỗ trợ việc định danh các lỗi nghiêm trọng trong μEDP với bảng mã lỗi và các hành động xử lý tương ứng, giúp đảm bảo rằng các lỗi nghiêm trọng được xử lý một cách hiệu quả và an toàn trong hệ thống.
 - [x] Bổ sung extension Anchor Comment để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu, giúp người phát triển dễ dàng theo dõi và quản lý các phần quan trọng của hệ thống.
-- [ ] Hoàn thiện injection của FCR vào các API để đảm bảo rằng các lỗi nghiêm trọng được phát hiện và xử lý một cách hiệu quả trong hệ thống, đồng thời cung cấp thông tin chi tiết về lỗi và các hành động xử lý tương ứng. //NOTE - Minh đã được review code và bổ sung các anchor để đánh dấu tiếp tục hoàn thiện mục này. Sau khi hoàn thành thì line này sẽ được đánh dấu là done.
-- [ ] Bổ sung name attribute cho rprintf để phục vụ μE-LS.
+- [x] Hoàn thiện injection của FCR vào các API để đảm bảo rằng các lỗi nghiêm trọng được phát hiện và xử lý một cách hiệu quả trong hệ thống, đồng thời cung cấp thông tin chi tiết về lỗi và các hành động xử lý tương ứng. //NOTE - Minh đã được review code và bổ sung các anchor để đánh dấu tiếp tục hoàn thiện mục này. Sau khi hoàn thành thì line này sẽ được đánh dấu là done.
+- [x] Bổ sung name attribute cho rprintf để phục vụ μE-LS.
 - [ ] Bổ sung tài liệu thiết kế FCR.
 - [ ] Bổ sung API filling task ID và source ID attribute của message (follow commit 6728c..) để hỗ trợ việc định danh các task và nguồn gốc của các tin nhắn trong hệ thống, giúp đảm bảo rằng các tin nhắn được xử lý một cách chính xác và hiệu quả.
 - [ ] Ra mắt phiên bản 1.1.5 của lõi μEDP với đầy đủ tính năng FCR, các bản cập nhật và tài liệu hướng dẫn sử dụng.
