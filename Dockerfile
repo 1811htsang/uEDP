@@ -21,7 +21,9 @@ RUN pip install --no-cache-dir \
   kconfiglib \
   jinja2 \
   pytest \
-  pyserial
+  pyserial \
+  pyyaml \
+  pyyaml-include
 # Create folder /uedp-libs for base source code
 RUN mkdir -p /uedp-libs/
 # Create folder /test for PLTF
