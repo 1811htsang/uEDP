@@ -23,6 +23,8 @@ echo "[ENTRY] call testspec.generator"
 python -m pltf.testspec.generators.tsgen
 echo "[ENTRY] call testspec.ustab.tsustab"
 python -m pltf.testspec.ustab.tsustab
+# Change ownership of all files in the /uedp-libs and /uedp-test directories to the new user
+chown -R $USER_ID:$GROUP_ID /uedp-libs/*
 echo -e "[DONE]"
 echo -e "You can:"
 echo -e "\t[cd /uedp-test] for PLTF development"

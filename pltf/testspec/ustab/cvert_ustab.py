@@ -25,6 +25,8 @@ def ustab_convert_yaml(context):
 # >> tpolls: &tpolllst
 # >>  '1', '2' of tpolls: &tpoll1, &tpoll2, ...
 # Alias: sử dụng *<str> để tham chiếu đến các phần tử đã định danh
+
+# NOTE - Triển khai logic bắt đầu từ dòng này
 """
   # NOTE - 3. Ghi một lần duy nhất vào file
   with open("config.yaml", "w", encoding='utf-8') as f:
