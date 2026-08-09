@@ -601,8 +601,6 @@ Nguyên tắc chọn nơi raise: **chỉ raise ở những nhánh thật sự b�
 - `UEDP_FCR_ITNLOG_BUF_CORRUPT` đã có mã trong bảng nhưng **chưa có logic kiểm tra hash thực sự** ở phía đọc (`uedp_itnlog_dump()`) — hiện `itnlog` chỉ tính hash lúc ghi, chưa so sánh lại lúc đọc để phát hiện corrupt.
 - Người dùng ở tầng ứng dụng có thể tự khai báo mã lỗi riêng qua `UEDP_FCR_CODE(UEDP_FCR_MOD_APP, x)`, nhưng hiện chưa có cơ chế cho phép tầng ứng dụng **tự đăng ký thêm entry** vào `g_fcr_table[]` lúc runtime — bảng hiện là `static const`, muốn thêm entry mới phải sửa trực tiếp `uedp_fcr.c`.
 
-
-
 ## Công cụ hỗ trợ phát triển (Development Tools)
 
 ### [KwDI] Kconfig with Docker Integration - Tích hợp Kconfig với Docker

@@ -129,7 +129,7 @@
 - [x] Bổ sung extension Anchor Comment để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu, giúp người phát triển dễ dàng theo dõi và quản lý các phần quan trọng của hệ thống.
 - [x] Hoàn thiện injection của FCR vào các API để đảm bảo rằng các lỗi nghiêm trọng được phát hiện và xử lý một cách hiệu quả trong hệ thống, đồng thời cung cấp thông tin chi tiết về lỗi và các hành động xử lý tương ứng. //NOTE - Minh đã được review code và bổ sung các anchor để đánh dấu tiếp tục hoàn thiện mục này. Sau khi hoàn thành thì line này sẽ được đánh dấu là done.
 - [x] Bổ sung name attribute cho rprintf để phục vụ μE-LS.
-- [ ] Bổ sung tài liệu thiết kế FCR.
+- [x] Bổ sung tài liệu thiết kế FCR. //NOTE - VN done, còn EN thì làm sau.
 - [ ] Bổ sung API filling task ID và source ID attribute của message (follow commit 6728c..) để hỗ trợ việc định danh các task và nguồn gốc của các tin nhắn trong hệ thống, giúp đảm bảo rằng các tin nhắn được xử lý một cách chính xác và hiệu quả.
 - [ ] Ra mắt phiên bản 1.1.5 của lõi μEDP với đầy đủ tính năng FCR, các bản cập nhật và tài liệu hướng dẫn sử dụng.
 
@@ -147,26 +147,31 @@
 - [x] Thiết kế syntax SII cho YAML.
 - [x] Thiết kế syntax PPLP cho YAML.
 - [x] Thiết kế syntax APE cho YAML.
-- [x] Thiết kế syntax OCE cho YAML. Bổ sung cân nhắc OCE-execjn cho các phiên bản sau.
+- [x] Thiết kế syntax OCE cho YAML. Bổ sung cân nhắc OCE-execjn (chain) cho các phiên bản sau.
 - [x] Review và refine các syntax SII, PPLP, APE, OCE cho YAML để đảm bảo rằng cú pháp được thiết kế một cách hợp lý, dễ đọc và dễ hiểu, đồng thời hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách hiệu quả.
-- [x] Thiết kế ustab.cvert và ustab.gnnerate để redirect kconfig data sang task-oriented YAML nhằm hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [x] Thiết kế ustab.cvert và ustab.gnnerate để redirect kconfig data sang task-oriented YAML nhằm hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP. //FIXME - Ở thời điểm hiện tại, kết quả từ gnnerate chưa hỗ trợ được việc tự động gán anchor cho các tag (ankorpin từng được thiết kế để hỗ trợ việc này nhưng chưa triển khai được do hạn chế của PyYAML, ruamel.yaml). Cần cân nhắc triển khai ustab.ankorpin trong các phiên bản sau nếu cần thiết để hỗ trợ việc tự động gán anchor cho các tag trong YAML. Hiện tại, chỉ có thể sử dụng ustab.xportstax để export toàn bộ config sang YAML. Cần cân nhắc triển khai ustab.ankorpin trong các phiên bản sau nếu cần thiết để hỗ trợ việc tự động gán anchor cho các tag trong YAML.
 - [x] Bổ sung thiết kế ustab.xportstax để hỗ trợ mapping toàn bộ config vào file YAML của μE-LS, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP. //NOTE - Loại bỏ ustab.ankorpin do không thể triển khai được và hạn chế của PyYAML, ruamel.yaml. Tạm thời sử dụng ustab.xportstax để export toàn bộ config sang YAML. Cân nhắc triển khai ustab.ankorpin trong các phiên bản sau.
 - [x] Hoàn thiện việc kết nối ustab vào docker compose để tự động build và kiểm thử các tính năng của lõi μEDP trên các nền tảng khác nhau một cách dễ dàng và nhất quán.
-- [ ] Triển khai thiết kế lstaxer.vlid và lstaxer.kreate để sinh ra C-source code từ YAML của μE-LS, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [x] Sửa đổi quyền truy cập đồng bộ để tránh lỗi khi create/remove file in/out Docker.
+- [ ] Sửa đổi lại thiết kế của phần `escal` để remove duplicate khi enable/disable các tính năng của μE-LS, nhằm đảm bảo rằng các tính năng được quản lý một cách hiệu quả và tránh tình trạng trùng lặp trong việc kích hoạt hoặc vô hiệu hóa các tính năng của lõi μEDP.
+- [ ] Triển khai thiết kế lstaxer.vlid và cfparsers.pejec để hỗ trợ việc VnV syntax và value check cho các cấu hình logic của μE-LS.
+- [ ] Triển khai thiết kế lstaxer.kre8 để hỗ trợ việc generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [ ] Triển khai thiết kế cfparsers để concentrate μE-LS thành C-source code, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [ ] Bổ sung thiết kế PLD (Parse-able Logic Descriptor) với YAML để hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả logic này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [ ] Kiểm tra bổ sung API ngược để cho phép Kconfig output có thể dùng cho PLD và ngược lại.
+- [ ] Review lại thiết kế PLD (Parse-able Logic Descriptor) với các triển khai hiện có để đánh giá tính khả thi và hiệu quả của việc sử dụng PLD trong việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, đồng thời hỗ trợ việc tự động sinh mã nguồn C từ các mô tả logic này.
+- [ ] Kiểm tra bổ sung API ngược để cho phép Kconfig output có thể dùng cho PLD và ngược lại. //REVIEW - Cần cân nhắc xóa task này để đảm bảo tính chất 1 chiều data flow để tránh PLD làm ảnh hưởng ngược đến Kconfig. Chỉ cho phép Kconfig output làm input cho PLD và không cho phép PLD output làm input cho Kconfig để đảm bảo tính nhất quán và tránh xung đột trong việc quản lý các cấu hình logic của μE-LS.
 - [ ] Mở rộng PLD với TSD (Test Scenario Descriptor) để hỗ trợ việc mô tả các kịch bản kiểm thử một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả kịch bản kiểm thử này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các kịch bản kiểm thử cho lõi μEDP.
-- [ ] Hoàn thiện thiết kế TLC (Test Level Coverager) để cho phép chỉ định mức kiểm tra từ ut (unit), ct (component), st (system) và it (integration) nhằm đảm bảo rằng các tính năng của lõi μEDP được kiểm thử đầy đủ và hiệu quả trên các mức độ khác nhau của hệ thống.
+- [ ] Hoàn thiện thiết kế TLC (Test Level Coverager) để cho phép chỉ định mức kiểm tra từ ut (unit), ct (component), st (system) và it (integration) nhằm đảm bảo rằng các tính năng của lõi μEDP được kiểm thử đầy đủ và hiệu quả trên các mức độ khác nhau của hệ thống. //REVIEW - Cần cân nhắc tách TLC với TSD sang phiên bản 1.2.1 để tránh quá tải cho phiên bản 1.2.0 và đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 - [ ] Thêm tài liệu thiết kế đưa smoltcp vào μEDP để bổ sung khả năng xử lý mạng tương thích hướng sự kiện, giúp mở rộng khả năng của lõi μEDP trong việc xử lý các ứng dụng mạng và giao tiếp với các thiết bị khác trong hệ thống.
 - [ ] Thêm tài liệu thiết kế chi tiết bootloader - μDB (Device Bootloader) để hỗ trợ việc khởi động và quản lý các thiết bị trong hệ thống một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các thiết bị được khởi động và quản lý một cách an toàn và hiệu quả.
 - [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
-- [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng của bộ điều phối phần cứng như NVIC và xử lý vấn đề về ISR nesting & preemption để đảm bảo hệ thống hoạt động ổn định và hiệu quả khi xử lý các sự kiện thời gian thực.
+- [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng của bộ điều phối phần cứng như NVIC và xử lý vấn đề về ISR nesting & preemption để đảm bảo hệ thống hoạt động ổn định và hiệu quả khi xử lý các sự kiện thời gian thực. //REVIEW - Cần cân nhắc tách phần này sang phiên bản 1.2.1 hoặc phiên bản 1.1.6 để tránh quá tải cho phiên bản 1.2.0 và đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 - [ ] Bổ sung tài liệu thiết kế PLTF (Portable Local Test Framework) nhằm cung cấp khả năng kiểm thử tự động đa quy mô.
 - [ ] Ra mắt phiên bản 1.2.0 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
 
 ### Phiên bản 1.2.1: The Pub/Sub Engine
+
+//REVIEW - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+//NOTE - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
 
 - [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc phát triển các ứng dụng phức tạp với nhiều tác vụ tương tác với nhau một cách linh hoạt hơn.
 - [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một sự kiện có thể phát tới nhiều task đã đăng ký.
