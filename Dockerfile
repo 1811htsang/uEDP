@@ -36,6 +36,9 @@ WORKDIR /uedp-libs
 ENV TERM=xterm-256color
 # Copy current source code in to /uedp folder
 COPY . /uedp-libs
+# Explicit allow all user to remove any source/pal/arch folder
+# Even with new file created, it will be removed by any user
+RUN chmod -R 777 /uedp-libs
 # Add ESP-IDF environment variables to bashrc
 RUN echo "source $IDF_PATH/export.sh > /dev/null 2>&1" >> ~/.bashrc
 # Entry with entrypoint script
