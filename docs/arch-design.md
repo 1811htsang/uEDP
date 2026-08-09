@@ -524,7 +524,84 @@ Thiết kế này đủ để phục vụ các dịch vụ hậu trường nhẹ
 
 Ở μE-OS thì sẽ nâng cấp thành AOCE (Advance OCE) với SCB (Service Control Block) để quản lý các dịch vụ OCE một cách linh hoạt hơn và xử lý ưu tiên theo thời gian, kèm theo cơ chế expected execution time, quantum và error callback.
 
-### [SIF] Safe Input Filter - Bộ lọc đầu vào an toàn = old [SOCI]
+### [FCR] Fatal Code Return - Định danh và xử lý lỗi nghiêm trọng
+
+Trước khi có FCR, các lỗi nghiêm trọng bên trong Core (pool hết chỗ, con trỏ không hợp lệ, ID tác vụ sai, transition không tồn tại...) được xử lý **im lặng và không nhất quán** giữa các module: có nơi `return NULL`, có nơi `return STAT_ERROR`, có nơi chỉ để lại comment `// có thể ghi log lỗi ở đây` mà không thực sự làm gì. Hệ quả là khi một lỗi nghiêm trọng xảy ra trên thiết bị thật, không có dấu vết nào được ghi lại và không có hành động xử lý nhất quán nào được thực thi.
+
+FCR (Fatal Code Return) giải quyết vấn đề này bằng một **bảng mã lỗi tập trung**: mỗi lỗi nghiêm trọng trong Core được gán một mã cố định, tra ra mức độ nghiêm trọng và hành động xử lý tương ứng, rồi luôn được ghi log qua `itnlog` trước khi thực thi hành động đó.
+
+#### Thiết kế mã lỗi
+
+Mã lỗi FCR (`uedp_fcr_code_t`, kiểu `ui16`) dùng chung nguyên lý encoding với `[HES]`: byte cao là mã **MODULE** phát sinh lỗi, byte thấp là mã **SUB-CODE** cụ thể trong module đó, ghép bằng macro `UEDP_FCR_CODE(mod, sub)`. Dải `0x9x` được chọn cho FCR vì các dải `0xAx` → `0xFx` đã bị chiếm bởi `TASK_NORM`/`TASK_POLL`/`TASK_PRI`/`FSM_SIG`/`TSM_SIG`/`TSM_STATE` (xem `[HES]`).
+
+| Module | Mã | Ý nghĩa |
+| --- | --- | --- |
+| `UEDP_FCR_MOD_MSG` | `0x90` | Quản lý tin nhắn (`uedp_msg`) |
+| `UEDP_FCR_MOD_TASK` | `0x91` | Quản lý tác vụ (`uedp_task`) |
+| `UEDP_FCR_MOD_TIMER` | `0x92` | Quản lý timer (`uedp_timer`) |
+| `UEDP_FCR_MOD_SM` | `0x93` | Máy trạng thái (`uedp_fsm`/`uedp_tsm`) |
+| `UEDP_FCR_MOD_ITNLOG` | `0x94` | Logger nội bộ (`uedp_itnlog`) |
+| `UEDP_FCR_MOD_OCE` | `0x95` | Out-Context Execution (`uedp_ocesvc`) |
+| `UEDP_FCR_MOD_PAL` | `0x96` | PAL / dịch vụ phần cứng (logdp, rprintf, memrp, arch...) |
+| `0x97` → `0x9D` | *(chưa dùng)* | Để trống cho module core sinh sau này |
+| `UEDP_FCR_MOD_APP` | `0x9E` | Dành cho tầng ứng dụng tự khai báo mã lỗi riêng |
+| `UEDP_FCR_MOD_UNK` | `0x9F` | Fallback khi tra bảng không tìm thấy mã lỗi |
+
+Mỗi mã lỗi được gắn với một `uedp_fcr_entry_t` gồm mô tả ngắn (`desc`), mức độ nghiêm trọng (`severity`: `WARN`/`ERROR`/`FATAL`), và hành động xử lý (`action`):
+
+- `UEDP_FCR_ACT_LOG_ONLY`: chỉ ghi log, không can thiệp luồng chạy.
+- `UEDP_FCR_ACT_RESET_TASK`: đánh dấu để tầng trên tự khôi phục tác vụ liên quan (FCR không tự ý reset TSM/FSM của tác vụ khác).
+- `UEDP_FCR_ACT_SYS_RESET`: gọi `pal_sys_reset()` khởi động lại toàn hệ thống.
+- `UEDP_FCR_ACT_SYS_PANIC`: gọi `pal_sys_fatal()` dừng hệ thống ngay lập tức.
+
+#### Luồng raise
+
+```c
+void uedp_fcr_raise(uedp_fcr_code_t code, const char* file, ui32 line, const char* extra_msg) {
+  const uedp_fcr_entry_t* entry = uedp_fcr_lookup(code);
+
+  // 1. Luôn ghi log trước, kể cả khi hành động tiếp theo là SYS_PANIC/SYS_RESET
+  uedp_itnlog_log(pal_sys_get_tick(), internal_uedp_fcr_sev_to_level(entry->severity),
+                  ITNLOG_TAG_FCR, (extra_msg != NULL) ? extra_msg : entry->desc);
+
+  // 2. Thực thi hành động tương ứng
+  switch (entry->action) { /* LOG_ONLY / RESET_TASK / SYS_RESET / SYS_PANIC */ }
+}
+```
+
+Hai macro `UEDP_FCR_RAISE(code)` và `UEDP_FCR_RAISE_MSG(code, extra)` tự động điền `__FILE__`/`__LINE__`, trong đó `RAISE_MSG` cho phép truyền thêm mô tả ngữ cảnh cụ thể (ví dụ tên hàm, giá trị tham số sai) thay cho `desc` mặc định trong bảng.
+
+`uedp_fcr_lookup()` duyệt tuyến tính bảng `g_fcr_table[]`; nếu không tìm thấy mã lỗi sẽ trả về entry `UEDP_FCR_UNKNOWN` (mặc định `SEV_FATAL` + `ACT_SYS_PANIC`) — cố ý chọn hành động nghiêm trọng nhất cho trường hợp "không rõ lỗi gì" để tránh bỏ sót.
+
+#### Tích hợp với itnlog
+
+FCR không tự ghi log trực tiếp mà đi qua `uedp_itnlog_log()` với tag riêng `ITNLOG_TAG_FCR`, ánh xạ `severity` sang mức log tương ứng (`WARN`/`ERROR` → `ITNLOG_LEVEL_WARN`/`ERROR`, `FATAL` → `ITNLOG_LEVEL_FATAL`). Việc này tận dụng lại toàn bộ cơ chế `[PPLP]` đã có (ring buffer, filter theo tag/level, dispatch ra nhiều backend qua `logdp`) thay vì xây một đường log riêng cho lỗi nghiêm trọng.
+
+#### Các điểm đã tích hợp FCR vào Core
+
+FCR chỉ có giá trị khi được "khâu" vào đúng những chỗ lỗi thật sự im lặng trước đó, thay vì chỉ tồn tại như một module đứng riêng. Tính đến bản này, FCR đã được raise tại hơn 40 điểm trên 7 file lõi:
+
+| File | Một số mã lỗi tiêu biểu |
+| --- | --- |
+| `uedp_msg.c` | `MSG_POOL_EXHAUSTED`, `MSG_INVALID_PTR`, `MSG_ISR_FIFO_FULL`, `MSG_POOL_MISCONFIG` |
+| `uedp_task.c` | `TASK_INVALID_ID`, `TASK_QUEUE_FULL`, `TASK_INVALID_PRI`, `TASK_PRI_EXHAUSTED` |
+| `uedp_timer.c` | `TIMER_POOL_EXHAUSTED`, `TIMER_INVALID_PARAM`, `TIMER_CORRUPTED` |
+| `uedp_tsm.c` | `SM_INVALID_TRANS`, `SM_NULL_HANDLER` |
+| `uedp_fsm.c` / `uedp_fsm.h` | `SM_NULL_HANDLER` (cả ở `go_next`/`go_back` lẫn `uedp_fsm_dispatch()`) |
+| `uedp_ocesvc.c` | `OCE_REGISTRY_FULL`, `OCE_INVALID_SVC`, `OCE_APPEND_FAILED`, `OCE_NOT_INIT` |
+| `pal_logdp.c` | `PAL_LOGDP_TABLE_FULL` (thay hẳn lệnh gọi `pal_sys_fatal()` trực tiếp cũ) |
+
+Nguyên tắc chọn nơi raise: **chỉ raise ở những nhánh thật sự bất thường**, không raise ở những nhánh hợp lệ xảy ra thường xuyên trong vận hành bình thường — ví dụ `TSM_STATE_STAY` (ở lại state hiện tại), `g_task_norm_ready == 0` (scheduler rảnh, xảy ra mỗi vòng lặp khi idle), hay `uedp_timer_remove()` gọi trên một timer chưa từng được set. Raise tràn lan vào các nhánh bình thường sẽ biến FCR thành nguồn nhiễu log thay vì tín hiệu cảnh báo có giá trị.
+
+> **Bài học trong quá trình tích hợp**: khi bắt đầu raise FCR từ nhiều điểm hơn trong Core, một lỗi tiềm ẩn có sẵn trong `uedp_itnlog_log()` đã bị lộ ra: hàm này dereference `uedp_task_norm_get_current_msg()->sig` mà không kiểm tra NULL. Trước đây không ai gọi `itnlog_log()` từ ngoài ngữ cảnh một task đang dispatch nên lỗi này không bao giờ xảy ra; nhưng FCR lại raise được từ nhiều nơi, kể cả từ `main()` lúc setup (trước khi task nào chạy) — khiến `g_current_msg` vẫn là `NULL` và gây crash ngay lần raise đầu tiên. Đã sửa bằng một dòng kiểm tra NULL phòng thủ trong `itnlog_log()`. Đây là minh chứng cụ thể cho lý do FCR cần được viết và test cẩn thận: bản thân việc thêm cơ chế báo lỗi cũng có thể vô tình mở ra đường crash mới nếu các module nó phụ thuộc (ở đây là `itnlog`) chưa đủ phòng thủ.
+
+#### Hạn chế / việc còn thiếu
+
+- `UEDP_FCR_ACT_RESET_TASK` ở bản 0.1 **chưa tự động khôi phục** tác vụ liên quan — mới dừng ở mức ghi log `ERROR`, việc reset TSM/FSM về trạng thái an toàn vẫn phải do tầng trên (task giám sát hoặc OCE) tự xử lý.
+- `UEDP_FCR_ITNLOG_BUF_CORRUPT` đã có mã trong bảng nhưng **chưa có logic kiểm tra hash thực sự** ở phía đọc (`uedp_itnlog_dump()`) — hiện `itnlog` chỉ tính hash lúc ghi, chưa so sánh lại lúc đọc để phát hiện corrupt.
+- Người dùng ở tầng ứng dụng có thể tự khai báo mã lỗi riêng qua `UEDP_FCR_CODE(UEDP_FCR_MOD_APP, x)`, nhưng hiện chưa có cơ chế cho phép tầng ứng dụng **tự đăng ký thêm entry** vào `g_fcr_table[]` lúc runtime — bảng hiện là `static const`, muốn thêm entry mới phải sửa trực tiếp `uedp_fcr.c`.
+
+
 
 ## Công cụ hỗ trợ phát triển (Development Tools)
 
