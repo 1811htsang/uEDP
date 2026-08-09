@@ -71,6 +71,7 @@ class gnnerate_ustab:
 def generate_ustab_from_kconfig(kconfig_path):
   generator = gnnerate_ustab()
   ustab_data = generator.ustab_parse_kconfig(kconfig_path)
-  return ustab_data
-  # yaml_output = ustab_convert_yaml(ustab_data)
-  # return yaml_output
+  yaml_output = ustab_convert_yaml(ustab_data)
+  return yaml_output
+
+data = generate_ustab_from_kconfig(".config")
