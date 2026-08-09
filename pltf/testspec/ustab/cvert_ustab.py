@@ -26,7 +26,6 @@ def ustab_convert_yaml(context):
 # >>  '1', '2' of tpolls: &tpoll1, &tpoll2, ...
 # Alias: sử dụng *<str> để tham chiếu đến các phần tử đã định danh
 """
-  
   # NOTE - 3. Ghi một lần duy nhất vào file
   with open("config.yaml", "w", encoding='utf-8') as f:
     f.write(true_yaml)

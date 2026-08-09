@@ -21,6 +21,8 @@ echo "[ENTRY] call menuconfig"
 python uedp.py menuconfig
 echo "[ENTRY] call testspec.generator"
 python -m pltf.testspec.generators.tsgen
+echo "[ENTRY] call testspec.ustab.tsustab"
+python -m pltf.testspec.ustab.tsustab
 echo -e "[DONE]"
 echo -e "You can:"
 echo -e "\t[cd /uedp-test] for PLTF development"

@@ -73,5 +73,4 @@ def generate_ustab_from_kconfig(kconfig_path):
   ustab_data = generator.ustab_parse_kconfig(kconfig_path)
   yaml_output = ustab_convert_yaml(ustab_data)
   return yaml_output
-
-data = generate_ustab_from_kconfig(".config")
+# data = generate_ustab_from_kconfig(".config")
