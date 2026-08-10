@@ -37,9 +37,9 @@ Sử dụng dấu gạch ngang `-` kèm theo một khoảng trắng cho mỗi ph
 
 ```yaml
 signals:
-  - SIG_START
-  - SIG_STOP
-  - SIG_TIMER
+- SIG_START
+- SIG_STOP
+- SIG_TIMER
 ```
 
 #### Dictionaries / Nested Objects
@@ -66,6 +66,14 @@ Rất hữu ích để viết các đoạn mã C (Action Snippets) trong PLD.
 
 ```yaml
 action_snippet: |
+  if (data > 100) {
+    status = ERROR;
+    log_err("Value out of range");
+  }
+```
+
+```yaml
+action_snippet_folded: >
   if (data > 100) {
     status = ERROR;
     log_err("Value out of range");
@@ -105,6 +113,13 @@ task_b:
   priority: LEVEL_9 # Ghi đè (Override) giá trị mặc định
 ```
 
+Việc sử dụng `<<` cho phép merge các trường từ anchor vào dictionary hiện tại, giúp giảm thiểu lỗi và tăng tính nhất quán trong cấu hình.
+
+<!-- TODO
+- Bổ sung thêm phần tag include của YAML nâng cao để hỗ trợ việc include các file cấu hình con, ví dụ `!include "signals.yaml"`.
+- Bổ sung thêm việc tìm hiểu các giải pháp để hỗ trợ lấy alias từ file include mà không cần phải khai báo lại trong file chính.
+-->
+
 ### Ví dụ tổng hợp
 
 Mô tả một Task hoàn chỉnh kết hợp các quy tắc trên:
@@ -137,7 +152,7 @@ task_definition:
             type: PERIODIC
 ```
 
-Lưu ý rằng cú pháp này dùng để làm ví dụ mẫu, không phải là cú pháp chính thức của μE-LS. Người dùng cần tham khảo tài liệu chính thức để biết các quy tắc và cú pháp đầy đủ.
+Lưu ý rằng cú pháp này dùng để làm ví dụ mẫu, không phải là cú pháp chính thức của μE-LS. Người dùng cần tham khảo tài liệu chính thức bên dưới để biết các quy tắc và cú pháp đầy đủ.
 
 ### Lưu ý khi thiết kế PLD Parser (Python)
 
@@ -149,7 +164,11 @@ Lưu ý rằng cú pháp này dùng để làm ví dụ mẫu, không phải là
 
 Cú pháp μE-LS được thiết kế để mô tả các cấu trúc logic trong hệ thống μE(DP)/-OS, bao gồm các khối như Task, State Machine (TSM), Signal, Policy, và các hành động (Action Snippets). Các cấu hình như Pool, Queue và Timer được cấu hình tự động bởi Kconfig + pre-PLTF + Jinja2, do đó không cần khai báo trong μE-LS. Tuy nhiên, người dùng có thể tùy chỉnh các thông số này thông qua Kconfig.
 
-### Hướng đọc nhanh
+<!-- TODO
+Cần rewrite lại phần này tương ứng với các khối phát triển đã có bên nhánh feat.
+-->
+
+### Hướng dẫn đọc nhanh
 
 1. Đọc phần quy ước YAML trước để tránh lỗi thụt lề và kiểu dữ liệu.
 2. Đọc phần Task để hiểu `tlist`, `task`, `tsm`, `fsm`, `exec` và `steps`.
@@ -166,6 +185,20 @@ Cú pháp μE-LS được thiết kế để mô tả các cấu trúc logic tro
 | PPLP | Cấu hình logging pipeline | `pplp -> itnlog -> level/tag/output` | `level`, `tag`, `output.backend`, `output.sink`, `log.timestamp`, `log.msg` | `uedp_itnlog_set_filter()`, `uedp_itnlog_set_output()` |
 | APE | Gọi urgent message / priority escalation | `escal -> trigger -> post_urgent` | `mode: slnf`, `mode: non-slnf`, `scope: self`, `keep_queue_order`, `extra_rounds`, `post_urgent` | `uedp_task_norm_post_urgent()`, `uedp_task_norm_set_urgent()` |
 | OCE | Service chạy ngoài luồng logic chính | `outexec -> name/handler/context/state` | `name`, `handler`, `context`, `state` | `ocesvc_register()`, `ocesvc_scheduler()` |
+
+### Các lưu ý chung
+
+Nếu tính năng không sử dụng thì set giá trị đi kèm là `NULL` hoặc bỏ qua. Điều này áp dụng đối với các tính năng như:
+
+- PPLP.
+- APE.
+- ISR.
+- OCE.
+- TSM (on_ntry, on_actv, on_exit).
+
+<!-- TODO
+Cần kiểm tra các trường hợp đặc biệt trong cú pháp để xử lý thành các bug-fix release.
+-->
 
 ### Đánh giá so với source code hiện tại
 
@@ -625,3 +658,81 @@ outexec:
   context: pplp_ctx
   state: READY
 ```
+
+### Phân biệt `act`, `actv`, `cact` và `steps`
+
+- `act` là một hành vi đơn lẻ, có thể là `post_msg`, `log`, `timer_set`, v.v. Nó được dùng trong `steps` hoặc `cact`.
+- `actv` là một alias cho `act`, dùng để nhấn mạnh đây là hành vi đang được thực thi trong ngữ cảnh hiện tại của FSM/TSM. Nó có thể chứa các trường bổ sung như `to`, `sig`, `data` để xác định hành vi cụ thể.
+- `cact` là một alias cho `act`, một hành vi được thực hiện khi một transition được kích hoạt, thường dùng trong `on_recv` của FSM. Nó có thể chứa một hoặc nhiều `actv` trong danh sách `steps`.
+- `steps` là một danh sách các hành vi (`actv`) được thực hiện tuần tự trong một ngữ cảnh cụ thể, như `on_ntry`, `on_actv`, `on_exit`, hoặc `on_recv`. Mỗi bước trong `steps` có thể là một hành vi đơn lẻ hoặc một hành vi phức tạp, tùy thuộc vào logic của task.
+
+> Kết luận đơn giản: `act` là hành vi cơ bản, `actv` là hành vi được thực thi trong ngữ cảnh cụ thể, `cact` là hành vi được thực hiện khi transition được kích hoạt, và `steps` là danh sách các hành vi được thực hiện theo thứ tự.
+
+<!-- TODO
+Cân nhắc thay đổi 2 keyword `act` và `actv` để tránh nhầm lẫn.
+-->
+
+### Khu vực dữ liệu toàn cục - Global Data Area
+
+Bổ sung thêm phần mô tả về khu vực dữ liệu toàn cục (Global Data Area) trong μE-LS. Khu vực này được sử dụng để lưu trữ các biến và cấu trúc dữ liệu phục vụ tính năng D2MP (Data-to-Message Passing).
+
+```yaml
+glbda:
+- '1': &gda1
+  name: GLOBAL_VAR_1
+  type: int
+  initial_value: 0
+- '2': &gda2
+  name: GLOBAL_VAR_2
+  type: string
+  initial_value: "default"
+...
+```
+
+Trong đó:
+
+- `name`: Tên của biến toàn cục.
+- `type`: Kiểu dữ liệu của biến.
+- `initial_value`: Giá trị ban đầu của biến.
+
+Thiết kế này cho phép người dùng khai báo biến toàn cục với kiểu dữ liệu và giá trị khởi tạo phục vụ tính năng D2MP, tức truyền tham chiếu và truyền tham trị giữa các task thông qua message. Các biến này sẽ được quản lý bởi core và có thể được truy cập từ các task khác nhau trong hệ thống. Cho phép hỗ trợ alias và tham chiếu để tránh lặp lại khai báo biến toàn cục.
+
+Ví dụ mẫu việc sử dụng biến toàn cục trong μE-LS:
+
+```yaml
+glbda:
+- '1': &gda1
+  name: GLOBAL_COUNTER
+  type: const char*
+  initial_value: "msg: hello"
+
+tlist:
+- task: TASK_A
+  exec:
+  - on_sig: SIG_USR
+    act:
+    - actv: increment_global
+      to: TASK_B
+      sig: SIG_HELLO
+      data: *gda1  # Tham chiếu đến biến toàn cục GLOBAL_COUNTER
+      ptype: REF  # Chỉ định truyền tham chiếu, nếu muốn truyền tham trị thì dùng VAL
+- task: TASK_B
+  exec:
+  - on_sig: SIG_HELLO
+    act:
+    - actv: log # action này thực hiện tự post chính mình với việc truyền VAL để copy dữ liệu từ biến toàn cục
+      to: TASK_B
+      sig: SIG_LOG
+      data: *gda1  # Tham chiếu đến biến toàn cục GLOBAL_COUNTER
+      ptype: VAL  # Chỉ định truyền tham trị, nếu muốn truyền tham chiếu thì dùng REF
+```
+
+<!-- REVIEW
+Cân nhắc thiết kế hoặc bổ sung thông tin trong tài liệu để làm rõ khi dùng `ptype: REF` thì ai sẽ thực thi quyền quản lý và kích thước dpool để copy dữ liệu từ biến toàn cục sang message. Cần đảm bảo rằng việc truyền tham chiếu và tham trị được thực hiện một cách an toàn và hiệu quả, tránh các vấn đề về đồng bộ hóa và quản lý bộ nhớ.
+-->
+
+<!-- NOTE
+Suy xét việc bổ sung thiết kế mới trong mã nguồn thêm 1 dpool hỗ trợ tính năng GDA (Global Data Area) để quản lý các biến toàn cục, đặc biệt là khi sử dụng `ptype: REF` để truyền tham chiếu. Điều này sẽ giúp đảm bảo rằng các task có thể truy cập và sử dụng dữ liệu toàn cục một cách an toàn và hiệu quả, đồng thời tránh các vấn đề về đồng bộ hóa và quản lý bộ nhớ. 
+
+Có thể cân nhắc đưa cho Minh trong việc thực thi.
+-->
