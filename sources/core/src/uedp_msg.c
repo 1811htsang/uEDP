@@ -188,6 +188,32 @@ void uedp_msg_ref_dec(uedp_msg_t* msg) {
 }
 
 /**
+ * @brief Thiết lập ID của tác vụ nguồn gửi tin nhắn
+ * @param msg: Con trỏ đến tin nhắn cần thiết lập ID nguồn
+ * @param src_task_id: ID của tác vụ nguồn gửi tin nhắn
+ */
+void uedp_msg_set_src_task_id(uedp_msg_t* msg, task_id_t src_task_id) {
+	if (!msg) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "set_src_task_id: null msg");
+		return;
+	}
+	msg->src_task_id = src_task_id;
+}
+
+/**
+ * @brief Thiết lập ID của tác vụ đích nhận tin nhắn
+ * @param msg: Con trỏ đến tin nhắn cần thiết lập ID đích
+ * @param des_task_id: ID của tác vụ đích nhận tin nhắn
+ */
+void uedp_msg_set_des_task_id(uedp_msg_t* msg, task_id_t des_task_id) {
+	if (!msg) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "set_des_task_id: null msg");
+		return;
+	}
+	msg->des_task_id = des_task_id;
+}
+
+/**
  * @brief Khởi tạo Pool tin nhắn
  * @param header Chứa thông tin quản lý của Pool
  * @param pool Con trỏ đến mảng chứa các tin nhắn trong Pool

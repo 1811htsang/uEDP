@@ -190,4 +190,11 @@
 	 */
 	void uedp_msg_set_src_task_id(uedp_msg_t* msg, task_id_t src_task_id);
 
+	/**
+	 * @brief Thiết lập ID của tác vụ đích nhận tin nhắn
+	 * @param msg: Con trỏ đến tin nhắn cần thiết lập ID đích
+	 * @param des_task_id: ID của tác vụ đích nhận tin nhắn
+	 */
+	void uedp_msg_set_des_task_id(uedp_msg_t* msg, task_id_t des_task_id);
+
 #endif //__UEDP_MSG_H__
