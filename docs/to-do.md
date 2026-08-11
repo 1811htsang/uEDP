@@ -131,6 +131,7 @@
 - [x] Bổ sung name attribute cho rprintf để phục vụ μE-LS.
 - [x] Bổ sung tài liệu thiết kế FCR. //NOTE - VN done, EN done.
 - [x] Bổ sung API filling task ID và source ID attribute của message (follow commit 6728c..) để hỗ trợ việc định danh các task và nguồn gốc của các tin nhắn trong hệ thống, giúp đảm bảo rằng các tin nhắn được xử lý một cách chính xác và hiệu quả. //REVIEW - Minh đã được review code và chuyển đổi từ đề xuất setup task ID đặc biệt như ISR, Start sang cho phép người dùng tự chọn Task ID. Tuy nhiên, cần đảm bảo về việc định danh.
+- [ ] Remove API `internal_uedp_msg_pool_panic` khỏi lõi μEDP và thay thế bằng cơ chế FCR để xử lý các lỗi nghiêm trọng trong hệ thống, nhằm đảm bảo rằng các lỗi được xử lý một cách hiệu quả và an toàn mà không cần phải sử dụng các API đặc biệt.
 - [ ] Ra mắt phiên bản 1.1.5 của lõi μEDP với đầy đủ tính năng FCR, các bản cập nhật và tài liệu hướng dẫn sử dụng.
 
 ### Phiên bản 1.2.0: The Infrastructure Preparation for μE-OS
