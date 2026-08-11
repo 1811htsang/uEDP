@@ -156,6 +156,7 @@
 - [x] Sửa đổi quyền truy cập đồng bộ để tránh lỗi khi create/remove file in/out Docker.
 - [x] Sửa đổi lại thiết kế của phần `escal` để remove duplicate khi enable/disable các tính năng của μE-LS, nhằm đảm bảo rằng các tính năng được quản lý một cách hiệu quả và tránh tình trạng trùng lặp trong việc kích hoạt hoặc vô hiệu hóa các tính năng của lõi μEDP. //NOTE - bổ sung tài liệu để phản ánh ngược lại các thay đổi trong thiết kế của phần `escal` và cách thức quản lý các tính năng của μE-LS một cách hiệu quả.
 - [x] Kiểm tra tài liệu `uels-syntax.md` để thêm task vào to-do list nhằm đảm bảo rằng các tính năng của μE-LS được triển khai một cách hiệu quả và nhất quán, đồng thời hỗ trợ việc phát triển và kiểm thử các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn.
+- [x] Triển khai rewrite mẫu app/lstaxizier-test.yaml để bắt đầu triển khai thiết kế lstaxer.vlid.
 - [ ] Cân nhắc về việc bổ sung dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu. //LINK docs/uels-syntax.md:745
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 - [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin. //LINK docs/uels-syntax.md:118
