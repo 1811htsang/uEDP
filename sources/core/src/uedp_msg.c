@@ -135,7 +135,20 @@ uedp_msg_t* uedp_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 	pal_exit_critical();
 
 	if (msg != NULL) {
-		msg->src_task_id = uedp_task_norm_get_current_id();
+		/**
+		 * @attention g_active_task_norm_id (trả về từ uedp_task_norm_get_current_id()) chỉ được
+		 *            cập nhật/reset bên trong internal_uedp_task_norm_dispatch() - nếu hàm này được
+		 *            gọi từ ngữ cảnh KHÔNG có task nào đang thực sự dispatch (ví dụ: từ ISR qua
+		 *            uedp_msg_drain_isr_pool(), từ uedp_timer_tick(), hoặc từ main() lúc setup tín
+		 *            hiệu khởi động hệ thống), giá trị này chỉ là "rác" còn sót lại từ vòng dispatch
+		 *            trước đó (thường là UEDP_TASK_NORM_IDLE_ID) - KHÔNG phản ánh đúng nguồn gốc thật.
+		 *            Dùng uedp_task_norm_get_current_msg() (chỉ khác NULL khi thực sự đang trong 1
+		 *            lần dispatch) để phân biệt, và gán UEDP_TASK_NORM_SYS_ID cho trường hợp không có
+		 *            task nguồn cụ thể, tránh đánh lừa rằng tin nhắn đến từ task IDLE.
+		 */
+		msg->src_task_id = (uedp_task_norm_get_current_msg() != NULL)
+			? uedp_task_norm_get_current_id()
+			: UEDP_TASK_NORM_SYS_ID;
 		msg->des_task_id = des_task_id;
 		msg->sig = sig;
 		msg->ref_count = 1; // mặc định 1 tham chiếu khi tạo mới
