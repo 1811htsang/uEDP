@@ -200,6 +200,10 @@ Nếu tính năng không sử dụng thì set giá trị đi kèm là `NULL` ho�
 Cần kiểm tra các trường hợp đặc biệt trong cú pháp để xử lý thành các bug-fix release.
 -->
 
+<!-- NOTE
+Đưa cho Minh kiểm tra phần này với source code hiện tại để đảm bảo rằng cú pháp μE-LS khớp với core API và các ví dụ test hiện tại. Nếu có sự khác biệt, cần ghi chú rõ ràng trong tài liệu để thực hiện bổ sung bug-fix.
+-->
+
 ### Đánh giá so với source code hiện tại
 
 Kết luận đối chiếu với core source và testspec hiện tại là: syntax đang dùng trong tài liệu phải giữ nguyên theo trục `on_ntry`, `on_actv`, `actv`, `cact`, `steps`, `on_recv`, vì đây mới là shape mà generator và ví dụ test hiện tại đang bám vào. Các đề xuất như `on_entry`, `on_active`, `action`, `guard`, hay `data_kind: VALUE/REF` là hợp lý về mặt UX, nhưng hiện mới ở mức đề xuất mở rộng, chưa nên ghi như syntax chính thức của pre-1.2.0.
@@ -661,15 +665,16 @@ outexec:
 
 ### Phân biệt `act`, `actv`, `cact` và `steps`
 
-- `act` là một hành vi đơn lẻ, có thể là `post_msg`, `log`, `timer_set`, v.v. Nó được dùng trong `steps` hoặc `cact`.
-- `actv` là một alias cho `act`, dùng để nhấn mạnh đây là hành vi đang được thực thi trong ngữ cảnh hiện tại của FSM/TSM. Nó có thể chứa các trường bổ sung như `to`, `sig`, `data` để xác định hành vi cụ thể.
-- `cact` là một alias cho `act`, một hành vi được thực hiện khi một transition được kích hoạt, thường dùng trong `on_recv` của FSM. Nó có thể chứa một hoặc nhiều `actv` trong danh sách `steps`.
+- `act` là một hành vi đơn lẻ, có thể là `post_msg`, `log`, `timer_set`, v.v. Nó được dùng trong `steps` hoặc `cact` của các khai báo non-HSMC, tức là sử dụng `exec`.
+- `actv` là một alias cho `act`, dùng để nhấn mạnh đây là hành vi đang được thực thi trong ngữ cảnh hiện tại của FSM/TSM. Nó có thể chứa các trường bổ sung như `to`, `sig`, `data` để xác định hành vi cụ thể. được sử dụng trong khai báo HSMC, tức là trong `on_ntry`, `on_actv`, `on_exit`, hoặc `on_recv`.
+- `cact` là một alias cho `act`, viết tắt của `call act`, chuỗi hành vi được thực hiện khi một transition được kích hoạt, thường dùng trong `on_recv` của FSM. Nó có thể chứa một hoặc nhiều `actv` trong danh sách `steps`.
 - `steps` là một danh sách các hành vi (`actv`) được thực hiện tuần tự trong một ngữ cảnh cụ thể, như `on_ntry`, `on_actv`, `on_exit`, hoặc `on_recv`. Mỗi bước trong `steps` có thể là một hành vi đơn lẻ hoặc một hành vi phức tạp, tùy thuộc vào logic của task.
 
 > Kết luận đơn giản: `act` là hành vi cơ bản, `actv` là hành vi được thực thi trong ngữ cảnh cụ thể, `cact` là hành vi được thực hiện khi transition được kích hoạt, và `steps` là danh sách các hành vi được thực hiện theo thứ tự.
 
 <!-- TODO
-Cân nhắc thay đổi 2 keyword `act` và `actv` để tránh nhầm lẫn.
+100826 - Cân nhắc thay đổi 2 keyword `act` và `actv` để tránh nhầm lẫn.
+110826 - Cân nhắc remove `cact` và chỉ dùng `steps` trong `on_recv` để thống nhất cú pháp. ~ Bổ sung task list để thực thi việc sửa đổi này.
 -->
 
 ### Khu vực dữ liệu toàn cục - Global Data Area
@@ -735,4 +740,9 @@ Cân nhắc thiết kế hoặc bổ sung thông tin trong tài liệu để là
 Suy xét việc bổ sung thiết kế mới trong mã nguồn thêm 1 dpool hỗ trợ tính năng GDA (Global Data Area) để quản lý các biến toàn cục, đặc biệt là khi sử dụng `ptype: REF` để truyền tham chiếu. Điều này sẽ giúp đảm bảo rằng các task có thể truy cập và sử dụng dữ liệu toàn cục một cách an toàn và hiệu quả, đồng thời tránh các vấn đề về đồng bộ hóa và quản lý bộ nhớ. 
 
 Có thể cân nhắc đưa cho Minh trong việc thực thi.
+-->
+
+<!-- TODO
+- Bổ sung vào tài liệu thiết kế 1 dpool riêng cho GDA để quản lý các biến toàn cục, đặc biệt là khi sử dụng `ptype: REF` để truyền tham chiếu. Điều này sẽ giúp đảm bảo rằng các task có thể truy cập và sử dụng dữ liệu toàn cục một cách an toàn và hiệu quả, đồng thời tránh các vấn đề về đồng bộ hóa và quản lý bộ nhớ.
+- Bổ sung 1 đoạn thông tin trong tài liệu để chỉ rõ quyền quản lý các biến toàn cục và truyền tham chiếu sẽ được thực hiện quản lý bởi ai, tính năng sẽ nằm trong phiên bản nào, 
 -->

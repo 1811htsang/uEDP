@@ -154,7 +154,11 @@
 - [x] Hoàn thiện việc kết nối ustab vào docker compose để tự động build và kiểm thử các tính năng của lõi μEDP trên các nền tảng khác nhau một cách dễ dàng và nhất quán.
 - [x] Sửa đổi quyền truy cập đồng bộ để tránh lỗi khi create/remove file in/out Docker.
 - [x] Sửa đổi lại thiết kế của phần `escal` để remove duplicate khi enable/disable các tính năng của μE-LS, nhằm đảm bảo rằng các tính năng được quản lý một cách hiệu quả và tránh tình trạng trùng lặp trong việc kích hoạt hoặc vô hiệu hóa các tính năng của lõi μEDP. //NOTE - bổ sung tài liệu để phản ánh ngược lại các thay đổi trong thiết kế của phần `escal` và cách thức quản lý các tính năng của μE-LS một cách hiệu quả.
-- [ ] Kiểm tra tài liệu `uels-syntax.md` để thêm task vào to-do list nhằm đảm bảo rằng các tính năng của μE-LS được triển khai một cách hiệu quả và nhất quán, đồng thời hỗ trợ việc phát triển và kiểm thử các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn.
+- [x] Kiểm tra tài liệu `uels-syntax.md` để thêm task vào to-do list nhằm đảm bảo rằng các tính năng của μE-LS được triển khai một cách hiệu quả và nhất quán, đồng thời hỗ trợ việc phát triển và kiểm thử các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn.
+- [ ] Cân nhắc về việc bổ sung dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu. //LINK docs/uels-syntax.md:745
+- [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
+- [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin. //LINK docs/uels-syntax.md:118
+- [ ] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //LINK docs/uels-syntax.md:199
 - [ ] Triển khai thiết kế lstaxer.vlid và cfparsers.pejec để hỗ trợ việc VnV syntax và value check cho các cấu hình logic của μE-LS.
 - [ ] Triển khai thiết kế lstaxer.kre8 để hỗ trợ việc generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.

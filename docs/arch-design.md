@@ -172,6 +172,10 @@ Trong đó `uintptr_t` cho phép lấy địa chỉ không cần xét đến ki�
 
 Do đó, cần phải sử dụng thêm một bước để lấy được nội dung thực sự của chuỗi ký tự thông qua việc giải tham chiếu hai lần như trong ví dụ trên. Trong thực tế sử dụng thì người dùng sẽ tùy thuộc vào kiểu dữ liệu cụ thể mà có cách giải tham chiếu phù hợp để lấy được nội dung thực sự từ payload của message khi sử dụng cơ chế truyền tham chiếu này.
 
+<!-- LINK docs/uels-syntax.md:745
+Dựa trên TODO, cân nhắc bổ sung thêm 1 dpool GDA kèm tài liệu giữa DMP và D2MP để quản lý truyền tham chiêu tương ứng khi sử dụng liên kết với tính năng PLD/μE-LS.
+-->
+
 ### [HSMC] Hybrid State Machine Control - Cơ chế quản lý máy trạng thái kết hợp giữa TSM và FSM
 
 Trong μEDP, mỗi Task (Active Object) không chỉ là một hàm xử lý mà là một thực thể có "trí nhớ". Để quản lý trí nhớ này, hệ thống cung cấp hai cấp độ máy trạng thái:
