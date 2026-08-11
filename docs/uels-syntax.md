@@ -179,7 +179,7 @@ Cần rewrite lại phần này tương ứng với các khối phát triển đ
 
 | Khối | Ý nghĩa | Syntax chính | Syntax phụ / tùy chỉnh | Core mapping |
 | --- | --- | --- | --- | --- |
-| Task Norm | Task có trạng thái hoặc xử lý message | `tlist -> task -> tsm/fsm/exec/escal` | `tsm`, `fsm`, `exec`, `escal`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps`, `cact` | `uedp_task_norm_create()`, `uedp_task_norm_post_msg()` |
+| Task Norm | Task có trạng thái hoặc xử lý message | `tlist -> task -> tsm/fsm/exec/escal` | `tsm`, `fsm`, `exec`, `escal`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps`, `steps` | `uedp_task_norm_create()`, `uedp_task_norm_post_msg()` |
 | Task Poll | Task vòng lặp nhẹ, không theo message | `tlist -> task -> poll/steps` | `poll`, `steps`, `actv`, `to`, `sig`, `data`, `ability` | `uedp_task_poll_create()`, `uedp_task_poll_set_ability()` |
 | SII | Đưa signal từ ISR vào hệ thống | `isr -> to/sig` | `to`, `sig` | `uedp_task_norm_post_isr()`, `uedp_msg_drain_isr_pool()` |
 | PPLP | Cấu hình logging pipeline | `pplp -> itnlog -> level/tag/output` | `level`, `tag`, `output.backend`, `output.sink`, `log.timestamp`, `log.msg` | `uedp_itnlog_set_filter()`, `uedp_itnlog_set_output()` |
@@ -206,7 +206,7 @@ Cần kiểm tra các trường hợp đặc biệt trong cú pháp để xử l
 
 ### Đánh giá so với source code hiện tại
 
-Kết luận đối chiếu với core source và testspec hiện tại là: syntax đang dùng trong tài liệu phải giữ nguyên theo trục `on_ntry`, `on_actv`, `actv`, `cact`, `steps`, `on_recv`, vì đây mới là shape mà generator và ví dụ test hiện tại đang bám vào. Các đề xuất như `on_entry`, `on_active`, `action`, `guard`, hay `data_kind: VALUE/REF` là hợp lý về mặt UX, nhưng hiện mới ở mức đề xuất mở rộng, chưa nên ghi như syntax chính thức của pre-1.2.0.
+Kết luận đối chiếu với core source và testspec hiện tại là: syntax đang dùng trong tài liệu phải giữ nguyên theo trục `on_ntry`, `on_actv`, `actv`, `steps`, `on_recv`, vì đây mới là shape mà generator và ví dụ test hiện tại đang bám vào. Các đề xuất như `on_entry`, `on_active`, `action`, `guard`, hay `data_kind: VALUE/REF` là hợp lý về mặt UX, nhưng hiện mới ở mức đề xuất mở rộng, chưa nên ghi như syntax chính thức của pre-1.2.0.
 
 | Đề xuất | Đánh giá theo source | Hành động trên tài liệu |
 | --- | --- | --- |
@@ -293,7 +293,7 @@ tlist:
     on_recv:
     - sig: KID_SIG_0xAA
       goto: STATE_B_IDLE
-      cact:
+      steps:
         actv: post_msg
         to: KID_TASK_USR
         sig: KID_SIG_USR_STOP
@@ -599,8 +599,8 @@ tlist:
     on_recv:
     - sig: SIG_B
       goto: STATE_A_IDLE
-      cact:
-        actv: post_msg
+      steps:
+      - actv: post_msg
         to: KID_TASK_USR
         sig: SIG_DONE
         data: NULL
@@ -663,18 +663,17 @@ outexec:
   state: READY
 ```
 
-### Phân biệt `act`, `actv`, `cact` và `steps`
+### Phân biệt `act`, `actv` và `steps`
 
-- `act` là một hành vi đơn lẻ, có thể là `post_msg`, `log`, `timer_set`, v.v. Nó được dùng trong `steps` hoặc `cact` của các khai báo non-HSMC, tức là sử dụng `exec`.
+- `act` là một hành vi đơn lẻ, có thể là `post_msg`, `log`, `timer_set`, v.v. Nó được dùng trong `steps` của các khai báo non-HSMC, tức là sử dụng `exec`.
 - `actv` là một alias cho `act`, dùng để nhấn mạnh đây là hành vi đang được thực thi trong ngữ cảnh hiện tại của FSM/TSM. Nó có thể chứa các trường bổ sung như `to`, `sig`, `data` để xác định hành vi cụ thể. được sử dụng trong khai báo HSMC, tức là trong `on_ntry`, `on_actv`, `on_exit`, hoặc `on_recv`.
-- `cact` là một alias cho `act`, viết tắt của `call act`, chuỗi hành vi được thực hiện khi một transition được kích hoạt, thường dùng trong `on_recv` của FSM. Nó có thể chứa một hoặc nhiều `actv` trong danh sách `steps`.
 - `steps` là một danh sách các hành vi (`actv`) được thực hiện tuần tự trong một ngữ cảnh cụ thể, như `on_ntry`, `on_actv`, `on_exit`, hoặc `on_recv`. Mỗi bước trong `steps` có thể là một hành vi đơn lẻ hoặc một hành vi phức tạp, tùy thuộc vào logic của task.
 
-> Kết luận đơn giản: `act` là hành vi cơ bản, `actv` là hành vi được thực thi trong ngữ cảnh cụ thể, `cact` là hành vi được thực hiện khi transition được kích hoạt, và `steps` là danh sách các hành vi được thực hiện theo thứ tự.
+> Kết luận đơn giản: `act` là hành vi cơ bản, `actv` là hành vi được thực thi trong ngữ cảnh cụ thể, `steps` là danh sách các hành vi được thực hiện theo thứ tự.
 
 <!-- TODO
 100826 - Cân nhắc thay đổi 2 keyword `act` và `actv` để tránh nhầm lẫn.
-110826 - Cân nhắc remove `cact` và chỉ dùng `steps` trong `on_recv` để thống nhất cú pháp. ~ Bổ sung task list để thực thi việc sửa đổi này.
+110826 - Cân nhắc remove `cact` và chỉ dùng `steps` trong `on_recv` để thống nhất cú pháp. ~ Bổ sung task list để thực thi việc sửa đổi này. >> DONE
 -->
 
 ### Khu vực dữ liệu toàn cục - Global Data Area
