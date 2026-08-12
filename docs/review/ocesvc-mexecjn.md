@@ -29,3 +29,14 @@ Thiết kế OCE hiện tại là **FCFS thuần theo thứ tự đăng ký** (`
 - Nếu được chấp thuận, `docs/uels-syntax.md` (mục `outexec`) cần bổ sung thêm 1 trường (ví dụ `priority:`) để μE-LS phản ánh đúng ngữ nghĩa mới của `id`.
 
 **Rủi ro cần xác nhận trước khi triển khai**: đây là **breaking change** đối với API `ocesvc_register()` - bất kỳ chỗ nào (hiện tại hoặc PLTF sinh code sau này) đang ngầm định `id` tự tăng dần 0,1,2... theo thứ tự đăng ký (ví dụ để log/debug đếm thứ tự) sẽ bị đổi ý nghĩa hoàn toàn sang "priority do người dùng chọn". Cần rà lại toàn bộ chỗ dùng `.id` của OCE (kể cả trong test và tooling) trước khi đổi.
+
+## Review 12/08/2026 235121
+
+Đối với thiết kế hiện tại OCE được xem xét không triển khai mức ưu tiên mà chỉ thực hiện đăng ký theo thứ tự FCFS, việc bổ sung mức ưu tiên chỉ xuất hiện AOCE (μE-OS) với "xử lý ưu tiên theo thời gian, kèm theo cơ chế expected execution time, quantum và error callback". Do đó ở đề xuất mới nhất là ocesvc.mexecjn và ID-remove, cần thật sự xem xét lại:
+
+1. Việc loại bỏ ID và thay đổi ý nghĩa của ID sang priority có thể gây ra breaking change và không nằm trong dự trù ban đầu của OCE. Tuy nhiên các thiết kế hiện tại của OCE không có cross-module dependency, chỉ có syntax-dependency theo lộ trình phát triển μE-LS, do đó việc thay đổi ý nghĩa của ID có thể được chấp nhận nếu được kiểm tra kỹ lưỡng. Nhưng điều này cũng dẫn việc phải suy xét bổ sung cả SCB-full theo dự trù của AOCE lẫn thay đổi thiết kế syntax của μE-LS, escalate các tính năng dự kiến của AOCE vào OCE, vì nếu không có SCB-full + μE-LS + AOCE-escalate thì việc thay đổi ý nghĩa của ID sẽ gây ra sự không đồng nhất trong cách xử lý các service.
+2. Việc bổ sung hỗ trợ thay đổi chuỗi thực thi (mexecjn) có đảm bảo không gây ra sự phức tạp trong việc quản lý các service, đặc biệt là khi có nhiều service đăng ký với cùng một priority không? Ngoài ra, bản thân tính năng này có thật sự cần thiết trong lộ trình đưa OCE lên AOCE hay không, hay chỉ là một tính năng phụ trợ cho OCE? Bởi vì nếu không có AOCE, việc thay đổi thứ tự thực thi sẽ không có ý nghĩa nhiều, vì OCE chỉ chạy khi hệ thống rảnh, và các service được thiết kế để chạy trong thời gian ngắn. Còn ở AOCE, việc thay đổi thứ tự thực thi sẽ được quản lý bởi scheduler của AOCE, do đó việc bổ sung mexecjn trong OCE có thể là thừa.
+
+<!-- TODO
+Minh đọc phần review này để bổ sung tiếp tục các đánh giá chi tiết hơn. Dự trù ở tính năng mexecjn và decision ID-remove sẽ chỉ có 1 vòng review này để thống nhất release v1.1.5, đồng thời làm căn cứ để xác định mexecjn có được đưa vào lộ trình thiết kế v1.1.6/7/8 hay không.
+-->
