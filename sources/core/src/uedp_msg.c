@@ -93,7 +93,6 @@ sta uedp_msg_t* internal_uedp_msg_pool_pop(uedp_msg_pool_header_t* header);
 sta void internal_uedp_msg_pool_push(uedp_msg_pool_header_t* header, uedp_msg_t* msg);
 sta uedp_msg_pool_header_t* internal_uedp_msg_find_best_pool(ui16 size);
 sta bool uedp_msg_is_valid_ptr(uedp_msg_t* msg);
-sta void internal_uedp_msg_pool_panic(ui8 pool_id);
 
 void uedp_msg_pool_init() {
 	// Khởi tạo BLANK Pool
@@ -153,7 +152,8 @@ uedp_msg_t* uedp_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 		msg->sig = sig;
 		msg->ref_count = 1; // mặc định 1 tham chiếu khi tạo mới
 	} else {
-		//TODO - Add FCR injection here with remove API `internal_uedp_msg_pool_panic`
+		// Pool đã hết chỗ - internal_uedp_msg_pool_pop()/find_best_pool() đã UEDP_FCR_RAISE()
+		// (MSG_POOL_EXHAUSTED) ngay tại nơi phát sinh, không cần xử lý gì thêm ở đây.
 	}
 
 	return msg;
@@ -397,7 +397,8 @@ void uedp_msg_drain_isr_pool(void) {
 		if (msg) {
 			uedp_task_norm_post_msg(msg->des_task_id, msg);
 		} else {
-			//TODO - Add FCR injection here with remove API `internal_uedp_msg_pool_panic`
+			// Cấp phát thất bại cho tin nhắn gốc từ ISR - uedp_msg_alloc() đã UEDP_FCR_RAISE()
+			// ngay bên trong rồi, không cần xử lý gì thêm ở đây.
 		}
 	}
 
@@ -423,19 +424,6 @@ bool uedp_msg_is_valid_ptr(uedp_msg_t* msg) {
 	}
 
 	return false; // Con trỏ tin nhắn không hợp lệ
-}
-
-/**
- * @brief Xử lý tình huống khẩn cấp khi Pool tin nhắn xảy ra vấn đề
- * @attention Giữ lại làm hook rỗng cho tương lai (ví dụ dọn dẹp riêng theo pool_id) -
- *            action SYS_PANIC/LOG cho các sự kiện pool đã được UEDP_FCR_RAISE() xử lý
- *            ngay tại nơi phát sinh (uedp_msg_alloc/pool_pop/drain_isr_pool), nên hàm
- *            này KHÔNG tự raise thêm để tránh double-raise.
- * //FIXME - Remove API này nếu không cần thiết, vì các sự kiện pool đã được UEDP_FCR_RAISE() 
- * 			 xử lý ngay tại nơi phát sinh (uedp_msg_alloc/pool_pop/drain_isr_pool)
- */
-void internal_uedp_msg_pool_panic(ui8 pool_id) {
-	(void)pool_id;
 }
 
 RETR_STAT internal_uedp_msg_enqueue_isr_sig(task_id_t tid, ui16 sig) {
