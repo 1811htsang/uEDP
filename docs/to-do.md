@@ -131,8 +131,11 @@
 - [x] Bổ sung name attribute cho rprintf để phục vụ μE-LS.
 - [x] Bổ sung tài liệu thiết kế FCR. //NOTE - VN done, EN done.
 - [x] Bổ sung API filling task ID và source ID attribute của message (follow commit 6728c..) để hỗ trợ việc định danh các task và nguồn gốc của các tin nhắn trong hệ thống, giúp đảm bảo rằng các tin nhắn được xử lý một cách chính xác và hiệu quả. //REVIEW - Minh đã được review code và chuyển đổi từ đề xuất setup task ID đặc biệt như ISR, Start sang cho phép người dùng tự chọn Task ID. Tuy nhiên, cần đảm bảo về việc định danh.
-- [ ] Remove API `internal_uedp_msg_pool_panic` khỏi lõi μEDP và thay thế bằng cơ chế FCR để xử lý các lỗi nghiêm trọng trong hệ thống, nhằm đảm bảo rằng các lỗi được xử lý một cách hiệu quả và an toàn mà không cần phải sử dụng các API đặc biệt.
+- [ ] Remove API `internal_uedp_msg_pool_panic` khỏi lõi μEDP và thay thế bằng cơ chế FCR để xử lý các lỗi nghiêm trọng trong hệ thống, nhằm đảm bảo rằng các lỗi được xử lý một cách hiệu quả và an toàn mà không cần phải sử dụng các API đặc biệt. //NOTE - Nghĩa là đã có FCR thay thế cho API này nên cần được loại bỏ.
+- [ ] Đánh giá tính năng mexecjn (chain) cho OCE service để hỗ trợ việc cho phép thay đổi thứ tự danh sách các sự kiện cần xử lý trong OCE service, giúp đảm bảo rằng các sự kiện quan trọng được xử lý theo đúng thứ tự ưu tiên và logic của hệ thống. //NOTE - Ngoài ra cân nhắc việc remove việc sử dụng ID để định danh các dịch vụ OCE do đã sử dụng llist để quản lý các dịch vụ OCE, giúp giảm thiểu sự phụ thuộc vào các ID và tăng tính linh hoạt trong việc quản lý các dịch vụ OCE. Do đó, việc bổ sung mexecjn cần được cân nhắc kỹ lưỡng để đảm bảo rằng cơ chế này không gây ra xung đột hoặc phức tạp hóa việc quản lý các dịch vụ OCE trong hệ thống. Minh sẽ cần review lại OCESVC và trình bày các đề xuất mới về mexecjn.
 - [ ] Ra mắt phiên bản 1.1.5 của lõi μEDP với đầy đủ tính năng FCR, các bản cập nhật và tài liệu hướng dẫn sử dụng.
+
+//REVIEW - Giữa 2 phiên bản 1.1.5 và 1.2.0 sẽ cần được thống nhất phân tách thêm 3 phiên bản 1.1.6, 1.1.7, 1.1.8 để hoàn thiện các submodule cơ sở hạ tầng được dự trù trong phiên bản 1.2.0, bao gồm các tính năng PLD/μE-LS, PLTF.TSD/TLC.
 
 ### Phiên bản 1.2.0: The Infrastructure Preparation for μE-OS
 
