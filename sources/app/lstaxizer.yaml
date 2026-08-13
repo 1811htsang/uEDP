@@ -22,12 +22,12 @@ sigs:
     id_symbol: SIG_HALT_NOW
 tnorms:
   '1': &tnorm1-ctrl
-    fsm: NULL
+    fsm_resrc: NULL
     handler: tnorm_usr_nhler
     hex_val: '0xe6'
     id_symbol: TASK_USR_IDS
     queue_name: tnorm_usr_msgq
-    tsm:
+    tsm_resrc:
       object: tnorm_usr_tsmobj
       state_trans:
       - tnorm_usr_state_idle_trans
@@ -37,12 +37,12 @@ tnorms:
       - tnorm_usr_state_running
       table: tnorm_usr_tsmobj_tbl
   '2': &tnorm2-ctrl
-    fsm: NULL
+    fsm_resrc: NULL
     handler: tnorm_a_nhler
     hex_val: '0xe7'
     id_symbol: TASK_A_IDS
     queue_name: tnorm_a_msgq
-    tsm:
+    tsm_resrc:
       object: tnorm_a_tsmobj
       state_trans:
       - tnorm_a_idle_trans
@@ -52,12 +52,12 @@ tnorms:
       - tnorm_a_state_waitb
       table: tnorm_a_tsmobj_tbl
   '3': &tnorm3-ctrl
-    fsm:
+    fsm_resrc:
       object: tnorm_b_tsmobj
       states:
       - tnorm_b_state_idle
       - tnorm_b_state_busy
-    tsm: NULL
+    tsm_resrc: NULL
     handler: tnorm_b_nhler
     hex_val: '0xe8'
     id_symbol: TASK_B_IDS
@@ -69,10 +69,10 @@ tpolls: {}
 # >>  '1', '2' of sigs: &sig1, &sig2, ...
 # >> tnorms: &tnormlst
 # >>  '1', '2' of tnorms: &tnorm1, &tnorm2, ...
-# >>  fsm of '1', '2': &tnorm1-fsmobj, &tnorm2-fsmobj, ...
-# >>    states of '1'[fsm], '2'[fsm]: &tnorm1-fsmstates, &tnorm2-fsmstates, ...
-# >>  tsm of '1', '2': &tnorm1-tsmobj, &tnorm2-tsmobj, ...
-# >>    states of '1'[tsm], '2'[tsm]: &tnorm1-tsmstates, &tnorm2-tsmstates, ...
+# >>  fsm_resrc of '1', '2': &tnorm1-fsmobj, &tnorm2-fsmobj, ...
+# >>    states of '1'[fsm_resrc], '2'[fsm_resrc]: &tnorm1-fsmstates, &tnorm2-fsmstates, ...
+# >>  tsm_resrc of '1', '2': &tnorm1-tsmobj, &tnorm2-tsmobj, ...
+# >>    states of '1'[tsm_resrc], '2'[tsm_resrc]: &tnorm1-tsmstates, &tnorm2-tsmstates, ...
 # >>    state trans of '1', '2': &tnorm1-tsmtrans, &tnorm2-tsmtrans, ...
 # >> tpolls: &tpolllst
 # >>  '1', '2' of tpolls: &tpoll1, &tpoll2, ...

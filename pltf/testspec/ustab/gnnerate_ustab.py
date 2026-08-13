@@ -30,16 +30,16 @@ class gnnerate_ustab:
       if m: self._get_norm(m.group(1))["handler"] = m.group(2) + "_nhler"
       m = re.match(r'CONFIG_APPCFG_TSM_TASK_(\d+)="(.+)"', line)
       if m: 
-        self._get_norm(m.group(1))["tsm"]["object"] = m.group(2)
-        self._get_norm(m.group(1))["tsm"]["table"] = m.group(2) + "_tbl"
+        self._get_norm(m.group(1))["tsm_resrc"]["object"] = m.group(2)
+        self._get_norm(m.group(1))["tsm_resrc"]["table"] = m.group(2) + "_tbl"
       m = re.match(r'CONFIG_APPCFG_TSM_TASK_(\d+)_STATE_(\d+)="(.+)"', line)
       if m: 
-        self._get_norm(m.group(1))["tsm"]["states"].append(m.group(3))
-        self._get_norm(m.group(1))["tsm"]["state_trans"].append(m.group(3) + "_trans")
+        self._get_norm(m.group(1))["tsm_resrc"]["states"].append(m.group(3))
+        self._get_norm(m.group(1))["tsm_resrc"]["state_trans"].append(m.group(3) + "_trans")
       m = re.match(r'CONFIG_APPCFG_FSM_TASK_(\d+)="(.+)"', line)
-      if m: self._get_norm(m.group(1))["fsm"]["object"] = m.group(2)
+      if m: self._get_norm(m.group(1))["fsm_resrc"]["object"] = m.group(2)
       m = re.match(r'CONFIG_APPCFG_FSM_TASK_(\d+)_STATE_(\d+)="(.+)"', line)
-      if m: self._get_norm(m.group(1))["fsm"]["states"].append(m.group(3))
+      if m: self._get_norm(m.group(1))["fsm_resrc"]["states"].append(m.group(3))
       m = re.match(r'CONFIG_DECL_TASK_POLL_(\d+)_NAME="(.+)"', line)
       if m: self._get_poll(m.group(1))["id_symbol"] = m.group(2)     
       m = re.match(r'CONFIG_DECL_POLL_HANDLER_(\d+)_NAME="(.+)"', line)
@@ -50,7 +50,7 @@ class gnnerate_ustab:
     return self.ust
   def _get_norm(self, idx):
     if idx not in self.ust["tnorms"]:
-      self.ust["tnorms"][idx] = {"tsm": {"states": [], "state_trans": []}, "fsm": {"states": []}}
+      self.ust["tnorms"][idx] = {"tsm_resrc": {"states": [], "state_trans": []}, "fsm_resrc": {"states": []}}
     return self.ust["tnorms"][idx]
   def _get_poll(self, idx):
     if idx not in self.ust["tpolls"]:
