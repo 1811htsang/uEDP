@@ -1,9 +1,9 @@
 /**
  * @file uedp_ocesvc.c
  * @author Shang Huang
- * @brief 
+ * @brief Implementation of OCE Service (OCE)
  * @version 0.1
- * @date 2026-07-08
+ * @date 2026-08-04
  * @copyright Copyright (c) 2026
  */
 #include <stdint.h>
@@ -12,6 +12,7 @@
 #include "uedp_task.h"
 #include "llist.h"
 #include "uedp_ocesvc.h"
+#include "uedp_fcr.h"
 
 sta uint8_t id_counter = 0; // Biến đếm ID cho các dịch vụ OCE
 sta ocesvc_ctrl_t ocesvc_ctrl; // Bộ điều khiển dịch vụ OCE
@@ -40,6 +41,7 @@ static bool ocesvc_has_id(uint8_t id) {
 
 static bool ocesvc_find_free_id(uint8_t start_id, uint8_t* out_id) {
   if (out_id == NULL) {
+    // Hàm static nội bộ, chỉ được gọi với &allocated_id hợp lệ - không cần raise FCR.
     return false;
   }
 
@@ -65,21 +67,25 @@ static void ocesvc_sync_fill_size(void) {
 
 void ocesvc_register(ocesvc_t* svc) {
   if (svc == NULL) {
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_OCE_INVALID_SVC, "register: null svc");
     return;
   }
 
   if (svc == &head) {
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_OCE_INVALID_SVC, "register: svc is sentinel head");
     return;
   }
 
   uint8_t allocated_id = 0U;
   if (!ocesvc_find_free_id(id_counter, &allocated_id)) {
+    UEDP_FCR_RAISE(UEDP_FCR_OCE_REGISTRY_FULL); // Không còn ID trống để đăng ký thêm service (đã dùng hết 0x00-0xFE)
     return;
   }
 
   uint32_t previous_size = ocesvc_list.size;
   llist_append(&ocesvc_list, svc);
   if (ocesvc_list.size == previous_size) {
+    UEDP_FCR_RAISE(UEDP_FCR_OCE_APPEND_FAILED);
     return;
   }
 
@@ -92,10 +98,12 @@ void ocesvc_register(ocesvc_t* svc) {
 
 void ocesvc_unregister(ocesvc_t* svc) {
   if (svc == NULL) {
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_OCE_INVALID_SVC, "unregister: null svc");
     return;
   }
 
   if (svc == &head) {
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_OCE_INVALID_SVC, "unregister: svc is sentinel head");
     return;
   }
 
@@ -115,6 +123,9 @@ void ocesvc_scheduler() {
   // Lấy head của danh sách liên kết đơn và duyệt qua từng dịch vụ OCE
   llist_node_t* current = ocesvc_list.head;
   if (current == NULL) {
+    //NOTE - Minh: Chỉ xảy ra nếu gọi trước ocesvc_ctrl_init() - hiếm gặp, không cần raise FCR ở hot-path.
+    //FIXME - Sang: Chỗ này vẫn cần raise với message để đảm bảo cover. -done
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_OCE_NOT_INIT, "scheduler: list is null before init");
     return; // Nếu danh sách rỗng, không làm gì cả
   }
   // Chỉ service đầu tiên trong danh sách có trạng thái READY mới được thực thi
