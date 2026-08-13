@@ -31,80 +31,23 @@ Feel free to star the projetct and contribute to its development. Your support i
 - **[PPLP]** Plug-N-Play Logging Pipeline: Three-layer logging system `itnlog` → `logdp` → `rprintf/xprintf` supporting safe log collection and forwarding from Core to backend.
 - **[MPS]** Modular Porting Support: Abstracted hardware access and services in the PAL, enabling easy porting to new platforms with predefined interfaces and configurations.
 - **[OCE]** Out-Context Execution Service: Support for executing tasks in an out-of-context manner, allowing for flexible task management and execution.
-- **[IOMS]** I/O Mapping Shell: A shell for mapping certain operations to I/O hardware, enabling command-based control and interaction with hardware components.
+- **[FCR]** Fatal Code Return: A mechanism for handling fatal errors and returning error codes, ensuring robust error handling and system stability.
+- **[PLTF]** Portable Local Test Framework: A framework for writing and running tests with YAML syntax and a simple test runner, enabling easy testing and validation of application logic.
 - **[PSE]** Pub/Sub Engine: A publish-subscribe mechanism for decoupled communication between tasks, allowing for flexible and scalable event handling.
-- **[SOCI]** Safe Out-Core Interaction: Ensuring safe and efficient interaction between the Core infrastructure and the external data flow, preventing issues such as data corruption and ensuring Core stability.
+- **[SIF]** Safe Input Filter: A mechanism for safely filtering and validating input data, ensuring that only valid and expected data is processed by the system.
+- **[IOMS]** I/O Mapping Shell: A shell for mapping certain operations to I/O hardware, enabling command-based control and interaction with hardware components.
 
 ---
 
-## 🏗 System Architecture
+## From Framework to Kernel: The μE-OS Transition
 
-```mermaid
-graph LR
-    subgraph App[Application Layer]
-        Config[App Config app_cfg.h]
-        Declaration[App Logic declaration/]
-        Logic[Main App Logic app.c]
-    end
+Currently, μEDP is evolving into the kernel of μE-OS (micro Event-Driven Operating System). Version 1.2.0 will mark a major milestone: The Infrastructure Preparation. We are moving away from manual coding toward Model-Driven Development (MDD) using the μE-LS (Logical Syntax-izer).
 
-    subgraph Core[μEDP Core]
-        Task[Task Scheduler & Task Objects]
-        Msg[Message Pools & Manager]
-        Timer[Timer Service]
-        SM[TSM/FSM Engine]
-        Itnlog[Event Logger itnlog]
-    end
+μEDP will include the PLTF (Portable Local Test Framework), a robust infrastructure for testing and validating application logic with:
 
-    subgraph PAL[Platform Abstraction Layer]
-        Arch[Architecture-Specific HAL]
-        Logdp[Log Dispatcher logdp]
-        Rprintf[redirectable printf]
-        Memrp[Memory Profiler memrp]
-    end
-
-    PAL -->|Hardware Access| Core
-    Core -->|Event-Driven API| App
-    App -->|Configuration| Core
-    App -->|Configuration| PAL
-    App -->|Logging| PAL
-    Core -->|Logging| PAL
-```
-
----
-
-## 📂 Directory Structure
-
-```text
-μEDP/
-├── core/                        # Định nghĩa và triển khai logic chính của μEDP
-│   ├── inc/                     # uedp_msg.h, uedp_task.h, uedp_timer.h, uedp_fsm.h, uedp_tsm.h
-│   │   └── uedp_core.h          # Định nghĩa các tín hiệu, hằng số và cấu trúc dữ liệu cốt lõi của μEDP
-│   └── src/                     # Triển khai logic scheduler, timer engine, message manager
-├── pal/                         # BACKEND (Lớp trừu tượng)
-│   ├── pal_core.h               # Khai báo thống nhất chung cho toàn bộ PAL và các dịch vụ hệ thống
-│   ├── services/                # Hardware Services (Mapping phần cứng)
-│   │   ├── logdp/               # pal_logdp.h chứa các khai báo API log để triển khai bộ dispatch log ra nhiều backend
-│   │   ├── memrp/               # pal_memrp.h chứa các khai báo API memory profiling để triển khai trên từng nền tảng
-│   │   └── rprintf/             # pal_rprintf.h chứa các khai báo API rprintf để triển khai trên từng nền tảng
-│   └── arch/                    # Implementation (Mã nguồn chi tiết từng chip)
-│       └── .../                 # Mỗi nền tảng sẽ có một thư mục riêng để triển khai
-├── app/                         # Định nghĩa logic ứng dụng, bao gồm các tác vụ và FSM do người dùng tạo ra
-│   ├── config/                  # Chứa cấu hình ứng dụng, Core và PAL
-│   ├── declaration/             # Khai báo các thiết kế cho logic nghiệp vụ
-│   ├── interface/               # Chứa các triển khai cho truyền tín hiệu từ ngoài vào Core
-│   ├── kconfig/                 # Chứa các cấu hình cho ứng dụng bằng Kconfig
-│   └── app.c                    # Implementation chính của logic hoạt động của ứng dụng người dùng
-├── common/                      # Các tiện ích và cấu trúc dữ liệu chung được sử dụng trong toàn bộ dự án
-│   ├── container/               # Các cấu trúc dữ liệu như FIFO, Ring Buffer, Linked List được triển khai thuần C
-│   ├── kconfiglib/              # Chứa cấu hình thực thi Kconfig terminal
-│   ├── pyspec/                  # Cấu hình python để sinh code từ Kconfig terminal
-│   └── xprintf/                 # Thư viện xprintf sử dụng cho việc format chuỗi log và xuất ra nhiều backend khác nhau
-└── test/                        # Các test case mẫu để kiểm tra các tính năng của μEDP
-    ├── test01/                  # Test cơ bản với các tác vụ ISR và TSM 
-    ├── test02/                  # Test với các tính năng như message pooling và memrp
-    ├── test03/                  # Test với các tính năng như message pooling và memrp
-    └── test04/                  # Test với tính năng itnlog
-```
+- μE-LS (Logical Syntax-izer): A YAML-based syntax to define Task behavior, Hybrid State Machines (TSM/FSM), and Global Data Areas (GDA).
+- TLC (Test Level Coverager): Automated verification ranging from Unit (UT) and Component (CT) to System (ST) and Integration (IT) testing.
+- UST (Unified Symbol Table): A centralized context engine that ensures consistency between Kconfig resources and Logic descriptors.
 
 ---
 
@@ -118,7 +61,7 @@ A detailed analysis between the μEDP/CIEDPC and the QP/C framework is available
 
 If you want to see the documentation in progress, switch to the `docs` branch to view the documents that are currently being drafted and updated.
 
-Please also note that the documentation is currently supporting Vietnamese, and English documentation will be added in the future as the project progresses or with contributions from the community.
+Please also note that the documentation is currently supporting Vietnamese, and English documentation will be added in the future as the project progresses or with contributions from the community. Currently, the documentation is quite limited to the resource of time and human to consilidate source code into a comprehensive document. However, the reminder in tasklist is always there to ensure the documentation task is not forgotten.
 
 ---
 
@@ -126,10 +69,6 @@ Please also note that the documentation is currently supporting Vietnamese, and 
 
 This project is developed by **Shang Huang (Huynh Thanh Sang)**. Contributions for bug reports or feature proposals are welcome via GitHub Issues.
 
+From v1.1.5, **Minminie06 (Nguyen Hoang Hai Minh)** has joined the project as a contributor, focusing on the development, refactor and documentation for any leftover features and improvements. Contributions from the community are always welcome, and we encourage you to submit pull requests for any enhancements or bug fixes.
+
 **License:** MIT.
-
----
-
-## Future Development Roadmap
-
-All design roadmaps are stored in [to-do.md](./docs/to-do.md) to track the progress and development plans for new features, improvements, and related documentation. For more detailed updates, switch to the `docs` branch to view the documents that are currently being drafted and updated.

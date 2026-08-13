@@ -1,15 +1,14 @@
-﻿/**
+/**
  * @file fsm.c
  * @author Shang Huang
  * @brief Triển khai các hàm và logic liên quan đến Finite State Machine (FSM) trong hệ thống UEDP
  * @version 0.1
  * @date 2026-04-16
- * 
  * @copyright MIT License
- * 
  */
 #include "uedp_fsm.h"
 #include "uedp_msg.h"
+#include "uedp_fcr.h"
 
 void uedp_fsm_go_next(uedp_fsm_t* me, state_handler target) {
   // Bảo vệ critical section để đảm bảo tính nhất quán khi thay đổi trạng thái của FSM
@@ -18,6 +17,7 @@ void uedp_fsm_go_next(uedp_fsm_t* me, state_handler target) {
   // Kiểm tra tính hợp lệ của con trỏ FSM và trạng thái mục tiêu
   if (!me || !target) {
     pal_exit_critical();
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_SM_NULL_HANDLER, "go_next: null fsm/target");
     return; 
   }
 
@@ -50,10 +50,18 @@ void uedp_fsm_go_back(uedp_fsm_t* me) {
   // Bảo vệ critical section để đảm bảo tính nhất quán khi thay đổi trạng thái của FSM
   pal_enter_critical();
 
-  // Kiểm tra tính hợp lệ của con trỏ FSM và đảm bảo có trạng thái trong lịch sử để quay lại
-  if (!me || !me->state || me->history_count == 0) {
+  // Kiểm tra tính hợp lệ của con trỏ FSM
+  if (!me || !me->state) {
     pal_exit_critical();
-    return; 
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_SM_NULL_HANDLER, "go_back: null fsm/state");
+    return;
+  }
+
+  // Chưa có lịch sử để quay lại - đây là tình huống hợp lệ (không phải lỗi),
+  // ví dụ FSM vừa init xong chưa từng go_next() lần nào - không raise FCR ở đây.
+  if (me->history_count == 0) {
+    pal_exit_critical();
+    return;
   }
 
   // Cập nhật chỉ số lịch sử để trỏ đến trạng thái trước đó
@@ -64,6 +72,10 @@ void uedp_fsm_go_back(uedp_fsm_t* me) {
 
   // Đảm bảo rằng trạng thái trước đó không phải là NULL trước khi quay lại
   if (!previous_state) {
+    // Sửa lỗi code gốc: Phải gọi pal_exit_critical() trước khi return để tránh treo hệ thống (Deadlock)
+    pal_exit_critical();
+    // Lịch sử có count > 0 nhưng slot bị NULL tức là hỏng bộ nhớ
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_SM_NULL_HANDLER, "go_back: corrupt history slot");
     return; 
   }
 

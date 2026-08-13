@@ -1,18 +1,17 @@
-﻿/**
+/**
  * @file uedp_msg.c
  * @author Shang Huang
  * @brief Implementation of message management for UEDP system
  * @version 0.1
- * @date 2026-04-16
- * 
+ * @date 2026-08-04
  * @copyright MIT License
- * 
  */
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "uedp_core.h"
 #include "uedp_msg.h"
+#include "uedp_fcr.h"
 #include "pal_memrp.h"
 #include "fifo.h"
 
@@ -57,7 +56,6 @@ sta uedp_msg_t alloc_pool[UEDP_MSG_ALLOC_QUEUE_SIZE] = {0};
 sta ui8 alloc_pool_data[UEDP_MSG_ALLOC_QUEUE_SIZE][UEDP_MSG_ALLOC_DATA_MAX] = {0};
 uedp_msg_pool_header_t g_alloc_pool_ctrl = {0};
 
-
 /**
  * @brief Extal pool với kích thước là 16 [sizeof(void*) * 4u] units
  * @example
@@ -95,7 +93,6 @@ sta uedp_msg_t* internal_uedp_msg_pool_pop(uedp_msg_pool_header_t* header);
 sta void internal_uedp_msg_pool_push(uedp_msg_pool_header_t* header, uedp_msg_t* msg);
 sta uedp_msg_pool_header_t* internal_uedp_msg_find_best_pool(ui16 size);
 sta bool uedp_msg_is_valid_ptr(uedp_msg_t* msg);
-sta void internal_uedp_msg_pool_panic(ui8 pool_id);
 
 void uedp_msg_pool_init() {
 	// Khởi tạo BLANK Pool
@@ -128,6 +125,7 @@ uedp_msg_t* uedp_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 	uedp_msg_pool_header_t* pool_header = internal_uedp_msg_find_best_pool(size);
 
 	if (pool_header == NULL) {
+		UEDP_FCR_RAISE(UEDP_FCR_MSG_POOL_EXHAUSTED); // Không tìm được Pool phù hợp cho kích thước yêu cầu -> coi như hết chỗ
 		return NULL;
 	}
 
@@ -136,20 +134,36 @@ uedp_msg_t* uedp_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 	pal_exit_critical();
 
 	if (msg != NULL) {
-		msg->src_task_id = uedp_task_norm_get_current_id();
+		/**
+		 * @attention g_active_task_norm_id (trả về từ uedp_task_norm_get_current_id()) chỉ được
+		 *            cập nhật/reset bên trong internal_uedp_task_norm_dispatch() - nếu hàm này được
+		 *            gọi từ ngữ cảnh KHÔNG có task nào đang thực sự dispatch (ví dụ: từ ISR qua
+		 *            uedp_msg_drain_isr_pool(), từ uedp_timer_tick(), hoặc từ main() lúc setup tín
+		 *            hiệu khởi động hệ thống), giá trị này chỉ là "rác" còn sót lại từ vòng dispatch
+		 *            trước đó (thường là UEDP_TASK_NORM_IDLE_ID) - KHÔNG phản ánh đúng nguồn gốc thật.
+		 *            Dùng uedp_task_norm_get_current_msg() (chỉ khác NULL khi thực sự đang trong 1
+		 *            lần dispatch) để phân biệt, và gán UEDP_TASK_NORM_SYS_ID cho trường hợp không có
+		 *            task nguồn cụ thể, tránh đánh lừa rằng tin nhắn đến từ task IDLE.
+		 */
+		msg->src_task_id = (uedp_task_norm_get_current_msg() != NULL)
+			? uedp_task_norm_get_current_id()
+			: UEDP_TASK_NORM_SYS_ID;
 		msg->des_task_id = des_task_id;
 		msg->sig = sig;
 		msg->ref_count = 1; // mặc định 1 tham chiếu khi tạo mới
 	} else {
-		// Pool đã hết, có thể log lỗi hoặc thực hiện hành động khắc phục
-		internal_uedp_msg_pool_panic(pool_header - &g_blank_pool_ctrl); // Tính toán pool_id dựa trên offset
+		// Pool đã hết chỗ - internal_uedp_msg_pool_pop()/find_best_pool() đã UEDP_FCR_RAISE()
+		// (MSG_POOL_EXHAUSTED) ngay tại nơi phát sinh, không cần xử lý gì thêm ở đây.
 	}
 
 	return msg;
 }
 
 void uedp_msg_free(uedp_msg_t* msg) {
-	if (!msg || !uedp_msg_is_valid_ptr(msg)) return;
+	if (!msg || !uedp_msg_is_valid_ptr(msg)) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "free: null or invalid ptr");
+		return;
+	}
 
 	msg->next = NULL;
 
@@ -166,8 +180,8 @@ void uedp_msg_free(uedp_msg_t* msg) {
 			header = &g_extal_pool_ctrl;
 			break;
 		default:
+			UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "free: unknown msg type");
 			return; // Loại tin nhắn không hợp lệ, không thực hiện giải phóng
-			break;
 	}
 
 	pal_enter_critical(); // Đảm bảo an toàn khi truy cập Pool trong môi trường đa tác vụ hoặc ISR
@@ -187,8 +201,33 @@ void uedp_msg_ref_dec(uedp_msg_t* msg) {
 }
 
 /**
+ * @brief Thiết lập ID của tác vụ nguồn gửi tin nhắn
+ * @param msg: Con trỏ đến tin nhắn cần thiết lập ID nguồn
+ * @param src_task_id: ID của tác vụ nguồn gửi tin nhắn
+ */
+void uedp_msg_set_src_task_id(uedp_msg_t* msg, task_id_t src_task_id) {
+	if (!msg) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "set_src_task_id: null msg");
+		return;
+	}
+	msg->src_task_id = src_task_id;
+}
+
+/**
+ * @brief Thiết lập ID của tác vụ đích nhận tin nhắn
+ * @param msg: Con trỏ đến tin nhắn cần thiết lập ID đích
+ * @param des_task_id: ID của tác vụ đích nhận tin nhắn
+ */
+void uedp_msg_set_des_task_id(uedp_msg_t* msg, task_id_t des_task_id) {
+	if (!msg) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "set_des_task_id: null msg");
+		return;
+	}
+	msg->des_task_id = des_task_id;
+}
+
+/**
  * @brief Khởi tạo Pool tin nhắn
- * 
  * @param header Chứa thông tin quản lý của Pool
  * @param pool Con trỏ đến mảng chứa các tin nhắn trong Pool
  * @param data_mem Con trỏ đến mảng chứa vùng dữ liệu cho các tin nhắn trong Pool
@@ -202,24 +241,27 @@ void internal_uedp_msg_pool_init(
 ) {
 	// Kiểm tra đầu vào
 	if (!header || !pool) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_POOL_MISCONFIG, "pool_init: null header/pool");
 		return;
 	}
 
 	// Kiểm tra nếu init Blank Pool thì không cần xử lý thêm, chỉ có Blank Pool mới có thể có data_mem là NULL và data_size là 0, 
 	// các Pool khác nếu không có vùng dữ liệu thì sẽ không khởi tạo Pool vì sẽ lãng phí bộ nhớ.
 	if (pool_type != UEDP_MSG_TYPE_BLANK && !data_mem) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_POOL_MISCONFIG, "pool_init: null data_mem");
 		return;
 	}
 
 	/**
 	 * @brief Kiểm tra nếu data_size là 0 hoặc kích thước phân bố dữ liệu không phù hợp với data_size
-	 * 				thì coi như không phù hợp và trả về, không khởi tạo Pool vì sẽ lãng phí bộ nhớ. 
+	 * 				thì coi như không phù hợp và trả về, không khởi tạo Pool vì sẽ lãng phí bộ nhớ.
 	 * 				Ví dụ giả sử norm_pool[12][8] nghĩa là có thể chứa 12 unit tin nhắn, mỗi unit tin nhắn có thể chứa tối đa 8 bytes dữ liệu, 
 	 * 				nếu data_size là 0 hoặc data_size lớn hơn 8 bytes thì sẽ không khởi tạo Pool.
 	 * 				Ngoài ra nếu data_size không phải là bội số của data_max thì cũng sẽ không khởi tạo Pool vì
 	 * 				sẽ dẫn đến việc phân bố dữ liệu	không đều.
 	 */
 	if (data_size > 0 && (data_max % data_size != 0 || data_size > data_max)) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_POOL_MISCONFIG, "pool_init: data_size/data_max mismatch");
 		return;
 	}
 
@@ -241,37 +283,39 @@ void internal_uedp_msg_pool_init(
 
 		// Gán vùng dữ liệu cho tin nhắn
 		if (data_mem != NULL && data_size > 0) {
-				// Tính toán địa chỉ: Bắt đầu + (vị trí * kích thước mỗi ô)
-				/**
-				 * @brief Mỗi tin nhắn sẽ sở hữu một vùng nhớ bắt đầu từ:
-				 * 				Địa chỉ gốc + (số thứ tự tin nhắn * kích thước ô nhớ)
-				 * @attention Lưu ý rằng [0][0-7], [1][8-15], ... Đây chính là nguyên lý trải phẳng của mảng 2 chiều thành mảng 1 chiều, 
-				 * 						giúp việc quản lý bộ nhớ trở nên đơn giản và hiệu quả hơn.
-				 */
-				pool[index].data = (ui32*)(data_mem + (index * data_size));
-
-				// Xóa sạch vùng dữ liệu
-				memset(pool[index].data, 0, data_size);
+			//NOTE - Tính toán địa chỉ: Bắt đầu + (vị trí * kích thước mỗi ô)
+			/**
+			 * @brief Mỗi tin nhắn sẽ sở hữu một vùng nhớ bắt đầu từ:
+			 * 				Địa chỉ gốc + (số thứ tự tin nhắn * kích thước ô nhớ)
+			 * @attention Lưu ý rằng [0][0-7], [1][8-15], ... Đây chính là nguyên lý trải phẳng của mảng 2 chiều thành mảng 1 chiều, 
+			 * 						giúp việc quản lý bộ nhớ trở nên đơn giản và hiệu quả hơn.
+			 */
+			pool[index].data = (ui32*)(data_mem + (index * data_size));
+			memset(pool[index].data, 0, data_size);
 		} else {
-				pool[index].data = NULL; // Pool Blank
+			pool[index].data = NULL; // Pool Blank
 		}
 
 		// Thiết lập danh sách liên kết (Linked List)
 		if (index < (units - 1)) {
-				pool[index].next = &pool[index + 1];
+			pool[index].next = &pool[index + 1];
 		} else {
-				pool[index].next = NULL; // Phần tử cuối cùng
+			pool[index].next = NULL; // Phần tử cuối cùng
 		}
 	}
 }
 
 /**
  * @brief Lấy một tin nhắn từ Pool
- * 
  * @param header Chứa thông tin quản lý của Pool
  */
 uedp_msg_t* internal_uedp_msg_pool_pop(uedp_msg_pool_header_t* header) {
-	if (!header || !header->free_list) {
+	if (!header) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "pool_pop: null header");
+		return NULL;
+	}
+	if (!header->free_list) {
+		UEDP_FCR_RAISE(UEDP_FCR_MSG_POOL_EXHAUSTED); // free_list rỗng -> Pool đã hết chỗ trống
 		return NULL; // Pool trống hoặc không hợp lệ
 	}
 
@@ -297,13 +341,13 @@ uedp_msg_t* internal_uedp_msg_pool_pop(uedp_msg_pool_header_t* header) {
 
 /**
  * @brief Trả một tin nhắn về Pool
- * 
  * @param header Chứa thông tin quản lý của Pool
  * @param msg Con trỏ đến tin nhắn cần trả về Pool
  */
 void internal_uedp_msg_pool_push(uedp_msg_pool_header_t* header, uedp_msg_t* msg) {
 	if (!header || !msg) {
-		return; // Pool không hợp lệ hoặc tin nhắn không hợp lệ
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "pool_push: null header/msg");
+		return;
 	}
 
 	// Ngắt liên kết của tin nhắn với danh sách liên kết (nếu có)
@@ -321,7 +365,6 @@ void internal_uedp_msg_pool_push(uedp_msg_pool_header_t* header, uedp_msg_t* msg
 
 /**
  * @brief Tìm Pool tin nhắn phù hợp nhất dựa trên kích thước dữ liệu yêu cầu
- * 
  * @param size Kích thước dữ liệu yêu cầu cho tin nhắn
  * @return uedp_msg_pool_header_t* Con trỏ đến Pool tin nhắn phù hợp nhất hoặc NULL nếu không có Pool nào phù hợp
  * @attention Pool EXTAL và ISR không được xem xét trong hàm này vì nó được thiết kế để đảm bảo signal từ ngoài vào core được
@@ -334,13 +377,12 @@ uedp_msg_pool_header_t* internal_uedp_msg_find_best_pool(ui16 size) {
 	} else if (size <= UEDP_MSG_ALLOC_DATA_MAX) {
 		return &g_alloc_pool_ctrl; // Pool Alloc
 	} else {
-		return NULL; // Không có Pool nào phù hợp
+		return NULL; // Không có Pool nào phù hợp -> caller (uedp_msg_alloc) sẽ raise MSG_POOL_EXHAUSTED
 	}
 }
 
 /**
  * @brief Xả hàng đợi tin nhắn trong ngữ cảnh ISR để giải phóng các tin nhắn đang bị giữ trong hàng đợi ISR
- * 
  */
 void uedp_msg_drain_isr_pool(void) {
 
@@ -355,8 +397,8 @@ void uedp_msg_drain_isr_pool(void) {
 		if (msg) {
 			uedp_task_norm_post_msg(msg->des_task_id, msg);
 		} else {
-			// Xử lý tình huống cấp phát tin nhắn thất bại, có thể log lỗi hoặc thực hiện hành động khắc phục
-			internal_uedp_msg_pool_panic(UEDP_MSG_ISR_QUEUE_SIZE); // Sử dụng một mã lỗi đặc biệt cho Pool ISR
+			// Cấp phát thất bại cho tin nhắn gốc từ ISR - uedp_msg_alloc() đã UEDP_FCR_RAISE()
+			// ngay bên trong rồi, không cần xử lý gì thêm ở đây.
 		}
 	}
 
@@ -365,14 +407,13 @@ void uedp_msg_drain_isr_pool(void) {
 
 /**
  * @brief Kiểm tra xem con trỏ tin nhắn có hợp lệ hay không (được cấp phát từ một trong các Pool tin nhắn)
- * 
  * @param msg Con trỏ đến tin nhắn cần kiểm tra
  * @return true nếu con trỏ tin nhắn hợp lệ (được cấp phát từ một trong các Pool tin nhắn)
  * @return false nếu con trỏ tin nhắn không hợp lệ (không được cấp phát từ bất kỳ Pool tin nhắn nào)
  */
 bool uedp_msg_is_valid_ptr(uedp_msg_t* msg) {
 	if (!msg) {
-		return false; // Con trỏ NULL không hợp lệ
+		return false; // Con trỏ NULL không hợp lệ - caller (uedp_msg_free) sẽ raise MSG_INVALID_PTR
 	}
 
 	// Kiểm tra xem con trỏ tin nhắn có thuộc về bất kỳ Pool nào không
@@ -383,15 +424,6 @@ bool uedp_msg_is_valid_ptr(uedp_msg_t* msg) {
 	}
 
 	return false; // Con trỏ tin nhắn không hợp lệ
-}
-
-/**
- * @brief Xử lý tình huống khẩn cấp khi Pool tin nhắn xảy ra vấn đề
- * 
- * @param pool_id ID của Pool tin nhắn bị lỗi, có thể là UEDP_MSG_TYPE_BLANK, UEDP_MSG_TYPE_NORM, UEDP_MSG_TYPE_ALLOC hoặc UEDP_MSG_TYPE_EXTAL
- */
-void internal_uedp_msg_pool_panic(ui8 pool_id) {
-
 }
 
 RETR_STAT internal_uedp_msg_enqueue_isr_sig(task_id_t tid, ui16 sig) {
@@ -407,6 +439,8 @@ RETR_STAT internal_uedp_msg_enqueue_isr_sig(task_id_t tid, ui16 sig) {
 	*/
 	if (fifo_put(&isr_pool, (uedp_msg_isr_t*)&raw_sig) == RET_FIFO_OK) {
 		result = STAT_OK;
+	} else {
+		UEDP_FCR_RAISE(UEDP_FCR_MSG_ISR_FIFO_FULL);
 	}
 	
 	pal_exit_critical();
@@ -414,7 +448,10 @@ RETR_STAT internal_uedp_msg_enqueue_isr_sig(task_id_t tid, ui16 sig) {
 }
 
 void internal_uedp_msg_pool_get_info(uedp_msg_type_t pool_id, pal_memrp_info_t* info) {
-	if (!info) return;
+	if (!info) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "get_info: null info");
+		return;
+	}
 
 	switch (pool_id) {
 		case UEDP_MSG_TYPE_BLANK:
@@ -445,13 +482,13 @@ void internal_uedp_msg_pool_get_info(uedp_msg_type_t pool_id, pal_memrp_info_t* 
 			info->target = (void*)isr_pool_buffer;
 			info->name = "ISR";
 			info->type = UEDP_MSG_TYPE_ISR; // ISR Pool không có kiểu tin nhắn cụ thể, có thể coi là BLANK hoặc định nghĩa một kiểu mới nếu cần
-			// FIFO không cung cấp trực tiếp số lượng phần tử đang sử dụng, có thể cần theo dõi riêng nếu cần
+			//NOTE - FIFO không cung cấp trực tiếp số lượng phần tử đang sử dụng, có thể cần theo dõi riêng nếu cần
 			info->used = 0; // Không có thông tin cụ thể về số lượng phần tử đang sử dụng trong FIFO
 			info->max_used = 0; // Không có thông tin cụ thể về số lượng phần tử tối đa đã từng được sử dụng trong FIFO
 			info->total = UEDP_MSG_ISR_QUEUE_SIZE; // Tổng số phần tử có thể chứa trong FIFO
 			break;
 		default:
-			printf("Invalid pool ID: %d\n", pool_id);
+			UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "get_info: unknown pool_id");
 			break;
 	}
 }
