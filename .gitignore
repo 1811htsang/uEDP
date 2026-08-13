@@ -83,15 +83,3 @@ eim_config.toml
 .env
 .vscode/*
 config.yaml
-
-# Sample config/env file
-.config
-.env
-.vscode/*
-config.yaml
-
-# Sample config/env file
-.config
-.env
-.vscode/*
-config.yaml
