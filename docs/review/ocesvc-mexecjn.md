@@ -41,7 +41,7 @@ Thiết kế OCE hiện tại là **FCFS thuần theo thứ tự đăng ký** (`
 Minh đọc phần review này để bổ sung tiếp tục các đánh giá chi tiết hơn. Dự trù ở tính năng mexecjn và decision ID-remove sẽ chỉ có 1 vòng review này để thống nhất release v1.1.5, đồng thời làm căn cứ để xác định mexecjn có được đưa vào lộ trình thiết kế v1.1.6/7/8 hay không.
 -->
 
-## Phản hồi review (Minh) 
+## Phản hồi review (Minh)
 
 Đồng ý với cả 2 điểm đã nêu. Đề xuất ban đầu ("tái dùng `id` làm `priority`" + `mexecjn`) đã đánh giá thiếu đúng phần quan trọng nhất: **cả 2 đều ngầm giả định OCE cần một khái niệm ưu tiên**, trong khi thiết kế gốc đã minh định priority chỉ thuộc về AOCE, đi kèm SCB-full. Đổi ý nghĩa 1 field mà không kéo theo toàn bộ hạ tầng đi cùng nó (SCB-full + cập nhật μE-LS + escalate tính năng AOCE tương ứng) đúng là tạo ra trạng thái nửa vời - service bị xử lý không đồng nhất, còn tệ hơn không làm gì. Bổ sung cho điểm 2: đề xuất `mexecjn` trước đó cũng **chưa xử lý trường hợp nhiều service cùng priority** (tie-break) - một lỗ hổng thiết kế thật, càng củng cố việc tính năng này chưa đủ chín để đưa vào OCE ở mức hiện tại.
 

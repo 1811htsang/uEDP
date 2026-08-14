@@ -138,15 +138,22 @@
 
 //REVIEW - Giữa 2 phiên bản 1.1.5 và 1.2.0 sẽ cần được thống nhất phân tách thêm 3 phiên bản 1.1.6, 1.1.7, 1.1.8 để hoàn thiện các submodule cơ sở hạ tầng được dự trù trong phiên bản 1.2.0, bao gồm các tính năng PLD/μE-LS, PLTF.TSD/TLC.
 
-### Phiên bản 1.1.6: The μE-LS (μEDP Logical Syntax-izer) Foundation
+### Phiên bản 1.1.6: The 1.1.5a Release
 
-//NOTE - Phiên bản này được lựa chọn để triển khai các submodule phân tách từ dự trù của phiên bản 1.2.0 nhằm đảm bảo rằng các tính năng cơ sở hạ tầng được triển khai một cách hiệu quả và ổn định trước khi tích hợp vào phiên bản 1.2.0 của lõi μEDP.
+//NOTE - Phiên bản này được lựa chọn để triển khai các vấn đề còn tồn đọng từ phiên bản 1.1.5, các đề xuất dự trù để hoàn thiện tính năng cũ.
 
-//NOTE - Ở phiên bản này sẽ bắt đầu bổ sung việc phân nhánh phát triển tính năng theo từng phiên bản số hiệu hoặc tên gọi đặc biệt để tránh việc lẫn lộn các tính năng của từng phiên bản với nhau.
+//NOTE - Ở phiên bản này sẽ bắt đầu bổ sung việc phân nhánh phát triển tính năng theo từng phiên bản số hiệu hoặc tên gọi đặc biệt để tránh việc lẫn lộn các tính năng của từng phiên bản với nhau. Cân nhắc bổ sung việc phân tách nhánh `feat` theo từng người phát triển để tránh xung đột khi merge code vào nhánh chính `main`.
 
+- [x] Bổ sung tài liệu mô tả thiết kế kiến trúc (ver eng) để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
+- [x] Triển khai tài liệu thiết kế các tính năng từ KwDI sang PLTF để hỗ trợ việc phát triển và kiểm thử các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn. //NOTE - Đã trình bày với phiên bản 1.0 và cung cấp các đề xuất mới để cập nhật cho phiên bản 1.2.0.
 - [ ] Triển khai sửa đổi thiết kế ocesvc.id sang ocesvc.dbugid để phản ánh tính chất debug ID của các dịch vụ OCE follow tài liệu thiết kế PLD/μE-LS.
-- [ ] Lên kế hoạch và tài liệu triển khai phân nhánh phát triển tính năng theo từng phiên bản số hiệu hoặc tên gọi đặc biệt để tránh việc lẫn lộn các tính năng của từng phiên bản với nhau. //NOTE - Tuy nhiên nếu các phiên bản liền kề nhau có liên quan chặt chẽ với nhau thì có thể triển khai theo hướng phát triển liên tục (continuous development) để đảm bảo rằng các tính năng được triển khai một cách hiệu quả và ổn định trước khi tích hợp vào phiên bản chính của lõi μEDP.
+- [ ] Triển khai thiết kế với GDP (Global Data Pool - định danh nội bộ hệ thống `GAXES`) để hỗ trợ việc quản lý các dữ liệu toàn cục của hệ thống một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các dữ liệu quan trọng được lưu trữ và truy xuất một cách an toàn và hiệu quả trong hệ thống.
 - [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
+- [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc phát triển các ứng dụng phức tạp với nhiều tác vụ tương tác với nhau một cách linh hoạt hơn.
+- [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một sự kiện có thể phát tới nhiều task đã đăng ký.
+
+//REVIEW - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+//NOTE - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
 
 ### Phiên bản 1.2.0: The Infrastructure Preparation for μE-OS
 
@@ -155,14 +162,12 @@
 - [x] Bổ sung bộ điều khiển chung (tsgen) để tích hợp pyspec + testspec tự động cho PLTF.
 - [x] Triển khai thiết kế lên Docker.
 - [x] Bổ sung triển khai thiết kế với Docker Compose để tự động build, chỉ định services, containers và các thông số môi trường cần thiết cho việc triển khai và kiểm thử lõi μEDP trên các nền tảng khác nhau một cách dễ dàng và nhất quán.
-- [x] Bổ sung tài liệu mô tả thiết kế kiến trúc (ver eng) để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
 - [x] Kiểm tra và đánh giá thiết kế syntax YAML của PLD/μE-LS cho Task và HSMC để đảm bảo rằng cú pháp được thiết kế một cách hợp lý, dễ đọc và dễ hiểu, đồng thời hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách hiệu quả.
-- [x] Triển khai tài liệu thiết kế các tính năng từ KwDI sang PLTF để hỗ trợ việc phát triển và kiểm thử các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn. //NOTE - Đã trình bày với phiên bản 1.0 và cung cấp các đề xuất mới để cập nhật cho phiên bản 1.2.0.
 - [x] Triển khai single-call trên cfparsers (testspec.cfpcall) với concentrate import để tránh repetitive call và tăng tốc độ xử lý khi parse các cấu hình logic của μE-LS.
 - [x] Thiết kế syntax SII cho YAML.
 - [x] Thiết kế syntax PPLP cho YAML.
 - [x] Thiết kế syntax APE cho YAML.
-- [x] Thiết kế syntax OCE cho YAML. //NOTE - Bổ sung cân nhắc OCE-execjn (chain) cho các phiên bản sau.
+- [x] Thiết kế syntax OCE cho YAML. //NOTE - Bổ sung cân nhắc OCE-execjn (chain) cho các phiên bản sau. Đã được review và loại bỏ, đưa vào thiết kế AOCE.
 - [x] Review và refine các syntax SII, PPLP, APE, OCE cho YAML để đảm bảo rằng cú pháp được thiết kế một cách hợp lý, dễ đọc và dễ hiểu, đồng thời hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách hiệu quả.
 - [x] Thiết kế ustab.cvert và ustab.gnnerate để redirect kconfig data sang task-oriented YAML nhằm hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP. //FIXME - Ở thời điểm hiện tại, kết quả từ gnnerate chưa hỗ trợ được việc tự động gán anchor cho các tag (ankorpin từng được thiết kế để hỗ trợ việc này nhưng chưa triển khai được do hạn chế của PyYAML, ruamel.yaml). Cần cân nhắc triển khai ustab.ankorpin trong các phiên bản sau nếu cần thiết để hỗ trợ việc tự động gán anchor cho các tag trong YAML. Hiện tại, chỉ có thể sử dụng ustab.xportstax để export toàn bộ config sang YAML. Cần cân nhắc triển khai ustab.ankorpin trong các phiên bản sau nếu cần thiết để hỗ trợ việc tự động gán anchor cho các tag trong YAML.
 - [x] Bổ sung thiết kế ustab.xportstax để hỗ trợ mapping toàn bộ config vào file YAML của μE-LS, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP. //NOTE - Loại bỏ ustab.ankorpin do không thể triển khai được và hạn chế của PyYAML, ruamel.yaml. Tạm thời sử dụng ustab.xportstax để export toàn bộ config sang YAML. Cân nhắc triển khai ustab.ankorpin trong các phiên bản sau.
@@ -189,28 +194,19 @@
 - [ ] Bổ sung tài liệu thiết kế PLTF (Portable Local Test Framework) nhằm cung cấp khả năng kiểm thử tự động đa quy mô. //NOTE - Task này vẫn được giữ nguyên tại phiên bản 1.2.0 thay vì đưa theo về phiên bản 1.1.7/8 để phản ánh đúng thiết kế tính năng PLTF nằm tại phiên bản 1.2.0, còn đối với phiên bản 1.1.7/8 sẽ lần lượt là PLD/μE-LS và PLTF.TSD/TLC.
 - [ ] Ra mắt phiên bản 1.2.0 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
 
-### Phiên bản 1.2.1: The Pub/Sub Engine
-
-//REVIEW - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
-//NOTE - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
-
-- [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc phát triển các ứng dụng phức tạp với nhiều tác vụ tương tác với nhau một cách linh hoạt hơn.
-- [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một sự kiện có thể phát tới nhiều task đã đăng ký.
-- [ ] Ra mắt phiên bản 1.2.1 của lõi μEDP với đầy đủ tính năng Pub/Sub engine và tài liệu hướng dẫn sử dụng.
-
-### Phiên bản 1.2.2: The Safe Input Filter
+### Phiên bản 1.2.1: The Safe Input Filter
 
 - [ ] Bổ sung tài liệu chi tiết cho thiết kế Safe Input Filter nhằm đảm bảo các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, nhằm đảm bảo tính ổn định và an toàn của hệ thống khi xử lý các tín hiệu từ bên ngoài.
 - [ ] Refine tính năng SOCI với OCE để đảm bảo rằng các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, đồng thời đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
 - [ ] Hoàn thiện thiết kế Safe Input Filter.
-- [ ] Ra mắt phiên bản 1.2.2 của lõi μEDP với đầy đủ tính năng Safe Input Filter và tài liệu hướng dẫn sử dụng.
+- [ ] Ra mắt phiên bản 1.2.1 của lõi μEDP với đầy đủ tính năng Safe Input Filter và tài liệu hướng dẫn sử dụng.
 
-### Phiên bản 1.2.3: The I/O Mapping Shell
+### Phiên bản 1.2.2: The I/O Mapping Shell
 
 - [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế IOMS (I/O Mapping Shell) để cung cấp cơ chế gán lệnh vào 1 chân GPIO cụ thể để hỗ trợ việc kích hoạt các chức năng của lõi μEDP thông qua các tín hiệu vật lý, giúp mở rộng khả năng tương tác với phần cứng và hỗ trợ các ứng dụng yêu cầu tương tác thời gian thực.
 - [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng như viot (virtual I/O table), idempotency signal, pipeline command để thống nhất cơ chế gán lệnh vào chân GPIO và đảm bảo tính ổn định và hiệu quả khi sử dụng IOMS để kích hoạt các chức năng của lõi μEDP thông qua các tín hiệu vật lý.
 - [ ] Bổ sung tài liệu phát triển chức năng Priority Degradation của μE-OS để giảm mức ưu tiên của command được kích hoạt thông qua IOMS sau một khoảng thời gian nhất định để tránh tình trạng task bị chiếm dụng quá lâu do các tín hiệu vật lý liên tục kích hoạt cùng một chức năng, giúp đảm bảo tính ổn định và hiệu quả của hệ thống khi xử lý các tín hiệu vật lý.
-- [ ] Ra mắt phiên bản 1.2.3 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho IOMS và tính năng viot, idempotency cùng với tài liệu hướng dẫn sử dụng, tài liệu phát triển cho chức năng Priority Degradation của μE-OS để hỗ trợ việc sử dụng IOMS một cách hiệu quả và ổn định trong các ứng dụng yêu cầu tương tác thời gian thực thông qua các tín hiệu vật lý.
+- [ ] Ra mắt phiên bản 1.2.2 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho IOMS và tính năng viot, idempotency cùng với tài liệu hướng dẫn sử dụng, tài liệu phát triển cho chức năng Priority Degradation của μE-OS để hỗ trợ việc sử dụng IOMS một cách hiệu quả và ổn định trong các ứng dụng yêu cầu tương tác thời gian thực thông qua các tín hiệu vật lý.
 
 Sau phiên bản này, μEDP (μEDP) sẽ bắt đầu chuyển đổi thành μE-OS với thiết kế mới và các tính năng nâng cao như HAS (Hardware Accelerated Scheduling), TIM (Tickless Idle Mode), uvfs (Micro-Virtual File System), compmng (Component Manager), SHA (Safe Heap Allocation), ESD (Execution Space Division), MPU/MMU Integration, SSI (Secure Signal Injection), AOCE (Advance Out-Context Execution), DIOMS (Degradable IOMS), ...
 
