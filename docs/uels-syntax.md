@@ -436,7 +436,6 @@ Cú pháp khai báo APE trong μE-LS được hỗ trợ chỉ dành cho tnorm n
 
 ```yaml
 escal:
-  enabled: true # if false thì tnorm không có APE
   mode: slnf
   trigger:
   - on_sig: SIG_CALL_URGENT # Kích hoạt APE khi nhận signal này
