@@ -59,7 +59,7 @@ Therefore, dev has chosen tsm_resrc from tnorm3 instead of tnorm1.
 Add anchor to mark the anchor to check the logic after that against this anchor. 
 The anchor is must have in the class.
 '''
-class C_tnorm_obj(BaseModel):
+class C_tnorm_resrc_obj(BaseModel):
   index: str
   handler: str
   hex_val: str
@@ -82,7 +82,7 @@ tpolls:
 Add anchor to mark the anchor to check the logic after that against this anchor. 
 The anchor is must have in the class.
 '''
-class C_tpoll_obj(BaseModel):
+class C_tpoll_resrc_obj(BaseModel):
   index: str
   hex_val: str
   handler: str
@@ -99,7 +99,7 @@ glbda:
 Add anchor to mark the anchor to check the logic after that against this anchor. 
 The anchor is must have in the class.
 '''
-class C_gda_obj(BaseModel):
+class C_gda_resrc_obj(BaseModel):
   index: str
   name: str
   type: str

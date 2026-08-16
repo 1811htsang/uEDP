@@ -147,95 +147,103 @@ TNORM Logic with FSM should have type below:
 # ANCHOR - -> Therefore, Dict[str, exec_list, str] = tnorm_item
 '''
 '''
+# STUB - TNORM Logic Stub with APE call for YAML file
+escal: -> Optional[Dict[str, List[Dict[str, Optional[Dict[str, str, Optional[str], Optional[str]]]]]]] = escal_list
+  mode: slnf -> str
+  trigger: -> List[Dict[str, Optional[Dict[str, str, Optional[str], Optional[str]]]]] = trigger_list
+  - on_sig: SIG_CALL_URGENT # Kích hoạt APE khi nhận signal này -> str
+    post_urgent: # Tự gọi urgent message cho chính tnorm để thực thi hành vi ưu tiên -> Optional[Dict[str, str, Optional[str], Optional[str]]]
+      to: KID_TASK_USR
+      sig: SIG_EXEC_URGENT
+      data: NULL
+      # NOTE - ptype if needed.
+'''
+'''
 # STUB - Final TNORM Stub for YAML file
 TNORM can have key type:
-- fsm/tsm
-- escal
-- exec
-- anchor
+- fsm/tsm -> optional
+- escal -> optional
+- exec -> must have if fsm/tsm is not present
+- anchor -> must have in the class
 '''
-class A(BaseModel):
-  index: str
-  hex_val: str
-  id_symbol: str
-  anchor: str = None
 
-'''
-# STUB - TNORM Stub for YAML file
-tnorms:
-  '1': &tnorm1-ctrl
-    fsm_resrc: -> must have 'object', 'states'
-      object: tnorm_b_tsmobj -> str
-      states: -> str
-      - tnorm_b_state_idle
-      - tnorm_b_state_busy
-    handler: tnorm_usr_nhler -> str
-    hex_val: '0xe6' -> str
-    id_symbol: TASK_USR_IDS -> str
-    queue_name: tnorm_usr_msgq -> str
-    tsm_resrc: -> must have 'object', 'state_trans', 'states'
-      object: tnorm_usr_tsmobj
-      state_trans: -> str
-      - tnorm_usr_state_idle_trans
-      - tnorm_usr_state_running_trans
-      states: -> str
-      - tnorm_usr_state_idle
-      - tnorm_usr_state_running
-      table: tnorm_usr_tsmobj_tbl -> str
-tnorm is a mapping of string keys to obj ects, where each object has several properties, 
-including fsm_resrc, handler, hex_val, id_symbol, queue_name, tsm_resrc. 
-tsm_resrc is constrained to have Dict[str, List[str], List[str], str] type, which means it must have 'object', 'state_trans', and 'states' properties.
-fsm_resrc is constrained to have Dict[str, List[str]] type, which means it must have 'object' and 'states' properties.
-Default value of both tsm_resrc and fsm_resrc is None,
-meaning whether FSM/TSM is used or not, it must have in the YAML file, but it can be None if not used. 
-Therefore, dev has chosen tsm_resrc from tnorm3 instead of tnorm1.
-Add anchor to mark the anchor to check the logic after that against this anchor. 
-The anchor is must have in the class.
-'''
+class C_act_obj(BaseModel):
+  actv: str
+  to: Optional[str] = None
+  sig: Optional[str] = None
+  data: Optional[str] = None
+  ptype: Optional[str] = None
+
+class C_act_list_obj(BaseModel):
+  steps: List[C_act_obj]
+  single_act: Optional[C_act_obj] = None
+  # NOTE - single_act is used when there is only one action, and steps is used when there are multiple actions. 
+  # Therefore, we can use either steps or single_act, but not both. 
+  # If both are present, we will use steps and ignore single_act.
+
+class C_trans_obj(BaseModel):
+  sig: str
+  goto: str
+
+class C_trans_list_obj(BaseModel):
+  trans: List[C_trans_obj]
+
+class C_tsm_obj(BaseModel):
+  id: str
+  trans: C_trans_list_obj
+  on_ntry: Optional[C_act_list_obj] = None
+  on_actv: Optional[C_act_list_obj] = None
+  on_exit: Optional[C_act_list_obj] = None
+
+class C_tsm_list_obj(BaseModel):
+  tsm_list: List[C_tsm_obj]
+  # NOTE - final call is equipvalent to tsm
+
+class C_onrecv_obj(BaseModel):
+  sig: str
+  goto: str
+  steps: C_act_list_obj
+  # NOTE - steps in on_rcev is mandatory, but also
+  # it overlaps the definition of steps in C_act_list_obj, 
+  # so we can use C_act_list_obj for steps in on_recv.
+
+class C_onrecv_list_obj(BaseModel):
+  on_recv: List[C_onrecv_obj]
+
+class C_fsm_obj(BaseModel):
+  id: str
+  on_recv: C_onrecv_list_obj
+
+class C_fsm_list_obj(BaseModel):
+  fsm_list: List[C_fsm_obj]
+  # NOTE - final call is equipvalent to fsm
+
+class C_exec_obj(BaseModel):
+  on_sig: str
+  steps: C_act_list_obj
+  # NOTE - steps in exec is mandatory, but also
+  # it overlaps the definition of steps in C_act_list_obj,
+  # so we can use C_act_list_obj for steps in exec.
+
+class C_exec_list_obj(BaseModel):
+  exec: List[C_exec_obj]
+  # NOTE - final call is equipvalent to exec
+
+class C_trig_obj(BaseModel):
+  on_sig: str
+  post_urgent: Optional[C_act_list_obj] = None
+
+class C_trig_list_obj(BaseModel):
+  trigger: List[C_trig_obj]
+
+class C_escal_obj(BaseModel):
+  mode: str
+  trigger: C_trig_list_obj
+
 class C_tnorm_obj(BaseModel):
-  index: str
-  handler: str
-  hex_val: str
-  id_symbol: str
-  queue_name: str
-  # tsm_resrc must have 'object', 'state_trans', 'states'
-  # NOTE - default value is None, because tsm_resrc is not present in tnorm1, but it is present in tnorm3. Therefore, dev has chosen tsm_resrc from tnorm3 instead.
-  tsm_resrc: Dict[str, List[str], List[str], str] = None
-  # fsm_resrc must have 'object', 'states'
-  fsm_resrc: Dict[str, List[str]] = None
-  anchor: str = None
-
-'''
-# STUB - TPOLL Stub for YAML file
-tpolls:
-  '1': &tpoll1
-    hex_val: '0xd4' -> str
-    handler: tpoll_usr_nhler -> str
-    id_symbol: TASK_USR_IDS -> str
-Add anchor to mark the anchor to check the logic after that against this anchor. 
-The anchor is must have in the class.
-'''
-class C_tpoll_obj(BaseModel):
-  index: str
-  hex_val: str
-  handler: str
-  id_symbol: str
-  anchor: str = None
-
-'''
-# STUB - GDA Stub for YAML file
-glbda:
-- '1': &gda_status
-  name: GDA_SYSTEM_STATUS
-  type: "const char*"
-  initial_value: "STATUS: INITIALIZING"
-Add anchor to mark the anchor to check the logic after that against this anchor. 
-The anchor is must have in the class.
-'''
-class C_gda_obj(BaseModel):
-  index: str
-  name: str
-  type: str
-  # NOTE - initial_value can be int or str, so we use Optional[int] = str to allow both types. it can be int or default value is str
-  initial_value: Optional[int] = str
+  task: str
+  tsm: Optional[C_tsm_list_obj] = None
+  fsm: Optional[C_fsm_list_obj] = None
+  exec: Optional[C_exec_list_obj] = None
+  escal: Optional[C_escal_obj] = None
   anchor: str = None

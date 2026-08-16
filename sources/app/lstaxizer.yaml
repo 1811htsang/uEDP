@@ -181,7 +181,6 @@ tlist:
         data: "[TASK_A][WAITING_B] Posted SIG_0xAA to TASK_B."
     on_exit: NULL
   escal: # Cấu hình APE để xử lý khẩn cấp (nếu có)
-    enabled: true
     mode: slnf
     trigger:
     - on_sig: *sig7
