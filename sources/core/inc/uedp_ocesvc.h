@@ -32,14 +32,17 @@
 
   /**
    * @brief Khai báo cấu trúc dữ liệu cho dịch vụ OCE
-   * @param id: ID của dịch vụ OCE
+   * @param dbugid: ID chỉ phục vụ mục đích debug/trace và sinh code PLTF - KHÔNG dùng cho bất kỳ
+   *                logic quản lý/định tuyến nào của core (xoá/tìm kiếm service đều dựa trên con trỏ
+   *                `svc`, không dựa trên giá trị này). Xem docs/uels-syntax.md (mục OCE) và
+   *                docs/review/ocesvc-mexecjn.md để biết bối cảnh quyết định đổi tên từ `id`.
    * @param state: Trạng thái hiện tại của dịch vụ OCE
    * @param handler: Con trỏ đến hàm xử lý của dịch vụ OCE
    * @param context: Con trỏ đến dữ liệu ngữ cảnh của dịch vụ OCE
    * @param next: Con trỏ đến dịch vụ OCE tiếp theo trong danh sách liên kết đơn (dùng cho hàng đợi FCFS)
    */
   typedef struct ocesvc_t {
-    uint8_t         id;             
+    uint8_t         dbugid;         
     ocesvc_state_t  state;          
     void (*handler)(struct ocesvc_t* me); 
     void*           context;        
@@ -59,11 +62,12 @@
   /**
    * @brief Hàm đăng ký dịch vụ OCE vào bộ điều khiển dịch vụ OCE
    * @param svc Con trỏ đến dịch vụ OCE cần đăng ký
-   * @note Hàm này sẽ gán ID cho dịch vụ OCE và đặt trạng thái của nó thành READY.
-   * @attention ID của dịch vụ OCE sẽ được tự động tăng dần từ 0, 
+   * @note Hàm này sẽ gán dbugid cho dịch vụ OCE và đặt trạng thái của nó thành READY.
+   * @attention dbugid của dịch vụ OCE sẽ được tự động tăng dần từ 0,
    * và không được trùng lặp với các dịch vụ OCE khác đã đăng ký.
-   * Nghĩa là dù người dùng đăng ký OCE với ID bất kỳ, 
-   * nhưng hệ thống sẽ gán lại ID cho OCE theo thứ tự tăng dần.
+   * Nghĩa là dù người dùng đăng ký OCE với dbugid bất kỳ,
+   * nhưng hệ thống sẽ gán lại dbugid cho OCE theo thứ tự tăng dần.
+   * Giá trị này CHỈ phục vụ debug/trace, không ảnh hưởng thứ tự thực thi (FCFS theo thứ tự đăng ký thật).
    */
   void ocesvc_register(ocesvc_t* svc);
 
@@ -82,7 +86,7 @@
    * @brief Hàm khởi tạo bộ điều khiển dịch vụ OCE
    * @note Hàm này cần được gọi trước khi sử dụng bất kỳ dịch vụ OCE nào.
    * Thực hiện việc khởi tạo danh sách liên kết đơn và đặt fill_size về 0.
-   * @attention Node đầu tiên của danh sách liên kết đơn có id là -1 để đánh dấu danh sách rỗng.
+   * @attention Node đầu tiên của danh sách liên kết đơn có dbugid là UINT8_MAX để đánh dấu danh sách rỗng (sentinel).
    */
   void ocesvc_ctrl_init();
 
