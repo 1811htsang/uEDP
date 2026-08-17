@@ -62,12 +62,10 @@
   /**
    * @brief Hàm đăng ký dịch vụ OCE vào bộ điều khiển dịch vụ OCE
    * @param svc Con trỏ đến dịch vụ OCE cần đăng ký
-   * @note Hàm này sẽ gán dbugid cho dịch vụ OCE và đặt trạng thái của nó thành READY.
-   * @attention dbugid của dịch vụ OCE sẽ được tự động tăng dần từ 0,
-   * và không được trùng lặp với các dịch vụ OCE khác đã đăng ký.
-   * Nghĩa là dù người dùng đăng ký OCE với dbugid bất kỳ,
-   * nhưng hệ thống sẽ gán lại dbugid cho OCE theo thứ tự tăng dần.
-   * Giá trị này CHỈ phục vụ debug/trace, không ảnh hưởng thứ tự thực thi (FCFS theo thứ tự đăng ký thật).
+   * @note Hàm này đặt trạng thái của dịch vụ OCE thành READY. KHÔNG còn tự động gán/quản lý
+   *       `dbugid` - core không đọc/ghi field này nữa ở bất kỳ đâu. Nếu cần, người dùng tự
+   *       gán `svc->dbugid` trước khi gọi hàm này, hoàn toàn tuỳ chọn và chỉ phục vụ mục
+   *       đích debug/trace cá nhân.
    */
   void ocesvc_register(ocesvc_t* svc);
 

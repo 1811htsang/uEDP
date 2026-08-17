@@ -14,7 +14,6 @@
 #include "uedp_ocesvc.h"
 #include "uedp_fcr.h"
 
-sta uint8_t dbugid_counter = 0; // Biến đếm dbugid cho các dịch vụ OCE (chỉ phục vụ debug/trace)
 sta ocesvc_ctrl_t ocesvc_ctrl; // Bộ điều khiển dịch vụ OCE
 sta ocesvc_t head = {
   .context = NULL,
@@ -24,37 +23,6 @@ sta ocesvc_t head = {
   .state = OCESVC_STATE_IDLE
 }; // Node đầu tiên của danh sách liên kết đơn, dùng làm sentinel cho danh sách rỗng
 sta llist_t ocesvc_list = {NULL}; // Danh sách liên kết đơn cho các dịch vụ OCE
-
-static bool ocesvc_has_dbugid(uint8_t dbugid) {
-  llist_node_t* current = ocesvc_list.head;
-
-  while (current != NULL) {
-    ocesvc_t* svc = (ocesvc_t*)current->data;
-    if (svc != NULL && svc->dbugid == dbugid) {
-      return true;
-    }
-    current = current->next;
-  }
-
-  return false;
-}
-
-static bool ocesvc_find_free_dbugid(uint8_t start_id, uint8_t* out_id) {
-  if (out_id == NULL) {
-    // Hàm static nội bộ, chỉ được gọi với &allocated_id hợp lệ - không cần raise FCR.
-    return false;
-  }
-
-  for (uint16_t offset = 0; offset < UINT8_MAX; offset++) {
-    uint8_t candidate = (uint8_t)((start_id + offset) % UINT8_MAX);
-    if (!ocesvc_has_dbugid(candidate)) {
-      *out_id = candidate;
-      return true;
-    }
-  }
-
-  return false;
-}
 
 static void ocesvc_sync_fill_size(void) {
   if (ocesvc_list.size == 0U) {
@@ -76,12 +44,6 @@ void ocesvc_register(ocesvc_t* svc) {
     return;
   }
 
-  uint8_t allocated_dbugid = 0U;
-  if (!ocesvc_find_free_dbugid(dbugid_counter, &allocated_dbugid)) {
-    UEDP_FCR_RAISE(UEDP_FCR_OCE_REGISTRY_FULL); // Không còn ID trống để đăng ký thêm service (đã dùng hết 0x00-0xFE)
-    return;
-  }
-
   uint32_t previous_size = ocesvc_list.size;
   llist_append(&ocesvc_list, svc);
   if (ocesvc_list.size == previous_size) {
@@ -89,11 +51,9 @@ void ocesvc_register(ocesvc_t* svc) {
     return;
   }
 
-  svc->dbugid = allocated_dbugid;
   svc->state = OCESVC_STATE_READY;
   svc->next = NULL;
   ocesvc_sync_fill_size();
-  dbugid_counter = (uint8_t)((allocated_dbugid + 1U) % UINT8_MAX);
 }
 
 void ocesvc_unregister(ocesvc_t* svc) {
@@ -112,10 +72,6 @@ void ocesvc_unregister(ocesvc_t* svc) {
     svc->state = OCESVC_STATE_IDLE;
     svc->next = NULL;
     ocesvc_sync_fill_size();
-
-    if (ocesvc_ctrl.fill_size == 0U) {
-      dbugid_counter = 0U;
-    }
   }
 }
 
@@ -145,7 +101,6 @@ void ocesvc_scheduler() {
 void ocesvc_ctrl_init() {
   ocesvc_ctrl.head = &head;
   ocesvc_ctrl.fill_size = 0;
-  dbugid_counter = 0;
   head.context = NULL;
   head.handler = NULL;
   head.dbugid = UINT8_MAX;
