@@ -74,6 +74,7 @@ pltf/testspec/generators/__pycache__/*
 pltf/testspec/__pycache__/*
 pltf/__pycache__/*
 pltf/testspec/ustab/__pycache__/*
+pltf/testspec/lstaxer/__pycache__/*
 
 # ESP-IDF
 eim_config.toml
@@ -83,3 +84,4 @@ eim_config.toml
 .env
 .vscode/*
 config.yaml
+
