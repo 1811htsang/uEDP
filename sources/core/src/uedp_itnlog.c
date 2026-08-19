@@ -98,11 +98,12 @@ void uedp_itnlog_init(void) {
 }
 
 void uedp_itnlog_log(ui32 timestamp, uedp_itnlog_level_t level, const char* tag, const char* msg) {
+  uedp_msg_t* cur_msg = uedp_task_norm_get_current_msg();
   uedp_itnlog_entry_t entry = {
     .level = level,
     .tag = tag,
     .task_id = uedp_task_norm_get_current_id(), 
-    .msg_sig = uedp_task_norm_get_current_msg()->sig,
+    .msg_sig = (cur_msg != NULL) ? cur_msg->sig : 0x0000, // 0x0000: không có task/msg nào đang dispatch (ví dụ log được gọi từ main() lúc setup)
     .msg = msg,
     .tmstmp = timestamp,
     .hash = 0  // Cần bổ sung logic để tính toán checksum của log entry
