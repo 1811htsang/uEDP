@@ -199,6 +199,7 @@ tlist:
       - actv: uedp_task_norm_post_msg
         to: TASK_A
         sig: *sig4
+        # sig: *gda_status # Validator check: Không hợp lệ, không thể dùng anchor trong sig
   - id: STATE_B_BUSY
     on_recv:
     - sig: *sig6
@@ -210,7 +211,7 @@ tlist:
       - actv: uedp_itnlog_log
         data: *gda_status # Ghi log nội dung từ biến toàn cục
         ptype: VAL        # Validator check: Copy nội dung (memcpy)
-  << : *tnorm3-ctrl
+  << : *tnorm3-ctrl # Validator check: Không hợp lệ, không thể dùng anchor trong sig
 
 # ANCHOR - Interrupt Service Routine (ISR) - Xử lý ngắt
 
