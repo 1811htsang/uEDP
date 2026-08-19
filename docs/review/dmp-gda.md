@@ -1,0 +1,47 @@
+# [GDA] Global Data Area - Cân nhắc quản lý biến toàn cục phục vụ truyền tham chiếu trong PLD/μE-LS
+
+> Trạng thái: **đang đánh giá, chưa triển khai**. Trả lời cho REVIEW/NOTE/TODO tại `docs/uels-syntax.md:~700-745` (mục "Khu vực dữ liệu toàn cục - Global Data Area").
+
+μE-LS cho phép khai báo biến toàn cục qua khối `glbda:` (tên, kiểu dữ liệu, giá trị khởi tạo), dùng làm nguồn dữ liệu cho `actv`/`act` thông qua `data: *gdaN` kèm `ptype: REF` (truyền tham chiếu) hoặc `ptype: VAL` (truyền tham trị) - phục vụ đúng cơ chế `[D2MP]` đã có. Câu hỏi cần trả lời: có cần bổ sung 1 `dpool` mới trong core (`uedp_msg.c`) riêng cho GDA hay không, và ai chịu trách nhiệm quản lý vòng đời/kích thước khi `ptype: REF` được dùng.
+
+## Không cần dpool mới ở tầng core - `ALLOC` hiện tại đã đủ
+
+Rà lại `[D2MP]` thì thấy lo ngại ban đầu về truyền tham chiếu (*"tránh việc truyền trực tiếp địa chỉ của biến cục bộ vào payload... dẫn đến lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi"*) là **về biến cục bộ (local)**, có thời gian sống giới hạn trong 1 lần gọi hàm. Biến khai báo qua `glbda:` thì ngược lại - đây là **biến toàn cục thật (static storage duration)**, tồn tại suốt vòng đời chương trình, không có nguy cơ dangling-pointer như biến cục bộ. Do đó, việc `uedp_msg_set_data_ref(msg, &GLOBAL_VAR)` cho 1 biến GDA là an toàn ngay với cơ chế D2MP hiện có, **không cần FIFO tham chiếu toàn cục riêng** như đề xuất ban đầu cho trường hợp biến cục bộ.
+
+Về kích thước: `ptype: REF` chỉ cần payload đủ chỗ chứa 1 con trỏ (`sizeof(void*)`) - pool `ALLOC` hiện đã được cấp `sizeof(void*) * 2u` trở lên theo đúng quy tắc `[DMP]` (`sizeof(void*) * 2^n`), thừa đủ chỗ cho 1 con trỏ tham chiếu mà không cần pool chuyên biệt mới.
+
+## Vấn đề thật sự cần giải quyết: không nằm ở core runtime, mà ở tầng PLTF codegen
+
+Câu hỏi gốc *"ai sẽ thực thi quyền quản lý... để copy dữ liệu từ biến toàn cục sang message"* thực chất đang gộp chung 2 vấn đề khác nhau:
+
+1. **Sinh vùng nhớ tĩnh thật cho `glbda:`** - đây là việc của PLTF, không phải của `uedp_msg.c`. Hiện `pltf/testspec/generators/` đã có `corecfg_tsgen.py`, `appcfg_tsgen.py`, `appdecl_tsgen.py`... nhưng **chưa có generator nào sinh khai báo biến toàn cục thật** từ khối `glbda:`. Đề xuất bổ sung 1 generator mới (ví dụ `gda_tsgen.py`) sinh ra 1 cặp file `.h`/`.c` khai báo đúng các biến `name`/`type`/`initial_value` đã mô tả trong YAML - đây mới là "nơi quản lý" thật sự của dữ liệu GDA, không phải 1 dpool kiểu message-pool.
+2. **Truy cập đồng thời (concurrency)** - đây là vấn đề thật, nhưng khác bản chất với lo ngại "dangling pointer" ban đầu. GDA đưa **shared mutable global state** (bypass hàng đợi message, truy cập trực tiếp qua con trỏ) trở lại vào một hệ thống vốn được thiết kế xoay quanh message-passing chính vì muốn tránh race condition giữa các task. Khi 1 task đang `ptype: VAL` (copy dữ liệu vào biến toàn cục) trong lúc task khác đang đọc qua `ptype: REF`, cần bảo vệ bằng critical section - tái dùng đúng cặp `pal_enter_critical()`/`pal_exit_critical()` đã dùng nhất quán khắp core, không cần cơ chế đồng bộ mới.
+
+## Đề xuất kết luận
+
+- **Không bổ sung dpool GDA mới trong `uedp_msg.c`** - tái dùng nguyên `ALLOC` pool hiện có cho việc truyền tham chiếu tới biến GDA.
+- **Bổ sung generator PLTF mới** (`gda_tsgen.py` hoặc tên tương đương) để sinh vùng nhớ tĩnh thật từ khối `glbda:` - đây là hạng mục thuộc phạm vi PLD/μE-LS (v1.1.7 theo lộ trình đã đề xuất), không phải core (`uedp_msg.c`).
+- **Truy cập GDA đồng thời giữa các task phải bọc `pal_enter_critical()`/`pal_exit_critical()`** - cần ghi rõ yêu cầu này vào tài liệu cú pháp `glbda:`/`ptype:` để người dùng μE-LS biết đây không phải truy cập "miễn phí", vẫn cần core (hoặc code sinh ra) chèn bảo vệ tương ứng khi copy dữ liệu.
+- Việc này nên được xác nhận thêm trước khi triển khai generator, vì đụng tới cả `arch-design.md` (core) lẫn `uels-syntax.md` (cú pháp) lẫn `pltf/` (codegen) - phạm vi rộng hơn 1 thay đổi đơn lẻ.
+
+## Review 19/08/2026 090000
+
+### Bổ sung generator PLTF mới
+
+Chấp thuận vì hiện tại chưa có take into account cho `glbda:` trong codegen, cần sinh ra biến tĩnh thật để tránh dangling pointer khi dùng `ptype: REF`.
+
+### Truy cập GDA đồng thời giữa các task phải bọc bảo vệ
+
+Ở thời điểm hiện tại μEDP chưa phát triển đến việc sử dụng cho môi trường đa nhân như AMP/SMP, do đó việc truy cập biến cục bộ chỉ xảy ra tuần tự ở 1 task duy nhất trong từng vòng lập lịch.
+
+ISR cũng không thể xảy ra việc tranh chấp vì ISR không được phép gọi `actv`/`act`. Do đó, việc bọc critical section là **không cần thiết** ở thời điểm hiện tại, nhưng vẫn nên ghi chú trong tài liệu cú pháp để người dùng biết rằng nếu triển khai μEDP cho môi trường đa nhân trong tương lai thì cần bổ sung critical section.
+
+Ít nhất cần tới thời điểm HELF/AMP version thì mới cần bổ sung critical section, do đó có thể ghi chú trong tài liệu cú pháp rằng việc bọc critical section là tùy chọn cho môi trường đa nhân, nhưng không bắt buộc cho môi trường đơn nhân hiện tại.
+
+### Không bổ sung dpool GDA mới
+
+Do theo thiết kế ban đầu, ALLOC được sử dụng để dành cho mục đích điều động và cấp phát bộ nhớ cho các message với các API hiện hữu.
+
+Hiện tại chưa có API triển khai việc sử dụng ALLOC cho các mục đích ngoài nên cần suy xét lại việc sử dụng thêm 1 dpool GDA (`GLBAL`) mới với kích thước `sizeof(void)`.
+
+Nếu sử dụng ALLOC, giả sử khai báo 1 biến toàn cục như `int x = 1;` và `const char* str = "Hello";`, thì làm sao để sử dụng với bản chất thông tin là biến toàn cục hỗ trợ truyền tham trị và tham chiếu. Ngoài ra, sau khi sử dụng xong thì message sẽ có thể được giải phóng, nhưng biến toàn cục vẫn tồn tại trong bộ nhớ, do đó việc sử dụng ALLOC cần phải có cơ chế vòng đời trên dpool. Trong khi đó việc sử dụng dpool GDA cho phép các biến toàn cục được assign vị trí an toàn và không cần quản lý vòng đời của chúng, do đó việc sử dụng dpool GDA là hợp lý hơn.
