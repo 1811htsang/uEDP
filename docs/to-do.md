@@ -181,7 +181,8 @@
 - [x] Triển khai rewrite mẫu app/lstaxizier-test.yaml để bắt đầu triển khai thiết kế lstaxer.vlid.
 - [x] Triển khai thiết kế với lstaxer.model để hỗ trợ pydantic model validation cho các cấu hình logic của μE-LS, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [x] Hoàn thiện thiết kế với pydantic_model.logic/resc/misc để làm nền tảng data validation cho pydantic model validation, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [ ] Bổ sung lstaxer.symresolv để tạo thành biểu đồ phân giải ký hiệu (SRM - Symbol Resolution Map) cho việc tìm kiếm và quản lý các references (anchors - aliases).
+- [X] Bổ sung lstaxer.symresolv để tạo thành biểu đồ phân giải ký hiệu (SRM - Symbol Resolution Map) cho việc tìm kiếm và quản lý các references (anchors - aliases).
+- [ ] Triển khai các validation strategy với lstaxer.vlid để hỗ trợ việc kiểm tra tính hợp lệ của các cấu hình logic của μE-LS, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 - [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin. //LINK docs/uels-syntax.md:118
 - [ ] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //LINK docs/uels-syntax.md:199
