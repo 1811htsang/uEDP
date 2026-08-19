@@ -23,3 +23,25 @@ Câu hỏi gốc *"ai sẽ thực thi quyền quản lý... để copy dữ li�
 - **Bổ sung generator PLTF mới** (`gda_tsgen.py` hoặc tên tương đương) để sinh vùng nhớ tĩnh thật từ khối `glbda:` - đây là hạng mục thuộc phạm vi PLD/μE-LS (v1.1.7 theo lộ trình đã đề xuất), không phải core (`uedp_msg.c`).
 - **Truy cập GDA đồng thời giữa các task phải bọc `pal_enter_critical()`/`pal_exit_critical()`** - cần ghi rõ yêu cầu này vào tài liệu cú pháp `glbda:`/`ptype:` để người dùng μE-LS biết đây không phải truy cập "miễn phí", vẫn cần core (hoặc code sinh ra) chèn bảo vệ tương ứng khi copy dữ liệu.
 - Việc này nên được xác nhận thêm trước khi triển khai generator, vì đụng tới cả `arch-design.md` (core) lẫn `uels-syntax.md` (cú pháp) lẫn `pltf/` (codegen) - phạm vi rộng hơn 1 thay đổi đơn lẻ.
+
+## Review 19/08/2026 090000
+
+### Bổ sung generator PLTF mới
+
+Chấp thuận vì hiện tại chưa có take into account cho `glbda:` trong codegen, cần sinh ra biến tĩnh thật để tránh dangling pointer khi dùng `ptype: REF`.
+
+### Truy cập GDA đồng thời giữa các task phải bọc bảo vệ
+
+Ở thời điểm hiện tại μEDP chưa phát triển đến việc sử dụng cho môi trường đa nhân như AMP/SMP, do đó việc truy cập biến cục bộ chỉ xảy ra tuần tự ở 1 task duy nhất trong từng vòng lập lịch.
+
+ISR cũng không thể xảy ra việc tranh chấp vì ISR không được phép gọi `actv`/`act`. Do đó, việc bọc critical section là **không cần thiết** ở thời điểm hiện tại, nhưng vẫn nên ghi chú trong tài liệu cú pháp để người dùng biết rằng nếu triển khai μEDP cho môi trường đa nhân trong tương lai thì cần bổ sung critical section.
+
+Ít nhất cần tới thời điểm HELF/AMP version thì mới cần bổ sung critical section, do đó có thể ghi chú trong tài liệu cú pháp rằng việc bọc critical section là tùy chọn cho môi trường đa nhân, nhưng không bắt buộc cho môi trường đơn nhân hiện tại.
+
+### Không bổ sung dpool GDA mới
+
+Do theo thiết kế ban đầu, ALLOC được sử dụng để dành cho mục đích điều động và cấp phát bộ nhớ cho các message với các API hiện hữu.
+
+Hiện tại chưa có API triển khai việc sử dụng ALLOC cho các mục đích ngoài nên cần suy xét lại việc sử dụng thêm 1 dpool GDA (`GLBAL`) mới với kích thước `sizeof(void)`.
+
+Nếu sử dụng ALLOC, giả sử khai báo 1 biến toàn cục như `int x = 1;` và `const char* str = "Hello";`, thì làm sao để sử dụng với bản chất thông tin là biến toàn cục hỗ trợ truyền tham trị và tham chiếu. Ngoài ra, sau khi sử dụng xong thì message sẽ có thể được giải phóng, nhưng biến toàn cục vẫn tồn tại trong bộ nhớ, do đó việc sử dụng ALLOC cần phải có cơ chế vòng đời trên dpool. Trong khi đó việc sử dụng dpool GDA cho phép các biến toàn cục được assign vị trí an toàn và không cần quản lý vòng đời của chúng, do đó việc sử dụng dpool GDA là hợp lý hơn.

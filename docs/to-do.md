@@ -148,7 +148,8 @@
 - [x] Triển khai tài liệu thiết kế các tính năng từ KwDI sang PLTF để hỗ trợ việc phát triển và kiểm thử các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn. //NOTE - Đã trình bày với phiên bản 1.0 và cung cấp các đề xuất mới để cập nhật cho phiên bản 1.2.0.
 - [X] Triển khai sửa đổi thiết kế ocesvc.id sang ocesvc.dbugid để phản ánh tính chất debug ID của các dịch vụ OCE follow tài liệu thiết kế PLD/μE-LS.
 - [x] Triển khai loại bỏ toàn bộ API liên quan đến dbugid, chỉ giữ lại khai báo trong `ocesvc_t`, ngoài ra, loại bỏ vòng O(N) liên quan đến việc tìm ID gán cho services, các khai báo đến việc quản lý dbugid như `id_counter`, `ocesvc_has_id`, `ocesvc_find_free_id` và các sử dụng của chúng trong API hiện tại.
-- [ ] Cân nhắc về việc bổ sung dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu -> Bổ sung tài liệu `review/dmp-gda.md` //LINK docs/uels-syntax.md:745
+- [X] Cân nhắc về việc bổ sung dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu -> Bổ sung tài liệu `review/dmp-gda.md` //LINK docs/uels-syntax.md:745
+- [ ] Vòng 2 thảo luận về việc triển khai thiết kế dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu.
 - [ ] Triển khai thiết kế với GDP (Global Data Pool - định danh nội bộ hệ thống `GLBAL`) để hỗ trợ việc quản lý các dữ liệu toàn cục của hệ thống một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các dữ liệu quan trọng được lưu trữ và truy xuất một cách an toàn và hiệu quả trong hệ thống.
 - [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
 - [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc phát triển các ứng dụng phức tạp với nhiều tác vụ tương tác với nhau một cách linh hoạt hơn.
@@ -178,7 +179,9 @@
 - [x] Sửa đổi lại thiết kế của phần `escal` để remove duplicate khi enable/disable các tính năng của μE-LS, nhằm đảm bảo rằng các tính năng được quản lý một cách hiệu quả và tránh tình trạng trùng lặp trong việc kích hoạt hoặc vô hiệu hóa các tính năng của lõi μEDP. //NOTE - bổ sung tài liệu để phản ánh ngược lại các thay đổi trong thiết kế của phần `escal` và cách thức quản lý các tính năng của μE-LS một cách hiệu quả.
 - [x] Kiểm tra tài liệu `uels-syntax.md` để thêm task vào to-do list nhằm đảm bảo rằng các tính năng của μE-LS được triển khai một cách hiệu quả và nhất quán, đồng thời hỗ trợ việc phát triển và kiểm thử các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn.
 - [x] Triển khai rewrite mẫu app/lstaxizier-test.yaml để bắt đầu triển khai thiết kế lstaxer.vlid.
-- [ ] Triển khai thiết kế với lstaxer.model để hỗ trợ pydantic model validation cho các cấu hình logic của μE-LS, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [x] Triển khai thiết kế với lstaxer.model để hỗ trợ pydantic model validation cho các cấu hình logic của μE-LS, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [x] Hoàn thiện thiết kế với pydantic_model.logic/resc/misc để làm nền tảng data validation cho pydantic model validation, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [ ] Bổ sung lstaxer.symresolv để tạo thành biểu đồ phân giải ký hiệu (SRM - Symbol Resolution Map) cho việc tìm kiếm và quản lý các references (anchors - aliases).
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 - [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin. //LINK docs/uels-syntax.md:118
 - [ ] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //LINK docs/uels-syntax.md:199
