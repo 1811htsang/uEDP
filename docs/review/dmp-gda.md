@@ -59,3 +59,10 @@ Nếu sử dụng ALLOC, giả sử khai báo 1 biến toàn cục như `int x =
 **Kết luận cuối cùng**: bổ sung 1 dpool riêng cho dữ liệu toàn cục, tách hẳn khỏi `uedp_msg`'s `ALLOC`. Việc này khớp đúng với task tiếp theo đã được giao: triển khai **GDP (Global Data Pool)**, định danh nội bộ hệ thống `GAXES`. Thiết kế cụ thể (cấu trúc slot, API, tích hợp FCR) sau khi triển khai xong, thay thế hẳn đề xuất "tái dùng ALLOC" đã đưa ra ở vòng 1.
 
 Generator PLTF mới cho `glbda:`sẽ sinh code gọi vào API đăng ký của GDP thay vì tự khai báo biến C rời rạc - giữ đúng tinh thần "PLTF sinh code, core quản lý vòng đời".
+
+### Kết luận cuối cùng
+
+Thống nhất
+
+- **Bổ sung dpool GDA riêng** trong core (`uedp_msg.c`) để quản lý biến toàn cục phục vụ truyền tham chiếu trong PLD/μE-LS.
+- **Bổ sung generator PLTF mới** (`gda_tsgen.py` hoặc tên tương đương) để sinh ra code khai báo biến toàn cục thật từ khối `glbda:` - đây là hạng mục thuộc phạm vi PLD/μE-LS (v1.1.7 theo lộ trình đã đề xuất), không phải core (`uedp_msg.c`).

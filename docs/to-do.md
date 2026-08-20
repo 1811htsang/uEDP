@@ -149,9 +149,11 @@
 - [X] Triển khai sửa đổi thiết kế ocesvc.id sang ocesvc.dbugid để phản ánh tính chất debug ID của các dịch vụ OCE follow tài liệu thiết kế PLD/μE-LS.
 - [x] Triển khai loại bỏ toàn bộ API liên quan đến dbugid, chỉ giữ lại khai báo trong `ocesvc_t`, ngoài ra, loại bỏ vòng O(N) liên quan đến việc tìm ID gán cho services, các khai báo đến việc quản lý dbugid như `id_counter`, `ocesvc_has_id`, `ocesvc_find_free_id` và các sử dụng của chúng trong API hiện tại.
 - [X] Cân nhắc về việc bổ sung dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu -> Bổ sung tài liệu `review/dmp-gda.md` //LINK docs/uels-syntax.md:745
-- [ ] Vòng 2 thảo luận về việc triển khai thiết kế dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu.
+- [x] Vòng 2 thảo luận về việc triển khai thiết kế dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu.
+- [ ] Thống nhất và bắt đầu khiển khai API cho dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu. //NOTE - Các task liên đới đến PLD/μE-LS sẽ được Sang triển khai sau khi Minh hoàn thiện API kèm tài liệu sửa đổi DMP, D2MP.
+- [ ] Bổ sung thiết kế API trong dpool GDA kèm API tương ứng.
+- [ ] Sửa đổi và cập nhật thiết kế DMP, D2MP tương ứng với sự xuất hiện của dpool GDA.
 - [ ] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
-- [ ] Triển khai thiết kế với GDP (Global Data Pool - định danh nội bộ hệ thống `GLBAL`) để hỗ trợ việc quản lý các dữ liệu toàn cục của hệ thống một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các dữ liệu quan trọng được lưu trữ và truy xuất một cách an toàn và hiệu quả trong hệ thống.
 - [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
 - [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc phát triển các ứng dụng phức tạp với nhiều tác vụ tương tác với nhau một cách linh hoạt hơn.
 - [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một sự kiện có thể phát tới nhiều task đã đăng ký.
@@ -185,7 +187,7 @@
 - [x] Bổ sung lstaxer.symresolv để tạo thành biểu đồ phân giải ký hiệu (SRM - Symbol Resolution Map) cho việc tìm kiếm và quản lý các references (anchors - aliases).
 - [x] Triển khai các validation strategy với lstaxer.vlid để hỗ trợ việc kiểm tra tính hợp lệ của các cấu hình logic của μE-LS, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Triển khai thiết kế các subcomponent của lstaxer.vlid để hỗ trợ việc kiểm tra tính hợp lệ của các cấu hình logic của μE-LS, bao gồm 5 chiến lược đề ra trong mã nguồn lstaxer.vlid.
-- [ ] Bổ sung thiết kế để tinh gọn các module không sử dụng trong khai báo YAML của người dùng nhằm giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [ ] Bổ sung thiết kế module để tinh gọn các khai báo NULL không sử dụng trong khai báo YAML của người dùng nhằm giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 - [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin. //LINK docs/uels-syntax.md:118
 - [ ] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //LINK docs/uels-syntax.md:199
