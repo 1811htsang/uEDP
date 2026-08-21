@@ -45,3 +45,24 @@ Do theo thiết kế ban đầu, ALLOC được sử dụng để dành cho mụ
 Hiện tại chưa có API triển khai việc sử dụng ALLOC cho các mục đích ngoài nên cần suy xét lại việc sử dụng thêm 1 dpool GDA (`GLBAL`) mới với kích thước `sizeof(void)`.
 
 Nếu sử dụng ALLOC, giả sử khai báo 1 biến toàn cục như `int x = 1;` và `const char* str = "Hello";`, thì làm sao để sử dụng với bản chất thông tin là biến toàn cục hỗ trợ truyền tham trị và tham chiếu. Ngoài ra, sau khi sử dụng xong thì message sẽ có thể được giải phóng, nhưng biến toàn cục vẫn tồn tại trong bộ nhớ, do đó việc sử dụng ALLOC cần phải có cơ chế vòng đời trên dpool. Trong khi đó việc sử dụng dpool GDA cho phép các biến toàn cục được assign vị trí an toàn và không cần quản lý vòng đời của chúng, do đó việc sử dụng dpool GDA là hợp lý hơn.
+
+## Phản hồi vòng 2 (Minh)
+
+### Critical section
+
+Đúng là đã bỏ qua đúng đặc điểm cốt lõi của scheduler hiện tại: single-core, không preemptive, mỗi vòng lập lịch chỉ dispatch đúng 1 task tại 1 thời điểm; ISR không được gọi `actv`/`act` nên không có đường tranh chấp nào từ ngắt cả. Rút lại đề xuất bọc `pal_enter_critical()`/`pal_exit_critical()` bắt buộc - **không cần thiết ở bản hiện tại**. Sẽ ghi chú trong tài liệu cú pháp `glbda:` rằng việc bọc critical section chỉ cần cân nhắc khi μEDP phát triển tới môi trường đa nhân (AMP/SMP/HELF), không bắt buộc cho môi trường đơn nhân hiện tại.
+
+### Dpool GDA riêng - đồng ý, rút lại kết luận "không cần dpool mới"
+
+Đồng ý với lập luận: `ALLOC` được thiết kế gắn chặt với vòng đời message (`uedp_msg_alloc()`/`uedp_msg_free()`), không có API nào cho phép dùng nó ngoài mục đích message. Ví dụ cụ thể (`int x = 1;`, `const char* str = "Hello";`) cho thấy đúng vấn đề: nếu tái dùng `ALLOC`, sẽ phải tự chế thêm cơ chế "never-free" đè lên trên vòng đời message sẵn có - phức tạp hơn hẳn so với việc có 1 dpool riêng mà biến toàn cục chỉ cần được gán vị trí an toàn, không cần quản lý vòng đời gì cả (không có khái niệm "free" một biến toàn cục).
+
+**Kết luận cuối cùng**: bổ sung 1 dpool riêng cho dữ liệu toàn cục, tách hẳn khỏi `uedp_msg`'s `ALLOC`. Việc này khớp đúng với task tiếp theo đã được giao: triển khai **GDP (Global Data Pool)**, định danh nội bộ hệ thống `GAXES`. Thiết kế cụ thể (cấu trúc slot, API, tích hợp FCR) sau khi triển khai xong, thay thế hẳn đề xuất "tái dùng ALLOC" đã đưa ra ở vòng 1.
+
+Generator PLTF mới cho `glbda:`sẽ sinh code gọi vào API đăng ký của GDP thay vì tự khai báo biến C rời rạc - giữ đúng tinh thần "PLTF sinh code, core quản lý vòng đời".
+
+### Kết luận cuối cùng
+
+Thống nhất
+
+- **Bổ sung dpool GDA riêng** trong core (`uedp_msg.c`) để quản lý biến toàn cục phục vụ truyền tham chiếu trong PLD/μE-LS.
+- **Bổ sung generator PLTF mới** (`gda_tsgen.py` hoặc tên tương đương) để sinh ra code khai báo biến toàn cục thật từ khối `glbda:` - đây là hạng mục thuộc phạm vi PLD/μE-LS (v1.1.7 theo lộ trình đã đề xuất), không phải core (`uedp_msg.c`).
