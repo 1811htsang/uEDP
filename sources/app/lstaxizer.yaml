@@ -87,7 +87,7 @@ versh: "1.2.0-pre"
 
 glbda:
 - '1': &gda_status
-  name: GDA_SYSTEM_STATUS
+  name: GDA_SYSTEM_STATUS # Validator check: kiểm tra lỗi từ lstaxer.strucjec
   type: "const char*"
   initial_value: "STATUS: INITIALIZING"
 
@@ -110,7 +110,7 @@ tlist:
         to: NULL
         sig: NULL
         data: NULL
-    on_actv: #NOTE - logic "chạy" (Active)
+    on_actv: # NOTE - logic "chạy" (Active)
       steps:
       - actv: uedp_itnlog_log
         to: NULL
@@ -200,6 +200,7 @@ tlist:
         to: TASK_A
         sig: *sig4
         # sig: *gda_status # Validator check: Không hợp lệ, không thể dùng anchor trong sig
+
   - id: STATE_B_BUSY
     on_recv:
     - sig: *sig6
