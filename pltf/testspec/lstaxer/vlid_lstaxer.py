@@ -5,11 +5,16 @@ from .symresolv_lstaxer import symresolv_load, symresolv_debug
 # NOTE - Validation Strategy for lstaxer.vlid 
 """
 1. Dangling Alias Check
-2. Context-Type Match
-3. UST cross Reference
-4. Post Resource Existance
-5. Policy Alignment Check
+2. Structure Validation
+3. Context-Type Match
+4. UST cross Reference
+5. Post Resource Existance
+6. Policy Alignment Check
 """
+
+# NOTE - Hardcode path to the YAML file for processing
+with open('sources/app/lstaxizer.yaml', 'r', encoding='utf-8') as f:
+  yaml_content = f.read()
 
 # NOTE - Dangling Alias Check 
 """
@@ -19,6 +24,8 @@ therefore, if there is any dangling alias,
 it will be detected by the yaml loader and raise an error.
 So DAC can be skipped in lstaxer.vlid.
 """
+
+# NOTE - Structure Validation
 
 # NOTE - Context-Type Match
 
@@ -51,8 +58,9 @@ but the source-side is `sigs` context,
 then it is valid because the sigs context is a superset of sig context.
 """
 
-anchors, trace_results = symresolv_load()
+anchors, trace_results = symresolv_load(yaml_content)
 symresolv_debug(anchors, trace_results)
+symresolv_error = 0
 
 for r in trace_results:
   alias_name = r['alias']
@@ -78,14 +86,18 @@ for r in trace_results:
       case 'data':
         if source_side != 'glbda':
           print(f"[ERROR] Alias *{alias_name} is defined in {source_side} context but used in {target_side} context.")
+          symresolv_error += 1
       case '<<':
         if source_side != 'tnorms':
           print(f"[ERROR] Alias *{alias_name} is defined in {source_side} context but used in {target_side} context.")
+          symresolv_error += 1
       case 'on_sig':
         if source_side != 'sigs':
           print(f"[ERROR] Alias *{alias_name} is defined in {source_side} context but used in {target_side} context.")
+          symresolv_error += 1
       case _:
         print(f"[ERROR] Alias *{alias_name} is not exception case but used in {target_side} context.")
+        symresolv_error += 1
   else:
     if source_side == 'sigs' and target_side == 'sig':
       # NOTE - Special case noted above
@@ -94,4 +106,14 @@ for r in trace_results:
       # NOTE - Normal case
       if source_side != target_side:
         print(f"[ERROR] Alias *{alias_name} is defined in {source_side} context but used in {target_side} context.")
-  
+        symresolv_error += 1
+
+if symresolv_error == 0:
+  print("[INFO] All aliases are used in the correct context.")
+else:
+  # NOTE - Summary of errors
+  print(f"[INFO] Total {symresolv_error} context-type mismatch errors found.")
+  print("[INFO] Please check the above errors and fix them in the YAML file.")
+  print("[INFO] Exiting with error.")
+  # NOTE - Exit with error code
+  exit(1)

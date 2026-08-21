@@ -179,10 +179,7 @@ def trace_yaml_context(yaml_text):
 
   return results
 
-def symresolv_load():
-  # NOTE - Hardcode path to the YAML file for testing
-  with open('sources/app/lstaxizer.yaml', 'r', encoding='utf-8') as f:
-    yaml_sample = f.read()
+def symresolv_load(yaml_content):
 
   # NOTE - Reference resolution
   '''
@@ -191,8 +188,8 @@ def symresolv_load():
   and we won't be able to trace them.
   '''
 
-  trace_results = trace_yaml_context(yaml_sample)
-  anchors = extract_yaml_metadata(yaml_sample)
+  trace_results = trace_yaml_context(yaml_content)
+  anchors = extract_yaml_metadata(yaml_content)
   return anchors, trace_results
 
 def symresolv_debug(anchors, trace_results):
