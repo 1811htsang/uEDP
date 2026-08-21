@@ -170,17 +170,6 @@ def strucjec_target_glbda(yaml_text):
           waiting_for_val_of = 'name'
   return errors        
 
-def strucjec_debug_glbda(errors):
-  print(f"{'-'*30} strucjec `glbda` param  {'-'*30}\n")
-  print(f"{'TYPE':<10} | {'LOCATION':<30} | {'MESSAGE'}")
-  print("-" * 85)
-  
-  if not errors:
-    print(f"{'SUCCESS':<10} | {'Global Data Area':<30} | All GDA items are valid.")
-  else:
-    for err in errors:
-      print(f"ERROR      | {err['loc']:<30} | {err['msg']}")
-
 def strucjec_target_glbda_item(item, errors):
   """Logic kiểm tra chi tiết cho từng item GDA"""
   tags = item['found_tags']
@@ -195,10 +184,244 @@ def strucjec_target_glbda_item(item, errors):
         'msg': f"Missing required field: '{field}'"
       })
 
+def strucjec_debug_glbda(errors):
+  print(f"{'-'*30} strucjec `glbda` param  {'-'*30}\n")
+  print(f"{'TYPE':<10} | {'LOCATION':<30} | {'MESSAGE'}")
+  print("-" * 85)
+  
+  if not errors:
+    print(f"{'SUCCESS':<10} | {'Global Data Area':<30} | All GDA items are valid.")
+  else:
+    for err in errors:
+      print(f"ERROR      | {err['loc']:<30} | {err['msg']}")
+  
+  print("\n")
+
+def strucjec_target_isr(yaml_text):
+  """
+  Hàm kiểm tra cấu trúc cho Interrupt Service Routine (isr).
+  Yêu cầu mỗi item phải có: id, to, sig.
+  """
+  events = yaml.parse(yaml_text)
+  
+  path_stack = []
+  current_item = None
+  errors = []
+  
+  in_isr = False
+  waiting_for_id_val = False # Để lấy giá trị của trường 'id' làm nhãn báo lỗi
+  is_key_turn = True         # Flag để phân biệt Key và Value trong Mapping
+
+  for event in events:
+    # 1. Quản lý cấp độ (Stack)
+    if isinstance(event, yaml.SequenceStartEvent):
+      path_stack.append("SEQ")
+    elif isinstance(event, yaml.MappingStartEvent):
+      path_stack.append("MAP")
+        
+      # Nếu bắt đầu một item trong isr (ROOT -> isr -> Item)
+      if in_isr and len(path_stack) == 3:
+        current_item = {
+          'isr_id': "Unknown ISR",
+          'found_keys': set(),
+          'line': event.start_mark.line + 1
+        }
+        is_key_turn = True # Item mới luôn bắt đầu bằng một Key
+    
+    elif isinstance(event, yaml.MappingEndEvent):
+      # Kết thúc một item -> Thực hiện Validate
+      if in_isr and len(path_stack) == 3 and current_item:
+        strucjec_target_isr_item(current_item, errors)
+      path_stack.pop()
+      
+    elif isinstance(event, yaml.SequenceEndEvent):
+      path_stack.pop()
+      # Thoát khỏi vùng isr
+      if in_isr and len(path_stack) == 1:
+        in_isr = False
+
+    # 2. Xử lý dữ liệu (Scalar)
+    elif isinstance(event, yaml.ScalarEvent):
+      # Nhận diện tag 'isr' ở cấp độ gốc (level 1)
+      if len(path_stack) == 1 and event.value == 'isr':
+        in_isr = True
+        continue
+
+      if in_isr and len(path_stack) == 3:
+        if is_key_turn:
+          # Đây là một KEY
+          key_name = event.value
+          current_item['found_keys'].add(key_name)
+          
+          if key_name == 'id':
+            waiting_for_id_val = True
+          
+          is_key_turn = False # Sau Key sẽ là Value
+        else:
+          # Đây là một VALUE
+          if waiting_for_id_val:
+            current_item['isr_id'] = event.value
+            waiting_for_id_val = False
+          
+          is_key_turn = True # Sau Value sẽ quay lại Key
+
+    # 3. Xử lý Alias (Trường hợp sig: *sig7)
+    elif isinstance(event, yaml.AliasEvent):
+      if in_isr and len(path_stack) == 3:
+        # Alias luôn đóng vai trò là một Value, nên tiếp theo sẽ là Key
+        is_key_turn = True
+
+  return errors
+
+def strucjec_target_isr_item(item, errors):
+  """Logic kiểm tra các trường bắt buộc của ISR"""
+  keys = item['found_keys']
+  isr_label = f"ISR: {item['isr_id']} (L:{item['line']})"
+  
+  required_fields = ['id', 'to', 'sig']
+  
+  for field in required_fields:
+    if field not in keys:
+      errors.append({
+        'loc': isr_label,
+        'msg': f"Missing required field: '{field}'"
+      })
+
+def strucjec_debug_isr(errors):
+  print(f"{'-'*30} strucjec `isr` param  {'-'*32}\n")
+  print(f"{'TYPE':<10} | {'LOCATION':<30} | {'MESSAGE'}")
+  print("-" * 85)
+  
+  if not errors:
+    print(f"{'SUCCESS':<10} | {'ISR Configuration':<30} | All ISR items are valid.")
+  else:
+    for err in errors:
+      print(f"ERROR      | {err['loc']:<30} | {err['msg']}")
+
+  print("\n")
+
+def strucjec_target_outexec(yaml_text):
+  """
+  Hàm kiểm tra cấu trúc cho Out-Context Execution (outexec).
+  Yêu cầu mỗi item phải có: name, handler, context, state.
+  """
+  events = yaml.parse(yaml_text)
+  
+  path_stack = []
+  current_item = None
+  errors = []
+  
+  in_outexec = False
+  waiting_for_name_val = False 
+  is_key_turn = True         
+
+  for event in events:
+    # 1. Quản lý cấp độ cấu trúc (Stack)
+    if isinstance(event, yaml.SequenceStartEvent):
+      path_stack.append("SEQ")
+    elif isinstance(event, yaml.MappingStartEvent):
+      path_stack.append("MAP")
+        
+      # Nếu bắt đầu một item trong outexec (ROOT -> outexec -> Item)
+      if in_outexec and len(path_stack) == 3:
+        current_item = {
+          'oce_name': "Unknown OCE",
+          'found_keys': set(),
+          'line': event.start_mark.line + 1
+        }
+        is_key_turn = True
+    
+    elif isinstance(event, yaml.MappingEndEvent):
+      # Kết thúc một item -> Thực hiện Validate
+      if in_outexec and len(path_stack) == 3 and current_item:
+        strucjec_target_outexec_item(current_item, errors)
+      path_stack.pop()
+        
+    elif isinstance(event, yaml.SequenceEndEvent):
+      path_stack.pop()
+      # Thoát khỏi vùng outexec
+      if in_outexec and len(path_stack) == 1:
+        in_outexec = False
+
+    # 2. Xử lý dữ liệu Scalar (Key/Value)
+    elif isinstance(event, yaml.ScalarEvent):
+      # Nhận diện tag 'outexec' ở cấp độ gốc
+      if len(path_stack) == 1 and event.value == 'outexec':
+        in_outexec = True
+        continue
+
+      if in_outexec and len(path_stack) == 3:
+        if is_key_turn:
+          # Đang ở vị trí KEY
+          key_name = event.value
+          current_item['found_keys'].add(key_name)
+          
+          if key_name == 'name':
+            waiting_for_name_val = True
+          
+          is_key_turn = False
+        else:
+          # Đang ở vị trí VALUE
+          if waiting_for_name_val:
+            current_item['oce_name'] = event.value
+            waiting_for_name_val = False
+          
+          is_key_turn = True
+
+    # 3. Xử lý Alias (Nếu có tham chiếu *)
+    elif isinstance(event, yaml.AliasEvent):
+      if in_outexec and len(path_stack) == 3:
+        is_key_turn = True
+
+  return errors
+
+def strucjec_target_outexec_item(item, errors):
+  """Logic kiểm tra các trường bắt buộc cho OutExec"""
+  keys = item['found_keys']
+  oce_label = f"OCE: {item['oce_name']} (L:{item['line']})"
+  
+  # Danh sách các trường bắt buộc theo yêu cầu
+  required_fields = ['name', 'handler', 'context', 'state']
+  
+  for field in required_fields:
+    if field not in keys:
+      errors.append({
+        'loc': oce_label,
+        'msg': f"Missing required field: '{field}'"
+      })
+
+def strucjec_debug_outexec(errors):
+  print(f"{'-'*30} strucjec `outexec` param  {'-'*28}\n")
+  print(f"{'TYPE':<10} | {'LOCATION':<30} | {'MESSAGE'}")
+  print("-" * 85)
+  
+  if not errors:
+    print(f"{'SUCCESS':<10} | {'OutExec Configuration':<30} | All OutExec items are valid.")
+  else:
+    for err in errors:
+      print(f"ERROR      | {err['loc']:<30} | {err['msg']}")
+
+  print("\n")
+
+# NOTE - Outer function to call all structure validation functions
+def strucjec_calib(yaml_sample):
+  errors_tlist, warnings_tlist = strucjec_target_tlist(yaml_sample)
+  strucjec_debug_tlist(errors_tlist, warnings_tlist)
+  errors_glbda = strucjec_target_glbda(yaml_sample)
+  strucjec_debug_glbda(errors_glbda)
+  errors_isr = strucjec_target_isr(yaml_sample)
+  strucjec_debug_isr(errors_isr)
+  errors_outexec = strucjec_target_outexec(yaml_sample)
+  strucjec_debug_outexec(errors_outexec)
+
 # STUB - sample usage to validate output
-with open('sources/app/lstaxizer.yaml', 'r', encoding='utf-8') as f:
-  yaml_sample = f.read()
-errors_tlist, warnings_tlist = strucjec_target_tlist(yaml_sample)
-strucjec_debug_tlist(errors_tlist, warnings_tlist)
-errors_glbda = strucjec_target_glbda(yaml_sample)
-strucjec_debug_glbda(errors_glbda)
+# with open('sources/app/lstaxizer.yaml', 'r', encoding='utf-8') as f:
+#   yaml_sample = f.read()
+# errors_tlist, warnings_tlist = strucjec_target_tlist(yaml_sample)
+# strucjec_debug_tlist(errors_tlist, warnings_tlist)
+# errors_glbda = strucjec_target_glbda(yaml_sample)
+# strucjec_debug_glbda(errors_glbda)
+# errors_isr = strucjec_target_isr(yaml_sample)
+# strucjec_debug_isr(errors_isr)
+# errors_outexec = strucjec_target_outexec(yaml_sample)
+# strucjec_debug_outexec(errors_outexec)

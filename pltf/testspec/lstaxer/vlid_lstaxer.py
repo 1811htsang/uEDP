@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator
 from typing import List, Optional, Dict
 from .symresolv_lstaxer import symresolv_load, symresolv_debug
+from .strucjec_lstaxer import strucjec_calib
 
 # NOTE - Validation Strategy for lstaxer.vlid 
 """
@@ -12,10 +13,6 @@ from .symresolv_lstaxer import symresolv_load, symresolv_debug
 6. Policy Alignment Check
 """
 
-# NOTE - Hardcode path to the YAML file for processing
-with open('sources/app/lstaxizer.yaml', 'r', encoding='utf-8') as f:
-  yaml_content = f.read()
-
 # NOTE - Dangling Alias Check 
 """
 b4 lstaxer.symresolv is called,
@@ -25,7 +22,18 @@ it will be detected by the yaml loader and raise an error.
 So DAC can be skipped in lstaxer.vlid.
 """
 
+# NOTE - Hardcode path to the YAML file for processing
+with open('sources/app/lstaxizer.yaml', 'r', encoding='utf-8') as f:
+  yaml_content = f.read()
+
 # NOTE - Structure Validation
+"""
+after ustab finish DAC along with yaml loader, 
+the yaml content is already loaded into memory.
+Therefore, we can use the loaded content to perform structure validation.
+"""
+
+strucjec_calib(yaml_content)
 
 # NOTE - Context-Type Match
 

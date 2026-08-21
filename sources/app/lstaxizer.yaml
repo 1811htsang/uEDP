@@ -218,13 +218,13 @@ tlist:
 
 isr:
 - id: ISR_HARD_STOP
-  to: TASK_A
+  to: TASK_A # Validator check: kiểm tra lỗi từ lstaxer.strucjec
   sig: *sig7
 
 # ANCHOR - Out-Context Execution (OUTEXEC) - Thực thi ngoài ngữ cảnh
 
 outexec:
 - name: OCE_ITNLOG_DUMP
-  handler: itnlog_dump_handler
+  handler: itnlog_dump_handler # Validator check: kiểm tra lỗi từ lstaxer.strucjec
   context: NULL
   state: READY

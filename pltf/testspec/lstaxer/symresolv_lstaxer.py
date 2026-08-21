@@ -193,6 +193,7 @@ def symresolv_load(yaml_content):
   return anchors, trace_results
 
 def symresolv_debug(anchors, trace_results):
+  print(f"{'-'*30} symresolv `anchor` param  {'-'*30}\n")
   print(f"\n{'INDEX':<6} | {'ANCHOR':<15} | {'DEFINITION TRACE PATH'}")
   print("-" * 60)
   i = 0
@@ -200,7 +201,9 @@ def symresolv_debug(anchors, trace_results):
     print(f"i = {i:<2} | {name:<15} | {tag}")
     i += 1
 
-  print(f"\n{'INDEX':<6} | {'ALIAS':<15} | {'FULL TRACE CONTEXT'}")
+  print('\n')
+  print(f"{'-'*30} symresolv `alias` param  {'-'*30}\n")
+  print(f"{'INDEX':<6} | {'ALIAS':<15} | {'FULL TRACE CONTEXT'}")
   print("-" * 60)
   i = 0
   for r in trace_results:
