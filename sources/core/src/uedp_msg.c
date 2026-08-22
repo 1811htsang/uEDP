@@ -93,6 +93,7 @@ sta uedp_msg_t* internal_uedp_msg_pool_pop(uedp_msg_pool_header_t* header);
 sta void internal_uedp_msg_pool_push(uedp_msg_pool_header_t* header, uedp_msg_t* msg);
 sta uedp_msg_pool_header_t* internal_uedp_msg_find_best_pool(ui16 size);
 sta bool uedp_msg_is_valid_ptr(uedp_msg_t* msg);
+sta uedp_gdp_slot_t* internal_uedp_gdp_find(const char* name);
 
 void uedp_msg_pool_init() {
 	// Khởi tạo BLANK Pool
@@ -491,4 +492,128 @@ void internal_uedp_msg_pool_get_info(uedp_msg_type_t pool_id, pal_memrp_info_t* 
 			UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "get_info: unknown pool_id");
 			break;
 	}
+}
+
+/* ============================================================================
+ * [GDP] Global Data Pool — implementation
+ * Xem block comment ở đầu section tương ứng trong uedp_msg.h để biết lý do
+ * thiết kế (dpool riêng, không dùng lại ALLOC, không quản lý vòng đời).
+ * Xem docs/review/dmp-gda.md để biết đầy đủ bối cảnh & 2 vòng review đã chốt.
+ * ============================================================================ */
+
+/**
+ * @brief Bảng slot tĩnh của GDP - kích thước cố định UEDP_GDP_MAX_SLOTS, không cấp phát động
+ */
+sta uedp_gdp_slot_t g_gdp_table[UEDP_GDP_MAX_SLOTS] = {0};
+
+void uedp_gdp_init(void) {
+	memset(g_gdp_table, 0, sizeof(g_gdp_table));
+}
+
+RETR_STAT uedp_gdp_register(const char* name, void* data_ptr, ui16 size) {
+	if (!name || !data_ptr || size == 0) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_INVALID_PARAM, "register: null name/data_ptr or size=0");
+		return STAT_ERROR;
+	}
+
+	if (internal_uedp_gdp_find(name) != NULL) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_DUPLICATE_NAME, "register: name already exists");
+		return STAT_ERROR;
+	}
+
+	for (ui16 i = 0; i < UEDP_GDP_MAX_SLOTS; i++) {
+		if (!g_gdp_table[i].in_use) {
+			g_gdp_table[i].name = name;
+			g_gdp_table[i].data = data_ptr;
+			g_gdp_table[i].size = size;
+			g_gdp_table[i].in_use = true;
+			return STAT_OK;
+		}
+	}
+
+	UEDP_FCR_RAISE(UEDP_FCR_GDP_TABLE_FULL); // Không còn slot trống trong UEDP_GDP_MAX_SLOTS
+	return STAT_ERROR;
+}
+
+RETR_STAT uedp_gdp_unregister(const char* name) {
+	uedp_gdp_slot_t* slot = internal_uedp_gdp_find(name);
+	if (!slot) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_NOT_FOUND, "unregister: name not found");
+		return STAT_ERROR;
+	}
+
+	// Chỉ gỡ liên kết tra cứu - KHÔNG đụng vào vùng nhớ data (GDP chưa bao giờ sở hữu nó)
+	slot->name = NULL;
+	slot->data = NULL;
+	slot->size = 0;
+	slot->in_use = false;
+	return STAT_OK;
+}
+
+void* uedp_gdp_get_ref(const char* name) {
+	uedp_gdp_slot_t* slot = internal_uedp_gdp_find(name);
+	if (!slot) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_NOT_FOUND, "get_ref: name not found");
+		return NULL;
+	}
+	return slot->data;
+}
+
+RETR_STAT uedp_gdp_get_val(const char* name, void* out_buf, ui16 buf_size) {
+	if (!out_buf) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_INVALID_PARAM, "get_val: null out_buf");
+		return STAT_ERROR;
+	}
+
+	uedp_gdp_slot_t* slot = internal_uedp_gdp_find(name);
+	if (!slot) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_NOT_FOUND, "get_val: name not found");
+		return STAT_ERROR;
+	}
+
+	if (buf_size < slot->size) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_INVALID_PARAM, "get_val: out_buf too small");
+		return STAT_ERROR;
+	}
+
+	memcpy(out_buf, slot->data, slot->size);
+	return STAT_OK;
+}
+
+RETR_STAT uedp_gdp_set_val(const char* name, const void* in_buf, ui16 buf_size) {
+	if (!in_buf) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_INVALID_PARAM, "set_val: null in_buf");
+		return STAT_ERROR;
+	}
+
+	uedp_gdp_slot_t* slot = internal_uedp_gdp_find(name);
+	if (!slot) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_NOT_FOUND, "set_val: name not found");
+		return STAT_ERROR;
+	}
+
+	if (buf_size != slot->size) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_GDP_INVALID_PARAM, "set_val: size mismatch with registered slot");
+		return STAT_ERROR;
+	}
+
+	memcpy(slot->data, in_buf, slot->size);
+	return STAT_OK;
+}
+
+/**
+ * @brief Hàm nội bộ để tìm 1 slot GDP theo tên
+ * @param name Tên định danh cần tìm
+ * @return uedp_gdp_slot_t* Con trỏ tới slot nếu tìm thấy, NULL nếu không tìm thấy hoặc name là NULL
+ */
+sta uedp_gdp_slot_t* internal_uedp_gdp_find(const char* name) {
+	if (!name) return NULL;
+
+	for (ui16 i = 0; i < UEDP_GDP_MAX_SLOTS; i++) {
+		if (g_gdp_table[i].in_use && g_gdp_table[i].name != NULL && strcmp(g_gdp_table[i].name, name) == 0) {
+			return &g_gdp_table[i];
+		}
+	}
+
+	return NULL;
 }
