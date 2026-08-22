@@ -125,3 +125,26 @@ else:
   print("[INFO] Exiting with error.")
   # NOTE - Exit with error code
   exit(1)
+
+# NOTE - UST cross Reference
+
+"""
+b4 users define logic in the YAML file,
+ustab has already loaded the UST data into memory.
+Therefore, data has already been guaranteed to be cross-referenced with UST data.
+So UST cross reference check can be skipped in lstaxer.vlid.
+However, UST can be considered to be implemented in the future
+as it a good practice but not necessary for now.
+"""
+
+# NOTE - Post Resource Existance
+
+"""
+This part is to check if after the YAML file is loaded into memory,
+all the resources defined in the YAML file are still exist in the UST data.
+However, since the UST data is loaded into memory before the YAML file is loaded,
+if any resource is deleted in the UST data, it will be detected by the YAML loader and raise an error.
+So PRE can be skipped in lstaxer.vlid.
+However, PRE can be considered to be implemented in the future
+as it a good practice but not necessary for now.
+"""

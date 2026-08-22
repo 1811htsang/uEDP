@@ -1,5 +1,7 @@
 import yaml
 
+DEBUG_FLAG = True
+
 def strucjec_target_tlist(yaml_text):
   events = yaml.parse(yaml_text)
   
@@ -406,13 +408,23 @@ def strucjec_debug_outexec(errors):
 # NOTE - Outer function to call all structure validation functions
 def strucjec_calib(yaml_sample):
   errors_tlist, warnings_tlist = strucjec_target_tlist(yaml_sample)
-  strucjec_debug_tlist(errors_tlist, warnings_tlist)
   errors_glbda = strucjec_target_glbda(yaml_sample)
-  strucjec_debug_glbda(errors_glbda)
   errors_isr = strucjec_target_isr(yaml_sample)
-  strucjec_debug_isr(errors_isr)
   errors_outexec = strucjec_target_outexec(yaml_sample)
-  strucjec_debug_outexec(errors_outexec)
+  if DEBUG_FLAG:
+    strucjec_debug_glbda(errors_glbda)
+    strucjec_debug_tlist(errors_tlist, warnings_tlist)
+    strucjec_debug_isr(errors_isr)
+    strucjec_debug_outexec(errors_outexec)
+  if warnings_tlist:
+    print("[INFO] Structure validation completed with warnings.")
+    print("[INFO] Please check the above warnings and consider fixing them in the YAML file.\n")
+  if errors_tlist or errors_glbda or errors_isr or errors_outexec:
+    print("[INFO] Structure validation completed with errors.")
+    print("[INFO] Please check the above errors and fix them in the YAML file.")
+    print("[INFO] Exiting with error.")
+    # NOTE - Exit with error code
+    exit(1)
 
 # STUB - sample usage to validate output
 # with open('sources/app/lstaxizer.yaml', 'r', encoding='utf-8') as f:
