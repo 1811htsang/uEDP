@@ -66,3 +66,25 @@ Thống nhất
 
 - **Bổ sung dpool GDA riêng** trong core (`uedp_msg.c`) để quản lý biến toàn cục phục vụ truyền tham chiếu trong PLD/μE-LS.
 - **Bổ sung generator PLTF mới** (`gda_tsgen.py` hoặc tên tương đương) để sinh ra code khai báo biến toàn cục thật từ khối `glbda:` - đây là hạng mục thuộc phạm vi PLD/μE-LS (v1.1.7 theo lộ trình đã đề xuất), không phải core (`uedp_msg.c`).
+
+## Cập nhật: API GDP đã triển khai (22/08/2026)
+
+API `uedp_gdp_*` đã được chèn thẳng vào `uedp_msg.h`/`uedp_msg.c` (không tách file riêng, cùng lý
+do đã bàn ở vòng review trước - GDP là phần mở rộng của DMP/D2MP, không phải module ngang hàng).
+
+- Struct `uedp_gdp_slot_t` (`name`/`data`/`size`/`in_use`) + bảng tĩnh `UEDP_GDP_MAX_SLOTS` (mặc
+  định 16, theo pattern `LOGDP_MAX_OUTPUT_FN`).
+- 5 hàm: `uedp_gdp_init()`, `uedp_gdp_register()`, `uedp_gdp_unregister()`, `uedp_gdp_get_ref()`
+  (cho `ptype: REF`), `uedp_gdp_get_val()`/`uedp_gdp_set_val()` (cho `ptype: VAL`).
+- Đúng như kết luận đã chốt: **không** dùng lại `ALLOC`, **không** có khái niệm free/vòng đời -
+  chỉ đăng ký tên ↔ con trỏ.
+- `uedp_gdp_get_ref()` **không** bọc `pal_enter_critical()`/`pal_exit_critical()`, đúng theo kết
+  luận "Phản hồi vòng 2": scheduler hiện tại single-core, non-preemptive, ISR không gọi
+  `actv`/`act` nên không có tranh chấp thật. Đã ghi chú rõ trong docstring rằng cần xem xét lại
+  nếu μEDP lên môi trường đa nhân (AMP/SMP/HELF).
+- 4 mã FCR (`GDP_TABLE_FULL`/`GDP_NOT_FOUND`/`GDP_INVALID_PARAM`/`GDP_DUPLICATE_NAME`, module
+  `0x97`) đã có sẵn trong `uedp_fcr.h` từ trước, dùng trực tiếp không cần thêm gì.
+- Đã `gcc -fsyntax-only -Wall -Wextra` trên bản gộp - sạch, không phát sinh lỗi/warning mới.
+
+**Còn lại (ngoài phạm vi core)**: generator `gda_tsgen.py` phía PLTF để sinh code gọi
+`uedp_gdp_register()` từ khối `glbda:`.
