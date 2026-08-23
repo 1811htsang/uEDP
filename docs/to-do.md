@@ -154,8 +154,20 @@
 - [x] Bổ sung thiết kế API trong dpool GDA kèm API tương ứng.
 - [ ] Bổ sung các khai báo FCR thiếu với API của GDA.
 - [ ] Sửa đổi và cập nhật thiết kế DMP, D2MP tương ứng với sự xuất hiện của dpool GDA.
+- [ ] Remove các khai báo task NORM và POLL mặc định không sử dụng. //NOTE - Xem `uedp_core.h` nhánh feat để hiểu rõ hơn yêu cầu của task này. Cần kiểm tra các tài liệu và mã nguồn liên đới như PLD/μE-LS, pltf.pyspec/testspec để đảm bảo rằng các khai báo task này không còn được sử dụng trong các tính năng hiện tại và tương lai của lõi μEDP.
 - [ ] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
 - [ ] Thực hiện rebase các task liên quan đến thiết kế syntax PLD/μE-LS (trước khi triển khai source code phân giải logic như testspec.*, pyspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
+
+<!-- NOTE
+Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ được hoàn thiện với khả năng tự động hóa việc phân giải logic từ các cấu hình YAML sang các hàm thực thi trong lõi μEDP.
+
+Điều này đảm bảo:
+
+1. Minh sẽ thực hiện việc kiểm thử và đánh giá khả năng sinh code của PLD/μE-LS song song với việc perform BST trước khi chuyển sang triển khai TLC và TLD
+2. Lộ trình phân tách đảm bảo 1.1.6 sẽ hoàn thiện các tính năng PLD/μE-LS, 1.1.7 sẽ hoàn thiện TLD và 1.1.8 sẽ hoàn thiện TLC, từ đó đảm bảo 1.2.0 sẽ có đầy đủ các tính năng cơ sở hạ tầng cần thiết để triển khai sang thiết kế Test Strategy và Test Matrix cho các phạm vi test, re-test và regression test.
+3. Hỗ trợ việc triển khai testing với các phiên bản sau đó một cách dễ dàng và hiệu quả hơn, đồng thời đảm bảo hỗ trợ cho các nhân sự mới tham gia vào dự án có thể nhanh chóng nắm bắt và thực hiện các công việc liên quan.
+-->
+
 - [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
 - [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong việc hỗ trợ việc phát triển các ứng dụng phức tạp với nhiều tác vụ tương tác với nhau một cách linh hoạt hơn.
 - [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một sự kiện có thể phát tới nhiều task đã đăng ký.
