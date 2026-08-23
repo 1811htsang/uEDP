@@ -124,4 +124,3 @@
    */
 
 #endif //__APP_DECL_H__
-

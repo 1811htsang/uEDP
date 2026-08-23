@@ -26,6 +26,16 @@
    *            bao gồm các tác vụ timer, giao tiếp, hệ thống, debug, người dùng và trống.
    */
 
+  /** FIXME
+   * Cân nhắc toàn bộ các tác vụ mặc định,
+   * chỉ giữ lại các khai báo về offset, EOT, MIN, MAX 
+   * để tránh trùng lặp với các tác vụ được người dùng định nghĩa.
+   * 
+   * Minh sẽ cân nhắc phần này, đồng thời sửa đổi lại các cấu hình cũ
+   * liên đới đến PLD/μE-LS, PLTF và các tài liệu liên quan đến.
+   */
+
+
   #define UEDP_TASK_NORM_MAX_SIZE						(16u) 	// 16 tác vụ, từ 0 đến 15
   #define UEDP_TASK_NORM_TIM_ID							(0xE0) // Tác vụ timer
   #define UEDP_TASK_NORM_IF_ID		    			(0xE1) // Tác vụ giao tiếp
@@ -42,6 +52,15 @@
    * @brief Định nghĩa các hằng số cho ID của tác vụ poll
    * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xDx`,
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF)
+   */
+
+  /** FIXME
+   * Cân nhắc toàn bộ các tác vụ mặc định,
+   * chỉ giữ lại các khai báo về offset, EOT, MIN, MAX 
+   * để tránh trùng lặp với các tác vụ được người dùng định nghĩa.
+   * 
+   * Minh sẽ cân nhắc phần này, đồng thời sửa đổi lại các cấu hình cũ
+   * liên đới đến PLD/μE-LS, PLTF và các tài liệu liên quan đến.
    */
 
   #define UEDP_TASK_POLL_MAX_SIZE					  (8u) // 8 tác vụ, từ 0 đến 7

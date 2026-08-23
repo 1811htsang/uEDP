@@ -1,0 +1,111 @@
+//ANCHOR - khai báo thư viện app
+#include "app_cfg.h"
+#include "app_decl.h"
+
+//ANCHOR - khai báo thư viện uEDP
+#include "uedp_core.h"
+#include "uedp_fcr.h"
+#include "uedp_fsm.h"
+#include "uedp_itnlog.h"
+#include "uedp_msg.h"
+#include "uedp_ocesvc.h"
+#include "uedp_task.h"
+#include "uedp_timer.h"
+#include "uedp_fsm.h"
+
+//ANCHOR - khai báo thư viện hệ thống
+#include "pal_logdp.h"
+#include "pal_memrp.h"
+#include "pal_rprintf.h"
+
+//ANCHOR - Biến debug số lượng các tác vụ đã được khởi tạo
+uint32_t system_action_count = 0x0u;
+
+//ANCHOR - Khai báo message queue cho các task
+{% for msgq in msgq_defs %}uedp_msg_t* {{msgq}}_msgq[UEDP_MSG_BLANK_QUEUE_SIZE];
+{% endfor %}
+
+//ANCHOR - Khai báo các biến toàn cục GDA
+//NOTE - Sample `int x = 1;` or `char str[20] = "Hello";` or `float f = 3.14;`
+{% for item in glbda_defs %}
+{%- set is_string = 'char' in item.type -%}
+{{item.type}} {{ item.name }} = {% if is_string %}"{{ item.initial_value }}"{% else %}{{ item.initial_value }}{% endif %};
+{% endfor %}
+
+//ANCHOR - Khai báo bảng task norm 
+task_norm_t app_task_table[] = {
+  //TODO - Bổ sung tiếp tục ở các session làm việc tiếp theo
+};
+
+/**
+ * @brief Định nghĩa bảng task POLL
+ */
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa bảng chuyển trạng thái cho state (trans_desc)
+ */
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa bảng TSM (state_desc)
+ */
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa TSM cho tác vụ (obj)
+ */
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa FSM cho tác vụ (obj)
+ */
+// Điền các khai báo tại đây
+
+/**
+ * @brief Các khai báo tham số khác (nếu có)
+ */
+
+// Điền các khai báo tại đây
+
+/**
+ * @brief Khai báo các hàm khác (nếu có)
+ */
+
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa handler cho task norm
+ */
+
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa handler cho task poll
+ */
+
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa hàm on-entry/exit cho các trạng thái của TSM
+ */
+
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa hàm on-state cho các trạng thái của TSM
+ */
+
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa các state handler cho FSM
+ */
+
+// Điền các khai báo tại đây
+
+/**
+ * @brief Định nghĩa hàm khác
+ */
+
+// Điền các khai báo tại đây

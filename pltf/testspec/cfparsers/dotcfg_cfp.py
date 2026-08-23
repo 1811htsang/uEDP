@@ -114,6 +114,6 @@ def parse_config(config_path):
   
   return context
 
-# For debug
+# STUB - Sample usage to test the parse_config function
 # pprint.pprint(parse_config(config_dir))
 # print("\n\n")
