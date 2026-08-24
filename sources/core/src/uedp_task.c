@@ -474,3 +474,55 @@ void internal_uedp_task_norm_put_head_to_queue(task_id_t tid, uedp_msg_t* msg) {
   // Exit critical section
   pal_exit_critical();
 }
+
+/**
+ * @brief Lấy con trỏ đến máy trạng thái toàn cục (TSM) hiện đang gắn với một tác vụ message-driven
+ * @param tid ID của tác vụ cần lấy TSM
+ * @return uedp_tsm_t* Con trỏ đến TSM của tác vụ, hoặc NULL nếu tác vụ không tồn tại hoặc chưa gán TSM
+ */
+uedp_tsm_t* uedp_task_norm_get_tsm(task_id_t tid) {
+  // internal_uedp_task_get_task_norm_by_id() đã tự raise FCR nếu tid không hợp lệ/không tìm thấy,
+  // không cần raise thêm lần nữa ở đây để tránh double-raise.
+  task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
+  if (task) {
+    return task->tsm;
+  }
+  return NULL;
+}
+
+/**
+ * @brief Gán một máy trạng thái toàn cục (TSM) cho một tác vụ message-driven
+ * @param tid ID của tác vụ cần gán TSM
+ * @param tsm Con trỏ đến TSM cần gán cho tác vụ
+ */
+void uedp_task_norm_set_tsm(task_id_t tid, uedp_tsm_t* tsm) {
+  task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
+  if (task) {
+    task->tsm = tsm;
+  }
+}
+
+/**
+ * @brief Lấy con trỏ đến máy trạng thái cục bộ (FSM) hiện đang gắn với một tác vụ message-driven
+ * @param tid ID của tác vụ cần lấy FSM
+ * @return uedp_fsm_t* Con trỏ đến FSM của tác vụ, hoặc NULL nếu tác vụ không tồn tại hoặc chưa gán FSM
+ */
+uedp_fsm_t* uedp_task_norm_get_fsm(task_id_t tid) {
+  task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
+  if (task) {
+    return task->fsm;
+  }
+  return NULL;
+}
+
+/**
+ * @brief Gán một máy trạng thái cục bộ (FSM) cho một tác vụ message-driven
+ * @param tid ID của tác vụ cần gán FSM
+ * @param fsm Con trỏ đến FSM cần gán cho tác vụ
+ */
+void uedp_task_norm_set_fsm(task_id_t tid, uedp_fsm_t* fsm) {
+  task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
+  if (task) {
+    task->fsm = fsm;
+  }
+}
