@@ -8,22 +8,23 @@
 # - Number of FSM states to generate (if FSM is used)
 # - Number of Hardware API need to be generated (if Hardware API is used)
 def user_input(DEFAULT_VALS):
-  # Number of tasks to generate
+  # NOTE - Number of tasks to generate
   print(f'[INFO] Number of tasks norm to generate (default: {DEFAULT_VALS["num_tasks_norm"]}): ', end='')
   val = input().strip()
   num_tasks_norm = int(val) if val != '' else DEFAULT_VALS["num_tasks_norm"]
 
-  # Number of tasks poll to generate
+  # NOTE - Number of tasks poll to generate
   print(f'[INFO] Number of tasks poll to generate (default: {DEFAULT_VALS["num_tasks_poll"]}): ', end='')
   val = input().strip()
   num_tasks_poll = int(val) if val != '' else DEFAULT_VALS["num_tasks_poll"]
 
-  # Number of signals to generate
+  # NOTE - Number of signals to generate
   print(f'[INFO] Number of signals to generate (default: {DEFAULT_VALS["num_signals"]}): ', end='')
   val = input().strip()
   num_signals = int(val) if val != '' else DEFAULT_VALS["num_signals"]
 
-  # Ask user if they want to use FSM/TSM
+  # NOTE - Ask user if they want to use FSM/TSM
+  # FIXME - Add note here for Minh to update the TSM/FSM state generation logic to be more flexible and allow for different number of states for each task.
   print('[INFO] Do you want to use FSM? (y/n, default: n): ', end='')
   if input().strip().lower() == 'y':
     is_use_fsm = True
@@ -36,7 +37,7 @@ def user_input(DEFAULT_VALS):
   else:
     is_use_tsm = False
 
-  # Number of TSM/FSM state to generate
+  # NOTE - Number of TSM/FSM state to generate
   num_tsm_states = 0
   if is_use_tsm:
     print(f'[INFO] Number of TSM states to generate (default: {num_tasks_norm}): ', end='')
@@ -49,7 +50,7 @@ def user_input(DEFAULT_VALS):
     val = input().strip()
     num_fsm_states = int(val) if val != '' else num_tasks_norm
 
-  # Number of hardware API to generate
+  # NOTE - Number of hardware API to generate
   num_hw_api = 0
   print('[INFO] Do you want to generate Hardware API? (y/n, default: n): ', end='')
   if input().strip().lower() == 'y':
@@ -57,5 +58,5 @@ def user_input(DEFAULT_VALS):
     val = input().strip()
     num_hw_api = int(val) if val != '' else DEFAULT_VALS["num_hw_api"]
 
-  # Return type
+  # NOTE - Return type
   return num_tasks_norm, num_tasks_poll, num_signals, is_use_fsm, is_use_tsm, num_tsm_states, num_fsm_states, num_hw_api
