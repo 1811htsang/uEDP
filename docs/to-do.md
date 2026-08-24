@@ -153,8 +153,9 @@
 - [x] Thống nhất và bắt đầu khiển khai API cho dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu. //NOTE - Các task liên đới đến PLD/μE-LS sẽ được Sang triển khai sau khi Minh hoàn thiện API kèm tài liệu sửa đổi DMP, D2MP.
 - [x] Bổ sung thiết kế API trong dpool GDA kèm API tương ứng.
 - [ ] Bổ sung các khai báo FCR thiếu với API của GDA.
+- [ ] Remove các khai báo task NORM và POLL mặc định không sử dụng. //NOTE - Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu rõ hơn yêu cầu của task này. Cần kiểm tra các tài liệu và mã nguồn liên đới như PLD/μE-LS, pltf.pyspec/testspec để đảm bảo rằng các khai báo task này không còn được sử dụng trong các tính năng hiện tại và tương lai của lõi μEDP.
+- [ ] Thay đổi triển khai pyspec.usrinp để cho phép mỗi task có thể khai báo việc sử dụng FSM/TSM riêng biệt kèm số lượng trạng thái khác nhau. //NOTE - Kiểm tra trong `usrinp_pspec` để nắm rõ thông tin của task và thực hiện thay đổi tương ứng trên `tnorm_pspec`.
 - [ ] Sửa đổi và cập nhật thiết kế DMP, D2MP tương ứng với sự xuất hiện của dpool GDA.
-- [ ] Remove các khai báo task NORM và POLL mặc định không sử dụng. //NOTE - Xem `uedp_core.h` nhánh feat để hiểu rõ hơn yêu cầu của task này. Cần kiểm tra các tài liệu và mã nguồn liên đới như PLD/μE-LS, pltf.pyspec/testspec để đảm bảo rằng các khai báo task này không còn được sử dụng trong các tính năng hiện tại và tương lai của lõi μEDP.
 - [ ] Revert lại sửa đổi của phiên bản 1.1.4 bị mất liên quan đến attribute HSMC (`tsm` và `fsm`) của task norm, kèm API get/set.
 - [ ] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
 - [ ] Thực hiện rebase các task liên quan đến thiết kế syntax PLD/μE-LS (trước khi triển khai source code phân giải logic như testspec.*, pyspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
@@ -203,8 +204,11 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 - [x] Triển khai các validation strategy với lstaxer.vlid để hỗ trợ việc kiểm tra tính hợp lệ của các cấu hình logic của μE-LS, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [x] Triển khai thiết kế các subcomponent của lstaxer.vlid để hỗ trợ việc kiểm tra tính hợp lệ của các cấu hình logic của μE-LS, bao gồm 5 chiến lược đề ra trong mã nguồn lstaxer.vlid.
 - [x] Đánh dấu các submodule của lstaxer.vlid để triển khai trong tương lai, bao gồm 2 tính năng là UST và PRE.
+- [x] Bổ sung thêm help cho các tùy chọn trong Kconfig.
+- [ ] Bổ sung triển khai template cho app.c với các khai báo jinja2 reusable.
 - [ ] Bổ sung triển khai tsgen.gda để hỗ trợ việc generate các cấu hình global data của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Bổ sung thiết kế module để tinh gọn các khai báo NULL không sử dụng trong khai báo YAML của người dùng nhằm giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [ ] Đưa cân nhắc triển khai hoạt động của cfparsers hoặc pyspec vào post-validation của lstaxer.vlid để phối hợp lstaxer.kre8 generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Triển khai thiết kế lstaxer.kre8 để hỗ trợ generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 - [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin. //LINK docs/uels-syntax.md:118
