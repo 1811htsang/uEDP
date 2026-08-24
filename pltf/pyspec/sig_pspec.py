@@ -3,7 +3,7 @@
 # - Signal name
 # - Signal value (auto generated from 0x01u, 0x02u, ... to 0xFFu)
 def signal_declaration(num_signals):
-  # Generate signal declarations in Kconfig format
+  # NOTE -Generate signal declarations in Kconfig format
   kconfig_content = []
   kconfig_content.append('menu "Signal configuration"\n')
 
@@ -14,6 +14,8 @@ def signal_declaration(num_signals):
     kconfig_content.append(f'\t\t\tdefault "SIG_{i}_ID"\n')
     kconfig_content.append(f'\t\t\thelp\n')
     kconfig_content.append(f'\t\t\t\tThis is the name of signal, please use upper case.\n')
+    kconfig_content.append(f'\t\t\t\tPrefer like eg. `SIG_A_ID`, `SIG_USR_ID`\n')
+    kconfig_content.append(f'\t\t\t\tThis is only used for internal identification.\n')
     kconfig_content.append(f'\tendmenu\n')
 
   kconfig_content.append(f'endmenu\n')

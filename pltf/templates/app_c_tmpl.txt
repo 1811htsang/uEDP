@@ -1,0 +1,111 @@
+//ANCHOR - khai báo thư viện app
+#include "app_cfg.h"
+#include "app_decl.h"
+
+//ANCHOR - khai báo thư viện uEDP
+#include "uedp_core.h"
+#include "uedp_fcr.h"
+#include "uedp_fsm.h"
+#include "uedp_itnlog.h"
+#include "uedp_msg.h"
+#include "uedp_ocesvc.h"
+#include "uedp_task.h"
+#include "uedp_timer.h"
+#include "uedp_fsm.h"
+
+//ANCHOR - khai báo thư viện hệ thống
+#include "pal_logdp.h"
+#include "pal_memrp.h"
+#include "pal_rprintf.h"
+
+//ANCHOR - Biến debug số lượng các tác vụ đã được khởi tạo
+uint32_t system_action_count = 0x0u;
+
+//ANCHOR - Khai báo message queue cho các task
+{% for msgq in msgq_defs %}uedp_msg_t* {{msgq}}_msgq[UEDP_MSG_BLANK_QUEUE_SIZE];
+{% endfor %}
+
+//ANCHOR - Khai báo các biến toàn cục GDA
+//NOTE - Sample `int x = 1;` or `char str[20] = "Hello";` or `float f = 3.14;`
+{% for item in glbda_defs %}
+{%- set is_string = 'char' in item.type -%}
+{{item.type}} {{ item.name }} = {% if is_string %}"{{ item.initial_value }}"{% else %}{{ item.initial_value }}{% endif %};
+{% endfor %}
+
+//ANCHOR - Khai báo TSM object quản lý cho tác vụ
+{% for tsmobject in tsmobj_defs %}uedp_tsm_t {{tsmobject}}; 
+{% endfor %}
+
+//ANCHOR - Khai báo FSM object quản lý cho tác vụ
+{% for fsmobject in fsmobj_defs %}uedp_fsm_t {{fsmobject}}; 
+{% endfor %}
+
+//ANCHOR - Khai báo bảng task norm 
+task_norm_t app_task_table[] = {
+  //TODO - Bổ sung tiếp tục ở các session làm việc tiếp theo
+  {% for item in tnorm_defs %}{ {{item.id}}, {{item.base_pri}}, {{item.cur_pri}}, {{item.urgent_pending}}, {{item.tsm}}, {{item.fsm}}, {{item.handler}}, {{item.msgq}}, {{item.msgq_buff}} },
+  {% endfor %}
+  { UEDP_TASK_NORM_EOT_ID, UEDP_TASK_PRI_LEVEL_0, UEDP_TASK_PRI_LEVEL_0, false, <tsm>, <fsm>, NULL, NULL, NULL } //ANCHOR - Must have
+  //NOTE - LR: id, base_pri, cur_pri, urgent_pending, tsm, fsm, task_norm, msg_queue, msg_queue_buffer
+};
+
+//ANCHOR - Khai báo bảng task poll
+task_poll_t app_poll_table[] = {
+  {% for item in tnorm_defs %}{ {{item.id}}, {{item.base_pri}}, {{item.cur_pri}}, {{item.urgent_pending}}, {{item.tsm}}, {{item.fsm}}, {{item.handler}}, {{item.msgq}}, {{item.msgq_buff}} },
+  {% endfor %}
+  { UEDP_TASK_NORM_EOT_ID, UEDP_TASK_PRI_LEVEL_0, UEDP_TASK_PRI_LEVEL_0, false, <tsm>, <fsm>, NULL, NULL, NULL } //ANCHOR - Must have
+  //NOTE - LR: id, base_pri, cur_pri, urgent_pending, tsm, fsm, task_norm, msg_queue, msg_queue_buffer
+};
+
+//TODO - Bổ sung tiếp tục ở các session làm việc tiếp theo
+
+//ANCHOR - Khai báo hàm on-ntry/actv (onst)/exit cho các trạng thái của TSM
+/** NOTE
+  * Implementation của hàm cần được khai báo
+  * trước do state_desc và tsm_table cần các khai báo từ hàm
+  */
+{% for tsmio in tsmio_lists %}
+void {{tsmio}}_ntry(uedp_msg_t* msg) {
+
+}
+
+void {{tsmio}}_onst(uedp_msg_t* msg) {
+
+}
+
+void {{tsmio}}_exit(uedp_msg_t* msg) {
+
+}
+{% endfor %}
+
+//ANCHOR - Khai báo bảng chuyển trạng thái cho state
+{% for tran in appcfg_tsm_state_trans %}tsm_trans_t {{tran}}[] = {
+
+};
+{% endfor %}
+
+//ANCHOR - Khai báo bảng state 
+{% for table in appcfg_tsm_tables %}tsm_state_desc_t {{table}}[] = {
+
+};
+{% endfor %}
+
+//ANCHOR - Khai báo tham số khác viết tại đây
+
+//ANCHOR - Khai báo hàm khác viết tại đây
+
+//ANCHOR - Khai báo handler cho task norm
+{% for normhler in normhler_lists %}void {{normhler}}_nhler(uedp_msg_t* msg) {
+
+}
+{% endfor %}
+
+//ANCHOR - Khai báo handler cho task poll
+{% for pollhler in pollhler_lists %}void {{pollhler}}_phler() {
+  
+}
+{% endfor %}
+
+//ANCHOR - Khai báo hàm state handler cho FSM
+{% for fsmio in fsmio_lists %}void {{fsmio}}_onst(uedp_msg_t* msg) {}
+{% endfor %}

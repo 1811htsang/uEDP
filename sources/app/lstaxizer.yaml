@@ -87,7 +87,7 @@ versh: "1.2.0-pre"
 
 glbda:
 - '1': &gda_status
-  name: GDA_SYSTEM_STATUS
+  name: GDA_SYSTEM_STATUS # Validator check: kiểm tra lỗi từ lstaxer.strucjec
   type: "const char*"
   initial_value: "STATUS: INITIALIZING"
 
@@ -110,7 +110,7 @@ tlist:
         to: NULL
         sig: NULL
         data: NULL
-    on_actv: #NOTE - logic "chạy" (Active)
+    on_actv: # NOTE - logic "chạy" (Active)
       steps:
       - actv: uedp_itnlog_log
         to: NULL
@@ -199,6 +199,8 @@ tlist:
       - actv: uedp_task_norm_post_msg
         to: TASK_A
         sig: *sig4
+        # sig: *gda_status # Validator check: Không hợp lệ, không thể dùng anchor trong sig
+
   - id: STATE_B_BUSY
     on_recv:
     - sig: *sig6
@@ -210,19 +212,19 @@ tlist:
       - actv: uedp_itnlog_log
         data: *gda_status # Ghi log nội dung từ biến toàn cục
         ptype: VAL        # Validator check: Copy nội dung (memcpy)
-  << : *tnorm3-ctrl
+  << : *tnorm3-ctrl # Validator check: Không hợp lệ, không thể dùng anchor trong sig
 
 # ANCHOR - Interrupt Service Routine (ISR) - Xử lý ngắt
 
 isr:
 - id: ISR_HARD_STOP
-  to: TASK_A
+  to: TASK_A # Validator check: kiểm tra lỗi từ lstaxer.strucjec
   sig: *sig7
 
 # ANCHOR - Out-Context Execution (OUTEXEC) - Thực thi ngoài ngữ cảnh
 
 outexec:
 - name: OCE_ITNLOG_DUMP
-  handler: itnlog_dump_handler
+  handler: itnlog_dump_handler # Validator check: kiểm tra lỗi từ lstaxer.strucjec
   context: NULL
   state: READY

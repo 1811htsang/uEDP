@@ -34,6 +34,7 @@ def parse_config(config_path):
   }
 
   # Auto ID counter
+  # FIXME - Chỗ này sẽ được Minh sửa follow theo task default removal
   counters = {"norm": 0xE6, "poll": 0xD4, "sig": 0x01}
   task_tsm_map = {}
   task_fsm_map = {}
@@ -114,6 +115,6 @@ def parse_config(config_path):
   
   return context
 
-# For debug
+# STUB - Sample usage to test the parse_config function
 # pprint.pprint(parse_config(config_dir))
 # print("\n\n")

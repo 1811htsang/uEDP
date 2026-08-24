@@ -10,7 +10,6 @@ except ImportError:
     sys.path.insert(0, parent_dir)
   from cfparsers import dotcfg_cfp
 
-
 def main():
   cur_trm_dir = os.path.dirname("uEDP")
   config_dir = os.path.join(cur_trm_dir, ".config")
