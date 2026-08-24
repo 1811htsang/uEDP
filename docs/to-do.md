@@ -173,10 +173,11 @@ Tức là có 1 space trước dấu `//` và 1 space trước dấu `!SECTION`,
 - [x] Vòng 2 thảo luận về việc triển khai thiết kế dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu.
 - [x] Thống nhất và bắt đầu khiển khai API cho dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu. //NOTE - Các task liên đới đến PLD/μE-LS sẽ được Sang triển khai sau khi Minh hoàn thiện API kèm tài liệu sửa đổi DMP, D2MP.
 - [x] Bổ sung thiết kế API trong dpool GDA kèm API tương ứng.
+- [x] Revert lại sửa đổi của phiên bản 1.1.4 bị mất liên quan đến attribute HSMC (`tsm` và `fsm`) của task norm, kèm API get/set.
 - [ ] Bổ sung các khai báo FCR thiếu với API của GDA.
 - [ ] Remove các khai báo task NORM và POLL mặc định không sử dụng.
 
-<!-- SECTION - L156
+<!-- SECTION - L178
 Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu rõ hơn yêu cầu của task này. Cần kiểm tra các tài liệu và mã nguồn liên đới như PLD/μE-LS, pltf.pyspec/testspec để đảm bảo rằng các khai báo task này không còn được sử dụng trong các tính năng hiện tại và tương lai của lõi μEDP.
 
 #LINK - pltf/testspec/ustab/gnnerate_ustab.py:13
@@ -189,7 +190,7 @@ Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu r�
 
 - [ ] Thay đổi triển khai pyspec.usrinp để cho phép mỗi task có thể khai báo việc sử dụng FSM/TSM riêng biệt kèm số lượng trạng thái khác nhau.
 
-<!-- SECTION - L169
+<!-- SECTION - L191
 Kiểm tra trong `usrinp_pspec` để nắm rõ thông tin của task và thực hiện thay đổi tương ứng trên `tnorm_pspec`.
 
 #LINK - pltf/pyspec/usrinp_pspec.py:27
@@ -200,7 +201,6 @@ Kiểm tra trong `usrinp_pspec` để nắm rõ thông tin của task và thực
 -->
 
 - [ ] Sửa đổi và cập nhật thiết kế DMP, D2MP tương ứng với sự xuất hiện của dpool GDA.
-- [ ] Revert lại sửa đổi của phiên bản 1.1.4 bị mất liên quan đến attribute HSMC (`tsm` và `fsm`) của task norm, kèm API get/set.
 - [ ] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
 - [ ] Thực hiện rebase các task liên quan đến thiết kế syntax PLD/μE-LS (trước khi triển khai source code phân giải logic như testspec.*, pyspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
 
