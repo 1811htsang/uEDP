@@ -85,3 +85,5 @@ eim_config.toml
 .vscode/*
 config.yaml
 
+# Nogic extension database
+.nogic/*
