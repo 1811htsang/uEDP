@@ -61,6 +61,12 @@ task_poll_t app_poll_table[] = {
 
 //TODO - Bổ sung tiếp tục ở các session làm việc tiếp theo
 
+//ANCHOR - Khai báo hàm on-ntry/actv/exit cho các trạng thái của TSM
+/** NOTE
+  * Implementation của hàm cần được khai báo
+  * trước do state_desc và tsm_table cần các khai báo từ hàm
+  */
+
 //ANCHOR - Khai báo bảng chuyển trạng thái cho state
 
 //ANCHOR - Khai báo bảng state 
@@ -72,7 +78,5 @@ task_poll_t app_poll_table[] = {
 //ANCHOR - Khai báo handler cho task norm
 
 //ANCHOR - Khai báo handler cho task poll
-
-//ANCHOR - Khai báo hàm on-ntry/actv/exit cho các trạng thái của TSM
 
 //ANCHOR - Khai báo hàm state handler cho FSM
