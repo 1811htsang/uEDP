@@ -32,80 +32,47 @@ uint32_t system_action_count = 0x0u;
 {{item.type}} {{ item.name }} = {% if is_string %}"{{ item.initial_value }}"{% else %}{{ item.initial_value }}{% endif %};
 {% endfor %}
 
+//ANCHOR - Khai báo TSM object quản lý cho tác vụ
+{% for tsmobject in tsmobj_defs %}uedp_tsm_t {{tsmobject}}; 
+{% endfor %}
+
+//ANCHOR - Khai báo FSM object quản lý cho tác vụ
+{% for fsmobject in fsmobj_defs %}uedp_fsm_t {{fsmobject}}; 
+{% endfor %}
+
 //ANCHOR - Khai báo bảng task norm 
 task_norm_t app_task_table[] = {
   //TODO - Bổ sung tiếp tục ở các session làm việc tiếp theo
+  {% for item in tnorm_defs %}
+  { {{item.id}}, {{item.base_pri}}, {{item.cur_pri}}, {{item.urgent_pending}}, {{item.tsm}}, {{item.fsm}}, {{item.handler}}, {{item.msgq}}, {{item.msgq_buff}} },
+  {% endfor %}
+  { UEDP_TASK_NORM_EOT_ID, UEDP_TASK_PRI_LEVEL_0, UEDP_TASK_PRI_LEVEL_0, false, <tsm>, <fsm>, NULL, NULL, NULL } //ANCHOR - Must have
+  //NOTE - LR: id, base_pri, cur_pri, urgent_pending, tsm, fsm, task_norm, msg_queue, msg_queue_buffer
 };
 
-/**
- * @brief Định nghĩa bảng task POLL
- */
-// Điền các khai báo tại đây
+//ANCHOR - Khai báo bảng task poll
+task_poll_t app_poll_table[] = {
+  {% for item in tnorm_defs %}
+  { {{item.id}}, {{item.base_pri}}, {{item.cur_pri}}, {{item.urgent_pending}}, {{item.tsm}}, {{item.fsm}}, {{item.handler}}, {{item.msgq}}, {{item.msgq_buff}} },
+  {% endfor %}
+  { UEDP_TASK_NORM_EOT_ID, UEDP_TASK_PRI_LEVEL_0, UEDP_TASK_PRI_LEVEL_0, false, <tsm>, <fsm>, NULL, NULL, NULL } //ANCHOR - Must have
+  //NOTE - LR: id, base_pri, cur_pri, urgent_pending, tsm, fsm, task_norm, msg_queue, msg_queue_buffer
+};
 
-/**
- * @brief Định nghĩa bảng chuyển trạng thái cho state (trans_desc)
- */
-// Điền các khai báo tại đây
+//TODO - Bổ sung tiếp tục ở các session làm việc tiếp theo
 
-/**
- * @brief Định nghĩa bảng TSM (state_desc)
- */
-// Điền các khai báo tại đây
+//ANCHOR - Khai báo bảng chuyển trạng thái cho state
 
-/**
- * @brief Định nghĩa TSM cho tác vụ (obj)
- */
-// Điền các khai báo tại đây
+//ANCHOR - Khai báo bảng state 
 
-/**
- * @brief Định nghĩa FSM cho tác vụ (obj)
- */
-// Điền các khai báo tại đây
+//ANCHOR - Khai báo tham số khác viết tại đây
 
-/**
- * @brief Các khai báo tham số khác (nếu có)
- */
+//ANCHOR - Khai báo hàm khác viết tại đây
 
-// Điền các khai báo tại đây
+//ANCHOR - Khai báo handler cho task norm
 
-/**
- * @brief Khai báo các hàm khác (nếu có)
- */
+//ANCHOR - Khai báo handler cho task poll
 
-// Điền các khai báo tại đây
+//ANCHOR - Khai báo hàm on-ntry/actv/exit cho các trạng thái của TSM
 
-/**
- * @brief Định nghĩa handler cho task norm
- */
-
-// Điền các khai báo tại đây
-
-/**
- * @brief Định nghĩa handler cho task poll
- */
-
-// Điền các khai báo tại đây
-
-/**
- * @brief Định nghĩa hàm on-entry/exit cho các trạng thái của TSM
- */
-
-// Điền các khai báo tại đây
-
-/**
- * @brief Định nghĩa hàm on-state cho các trạng thái của TSM
- */
-
-// Điền các khai báo tại đây
-
-/**
- * @brief Định nghĩa các state handler cho FSM
- */
-
-// Điền các khai báo tại đây
-
-/**
- * @brief Định nghĩa hàm khác
- */
-
-// Điền các khai báo tại đây
+//ANCHOR - Khai báo hàm state handler cho FSM
