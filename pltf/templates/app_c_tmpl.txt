@@ -43,8 +43,7 @@ uint32_t system_action_count = 0x0u;
 //ANCHOR - Khai báo bảng task norm 
 task_norm_t app_task_table[] = {
   //TODO - Bổ sung tiếp tục ở các session làm việc tiếp theo
-  {% for item in tnorm_defs %}
-  { {{item.id}}, {{item.base_pri}}, {{item.cur_pri}}, {{item.urgent_pending}}, {{item.tsm}}, {{item.fsm}}, {{item.handler}}, {{item.msgq}}, {{item.msgq_buff}} },
+  {% for item in tnorm_defs %}{ {{item.id}}, {{item.base_pri}}, {{item.cur_pri}}, {{item.urgent_pending}}, {{item.tsm}}, {{item.fsm}}, {{item.handler}}, {{item.msgq}}, {{item.msgq_buff}} },
   {% endfor %}
   { UEDP_TASK_NORM_EOT_ID, UEDP_TASK_PRI_LEVEL_0, UEDP_TASK_PRI_LEVEL_0, false, <tsm>, <fsm>, NULL, NULL, NULL } //ANCHOR - Must have
   //NOTE - LR: id, base_pri, cur_pri, urgent_pending, tsm, fsm, task_norm, msg_queue, msg_queue_buffer
@@ -52,8 +51,7 @@ task_norm_t app_task_table[] = {
 
 //ANCHOR - Khai báo bảng task poll
 task_poll_t app_poll_table[] = {
-  {% for item in tnorm_defs %}
-  { {{item.id}}, {{item.base_pri}}, {{item.cur_pri}}, {{item.urgent_pending}}, {{item.tsm}}, {{item.fsm}}, {{item.handler}}, {{item.msgq}}, {{item.msgq_buff}} },
+  {% for item in tnorm_defs %}{ {{item.id}}, {{item.base_pri}}, {{item.cur_pri}}, {{item.urgent_pending}}, {{item.tsm}}, {{item.fsm}}, {{item.handler}}, {{item.msgq}}, {{item.msgq_buff}} },
   {% endfor %}
   { UEDP_TASK_NORM_EOT_ID, UEDP_TASK_PRI_LEVEL_0, UEDP_TASK_PRI_LEVEL_0, false, <tsm>, <fsm>, NULL, NULL, NULL } //ANCHOR - Must have
   //NOTE - LR: id, base_pri, cur_pri, urgent_pending, tsm, fsm, task_norm, msg_queue, msg_queue_buffer
@@ -61,22 +59,53 @@ task_poll_t app_poll_table[] = {
 
 //TODO - Bổ sung tiếp tục ở các session làm việc tiếp theo
 
-//ANCHOR - Khai báo hàm on-ntry/actv/exit cho các trạng thái của TSM
+//ANCHOR - Khai báo hàm on-ntry/actv (onst)/exit cho các trạng thái của TSM
 /** NOTE
   * Implementation của hàm cần được khai báo
   * trước do state_desc và tsm_table cần các khai báo từ hàm
   */
+{% for tsmio in tsmio_lists %}
+void {{tsmio}}_ntry(uedp_msg_t* msg) {
+
+}
+
+void {{tsmio}}_onst(uedp_msg_t* msg) {
+
+}
+
+void {{tsmio}}_exit(uedp_msg_t* msg) {
+
+}
+{% endfor %}
 
 //ANCHOR - Khai báo bảng chuyển trạng thái cho state
+{% for tran in appcfg_tsm_state_trans %}tsm_trans_t {{tran}}[] = {
+
+};
+{% endfor %}
 
 //ANCHOR - Khai báo bảng state 
+{% for table in appcfg_tsm_tables %}tsm_state_desc_t {{table}}[] = {
+
+};
+{% endfor %}
 
 //ANCHOR - Khai báo tham số khác viết tại đây
 
 //ANCHOR - Khai báo hàm khác viết tại đây
 
 //ANCHOR - Khai báo handler cho task norm
+{% for normhler in normhler_lists %}void {{normhler}}_nhler(uedp_msg_t* msg) {
+
+}
+{% endfor %}
 
 //ANCHOR - Khai báo handler cho task poll
+{% for pollhler in pollhler_lists %}void {{pollhler}}_phler() {
+  
+}
+{% endfor %}
 
 //ANCHOR - Khai báo hàm state handler cho FSM
+{% for fsmio in fsmio_lists %}void {{fsmio}}_onst(uedp_msg_t* msg) {}
+{% endfor %}

@@ -106,7 +106,7 @@
   void {{tsmio}}_exit(uedp_msg_t* msg);
   {% endfor %}
   /**
-   * @brief Khai báo các hàm on-state cho các trạng thái TSM (nếu có)
+   * @brief Khai báo các hàm on-state (aka on_actv) cho các trạng thái TSM (nếu có)
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
    */
   
