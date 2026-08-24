@@ -10,6 +10,7 @@ class gnnerate_ustab:
       "sigs": {}
     }
     # Định nghĩa các base offset theo thiết kế HES của μE-OS
+    # FIXME - Chỗ này sẽ được Minh sửa follow theo task default removal
     self.OFFSETS = {
       "NORM": 0xE6,
       "POLL": 0xD4,
