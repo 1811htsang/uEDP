@@ -37,6 +37,7 @@
   #define UEDP_FCR_MOD_ITNLOG   (0x94u) // Module logger nội bộ (uedp_itnlog)
   #define UEDP_FCR_MOD_OCE      (0x95u) // Module Out-Context Execution (uedp_ocesvc)
   #define UEDP_FCR_MOD_PAL      (0x96u) // Module PAL / dịch vụ phần cứng (logdp, rprintf, memrp, arch...)
+  #define UEDP_FCR_MOD_GDP      (0x97u) // Module Global Data Pool (dpool GDP trong uedp_msg.c, định danh nội bộ GAXES)
   #define UEDP_FCR_MOD_APP      (0x9Eu) // Dành riêng cho tầng ứng dụng tự khai báo mã lỗi
   #define UEDP_FCR_MOD_UNK      (0x9Fu) // Module không xác định / fallback
 
@@ -86,6 +87,11 @@
 
   // [PAL] - 0x96xx
   #define UEDP_FCR_PAL_LOGDP_TABLE_FULL   UEDP_FCR_CODE(UEDP_FCR_MOD_PAL, 0x00) // Bảng đăng ký callback của logdp đã đầy
+
+  #define UEDP_FCR_GDP_TABLE_FULL         UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x00) // Không còn slot trống trong GDP để đăng ký thêm biến toàn cục (UEDP_GDP_MAX_SLOTS)
+  #define UEDP_FCR_GDP_NOT_FOUND          UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x01) // Không tìm thấy tên biến đã đăng ký trong GDP (get_ref/get_val/set_val/unregister)
+  #define UEDP_FCR_GDP_INVALID_PARAM      UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x02) // Tham số không hợp lệ (name/data_ptr NULL, size=0) hoặc buffer đích quá nhỏ/sai kích thước
+  #define UEDP_FCR_GDP_DUPLICATE_NAME     UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x03) // Đăng ký trùng tên biến đã tồn tại trong GDP
 
   // Fallback
   #define UEDP_FCR_UNKNOWN                UEDP_FCR_CODE(UEDP_FCR_MOD_UNK, 0xFF) // Mã lỗi không tra được trong bảng (không có entry tương ứng)
