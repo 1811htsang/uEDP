@@ -174,7 +174,7 @@ Tức là có 1 space trước dấu `//` và 1 space trước dấu `!SECTION`,
 - [x] Thống nhất và bắt đầu khiển khai API cho dpool GDA kèm tài liệu liên đới DMP, D2MP và PLD/μE-LS trong quản lý dữ liệu toàn cục đối với truyền tham chiếu. //NOTE - Các task liên đới đến PLD/μE-LS sẽ được Sang triển khai sau khi Minh hoàn thiện API kèm tài liệu sửa đổi DMP, D2MP.
 - [x] Bổ sung thiết kế API trong dpool GDA kèm API tương ứng.
 - [x] Revert lại sửa đổi của phiên bản 1.1.4 bị mất liên quan đến attribute HSMC (`tsm` và `fsm`) của task norm, kèm API get/set.
-- [ ] Bổ sung các khai báo FCR thiếu với API của GDA.
+- [x] Bổ sung các khai báo FCR thiếu với API của GDA.
 - [ ] Remove các khai báo task NORM và POLL mặc định không sử dụng.
 
 <!-- SECTION - L178
