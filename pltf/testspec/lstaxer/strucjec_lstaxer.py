@@ -83,9 +83,14 @@ def strucjec_target_tlist_item(item, errors, warnings):
     errors.append({'loc': f"Line {item['line']}", 'msg': "Missing 'tnorm' or 'tpoll' identifier tag."})
 
   # 2. Check bắt buộc: tsm/fsm vs exec
-  has_logic = any(t in tags for t in ['tsm', 'fsm'])
-  if not has_logic and 'exec' not in tags:
-    errors.append({'loc': task_label, 'msg': "Must have either 'tsm', 'fsm', or 'exec' tag."})
+  if 'tnorm' in tags:
+    has_logic = any(t in tags for t in ['tsm', 'fsm'])
+    if not has_logic and 'exec' not in tags:
+      errors.append({'loc': task_label, 'msg': "tnorm is present but missing 'tsm'/'fsm' or 'exec' tag."})
+  if 'tpoll' in tags:
+    has_logic = any(t in tags for t in ['tsm', 'fsm'])
+    if not has_logic and 'exec' not in tags:
+      errors.append({'loc': task_label, 'msg': "tpoll is present but missing 'exec' tag."})
 
   # 3. Check bắt buộc: anchor/alias
   if not item['has_anchor']:

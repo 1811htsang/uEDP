@@ -238,7 +238,7 @@ tlist:
   << : *tnorm3-ctrl # Validator check: Không hợp lệ, không thể dùng anchor trong sig
 - tpoll: TASK_POLL_MEMRP
   exec: NULL
-  << : *tpoll1
+  << : *tpoll1 # Validator check: Không hợp lệ, thiếu anchor
 - tpoll: TASK_POLL_BLINK
   exec: NULL
   << : *tpoll2
