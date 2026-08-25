@@ -22,81 +22,57 @@ sigs:
     id_symbol: SIG_HALT_NOW
 tnorms:
   '1': &tnorm1-ctrl
-    fsm_resrc:
-      object: FSM_TASK_1_ID
-      states:
-      - FSM_TASK_1_STATE_1_ID
-      - FSM_TASK_1_STATE_2_ID
+    fsm_resrc: NULL
     handler: tnorm_usr_nhler
     hex_val: '0xe6'
-    id_symbol: TASK_NORM_USR_IDS
+    id_symbol: TASK_USR_IDS
     queue_name: tnorm_usr_msgq
     tsm_resrc:
-      object: tsm_task_usr
+      object: tnorm_usr_tsmobj
       state_trans:
-      - tsm_task_usr_state_idle_trans
-      - tsm_task_usr_state_running_trans
+      - tnorm_usr_state_idle_trans
+      - tnorm_usr_state_running_trans
       states:
-      - tsm_task_usr_state_idle
-      - tsm_task_usr_state_running
-      table: tsm_task_usr_tbl
+      - tnorm_usr_state_idle
+      - tnorm_usr_state_running
+      table: tnorm_usr_tsmobj_tbl
   '2': &tnorm2-ctrl
-    fsm_resrc:
-      object: FSM_TASK_2_ID
-      states:
-      - FSM_TASK_2_STATE_1_ID
-      - FSM_TASK_2_STATE_2_ID
+    fsm_resrc: NULL
     handler: tnorm_a_nhler
     hex_val: '0xe7'
-    id_symbol: TASK_NORM_A_IDS
+    id_symbol: TASK_A_IDS
     queue_name: tnorm_a_msgq
     tsm_resrc:
-      object: tsm_task_a
+      object: tnorm_a_tsmobj
       state_trans:
-      - tsm_task_a_state_idle_trans
-      - tsm_task_a_state_waiting_trans
+      - tnorm_a_idle_trans
+      - tnorm_a_state_waitb_trans
       states:
-      - tsm_task_a_state_idle
-      - tsm_task_a_state_waiting
-      table: tsm_task_a_tbl
+      - tnorm_a_idle
+      - tnorm_a_state_waitb
+      table: tnorm_a_tsmobj_tbl
   '3': &tnorm3-ctrl
     fsm_resrc:
-      object: fsm_task_b
+      object: tnorm_b_tsmobj
       states:
-      - fsm_task_b_state_idle
-      - fsm_task_b_state_busy
+      - tnorm_b_state_idle
+      - tnorm_b_state_busy
+    tsm_resrc: NULL
     handler: tnorm_b_nhler
     hex_val: '0xe8'
-    id_symbol: TASK_NORM_B_IDS
+    id_symbol: TASK_B_IDS
     queue_name: tnorm_b_msgq
-    tsm_resrc:
-      object: TSM_TASK_3_ID
-      state_trans:
-      - TSM_TASK_3_STATE_1_ID_trans
-      - TSM_TASK_3_STATE_2_ID_trans
-      states:
-      - TSM_TASK_3_STATE_1_ID
-      - TSM_TASK_3_STATE_2_ID
-      table: TSM_TASK_3_ID_tbl
-tpolls:
-  '1': &tpoll1
-    handler: tpoll_memrp
-    hex_val: '0xd4'
-    id_symbol: TASK_POLL_MEMRP
-  '2': &tpoll2
-    handler: tpoll_blink
-    hex_val: '0xd5'
-    id_symbol: TASK_POLL_BLINK
+tpolls: {}
 
 # Anchor: sử dụng &<str> để định danh các phần tử 
 # >> sigs: &siglst
 # >>  '1', '2' of sigs: &sig1, &sig2, ...
 # >> tnorms: &tnormlst
 # >>  '1', '2' of tnorms: &tnorm1, &tnorm2, ...
-# >>  fsm of '1', '2': &tnorm1-fsmobj, &tnorm2-fsmobj, ...
-# >>    states of '1'[fsm], '2'[fsm]: &tnorm1-fsmstates, &tnorm2-fsmstates, ...
-# >>  tsm of '1', '2': &tnorm1-tsmobj, &tnorm2-tsmobj, ...
-# >>    states of '1'[tsm], '2'[tsm]: &tnorm1-tsmstates, &tnorm2-tsmstates, ...
+# >>  fsm_resrc of '1', '2': &tnorm1-fsmobj, &tnorm2-fsmobj, ...
+# >>    states of '1'[fsm_resrc], '2'[fsm_resrc]: &tnorm1-fsmstates, &tnorm2-fsmstates, ...
+# >>  tsm_resrc of '1', '2': &tnorm1-tsmobj, &tnorm2-tsmobj, ...
+# >>    states of '1'[tsm_resrc], '2'[tsm_resrc]: &tnorm1-tsmstates, &tnorm2-tsmstates, ...
 # >>    state trans of '1', '2': &tnorm1-tsmtrans, &tnorm2-tsmtrans, ...
 # >> tpolls: &tpolllst
 # >>  '1', '2' of tpolls: &tpoll1, &tpoll2, ...
@@ -118,7 +94,7 @@ glbda:
 # ANCHOR - Task List (TLIST)
 
 tlist:
-- tnorm: TASK_USR
+- task: TASK_USR
   tsm:
   - id: STATE_USR_IDLE
     trans:
@@ -175,7 +151,7 @@ tlist:
         sig: NULL
         data: itnlog_dump_svc
   << : *tnorm1-ctrl
-- tnorm: TASK_A
+- task: TASK_A
   tsm:
   - id: STATE_A_IDLE
     trans:
@@ -210,7 +186,7 @@ tlist:
     - on_sig: *sig7
       post_urgent: NULL       # Chạy tiếp queue hiện tại với ưu tiên cao
   << : *tnorm2-ctrl
-- tnorm: TASK_B
+- task: TASK_B
   fsm:
   - id: STATE_B_IDLE
     on_recv:
@@ -236,12 +212,7 @@ tlist:
         data: *gda_status # Ghi log nội dung từ biến toàn cục
         ptype: VAL        # Validator check: Copy nội dung (memcpy)
   << : *tnorm3-ctrl # Validator check: Không hợp lệ, không thể dùng anchor trong sig
-- tpoll: TASK_POLL_MEMRP
-  exec: NULL
-  << : *tpoll1
-- tpoll: TASK_POLL_BLINK
-  exec: NULL
-  << : *tpoll2
+
 # ANCHOR - Interrupt Service Routine (ISR) - Xử lý ngắt
 
 isr:

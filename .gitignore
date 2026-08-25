@@ -80,7 +80,7 @@ pltf/testspec/lstaxer/__pycache__/*
 eim_config.toml
 
 # Sample config/env file
-.config
+# .config -> Allow config save to version control due to work-everywhere policy
 .env
 .vscode/*
 config.yaml
