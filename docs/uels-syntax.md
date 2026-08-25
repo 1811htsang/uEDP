@@ -179,8 +179,8 @@ Cần rewrite lại phần này tương ứng với các khối phát triển đ
 
 | Khối | Ý nghĩa | Syntax chính | Syntax phụ / tùy chỉnh | Core mapping |
 | --- | --- | --- | --- | --- |
-| Task Norm | Task có trạng thái hoặc xử lý message | `tlist -> task -> tsm/fsm/exec/escal` | `tsm`, `fsm`, `exec`, `escal`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps`, `steps` | `uedp_task_norm_create()`, `uedp_task_norm_post_msg()` |
-| Task Poll | Task vòng lặp nhẹ, không theo message | `tlist -> task -> poll/steps` | `poll`, `steps`, `actv`, `to`, `sig`, `data`, `ability` | `uedp_task_poll_create()`, `uedp_task_poll_set_ability()` |
+| Task Norm | Task có trạng thái hoặc xử lý message | `tlist -> tnorm -> tsm/fsm/exec/escal` | `tsm`, `fsm`, `exec`, `escal`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps` | `uedp_task_norm_create()`, `uedp_task_norm_post_msg()` |
+| Task Poll | Task vòng lặp nhẹ, không theo message | `tlist -> tpoll -> exec` | `exec`, `steps`, `actv`, `to`, `sig`, `data`, `ability` | `uedp_task_poll_create()`, `uedp_task_poll_set_ability()` |
 | SII | Đưa signal từ ISR vào hệ thống | `isr -> to/sig` | `to`, `sig` | `uedp_task_norm_post_isr()`, `uedp_msg_drain_isr_pool()` |
 | PPLP | Cấu hình logging pipeline | `pplp -> itnlog -> level/tag/output` | `level`, `tag`, `output.backend`, `output.sink`, `log.timestamp`, `log.msg` | `uedp_itnlog_set_filter()`, `uedp_itnlog_set_output()` |
 | APE | Gọi urgent message / priority escalation | `escal -> trigger -> post_urgent` | `mode: slnf`, `mode: non-slnf`, `scope: self`, `keep_queue_order`, `extra_rounds`, `post_urgent` | `uedp_task_norm_post_urgent()`, `uedp_task_norm_set_urgent()` |
@@ -225,9 +225,11 @@ Từ đánh giá này, hành động cần làm trên tài liệu là:
 
 ### Task - Tác vụ
 
-Trong μE-LS, mỗi task được khai báo trong danh sách `tlist`. Một task có thể đi theo một trong ba nhánh chính: `tsm` nếu cần state machine dạng bảng, `fsm` nếu cần dispatch theo handler, hoặc `exec`/`poll` nếu chỉ cần hành vi tuyến tính.
+Trong μE-LS, mỗi task được khai báo trong danh sách `tlist`. Một task có thể đi theo một trong ba nhánh chính: `tsm` nếu cần state machine dạng bảng, `fsm` nếu cần dispatch theo handler, hoặc `exec` nếu chỉ cần hành vi tuyến tính hoặc lặp lại.
 
 `task` là định danh logic do PLTF sinh ra từ Kconfig; `tnorm` và `tpoll` là hai kiểu hành vi, không phải hai hệ syntax tách biệt. Các cấu hình Pool, Queue, Timer và Stack vẫn thuộc Kconfig, nên μE-LS chỉ mô tả hành vi và quan hệ giữa task, signal, action.
+
+Tuy nhiên, sự nhập nhằng giữa non-HSMC tnorm (sử dụng `exec`) và tpoll sẽ xảy ra với cú pháp chỉ sử dụng `task`. Do đó, ở tag tổng đại diện cho entry của từng task trong `tlist` sẽ bổ sung thêm 2 loại tag là `tnorm` và `tpoll` để phân biệt rõ ràng.
 
 Về tổng quát, một task Norm nên được viết theo cấu trúc sau:
 
@@ -274,7 +276,7 @@ Ví dụ FSM nên viết theo kiểu sau:
 ```yaml
 project: "uEDP"
 tlist:
-- task: KID_TASK_B
+- tnorm: KID_TASK_B
   fsm:
   - id: STATE_B_IDLE
     on_recv:
@@ -305,7 +307,7 @@ Nếu một task không cần TSM/FSM thì dùng `exec` để mô tả các hàn
 ```yaml
 project: "uEDP"
 tlist:
-- task: KID_TASK_SIMPLE
+- tnorm: KID_TASK_SIMPLE
   exec:
   - on_sig: SIG_A
     steps:
@@ -324,8 +326,8 @@ Task Poll nên đi theo nhịp polling riêng và chỉ khai báo các bước x
 ```yaml
 project: "uEDP"
 tlist:
-- task: KID_TASK_POLL
-  poll:
+- tpoll: KID_TASK_POLL
+  exec:
   - actv: poll_led
     to: NULL
     sig: NULL
@@ -467,7 +469,7 @@ Ví dụ:
 ```yaml
 project: "uEDP"
 tlist:
-- task: KID_TASK_USR
+- tnorm: KID_TASK_USR
   exec:
   - on_sig: SIG_CALL_URGENT
     steps:
@@ -495,7 +497,7 @@ tlist:
         to: KID_TASK_USR
         sig: SIG_EXEC_URGENT
         data: NULL
-- task: KID_TASK_IO
+- tnorm: KID_TASK_IO
   exec:
   - on_sig: SIG_CALL_IO_BOOST
     steps:
@@ -551,7 +553,7 @@ Khi cần một khung khai báo đầy đủ để tham chiếu nhanh, có thể
 ```yaml
 project: "uEDP"
 tlist:
-- task: KID_TASK_USR
+- tnorm: KID_TASK_USR
   tsm:
   - id: STATE_USR_IDLE
     trans:
@@ -582,8 +584,7 @@ tlist:
         to: KID_TASK_USR
         sig: SIG_LOG
         data: "Task is stopping"
-
-- task: KID_TASK_A
+- tnorm: KID_TASK_A
   fsm:
   - id: STATE_A_IDLE
     on_recv:
@@ -603,8 +604,7 @@ tlist:
         to: KID_TASK_USR
         sig: SIG_DONE
         data: NULL
-
-- task: KID_TASK_SIMPLE
+- tnorm: KID_TASK_SIMPLE
   exec:
   - on_sig: SIG_SIMPLE
     steps:
@@ -613,8 +613,8 @@ tlist:
       sig: SIG_A
       data: NULL
 
-- task: KID_TASK_POLL
-  poll:
+- tpoll: KID_TASK_POLL
+  exec:
   - actv: poll_led
     to: NULL
     sig: NULL
@@ -710,7 +710,7 @@ glbda:
   initial_value: "msg: hello"
 
 tlist:
-- task: TASK_A
+- tnorm: TASK_A
   exec:
   - on_sig: SIG_USR
     act:
@@ -719,7 +719,7 @@ tlist:
       sig: SIG_HELLO
       data: *gda1  # Tham chiếu đến biến toàn cục GLOBAL_COUNTER
       ptype: REF  # Chỉ định truyền tham chiếu, nếu muốn truyền tham trị thì dùng VAL
-- task: TASK_B
+- tnorm: TASK_B
   exec:
   - on_sig: SIG_HELLO
     act:
@@ -740,15 +740,11 @@ Suy xét việc bổ sung thiết kế mới trong mã nguồn thêm 1 dpool h�
 Có thể cân nhắc đưa cho Minh trong việc thực thi.
 -->
 
-<!-- TODO
+<!-- SECTION - GDA
 - Bổ sung vào tài liệu thiết kế 1 dpool riêng cho GDA để quản lý các biến toàn cục, đặc biệt là khi sử dụng `ptype: REF` để truyền tham chiếu. Điều này sẽ giúp đảm bảo rằng các task có thể truy cập và sử dụng dữ liệu toàn cục một cách an toàn và hiệu quả, đồng thời tránh các vấn đề về đồng bộ hóa và quản lý bộ nhớ.
-- Bổ sung 1 đoạn thông tin trong tài liệu để chỉ rõ quyền quản lý các biến toàn cục và truyền tham chiếu sẽ được thực hiện quản lý bởi ai, tính năng sẽ nằm trong phiên bản nào, 
+- Bổ sung 1 đoạn thông tin trong tài liệu để chỉ rõ quyền quản lý các biến toàn cục và truyền tham chiếu sẽ được thực hiện quản lý bởi ai, tính năng sẽ nằm trong phiên bản nào.
+
+Section này đã được review và cập nhật các task trong task list để thực hiện các thay đổi cần thiết trong mã nguồn và tài liệu từ phiên bản 1.1.6.
+
+// !SECTION
 -->
-
-**Đã trả lời** tại `docs/review/dmp-gda.md`. Tóm tắt kết luận:
-
-- **Không cần dpool mới trong core** - biến GDA có thời gian sống toàn chương trình (static storage duration), không có nguy cơ dangling-pointer như biến cục bộ mà `[D2MP]` từng cảnh báo; pool `ALLOC` hiện có (`sizeof(void*) * 2u` trở lên theo `[DMP]`) đã đủ chỗ chứa 1 con trỏ tham chiếu.
-- Vấn đề thật sự cần giải quyết nằm ở **tầng PLTF codegen** (sinh vùng nhớ tĩnh thật từ khối `glbda:` - đề xuất generator mới `gda_tsgen.py`), không phải ở `uedp_msg.c`.
-- Truy cập GDA đồng thời giữa nhiều task cần bọc `pal_enter_critical()`/`pal_exit_critical()` - đây là rủi ro thật (shared mutable state) cần ghi rõ trong tài liệu cú pháp, khác bản chất với lo ngại dangling-pointer ban đầu.
-- Phạm vi triển khai generator dự kiến thuộc v1.1.7 (PLD/μE-LS) theo lộ trình đã đề xuất.
-
