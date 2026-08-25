@@ -59,8 +59,8 @@ def strucjec_target_tlist(yaml_text):
         # Lưu các key để kiểm tra cấu trúc
         current_item['found_tags'].add(event.value)
 
-        # Kiểm tra nếu key là 'task'
-        if event.value == 'task':
+        # Kiểm tra nếu key là 'tnorm' hoặc 'tpoll' 
+        if event.value == 'tnorm' or event.value == 'tpoll':
           waiting_for_task_name = True
         
         # Kiểm tra merge key '<<' hoặc anchor trên scalar
@@ -79,8 +79,8 @@ def strucjec_target_tlist_item(item, errors, warnings):
   task_label = f"Task: {item['task_name']} (Line: {item['line']})"
   
   # 1. Check bắt buộc: task
-  if 'task' not in tags:
-    errors.append({'loc': f"Line {item['line']}", 'msg': "Missing 'task' identifier tag."})
+  if 'tnorm' not in tags and 'tpoll' not in tags:
+    errors.append({'loc': f"Line {item['line']}", 'msg': "Missing 'tnorm' or 'tpoll' identifier tag."})
 
   # 2. Check bắt buộc: tsm/fsm vs exec
   has_logic = any(t in tags for t in ['tsm', 'fsm'])
@@ -92,21 +92,21 @@ def strucjec_target_tlist_item(item, errors, warnings):
     errors.append({'loc': task_label, 'msg': "Missing anchor definition or alias reference (e.g., <<: *anchor)."})
   
   # 4. Warnings: escal
-  if 'escal' not in tags:
+  if 'tnorm' in tags and 'escal' not in tags:
     warnings.append({'loc': task_label, 'msg': "Missing 'escal' tag. If not use, please set NULL"})
 
 def strucjec_debug_tlist(errors, warnings):
   print(f"{'-'*30} strucjec `tlist` param  {'-'*30}\n")
-  print(f"{'TYPE':<10} | {'LOCATION':<30} | {'MESSAGE'}")
+  print(f"{'TYPE':<10} | {'LOCATION':<40} | {'MESSAGE'}")
   print("-" * 85)
   
   if not errors and not warnings:
-    print(f"{'SUCCESS':<10} | {'All tasks':<30} | No issues found.")
+    print(f"{'SUCCESS':<10} | {'All tasks':<40} | No issues found.")
   else:
     for err in errors:
-      print(f"ERROR      | {err['loc']:<30} | {err['msg']}")
+      print(f"ERROR      | {err['loc']:<40} | {err['msg']}")
     for warn in warnings:
-      print(f"WARNING    | {warn['loc']:<30} | {warn['msg']}")
+      print(f"WARNING    | {warn['loc']:<40} | {warn['msg']}")
 
   print("\n")
 

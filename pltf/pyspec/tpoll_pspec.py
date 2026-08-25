@@ -28,7 +28,7 @@ def task_poll_declaration(num_tasks_poll):
     kconfig_content.append(f'\t\t\thelp\n')
     kconfig_content.append(f'\t\t\t\tThis is the name of task poll handler.\n')
     kconfig_content.append(f'\t\t\t\tFormat output as void <value>_phler(uedp_msg_t* msg);.\n')
-    kconfig_content.append(f'\t\t\t\tUsually prefer eg. `tpoll_a` to produce `tpoll_a_phler(uedp_msg_t* msg);`.\n
+    kconfig_content.append(f'\t\t\t\tUsually prefer eg. `tpoll_a` to produce `tpoll_a_phler(uedp_msg_t* msg);.`\n')
 
     kconfig_content.append(f'\tendmenu\n')
 

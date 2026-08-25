@@ -79,13 +79,15 @@ void {{tsmio}}_exit(uedp_msg_t* msg) {
 {% endfor %}
 
 //ANCHOR - Khai báo bảng chuyển trạng thái cho state
-{% for tran in appcfg_tsm_state_trans %}tsm_trans_t {{tran}}[] = {
+{% for tran in appcfg_tsm_state_trans %}
+tsm_trans_t {{tran}}[] = {
 
 };
 {% endfor %}
 
 //ANCHOR - Khai báo bảng state 
-{% for table in appcfg_tsm_tables %}tsm_state_desc_t {{table}}[] = {
+{% for table in appcfg_tsm_tables %}
+tsm_state_desc_t {{table}}[] = {
 
 };
 {% endfor %}
@@ -95,17 +97,22 @@ void {{tsmio}}_exit(uedp_msg_t* msg) {
 //ANCHOR - Khai báo hàm khác viết tại đây
 
 //ANCHOR - Khai báo handler cho task norm
-{% for normhler in normhler_lists %}void {{normhler}}_nhler(uedp_msg_t* msg) {
+{% for normhler in normhler_lists %}
+void {{normhler}}_nhler(uedp_msg_t* msg) {
 
 }
 {% endfor %}
 
 //ANCHOR - Khai báo handler cho task poll
-{% for pollhler in pollhler_lists %}void {{pollhler}}_phler() {
+{% for pollhler in pollhler_lists %}
+void {{pollhler}}_phler() {
   
 }
 {% endfor %}
 
 //ANCHOR - Khai báo hàm state handler cho FSM
-{% for fsmio in fsmio_lists %}void {{fsmio}}_onst(uedp_msg_t* msg) {}
+{% for fsmio in fsmio_lists %}
+void {{fsmio}}_onst(uedp_msg_t* msg) {
+
+}
 {% endfor %}
