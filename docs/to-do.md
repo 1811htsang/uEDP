@@ -253,7 +253,7 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 - [x] Triển khai thiết kế các subcomponent của lstaxer.vlid để hỗ trợ việc kiểm tra tính hợp lệ của các cấu hình logic của μE-LS, bao gồm 5 chiến lược đề ra trong mã nguồn lstaxer.vlid.
 - [x] Đánh dấu các submodule của lstaxer.vlid để triển khai trong tương lai, bao gồm 2 tính năng là UST và PRE.
 - [x] Bổ sung thêm help cho các tùy chọn trong Kconfig.
-- [ ] Sửa đổi triển khai tag `task` thành `tnorm` và `tpoll` để phân biệt tránh nhầm lẫn cú pháp giữa non-HSMC tnorm và tpoll. //FIXME - Chưa bổ sung tài liệu thay đổi, đã sửa đổi mẫu thử nghiệm và mã nguồn liên đới
+- [x] Sửa đổi triển khai tag `task` thành `tnorm` và `tpoll` để phân biệt tránh nhầm lẫn cú pháp giữa non-HSMC tnorm và tpoll. //FIXME - Chưa bổ sung tài liệu thay đổi, đã sửa đổi mẫu thử nghiệm và mã nguồn liên đới
 - [ ] Bổ sung triển khai template cho app.c với các khai báo jinja2 reusable.
 - [ ] Bổ sung triển khai tsgen.gda để hỗ trợ việc generate các cấu hình global data của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Bổ sung thiết kế module để tinh gọn các khai báo NULL không sử dụng trong khai báo YAML của người dùng nhằm giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
