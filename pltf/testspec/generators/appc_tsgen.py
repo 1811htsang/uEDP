@@ -1,5 +1,5 @@
 from jinja2 import Environment, FileSystemLoader
-import cfpcall_tsgen
+from . import cfpcall_tsgen
 import os
 cur_trm_dir = os.path.dirname("uEDP")
 env = Environment(loader = FileSystemLoader('./pltf/templates'))
