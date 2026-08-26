@@ -254,7 +254,8 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 - [x] Đánh dấu các submodule của lstaxer.vlid để triển khai trong tương lai, bao gồm 2 tính năng là UST và PRE.
 - [x] Bổ sung thêm help cho các tùy chọn trong Kconfig.
 - [x] Sửa đổi triển khai tag `task` thành `tnorm` và `tpoll` để phân biệt tránh nhầm lẫn cú pháp giữa non-HSMC tnorm và tpoll. //FIXME - Chưa bổ sung tài liệu thay đổi, đã sửa đổi mẫu thử nghiệm và mã nguồn liên đới
-- [ ] Bổ sung triển khai template cho app.c với các khai báo jinja2 reusable.
+- [x] Bổ sung triển khai template cho app.c với các khai báo jinja2 reusable.
+- [ ] Thay đổi triển khai __init__.py để hỗ trợ thống nhất triển khai các submodule của pltf.
 - [ ] Bổ sung triển khai tsgen.gda để hỗ trợ việc generate các cấu hình global data của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Bổ sung thiết kế module để tinh gọn các khai báo NULL không sử dụng trong khai báo YAML của người dùng nhằm giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Đưa cân nhắc triển khai hoạt động của cfparsers hoặc pyspec vào post-validation của lstaxer.vlid để phối hợp lstaxer.kre8 generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
