@@ -175,7 +175,7 @@ Tức là có 1 space trước dấu `//` và 1 space trước dấu `!SECTION`,
 - [x] Bổ sung thiết kế API trong dpool GDA kèm API tương ứng.
 - [x] Revert lại sửa đổi của phiên bản 1.1.4 bị mất liên quan đến attribute HSMC (`tsm` và `fsm`) của task norm, kèm API get/set.
 - [x] Bổ sung các khai báo FCR thiếu với API của GDA.
-- [ ] Remove các khai báo task NORM và POLL mặc định không sử dụng.
+- [x] Remove các khai báo task NORM và POLL mặc định không sử dụng.
 
 <!-- SECTION - L178
 Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu rõ hơn yêu cầu của task này. Cần kiểm tra các tài liệu và mã nguồn liên đới như PLD/μE-LS, pltf.pyspec/testspec để đảm bảo rằng các khai báo task này không còn được sử dụng trong các tính năng hiện tại và tương lai của lõi μEDP.
