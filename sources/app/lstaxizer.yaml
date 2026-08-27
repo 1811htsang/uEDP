@@ -118,12 +118,12 @@ glbda:
 # ANCHOR - Task List (TLIST)
 
 tlist:
-- tnorm: TASK_USR
+- tnorm: TASK_NORM_USR
   tsm:
-  - id: STATE_USR_IDLE
+  - id: tsm_task_usr_state_idle
     trans:
     - sig: *sig1
-      goto: STATE_USR_RUNNING
+      goto: tsm_task_usr_state_running
     on_ntry: # NOTE - logic "khởi tạo" (Entry)
       steps:
       - actv: uedp_itnlog_init()
@@ -141,17 +141,17 @@ tlist:
         sig: NULL
         data: "[USR][IDLE] Starting sequence..."
       - actv: uedp_task_norm_post_msg
-        to: TASK_A
+        to: TASK_NORM_A
         sig: *sig1
     on_exit: # NOTE - logic "kết thúc" (Exit)
       actv: uedp_itnlog_log
       to: NULL
       sig: NULL
       data: "[USR][IDLE] Sequence finished."
-  - id: STATE_USR_RUNNING
+  - id: tsm_task_usr_state_running
     trans:
     - sig: *sig2
-      goto: STATE_USR_IDLE
+      goto: tsm_task_usr_state_idle
     on_ntry:
       actv: uedp_itnlog_log
       to: NULL
@@ -162,9 +162,9 @@ tlist:
       - actv: uedp_itnlog_log
         to: NULL
         sig: NULL
-        data: "[USR][RUNNING] Posting message to TASK_A..."
+        data: "[USR][RUNNING] Posting message to TASK_NORM_A..."
       - actv: uedp_task_norm_post_msg
-        to: TASK_A
+        to: TASK_NORM_A
         sig: *sig1
         data: *gda_status   # Validator check: tham chiếu anchor hợp lệ
         ptype: REF          # D2MP: Truyền địa chỉ chuỗi status
@@ -175,34 +175,34 @@ tlist:
         sig: NULL
         data: itnlog_dump_svc
   << : *tnorm1-ctrl
-- tnorm: TASK_A
+- tnorm: TASK_NORM_A
   tsm:
-  - id: STATE_A_IDLE
+  - id: tsm_task_a_state_idle
     trans:
     - sig: *sig1
-      goto: STATE_A_WAITING_B
+      goto: tsm_task_a_state_waiting
     on_ntry: NULL
     on_actv: NULL
     on_exit: NULL
-  - id: STATE_A_WAITING_B
+  - id: tsm_task_a_state_waiting
     trans:
     - sig: *sig3
       goto: STAY            # Validator check: logic "bỏ qua" (Stay)
     - sig: *sig4
-      goto: STATE_A_IDLE
+      goto: tsm_task_a_state_idle
     on_ntry:
       actv: uedp_post_msg
-      to: TASK_B
+      to: TASK_NORM_B
       sig: *sig5
       data: NULL
     on_actv:
       steps:                # Chuyển trạng thái kèm hành động phức tạp
       - actv: uedp_post_msg
-        to: TASK_B
+        to: TASK_NORM_B
         sig: *sig6
         data: NULL
       - actv: uedp_itnlog_log
-        data: "[TASK_A][WAITING_B] Posted SIG_0xAA to TASK_B."
+        data: "[TASK_NORM_A][WAITING_B] Posted SIG_0xAA to TASK_NORM_B."
     on_exit: NULL
   escal: # Cấu hình APE để xử lý khẩn cấp (nếu có)
     mode: slnf
@@ -210,24 +210,24 @@ tlist:
     - on_sig: *sig7
       post_urgent: NULL       # Chạy tiếp queue hiện tại với ưu tiên cao
   << : *tnorm2-ctrl
-- tnorm: TASK_B
+- tnorm: TASK_NORM_B
   fsm:
-  - id: STATE_B_IDLE
+  - id: fsm_task_b_state_idle
     on_recv:
     - sig: *sig5
-      goto: STATE_B_BUSY
+      goto: fsm_task_b_state_busy
       steps:
       - actv: uedp_task_norm_post_msg
-        to: TASK_A
+        to: TASK_NORM_A
         sig: *sig3
       - actv: uedp_task_norm_post_msg
-        to: TASK_A
+        to: TASK_NORM_A
         sig: *sig4
         # sig: *gda_status # Validator check: Không hợp lệ, không thể dùng anchor trong sig
-  - id: STATE_B_BUSY
+  - id: fsm_task_b_state_busy
     on_recv:
     - sig: *sig6
-      goto: STATE_B_IDLE
+      goto: fsm_task_b_state_idle
       steps:
       - actv: uedp_task_norm_post_msg
         to: TASK_USR
@@ -237,7 +237,7 @@ tlist:
         ptype: VAL        # Validator check: Copy nội dung (memcpy)
   << : *tnorm3-ctrl # Validator check: Không hợp lệ, không thể dùng anchor trong sig
 - tpoll: TASK_POLL_MEMRP
-  exec: NULL
+  exec: NULL # NOTE - Tạm thời để NULL để đảm bảo đúng cấu trúc theo strucjec specs.
   << : *tpoll1 # Validator check: Không hợp lệ, thiếu anchor
 - tpoll: TASK_POLL_BLINK
   exec: NULL
@@ -246,7 +246,7 @@ tlist:
 
 isr:
 - id: ISR_HARD_STOP
-  to: TASK_A # Validator check: kiểm tra lỗi từ lstaxer.strucjec
+  to: TASK_NORM_A # Validator check: kiểm tra lỗi từ lstaxer.strucjec
   sig: *sig7
 
 # ANCHOR - Out-Context Execution (OUTEXEC) - Thực thi ngoài ngữ cảnh
