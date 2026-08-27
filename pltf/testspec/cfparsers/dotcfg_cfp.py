@@ -9,7 +9,7 @@ arch_dir = "sources/pal/arch"
 
 counters = {"norm": 0xE6, "poll": 0xD4, "sig": 0x01}
 
-def parse_config(config_path):
+def cfp_parse_dotcfg(config_path):
   # Jinja2 data structure
   context = {
     "current_date": datetime.now().strftime("%Y-%m-%d"),
@@ -116,6 +116,6 @@ def parse_config(config_path):
   
   return context
 
-# STUB - Sample usage to test the parse_config function
-# pprint.pprint(parse_config(config_dir))
+# STUB - Sample usage to test the cfp_parse_dotcfg function
+# pprint.pprint(cfp_parse_dotcfg(config_dir))
 # print("\n\n")

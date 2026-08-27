@@ -115,7 +115,7 @@ The logic is nearly identical to the old `sources/common/pyspec/` (files renamed
 
 ### 3.3 `pltf/testspec/cfparsers/dotcfg_cfp.py` — the heart of the code-generation pipeline
 
-This is the direct replacement for the logic that used to walk `kconf.unique_defined_syms`, scattered across `corecfg_gen`/`palcfg_gen` inside the old `uedp.py`. `dotcfg_cfp.parse_config(config_path)` reads the `.config` file (in `CONFIG_KEY=value` text form) directly — `kconfiglib` is **no longer needed** at this step — and returns a structured `context` dict:
+This is the direct replacement for the logic that used to walk `kconf.unique_defined_syms`, scattered across `corecfg_gen`/`palcfg_gen` inside the old `uedp.py`. `dotcfg_cfp.cfp_parse_dotcfg(config_path)` reads the `.config` file (in `CONFIG_KEY=value` text form) directly — `kconfiglib` is **no longer needed** at this step — and returns a structured `context` dict:
 
 - `core_configs`, `pal_configs`: lists of `#define` strings for `CORE_*` / `PAL_*`.
 - `tasknorm_defs`, `taskpoll_defs`, `sig_defs`: automatically assigned increasing hex IDs, starting at `0xE6` (task norm), `0xD4` (task poll), `0x01` (signal) — matching the `[HES] Heximal Encoding Signals` ranges already described in `arch-design.md` (`TASK_NORM` in the `0xEx` range, `TASK_POLL` in the `0xDx` range).
@@ -124,7 +124,7 @@ This is the direct replacement for the logic that used to walk `kconf.unique_def
 - `arch_name`, `arch_apis`: the PAL architecture name and the list of Hardware APIs to generate.
 - `task_tsm`, `task_fsm`: a task → state-list map, reserved for a future μE-LS integration (see section 3.5).
 
-Each generator (`*_tsgen.py`) calls `dotcfg_cfp.parse_config()` independently — this is a point of duplication worth noting; see section 5.
+Each generator (`*_tsgen.py`) calls `dotcfg_cfp.cfp_parse_dotcfg()` independently — this is a point of duplication worth noting; see section 5.
 
 ### 3.4 `pltf/templates/` + `pltf/testspec/generators/` — generating files with Jinja2
 
@@ -132,7 +132,7 @@ Unlike KwDI's "patch a string between 2 markers" mechanism, each generator in PL
 
 ```python
 # pltf/testspec/generators/corecfg_tsgen.py
-context = dotcfg_cfp.parse_config(config_dir)
+context = dotcfg_cfp.cfp_parse_dotcfg(config_dir)
 env = Environment(loader=FileSystemLoader('./pltf/templates'))
 template = env.get_template('corecfg_tmpl.txt')
 output = template.render(current_date=context["current_date"], core_configs=context['core_configs'])
@@ -259,7 +259,7 @@ Unchanged from KwDI — `docs/` (which holds large reference PDFs and instructio
 ## 6. Remaining work / risks to note going forward
 
 - **`yaml_cfp.py` is not yet wired into `tsgen.py`**: currently it's only an independent debug script (`python pltf/testspec/cfparsers/yaml_cfp.py`) — no generator yet consumes data from `test.yaml`. This is the main remaining piece of work to complete the μE-LS direction.
-- **Duplicated `.config` parsing code**: all 6 generators (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) each call `dotcfg_cfp.parse_config(config_dir)` separately instead of parsing once and sharing a common `context` — this could be consolidated inside `tsgen.py` to avoid reading the `.config` file multiple times.
+- **Duplicated `.config` parsing code**: all 6 generators (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) each call `dotcfg_cfp.cfp_parse_dotcfg(config_dir)` separately instead of parsing once and sharing a common `context` — this could be consolidated inside `tsgen.py` to avoid reading the `.config` file multiple times.
 - **`entrypoint.sh` always runs `uedp.py menuconfig` on every container startup**: fine for an interactive session on a dev machine, but there's no non-interactive branch yet (e.g., reading an existing `.config` directly and skipping menuconfig) for use in CI/CD.
 - **No automated tests for `pltf/` itself yet**: the testing framework itself (parser, generator, template) currently has no dedicated tests to guard against regressions when editing a template or a parser.
 - **`arch_dir_tsgen.py`** uses Python 3.12+-style nested double-quote f-strings (`f"{context["arch_name"]}"`) — worth confirming compatibility, since it matches the `python:3.13-slim` base image currently used, but is worth watching if the base image is ever downgraded to an older Python version.
