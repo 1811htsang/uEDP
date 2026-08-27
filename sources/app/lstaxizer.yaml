@@ -114,6 +114,14 @@ glbda:
   name: GDA_SYSTEM_STATUS # Validator check: kiểm tra lỗi từ lstaxer.strucjec
   type: "const char*"
   initial_value: "STATUS: INITIALIZING"
+- '2': &gda_counter
+  name: GDA_COUNTER
+  type: "int"
+  initial_value: 0
+- '3': &gda_flag
+  name: GDA_FLAG
+  type: "bool"
+  initial_value: false
 
 # ANCHOR - Task List (TLIST)
 
