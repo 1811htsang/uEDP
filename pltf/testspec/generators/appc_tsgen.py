@@ -39,6 +39,14 @@ context = cfpcall_tsgen.main()
 with open('sources/app/lstaxizer.yaml', 'r') as file:
   data = yaml.safe_load(file)
 gda_items = yaml_cfp.cfp_parse_yaml(data)
+# NOTE - Check for bool item with initial value of True/False
+# Convert it to 1/0 for C code generation
+for item in gda_items:
+  if item["type"] == "bool":
+    if item["initial_value"] == True:
+      item["initial_value"] = "true"
+    elif item["initial_value"] == False:
+      item["initial_value"] = "false"
 output = template.render(
   msgq_defs = context["msgq_defs"],
   glbda_defs = gda_items,
