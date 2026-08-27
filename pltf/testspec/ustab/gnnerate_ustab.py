@@ -10,7 +10,11 @@ class gnnerate_ustab:
       "sigs": {}
     }
     # Định nghĩa các base offset theo thiết kế HES của μE-OS
-    # FIXME - Chỗ này sẽ được Minh sửa follow theo task default removal
+    # RESOLVED - Đã xử lý task default removal (uedp_core.h): chỉ TIM/IF/DBG (norm)
+    # và WDG/SYSLF/MEMRP/IDLE (poll) bị xóa vì không còn được dùng ở đâu.
+    # SYS_ID, USR_ID, IDLE_ID (norm) được giữ lại do vẫn có ý nghĩa chức năng thật.
+    # OFFSET và MIN_ID không đổi (norm: 0xE0 + 0x06, poll: 0xD0 + 0x04) nên các
+    # giá trị offset auto-counter bên dưới vẫn chính xác, không cần chỉnh sửa.
     self.OFFSETS = {
       "NORM": 0xE6,
       "POLL": 0xD4,

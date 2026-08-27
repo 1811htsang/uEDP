@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-import pprint
 
 # [1] Config specifier
 current_dir = os.path.dirname("uEDP")
@@ -9,7 +8,7 @@ arch_dir = "sources/pal/arch"
 
 counters = {"norm": 0xE6, "poll": 0xD4, "sig": 0x01}
 
-def cfp_parse_dotcfg(config_path):
+def parse_config(config_path):
   # Jinja2 data structure
   context = {
     "current_date": datetime.now().strftime("%Y-%m-%d"),
@@ -35,7 +34,11 @@ def cfp_parse_dotcfg(config_path):
   }
 
   # Auto ID counter
-  # FIXME - Chỗ này sẽ được Minh sửa follow theo task default removal
+  # RESOLVED - Đã xử lý task default removal (uedp_core.h): chỉ TIM/IF/DBG (norm)
+  # và WDG/SYSLF/MEMRP/IDLE (poll) bị xóa vì không còn được dùng ở đâu.
+  # SYS_ID, USR_ID, IDLE_ID (norm) được giữ lại do vẫn có ý nghĩa chức năng thật.
+  # OFFSET và MIN_ID không đổi (norm: 0xE0 + 0x06, poll: 0xD0 + 0x04) nên counter
+  # dưới đây vẫn chính xác, không cần chỉnh sửa.
   counters = {"norm": 0xE6, "poll": 0xD4, "sig": 0x01}
   task_tsm_map = {}
   task_fsm_map = {}
@@ -116,6 +119,6 @@ def cfp_parse_dotcfg(config_path):
   
   return context
 
-# STUB - Sample usage to test the cfp_parse_dotcfg function
-# pprint.pprint(cfp_parse_dotcfg(config_dir))
+# STUB - Sample usage to test the parse_config function
+# pprint.pprint(parse_config(config_dir))
 # print("\n\n")

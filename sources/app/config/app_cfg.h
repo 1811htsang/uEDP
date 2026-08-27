@@ -42,7 +42,7 @@
 	 * };
 	 *
 	 * task_poll_t app_poll_table[] = {
-	 * 	{ UEDP_TASK_POLL_MEMRP_ID , 0, task_poll_memrp_handler },
+	 * 	{ TASK_POLL_A_ID , 0, task_poll_a_handler },
 	 * 	{ UEDP_TASK_POLL_EOT_ID, 0, NULL }
 	 * };
 	 * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib

@@ -24,25 +24,21 @@
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
    *            cho phép hệ thống UEDP quản lý tối đa 16 tác vụ khác nhau, 
    *            bao gồm các tác vụ timer, giao tiếp, hệ thống, debug, người dùng và trống.
+   * @note Đã loại bỏ các khai báo tác vụ mặc định không còn được sử dụng
+   *       (TIM, IF, DBG) khỏi phiên bản này. `SYS_ID`, `USR_ID` và `IDLE_ID`
+   *       được GIỮ LẠI vì đang là hằng số có ý nghĩa chức năng thật sự:
+   *       - `UEDP_TASK_NORM_USR_ID` và `UEDP_TASK_NORM_EOT_ID` là 2 ID bắt buộc
+   *         phải có trong bảng tác vụ của người dùng (xem app_cfg.h, appcfg_tmpl.txt).
+   *       - `UEDP_TASK_NORM_IDLE_ID` được dùng làm giá trị sentinel khởi tạo/reset
+   *         của `g_active_task_norm_id` trong uedp_task.c.
+   *       - `UEDP_TASK_NORM_SYS_ID` được dùng trong uedp_msg.c làm src_task_id khi
+   *         message được cấp phát ngoài ngữ cảnh dispatch thật (ISR, timer, main()).
    */
-
-  /** FIXME
-   * Cân nhắc toàn bộ các tác vụ mặc định,
-   * chỉ giữ lại các khai báo về offset, EOT, MIN, MAX 
-   * để tránh trùng lặp với các tác vụ được người dùng định nghĩa.
-   * 
-   * Minh sẽ cân nhắc phần này, đồng thời sửa đổi lại các cấu hình cũ
-   * liên đới đến PLD/μE-LS, PLTF và các tài liệu liên quan đến.
-   */
-
 
   #define UEDP_TASK_NORM_MAX_SIZE						(16u) 	// 16 tác vụ, từ 0 đến 15
-  #define UEDP_TASK_NORM_TIM_ID							(0xE0) // Tác vụ timer
-  #define UEDP_TASK_NORM_IF_ID		    			(0xE1) // Tác vụ giao tiếp
-  #define UEDP_TASK_NORM_SYS_ID							(0xE2) // Tác vụ hệ thống (info + memrp)
-  #define UEDP_TASK_NORM_DBG_ID							(0xE3) // Tác vụ debug
-  #define UEDP_TASK_NORM_USR_ID							(0xE4) // Tác vụ người dùng (dùng để entry)
-  #define UEDP_TASK_NORM_IDLE_ID						(0xE5) // Tác vụ rảnh
+  #define UEDP_TASK_NORM_SYS_ID							(0xE2) // Tác vụ hệ thống (info + memrp) — dùng làm src_task_id khi message không xuất phát từ 1 task dispatch thật, xem uedp_msg.c
+  #define UEDP_TASK_NORM_USR_ID							(0xE4) // Tác vụ người dùng (dùng để entry) — bắt buộc phải có trong bảng tác vụ, xem app_cfg.h
+  #define UEDP_TASK_NORM_IDLE_ID						(0xE5) // Tác vụ rảnh — dùng làm sentinel "không có task nào đang thực thi", xem g_active_task_norm_id trong uedp_task.c
   #define UEDP_TASK_NORM_EOT_ID							(0xEF) // Kết thúc danh sách tác vụ
   #define UEDP_TASK_NORM_MIN_ID 						(0xE0) // ID đầu tiên
   #define UEDP_TASK_NORM_MAX_ID							(0xEF) // ID cuối cùng
@@ -52,22 +48,14 @@
    * @brief Định nghĩa các hằng số cho ID của tác vụ poll
    * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xDx`,
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF)
-   */
-
-  /** FIXME
-   * Cân nhắc toàn bộ các tác vụ mặc định,
-   * chỉ giữ lại các khai báo về offset, EOT, MIN, MAX 
-   * để tránh trùng lặp với các tác vụ được người dùng định nghĩa.
-   * 
-   * Minh sẽ cân nhắc phần này, đồng thời sửa đổi lại các cấu hình cũ
-   * liên đới đến PLD/μE-LS, PLTF và các tài liệu liên quan đến.
+   * @note Đã loại bỏ toàn bộ các khai báo tác vụ poll mặc định (WDG, SYSLF,
+   *       MEMRP, IDLE) vì không còn được sử dụng ở bất kỳ đâu trong lõi,
+   *       PAL, tài liệu hay PLD/μE-LS (pltf/pyspec, pltf/testspec). Chỉ giữ
+   *       lại các hằng số cấu trúc (OFFSET, EOT, MIN, MAX) để tránh trùng lặp
+   *       với các tác vụ poll do người dùng tự định nghĩa.
    */
 
   #define UEDP_TASK_POLL_MAX_SIZE					  (8u) // 8 tác vụ, từ 0 đến 7
-  #define UEDP_TASK_POLL_WDG_ID             (0xD0) // Tác vụ "đá" Watchdog để reset chip nếu treo
-  #define UEDP_TASK_POLL_SYSLF_ID           (0xD1) // Tác vụ nháy LED Heartbeat (Nhịp tim hệ thống)
-  #define UEDP_TASK_POLL_MEMRP_ID           (0xD2) // Tác vụ giám sát rò rỉ RAM hoặc tràn Stack
-  #define UEDP_TASK_POLL_IDLE_ID            (0xD3) // Tác vụ nhàn rỗi 
   #define UEDP_TASK_POLL_EOT_ID         	  (0xDF) // Kết thúc danh sách tác vụ poll
   #define UEDP_TASK_POLL_MIN_ID         	  (0xD0) // ID đầu tiên
   #define UEDP_TASK_POLL_MAX_ID         	  (0xDF) // ID cuối cùng
