@@ -1,0 +1,204 @@
+pject: uEDP_PingPong_Full_Validation
+versh: 1.2.0-pre
+glbda:
+- name: GDA_SYSTEM_STATUS
+  type: const char*
+  initial_value: 'STATUS: INITIALIZING'
+- name: GDA_COUNTER
+  type: int
+  initial_value: 0
+- name: GDA_FLAG
+  type: bool
+  initial_value: false
+tlist:
+- fsm_resrc:
+    object: FSM_TASK_1_ID
+    states:
+    - FSM_TASK_1_STATE_1_ID
+    - FSM_TASK_1_STATE_2_ID
+  handler: tnorm_usr_nhler
+  hex_val: '0xe6'
+  id_symbol: TASK_NORM_USR_IDS
+  queue_name: tnorm_usr_msgq
+  tsm_resrc:
+    object: tsm_task_usr
+    state_trans:
+    - tsm_task_usr_state_idle_trans
+    - tsm_task_usr_state_running_trans
+    states:
+    - tsm_task_usr_state_idle
+    - tsm_task_usr_state_running
+    table: tsm_task_usr_tbl
+  tnorm: TASK_NORM_USR
+  tsm:
+  - id: tsm_task_usr_state_idle
+    trans:
+    - sig:
+        hex_val: '0x1'
+        id_symbol: SIG_USR_START
+      goto: tsm_task_usr_state_running
+    on_ntry:
+      steps:
+      - actv: uedp_itnlog_init()
+      - actv: uedp_itnlog_set_output(pal_logdp_dispatch)
+    on_actv:
+      steps:
+      - actv: uedp_itnlog_log
+        data: '[USR][IDLE] Starting sequence...'
+      - actv: uedp_task_norm_post_msg
+        to: TASK_NORM_A
+        sig:
+          hex_val: '0x1'
+          id_symbol: SIG_USR_START
+    on_exit:
+      actv: uedp_itnlog_log
+      data: '[USR][IDLE] Sequence finished.'
+  - id: tsm_task_usr_state_running
+    trans:
+    - sig:
+        hex_val: '0x2'
+        id_symbol: SIG_USR_STOP
+      goto: tsm_task_usr_state_idle
+    on_ntry:
+      actv: uedp_itnlog_log
+      data: '[USR][RUNNING] Sequence started.'
+    on_actv:
+      steps:
+      - actv: uedp_itnlog_log
+        data: '[USR][RUNNING] Posting message to TASK_NORM_A...'
+      - actv: uedp_task_norm_post_msg
+        to: TASK_NORM_A
+        sig:
+          hex_val: '0x1'
+          id_symbol: SIG_USR_START
+        ptype: REF
+    on_exit:
+      steps:
+      - actv: ocesvc_register
+        data: itnlog_dump_svc
+- fsm_resrc:
+    object: FSM_TASK_2_ID
+    states:
+    - FSM_TASK_2_STATE_1_ID
+    - FSM_TASK_2_STATE_2_ID
+  handler: tnorm_a_nhler
+  hex_val: '0xe7'
+  id_symbol: TASK_NORM_A_IDS
+  queue_name: tnorm_a_msgq
+  tsm_resrc:
+    object: tsm_task_a
+    state_trans:
+    - tsm_task_a_state_idle_trans
+    - tsm_task_a_state_waiting_trans
+    states:
+    - tsm_task_a_state_idle
+    - tsm_task_a_state_waiting
+    table: tsm_task_a_tbl
+  tnorm: TASK_NORM_A
+  tsm:
+  - id: tsm_task_a_state_idle
+    trans:
+    - sig:
+        hex_val: '0x1'
+        id_symbol: SIG_USR_START
+      goto: tsm_task_a_state_waiting
+  - id: tsm_task_a_state_waiting
+    trans:
+    - sig:
+        hex_val: '0x3'
+        id_symbol: SIG_0X34
+      goto: STAY
+    - sig:
+        hex_val: '0x4'
+        id_symbol: SIG_0XFF
+      goto: tsm_task_a_state_idle
+    on_ntry:
+      actv: uedp_post_msg
+      to: TASK_NORM_B
+      sig:
+        hex_val: '0x5'
+        id_symbol: SIG_0X12
+    on_actv:
+      steps:
+      - actv: uedp_post_msg
+        to: TASK_NORM_B
+        sig:
+          hex_val: '0x6'
+          id_symbol: SIG_0XAA
+      - actv: uedp_itnlog_log
+        data: '[TASK_NORM_A][WAITING_B] Posted SIG_0xAA to TASK_NORM_B.'
+  escal:
+    mode: slnf
+    trigger:
+    - on_sig:
+        hex_val: '0x7'
+        id_symbol: SIG_HALT_NOW
+- fsm_resrc:
+    object: fsm_task_b
+    states:
+    - fsm_task_b_state_idle
+    - fsm_task_b_state_busy
+  handler: tnorm_b_nhler
+  hex_val: '0xe8'
+  id_symbol: TASK_NORM_B_IDS
+  queue_name: tnorm_b_msgq
+  tsm_resrc:
+    object: TSM_TASK_3_ID
+    state_trans:
+    - TSM_TASK_3_STATE_1_ID_trans
+    - TSM_TASK_3_STATE_2_ID_trans
+    states:
+    - TSM_TASK_3_STATE_1_ID
+    - TSM_TASK_3_STATE_2_ID
+    table: TSM_TASK_3_ID_tbl
+  tnorm: TASK_NORM_B
+  fsm:
+  - id: fsm_task_b_state_idle
+    on_recv:
+    - sig:
+        hex_val: '0x5'
+        id_symbol: SIG_0X12
+      goto: fsm_task_b_state_busy
+      steps:
+      - actv: uedp_task_norm_post_msg
+        to: TASK_NORM_A
+        sig:
+          hex_val: '0x3'
+          id_symbol: SIG_0X34
+      - actv: uedp_task_norm_post_msg
+        to: TASK_NORM_A
+        sig:
+          hex_val: '0x4'
+          id_symbol: SIG_0XFF
+  - id: fsm_task_b_state_busy
+    on_recv:
+    - sig:
+        hex_val: '0x6'
+        id_symbol: SIG_0XAA
+      goto: fsm_task_b_state_idle
+      steps:
+      - actv: uedp_task_norm_post_msg
+        to: TASK_USR
+        sig:
+          hex_val: '0x2'
+          id_symbol: SIG_USR_STOP
+      - actv: uedp_itnlog_log
+        ptype: VAL
+- handler: tpoll_memrp
+  hex_val: '0xd4'
+  id_symbol: TASK_POLL_MEMRP
+  tpoll: TASK_POLL_MEMRP
+- handler: tpoll_blink
+  hex_val: '0xd5'
+  id_symbol: TASK_POLL_BLINK
+  tpoll: TASK_POLL_BLINK
+isr:
+- id: ISR_HARD_STOP
+  to: TASK_NORM_A
+  sig:
+    hex_val: '0x7'
+    id_symbol: SIG_HALT_NOW
+outexec:
+- name: OCE_ITNLOG_DUMP
+  handler: itnlog_dump_handler
+  state: READY
