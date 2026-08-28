@@ -29,7 +29,7 @@ tnorms:
       - FSM_TASK_1_STATE_2_ID
     handler: tnorm_usr_nhler
     hex_val: '0xe6'
-    id_symbol: TASK_NORM_USR_IDS
+    id_symbol: TASK_NORM_USR
     queue_name: tnorm_usr_msgq
     tsm_resrc:
       object: tsm_task_usr
@@ -48,7 +48,7 @@ tnorms:
       - FSM_TASK_2_STATE_2_ID
     handler: tnorm_a_nhler
     hex_val: '0xe7'
-    id_symbol: TASK_NORM_A_IDS
+    id_symbol: TASK_NORM_A
     queue_name: tnorm_a_msgq
     tsm_resrc:
       object: tsm_task_a
@@ -67,7 +67,7 @@ tnorms:
       - fsm_task_b_state_busy
     handler: tnorm_b_nhler
     hex_val: '0xe8'
-    id_symbol: TASK_NORM_B_IDS
+    id_symbol: TASK_NORM_B
     queue_name: tnorm_b_msgq
     tsm_resrc:
       object: TSM_TASK_3_ID
