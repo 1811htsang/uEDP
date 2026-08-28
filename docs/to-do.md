@@ -266,11 +266,17 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 - [x] Sửa đổi triển khai tag `task` thành `tnorm` và `tpoll` để phân biệt tránh nhầm lẫn cú pháp giữa non-HSMC tnorm và tpoll. //FIXME - Chưa bổ sung tài liệu thay đổi, đã sửa đổi mẫu thử nghiệm và mã nguồn liên đới
 - [x] Bổ sung triển khai template cho app.c với các khai báo jinja2 reusable.
 - [x] Thay đổi triển khai __init__.py để hỗ trợ thống nhất triển khai các submodule của pltf.
-- [ ] Bổ sung triển khai tsgen.gda để hỗ trợ việc generate các cấu hình global data của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [ ] Bổ sung thiết kế module để tinh gọn các khai báo NULL không sử dụng trong khai báo YAML của người dùng nhằm giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [x] Bổ sung triển khai tsgen.gda để hỗ trợ việc generate các cấu hình global data của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [x] Bổ sung thiết kế module để tinh gọn các khai báo NULL không sử dụng trong khai báo YAML của người dùng nhằm giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Đưa cân nhắc triển khai hoạt động của cfparsers hoặc pyspec vào post-validation của lstaxer.vlid để phối hợp lstaxer.kre8 generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+
+<!-- REVIEW
+1. Bổ sung cân nhắc phân tách PLD/μE-LS thành SA (semi-automation) và FA (full-automation) trên 2 phiên bản 1.1.7, 1.1.8 hay 1.1.8, 1.1.9.
+2. Cân nhắc đưa triển khai kết quả sau khi cleanup NULL vào pydantic model để chuẩn hóa toàn bộ logic triển khai trước khi translate thành mã C.
+3. Cần review lại thiết kế cú pháp ở khu vực data để quản lý chi tiết vấn đề chuyển data-as-parameter thành data-as-global đối với các tham số truyền vào có sizeof() hoặc length nặng hoặc multiple param trong 1 function call.
+-->
+
 - [ ] Đưa calling của testspec.generator vào cùng phase với lstaxer.kre8 để cùng giai đoạn cấu hình sang mã nguồn.
-- [ ] Triển khai thiết kế lstaxer.kre8 để hỗ trợ generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 - [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin. //LINK docs/uels-syntax.md:118
 - [ ] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //LINK docs/uels-syntax.md:199
