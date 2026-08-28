@@ -24,7 +24,7 @@ class gnnerate_ustab:
       if not line or line.startswith("#"):
         continue
       m = re.match(r'CONFIG_DECL_TASK_NORM_(\d+)_NAME="(.+)"', line)
-      if m: self._get_norm(m.group(1))["id_symbol"] = m.group(2) + "_IDS"      
+      if m: self._get_norm(m.group(1))["id_symbol"] = m.group(2)      
       m = re.match(r'CONFIG_DECL_MSG_QUEUE_(\d+)_NAME="(.+)"', line)
       if m: self._get_norm(m.group(1))["queue_name"] = m.group(2) + "_msgq"
       m = re.match(r'CONFIG_DECL_NORM_HANDLER_(\d+)_NAME="(.+)"', line)
