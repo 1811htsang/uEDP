@@ -21,31 +21,48 @@
    * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xEx`, 
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
    *            cho phép hệ thống UEDP quản lý tối đa 16 tác vụ khác nhau, 
-   *            bao gồm các tác vụ timer, giao tiếp, hệ thống, debug, người dùng và trống.
-   * FIXME - Sửa đổi lại các task với index gốc mới xuất phát từ 0xEO.
+   *            bao gồm các tác vụ hệ thống, người dùng, nhàn rỗi và trống.
+   * @note Đã loại bỏ các khai báo tác vụ mặc định không còn được sử dụng
+   *       (TIM, IF, DBG) khỏi phiên bản này. `SYS_ID`, `USR_ID` và `IDLE_ID`
+   *       được GIỮ LẠI vì đang là hằng số có ý nghĩa chức năng thật sự, và đã
+   *       được ĐÁNH SỐ LẠI liền kề từ MIN_ID (0xE0 → 0xE2) thay vì để trống
+   *       các slot 0xE0/0xE1/0xE3 do các tác vụ bị xóa để lại. OFFSET cũng
+   *       được cập nhật từ 0x06 xuống 0x03 tương ứng với số lượng tác vụ mặc
+   *       định còn được giữ lại (3 thay vì 6):
+   *       - `UEDP_TASK_NORM_USR_ID` và `UEDP_TASK_NORM_EOT_ID` là 2 ID bắt buộc
+   *         phải có trong bảng tác vụ của người dùng (xem app_cfg.h, appcfg_tmpl.txt).
+   *       - `UEDP_TASK_NORM_IDLE_ID` được dùng làm giá trị sentinel khởi tạo/reset
+   *         của `g_active_task_norm_id` trong uedp_task.c.
+   *       - `UEDP_TASK_NORM_SYS_ID` được dùng trong uedp_msg.c làm src_task_id khi
+   *         message được cấp phát ngoài ngữ cảnh dispatch thật (ISR, timer, main()).
    */
 
   #define UEDP_TASK_NORM_MAX_SIZE						(16u) 	// 16 tác vụ, từ 0 đến 15
-  #define UEDP_TASK_NORM_SYS_ID							(0xE2) // Tác vụ hệ thống (info + memrp) — dùng làm src_task_id khi message không xuất phát từ 1 task dispatch thật, xem uedp_msg.c
-  #define UEDP_TASK_NORM_USR_ID							(0xE4) // Tác vụ người dùng (dùng để entry) — bắt buộc phải có trong bảng tác vụ, xem app_cfg.h
-  #define UEDP_TASK_NORM_IDLE_ID						(0xE5) // Tác vụ rảnh — dùng làm sentinel "không có task nào đang thực thi", xem g_active_task_norm_id trong uedp_task.c
+  #define UEDP_TASK_NORM_SYS_ID							(0xE0) // Tác vụ hệ thống (info + memrp) — dùng làm src_task_id khi message không xuất phát từ 1 task dispatch thật, xem uedp_msg.c
+  #define UEDP_TASK_NORM_USR_ID							(0xE1) // Tác vụ người dùng (dùng để entry) — bắt buộc phải có trong bảng tác vụ, xem app_cfg.h
+  #define UEDP_TASK_NORM_IDLE_ID						(0xE2) // Tác vụ rảnh — dùng làm sentinel "không có task nào đang thực thi", xem g_active_task_norm_id trong uedp_task.c
   #define UEDP_TASK_NORM_EOT_ID							(0xEF) // Kết thúc danh sách tác vụ
   #define UEDP_TASK_NORM_MIN_ID 						(0xE0) // ID đầu tiên
   #define UEDP_TASK_NORM_MAX_ID							(0xEF) // ID cuối cùng
-  #define UEDP_TASK_NORM_OFFSET						  (0x06) // Offset để tránh trùng với các tác vụ khác, nhớ thay đổi giá trị offset tương ứng
+  #define UEDP_TASK_NORM_OFFSET						  (0x03) // Offset để tránh trùng với các tác vụ khác (3 tác vụ mặc định: SYS, USR, IDLE)
 
   /** ANCHOR - Define constants for poll task IDs
    * @brief Định nghĩa các hằng số cho ID của tác vụ poll
    * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xDx`,
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF)
-   * FIXME - Sửa đổi lại các task với index gốc mới xuất phát từ 0xD0.
+   * @note Đã loại bỏ toàn bộ các khai báo tác vụ poll mặc định (WDG, SYSLF,
+   *       MEMRP, IDLE) vì không còn được sử dụng ở bất kỳ đâu trong lõi,
+   *       PAL, tài liệu hay PLD/μE-LS (pltf/pyspec, pltf/testspec). Do không
+   *       còn tác vụ mặc định nào được giữ lại, OFFSET được cập nhật từ 0x04
+   *       xuống 0x00 để tác vụ poll đầu tiên do người dùng định nghĩa có thể
+   *       bắt đầu ngay tại MIN_ID, không để trống không gian ID nào.
    */
 
   #define UEDP_TASK_POLL_MAX_SIZE					  (8u) // 8 tác vụ, từ 0 đến 7
   #define UEDP_TASK_POLL_EOT_ID         	  (0xDF) // Kết thúc danh sách tác vụ poll
   #define UEDP_TASK_POLL_MIN_ID         	  (0xD0) // ID đầu tiên
   #define UEDP_TASK_POLL_MAX_ID         	  (0xDF) // ID cuối cùng
-  #define UEDP_TASK_POLL_OFFSET             (0x04) // Offset để tránh trùng với các tác vụ khác, nhớ thay đổi giá trị offset tương ứng
+  #define UEDP_TASK_POLL_OFFSET             (0x00) // Offset để tránh trùng với các tác vụ khác (không còn tác vụ mặc định nào)
 
   /** ANCHOR - Define constants for task priority levels
    * @brief Định nghĩa các hằng số cho mức độ ưu tiên của tác vụ trong hệ thống UEDP

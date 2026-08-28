@@ -7,7 +7,7 @@ current_dir = os.path.dirname("uEDP")
 config_dir = os.path.join(current_dir, ".config")
 arch_dir = "sources/pal/arch"
 
-counters = {"norm": 0xE6, "poll": 0xD4, "sig": 0x01}
+counters = {"norm": 0xE3, "poll": 0xD0, "sig": 0x01}
 
 def cfp_parse_dotcfg(config_path):
   # Jinja2 data structure
@@ -35,8 +35,11 @@ def cfp_parse_dotcfg(config_path):
   }
 
   # Auto ID counter
-  # FIXME - Chỗ này sẽ được Minh sửa follow theo task default removal do không thay đổi index gốc
-  counters = {"norm": 0xE6, "poll": 0xD4, "sig": 0x01}
+  # RESOLVED - Đã đánh số lại SYS/USR/IDLE liền kề từ MIN_ID (0xE0-0xE2, xem
+  # uedp_core.h) và cập nhật OFFSET: norm 0x06→0x03, poll 0x04→0x00 (không còn
+  # tác vụ poll mặc định). Counter cập nhật theo MIN_ID + OFFSET mới:
+  # norm: 0xE0 + 0x03 = 0xE3, poll: 0xD0 + 0x00 = 0xD0.
+  counters = {"norm": 0xE3, "poll": 0xD0, "sig": 0x01}
   task_tsm_map = {}
   task_fsm_map = {}
 
