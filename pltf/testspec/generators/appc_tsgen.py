@@ -29,6 +29,9 @@ while the context["glbda_defs"] will be:
 As this step is post definition of logic in lstaxizer.yaml
 Therefore, cfparsers is also in charged of generating the context["glbda_defs"] from the lstaxizer.yaml file, 
 and the template will be rendered with the context["glbda_defs"] to produce the GDA definitions in the output C file.
+
+Please also note that GDA is a subset of app.c with lstaxizer.yaml,
+therefore, there are no need to generate a separate generator for GDA, as the template rendering will handle it with the context["glbda_defs"] generated from the lstaxizer.yaml file.
 """
 
 # STUB - Called sample to check the output of the template rendering
