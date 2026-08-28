@@ -175,7 +175,7 @@ Tức là có 1 space trước dấu `//` và 1 space trước dấu `!SECTION`,
 - [x] Bổ sung thiết kế API trong dpool GDA kèm API tương ứng.
 - [x] Revert lại sửa đổi của phiên bản 1.1.4 bị mất liên quan đến attribute HSMC (`tsm` và `fsm`) của task norm, kèm API get/set.
 - [x] Bổ sung các khai báo FCR thiếu với API của GDA.
-- [x] Remove các khai báo task NORM và POLL mặc định không sử dụng.
+- [ ] Remove các khai báo task NORM và POLL mặc định không sử dụng.
 
 <!-- SECTION - L178
 Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu rõ hơn yêu cầu của task này. Cần kiểm tra các tài liệu và mã nguồn liên đới như PLD/μE-LS, pltf.pyspec/testspec để đảm bảo rằng các khai báo task này không còn được sử dụng trong các tính năng hiện tại và tương lai của lõi μEDP.
@@ -184,6 +184,8 @@ Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu r�
 #LINK - /workspaces/uEDP/sources/core/inc/uedp_core.h:29
 #LINK - /workspaces/uEDP/sources/core/inc/uedp_core.h:57
 #LINK - pltf/testspec/cfparsers/dotcfg_cfp.py:37
+
+#NOTE - 260826 đã thực hiện revert lại các sửa đổi của task để Minh sửa lại theo đúng yêu cầu của task này.
 
 // !SECTION 
 -->
@@ -202,7 +204,13 @@ Kiểm tra trong `usrinp_pspec` để nắm rõ thông tin của task và thực
 
 - [ ] Sửa đổi và cập nhật thiết kế DMP, D2MP tương ứng với sự xuất hiện của dpool GDA.
 - [ ] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
-- [ ] Thực hiện rebase các task liên quan đến thiết kế syntax PLD/μE-LS (trước khi triển khai source code phân giải logic như testspec.*, pyspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
+- [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu.
+
+<!-- NOTE - Lưu ý cho task bên trên
+Theo dõi ở uedp_core.h nhánh feat để nắm rõ các tag ANCHOR được comment theo format kết hợp cùng doxygen-type.
+-->
+
+- [ ] Thực hiện rebase các task liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như testspec.*, pyspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
 
 <!-- NOTE - Expectation
 Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ được hoàn thiện với khả năng tự động hóa việc phân giải logic từ các cấu hình YAML sang các hàm thực thi trong lõi μEDP.
@@ -220,6 +228,8 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 
 //REVIEW - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 //NOTE - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
+
+- [ ] Ra mắt phiên bản 1.1.6 của lõi μEDP với đầy đủ tính năng PLD/μE-LS, Pub/Sub engine và tài liệu hướng dẫn sử dụng.
 
 //  !SECTION
 
