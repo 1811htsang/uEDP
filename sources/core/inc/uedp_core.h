@@ -1,38 +1,28 @@
-﻿/**
+﻿/** ANCHOR - Core definitions and utilities for UEDP system
  * @file uedp_core.h
  * @author Shang Huang
  * @brief Core definitions and utilities for UEDP system
  * @version 0.1
  * @date 2026-04-16
- * 
  * @copyright MIT License
- * 
  */
 #ifndef __UEDP_CORE_H__
   #define __UEDP_CORE_H__
 
-  /**
+  /** ANCHOR - Include necessary libraries for UEDP system
    * @brief Khai báo thư viện sử dụng cho hệ thống UEDP
    */
   #include <string.h>
   #include "core_cfg.h"
   #include "pal_core.h"
 
-  /**
+  /** ANCHOR - Define constants for normal task IDs
    * @brief Định nghĩa các hằng số cho ID của tác vụ bình thường
    * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xEx`, 
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
    *            cho phép hệ thống UEDP quản lý tối đa 16 tác vụ khác nhau, 
    *            bao gồm các tác vụ timer, giao tiếp, hệ thống, debug, người dùng và trống.
-   * @note Đã loại bỏ các khai báo tác vụ mặc định không còn được sử dụng
-   *       (TIM, IF, DBG) khỏi phiên bản này. `SYS_ID`, `USR_ID` và `IDLE_ID`
-   *       được GIỮ LẠI vì đang là hằng số có ý nghĩa chức năng thật sự:
-   *       - `UEDP_TASK_NORM_USR_ID` và `UEDP_TASK_NORM_EOT_ID` là 2 ID bắt buộc
-   *         phải có trong bảng tác vụ của người dùng (xem app_cfg.h, appcfg_tmpl.txt).
-   *       - `UEDP_TASK_NORM_IDLE_ID` được dùng làm giá trị sentinel khởi tạo/reset
-   *         của `g_active_task_norm_id` trong uedp_task.c.
-   *       - `UEDP_TASK_NORM_SYS_ID` được dùng trong uedp_msg.c làm src_task_id khi
-   *         message được cấp phát ngoài ngữ cảnh dispatch thật (ISR, timer, main()).
+   * FIXME - Sửa đổi lại các task với index gốc mới xuất phát từ 0xEO.
    */
 
   #define UEDP_TASK_NORM_MAX_SIZE						(16u) 	// 16 tác vụ, từ 0 đến 15
@@ -42,26 +32,22 @@
   #define UEDP_TASK_NORM_EOT_ID							(0xEF) // Kết thúc danh sách tác vụ
   #define UEDP_TASK_NORM_MIN_ID 						(0xE0) // ID đầu tiên
   #define UEDP_TASK_NORM_MAX_ID							(0xEF) // ID cuối cùng
-  #define UEDP_TASK_NORM_OFFSET						  (0x06) // Offset để tránh trùng với các tác vụ khác
+  #define UEDP_TASK_NORM_OFFSET						  (0x06) // Offset để tránh trùng với các tác vụ khác, nhớ thay đổi giá trị offset tương ứng
 
-  /**
+  /** ANCHOR - Define constants for poll task IDs
    * @brief Định nghĩa các hằng số cho ID của tác vụ poll
    * @attention ID của tác vụ được thiết kế tuân thủ theo encoding `0xDx`,
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF)
-   * @note Đã loại bỏ toàn bộ các khai báo tác vụ poll mặc định (WDG, SYSLF,
-   *       MEMRP, IDLE) vì không còn được sử dụng ở bất kỳ đâu trong lõi,
-   *       PAL, tài liệu hay PLD/μE-LS (pltf/pyspec, pltf/testspec). Chỉ giữ
-   *       lại các hằng số cấu trúc (OFFSET, EOT, MIN, MAX) để tránh trùng lặp
-   *       với các tác vụ poll do người dùng tự định nghĩa.
+   * FIXME - Sửa đổi lại các task với index gốc mới xuất phát từ 0xD0.
    */
 
   #define UEDP_TASK_POLL_MAX_SIZE					  (8u) // 8 tác vụ, từ 0 đến 7
   #define UEDP_TASK_POLL_EOT_ID         	  (0xDF) // Kết thúc danh sách tác vụ poll
   #define UEDP_TASK_POLL_MIN_ID         	  (0xD0) // ID đầu tiên
   #define UEDP_TASK_POLL_MAX_ID         	  (0xDF) // ID cuối cùng
-  #define UEDP_TASK_POLL_OFFSET             (0x04) // Offset để tránh trùng với các tác vụ khác
+  #define UEDP_TASK_POLL_OFFSET             (0x04) // Offset để tránh trùng với các tác vụ khác, nhớ thay đổi giá trị offset tương ứng
 
-  /**
+  /** ANCHOR - Define constants for task priority levels
    * @brief Định nghĩa các hằng số cho mức độ ưu tiên của tác vụ trong hệ thống UEDP
    * @attention Mức độ ưu tiên của tác vụ được thiết kế tuân thủ theo encoding `0xCx`,
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
@@ -97,7 +83,7 @@
   #define UEDP_TASK_PRI_MIN_LEVEL			(0xCA0u) // Mức ưu tiên thấp nhất
   #define UEDP_TASK_PRI_MAX_LEVEL			(0xCB7u) // Mức ưu tiên cao nhất
   
-  /**
+  /** ANCHOR - Define constants for FSM signals
    * @brief Các tín hiệu đặc biệt dành cho quản lý vòng đời trạng thái
    * @attention Các tín hiệu này được thiết kế tuân thủ theo encoding `0xBx`,
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
@@ -107,12 +93,11 @@
   #define UEDP_FSM_SIG_ENTRY    (0xB0u)
   #define UEDP_FSM_SIG_EXIT     (0xB1u)
   #define UEDP_FSM_SIG_INIT     (0xB2u)
-  #define UEDP_FSM_SIG_LOOP     (0xB3u) // Tín hiệu để xử lý trạng thái tự trỏ chính nó.
   #define UEDP_FSM_SIG_MIN      (0xB0u) // ID thấp nhất
   #define UEDP_FSM_SIG_MAX      (0xBFu) // ID cao nhất
-  #define UEDP_FSM_SIG_OFFSET   (0x04u) // Offset để tránh trùng với các tín hiệu khác
+  #define UEDP_FSM_SIG_OFFSET   (0x03u) // Offset để tránh trùng với các tín hiệu khác
 
-  /**
+  /** ANCHOR - Define constants for TSM signals
    * @brief Khai báo dải tín hiệu TSM
    * @attention Các tín hiệu này được thiết kế tuân thủ theo encoding `0xAx`,
    * 						trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
@@ -120,12 +105,11 @@
    */
   #define UEDP_TSM_SIG_ENTRY    (0xA0u)
   #define UEDP_TSM_SIG_EXIT     (0xA1u)
-  #define UEDP_TSM_SIG_INIT     (0xA2u)
   #define UEDP_TSM_SIG_MIN      (0xA0u) // ID thấp nhất
   #define UEDP_TSM_SIG_MAX      (0xAFu) // ID cao nhất
-  #define UEDP_TSM_SIG_OFFSET   (0x03u) // Offset để tránh trùng với các tín hiệu khác
+  #define UEDP_TSM_SIG_OFFSET   (0x02u) // Offset để tránh trùng với các tín hiệu khác
 
-  /**
+  /** ANCHOR - Define constants for TSM states
    * @brief Khai báo dải trạng thái TSM
    * @attention Các tín hiệu này được thiết kế tuân thủ theo encoding `0xAFx`,
    * 						trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
@@ -136,12 +120,11 @@
    */
   #define UEDP_TSM_STATE_BACK   (0xAF0u) // Quay lại trạng thái cũ
   #define UEDP_TSM_STATE_STAY   (0xAF1u) // Giữ nguyên trạng thái hiện tại
-  #define UEDP_TSM_STATE_RESET  (0xAF2u) // Đặt lại về trạng thái ban đầu
   #define UEDP_TSM_STATE_MIN		(0xAF0u) // ID thấp nhất
   #define UEDP_TSM_STATE_MAX 		(0xAFFu) // ID cao nhất
-  #define UEDP_TSM_STATE_OFFSET (0x003u) // Offset để tránh trùng với các trạng thái đặc biệt
+  #define UEDP_TSM_STATE_OFFSET (0x002u) // Offset để tránh trùng với các trạng thái đặc biệt
 
-  /**
+  /** ANCHOR - Define constants for message pool sizes
    * @brief Khai báo các hằng số cho kích thước của các Pool tin nhắn
    * @attention 1 pool tin nhắn được thiết kế để chứa một số lượng tin nhắn nhất định, với kích thước dữ liệu tối đa được xác định trước,
    *            cho phép hệ thống UEDP quản lý bộ nhớ một cách hiệu quả. Ví dụ giả sử norm_pool[12][8] nghĩa là có thể chứa unit tin nhắn,
@@ -172,21 +155,21 @@
     #define UEDP_MSG_ISR_QUEUE_SIZE   (16u) 	// units
   #endif
 
-  /**
+  /** ANCHOR - Define various message queue sizes for different task types
    * @brief Define các kích thước của các hàng đợi tin nhắn cho các tác vụ trong hệ thống UEDP
    */
   #ifndef UEDP_TASK_MSG_QUEUE_SIZE
     #define UEDP_TASK_MSG_QUEUE_SIZE  (8u) // Số lượng tin nhắn tối đa trong hàng đợi của mỗi tác vụ
   #endif
 
-  /**
+  /** ANCHOR - Define constants for maximum number of timers
    * @brief Khai báo các hằng số cho số lượng timer tối đa có thể chạy cùng lúc
    */
   #ifndef UEDP_TIMER_MAX_NODES
     #define UEDP_TIMER_MAX_NODES    (4u) // units
   #endif
 
-  /**
+  /** ANCHOR - Define constants for ring buffer log entry sizes
    * @brief Khai báo hằng số cho kích thước của ring buffer log entry
    */
 
@@ -194,7 +177,7 @@
     #define UEDP_ITNLOG_MAX_LOG_ENTRIES  (32u) // units
   #endif // -> equipvalent to 32 units * sizeof(itnlog_entry_t) bytes
 
-  /**
+  /** ANCHOR - Define constants for flush log entry threshold
    * @brief Khai báo hằng số cho ngưỡng flush log entry của internal logger
    */
 
@@ -202,7 +185,7 @@
     #define UEDP_ITNLOG_FLUSH_THRESHOLD  (28u) // units, ngưỡng để tự động flush log entry ra đích đến khi số lượng log entry trong ring buffer đạt đến ngưỡng này
   #endif
 
-  /**
+  /** ANCHOR - Define constants for flush log entry threshold
    * @brief Khởi tạo toàn bộ lõi UEDP (Pools, Timers, Task Manager)
    */
   UEDP_ATTR_WEAK void uedp_core_init(void);
