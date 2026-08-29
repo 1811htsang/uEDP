@@ -4,114 +4,118 @@ DEBUG_FLAG = True
 
 def strucjec_target_tlist(yaml_text):
   events = yaml.parse(yaml_text)
-  
+    
   path_stack = []      
-  current_item = {}    
   errors = []
-  warnings = []
   
   in_tlist = False
-  # Biến hỗ trợ lấy tên Task
+  current_task = ""
+  current_sub_item = {} # Lưu thông tin item của tsm/fsm đang xét
+  
+  # Trạng thái điều hướng
+  context_type = None # 'TSM' hoặc 'FSM' hoặc None
   waiting_for_task_name = False
+  waiting_for_on_recv_val = False
 
   for event in events:
-    # 1. Theo dõi cấu trúc
+    # --- QUẢN LÝ CẤU TRÚC STACK ---
     if isinstance(event, yaml.SequenceStartEvent):
       path_stack.append("SEQ")
     elif isinstance(event, yaml.MappingStartEvent):
       path_stack.append("MAP")
-      # Bắt đầu một Task mới trong tlist (ROOT -> tlist -> Item)
-      if in_tlist and len(path_stack) == 3:
-        current_item = {
-          'task_name': "Unknown Task", # Mặc định nếu không tìm thấy key task
+      
+      # Cấp độ 4: Bắt đầu 1 object bên trong list tsm hoặc fsm
+      if in_tlist and context_type in ['TSM', 'FSM'] and len(path_stack) == 5:
+        current_sub_item = {
+          'id': "Unknown ID",
           'found_tags': set(),
-          'has_anchor': False,
-          'line': event.start_mark.line + 1
+          'line': event.start_mark.line + 1,
+          'on_recv_is_list': False
         }
-        # Nếu chính Mapping có Anchor (&...)
-        if event.anchor:
-          current_item['has_anchor'] = True
+      
+      # Nếu on_recv bắt đầu bằng một mapping (không phải NULL)
+      if waiting_for_on_recv_val:
+        current_sub_item['on_recv_is_list'] = True # Coi như hợp lệ vì không phải NULL
+        waiting_for_on_recv_val = False
 
     elif isinstance(event, yaml.MappingEndEvent):
-      # Kết thúc một Task -> Tiến hành VALIDATE
-      if in_tlist and len(path_stack) == 3:
-        strucjec_target_tlist_item(current_item, errors, warnings)
+      # Kết thúc 1 item của tsm/fsm -> Validate ngay
+      if in_tlist and context_type in ['TSM', 'FSM'] and len(path_stack) == 5:
+        strucjec_target_tlist_item(current_task, context_type, current_sub_item, errors)
+      
+      # Thoát khỏi vùng tsm/fsm list
+      if len(path_stack) == 4: context_type = None
       path_stack.pop()
         
     elif isinstance(event, yaml.SequenceEndEvent):
       path_stack.pop()
-      if in_tlist and len(path_stack) == 1:
-        in_tlist = False
 
-    # 2. Xử lý dữ liệu (Scalar)
+    # --- XỬ LÝ DỮ LIỆU (SCALAR) ---
     elif isinstance(event, yaml.ScalarEvent):
-      # Nhận diện vùng tlist
-      if len(path_stack) == 1 and event.value == 'tlist':
-        in_tlist = True
+      val = event.value
       
-      # Nếu đang ở cấp độ thuộc tính của Task
+      # 1. Nhận diện task name
+      if len(path_stack) == 1 and val == 'tlist': in_tlist = True
       if in_tlist and len(path_stack) == 3:
-        # Nếu vừa đọc được key 'task', thì Scalar này chính là giá trị tên Task
-        if waiting_for_task_name:
-          current_item['task_name'] = event.value
+        if val == 'tnorm' or val == 'tpoll': waiting_for_task_name = True
+        elif waiting_for_task_name:
+          current_task = val
           waiting_for_task_name = False
-        
-        # Lưu các key để kiểm tra cấu trúc
-        current_item['found_tags'].add(event.value)
-
-        # Kiểm tra nếu key là 'tnorm' hoặc 'tpoll' 
-        if event.value == 'tnorm' or event.value == 'tpoll':
-          waiting_for_task_name = True
-        
-        # Kiểm tra merge key '<<' hoặc anchor trên scalar
-        if event.value == '<<' or event.anchor:
-          current_item['has_anchor'] = True
-
-    # 3. Xử lý Alias (*)
-    elif isinstance(event, yaml.AliasEvent):
+      
+      # 2. Nhận diện vùng TSM / FSM
       if in_tlist and len(path_stack) == 3:
-        current_item['has_anchor'] = True
+        if val == 'tsm': context_type = 'TSM'
+        if val == 'fsm': context_type = 'FSM'
 
-  return errors, warnings
+      # 3. Thu thập tag trong item của TSM/FSM
+      if in_tlist and context_type in ['TSM', 'FSM'] and len(path_stack) == 5:
+        current_sub_item['found_tags'].add(val)
+        if val == 'id': # Lấy ID để báo lỗi cho rõ
+          # Giả định Scalar tiếp theo là giá trị ID
+          pass 
+        
+        if val == 'on_recv':
+          waiting_for_on_recv_val = True
+        elif waiting_for_on_recv_val:
+          # Nếu sau on_recv là một Scalar (như NULL), kiểm tra lỗi
+          if val is None or val.upper() == 'NULL':
+            current_sub_item['on_recv_is_list'] = False
+          waiting_for_on_recv_val = False
 
-def strucjec_target_tlist_item(item, errors, warnings):
+    # --- XỬ LÝ SEQUENCE (Cho on_recv) ---
+    elif isinstance(event, yaml.SequenceStartEvent):
+      if waiting_for_on_recv_val:
+        current_sub_item['on_recv_is_list'] = True
+        waiting_for_on_recv_val = False
+
+  return errors
+
+def strucjec_target_tlist_item(task, type, item, errors):
   tags = item['found_tags']
-  task_label = f"Task: {item['task_name']} (Line: {item['line']})"
+  loc = f"Task: {task} -> {type} Item (Line:{item['line']})"
   
-  # 1. Check bắt buộc: task
-  if 'tnorm' not in tags and 'tpoll' not in tags:
-    errors.append({'loc': f"Line {item['line']}", 'msg': "Missing 'tnorm' or 'tpoll' identifier tag."})
-
-  # 2. Check bắt buộc: tsm/fsm vs exec
-  if 'tnorm' in tags:
-    has_logic = any(t in tags for t in ['tsm', 'fsm'])
-    if not has_logic and 'exec' not in tags:
-      errors.append({'loc': task_label, 'msg': "tnorm is present but missing 'tsm'/'fsm' or 'exec' tag."})
-  if 'tpoll' in tags:
-    has_logic = any(t in tags for t in ['tsm', 'fsm'])
-    if not has_logic and 'exec' not in tags:
-      errors.append({'loc': task_label, 'msg': "tpoll is present but missing 'exec' tag."})
-
-  # 3. Check bắt buộc: anchor/alias
-  if not item['has_anchor']:
-    errors.append({'loc': task_label, 'msg': "Missing anchor definition or alias reference (e.g., <<: *anchor)."})
+  if type == 'TSM':
+    required = ['trans', 'on_ntry', 'on_actv', 'on_exit']
+    for r in required:
+      if r not in tags:
+        errors.append({'loc': loc, 'msg': f"TSM item missing required tag: '{r}'"})
   
-  # 4. Warnings: escal
-  if 'tnorm' in tags and 'escal' not in tags:
-    warnings.append({'loc': task_label, 'msg': "Missing 'escal' tag. If not use, please set NULL"})
+  elif type == 'FSM':
+    if 'on_recv' not in tags:
+      errors.append({'loc': loc, 'msg': "FSM item missing required tag: 'on_recv'"})
+    elif not item.get('on_recv_is_list', False):
+      errors.append({'loc': loc, 'msg': "Tag 'on_recv' in FSM must be a LIST (not NULL)."})
 
-def strucjec_debug_tlist(errors, warnings):
+def strucjec_debug_tlist(errors):
   print(f"{'-'*30} strucjec `tlist` param  {'-'*30}\n")
   print(f"{'TYPE':<10} | {'LOCATION':<40} | {'MESSAGE'}")
   print("-" * 85)
   
-  if not errors and not warnings:
+  if not errors:
     print(f"{'SUCCESS':<10} | {'All tasks':<40} | No issues found.")
   else:
     for err in errors:
       print(f"ERROR      | {err['loc']:<40} | {err['msg']}")
-    for warn in warnings:
-      print(f"WARNING    | {warn['loc']:<40} | {warn['msg']}")
 
   print("\n")
 
@@ -412,18 +416,15 @@ def strucjec_debug_outexec(errors):
 
 # NOTE - Outer function to call all structure validation functions
 def strucjec_calib(yaml_sample):
-  errors_tlist, warnings_tlist = strucjec_target_tlist(yaml_sample)
+  errors_tlist = strucjec_target_tlist(yaml_sample)
   errors_glbda = strucjec_target_glbda(yaml_sample)
   errors_isr = strucjec_target_isr(yaml_sample)
   errors_outexec = strucjec_target_outexec(yaml_sample)
   if DEBUG_FLAG:
     strucjec_debug_glbda(errors_glbda)
-    strucjec_debug_tlist(errors_tlist, warnings_tlist)
+    strucjec_debug_tlist(errors_tlist)
     strucjec_debug_isr(errors_isr)
     strucjec_debug_outexec(errors_outexec)
-  if warnings_tlist:
-    print("[INFO] Structure validation completed with warnings.")
-    print("[INFO] Please check the above warnings and consider fixing them in the YAML file.\n")
   if errors_tlist or errors_glbda or errors_isr or errors_outexec:
     print("[INFO] Structure validation completed with errors.")
     print("[INFO] Please check the above errors and fix them in the YAML file.")
