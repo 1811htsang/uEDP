@@ -245,10 +245,18 @@ tlist:
         ptype: VAL        # Validator check: Copy nội dung (memcpy)
   << : *tnorm3-ctrl # Validator check: Không hợp lệ, không thể dùng anchor trong sig
 - tpoll: TASK_POLL_MEMRP
-  exec: NULL # NOTE - Tạm thời để NULL để đảm bảo đúng cấu trúc theo strucjec specs.
+  exec: 
+  - actv: pal_memrp_report()
+    to: NULL
+    sig: NULL
+    data: NULL
   << : *tpoll1 # Validator check: Không hợp lệ, thiếu anchor
 - tpoll: TASK_POLL_BLINK
-  exec: NULL
+  exec: 
+  - actv: pal_blink_led()
+    to: NULL
+    sig: NULL
+    data: NULL
   << : *tpoll2
 # ANCHOR - Interrupt Service Routine (ISR) - Xử lý ngắt
 
