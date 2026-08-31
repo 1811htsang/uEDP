@@ -187,6 +187,8 @@ Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu r�
 
 #NOTE - 260826 đã thực hiện revert lại các sửa đổi của task để Minh sửa lại theo đúng yêu cầu của task này.
 
+#STATUS - task đã hoàn thành.
+
 // !SECTION 
 -->
 
@@ -198,6 +200,8 @@ Kiểm tra trong `usrinp_pspec` để nắm rõ thông tin của task và thực
 #LINK - pltf/pyspec/usrinp_pspec.py:27
 #LINK - pltf/pyspec/tnorm_pspec.py:56
 #LINK - pltf/pyspec/tnorm_pspec.py:84
+
+#STATUS - task đã hoàn thành.
 
 // !SECTION 
 -->
@@ -211,7 +215,7 @@ Kiểm tra trong `usrinp_pspec` để nắm rõ thông tin của task và thực
 Theo dõi ở uedp_core.h nhánh feat để nắm rõ các tag ANCHOR được comment theo format kết hợp cùng doxygen-type.
 -->
 
-- [ ] Thực hiện rebase các task liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như testspec.*, pyspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
+- [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như testspec.*, pyspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
 
 <!-- NOTE - Expectation
 Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ được hoàn thiện với khả năng tự động hóa việc phân giải logic từ các cấu hình YAML sang các hàm thực thi trong lõi μEDP.
@@ -264,11 +268,12 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 - [x] Triển khai thiết kế các subcomponent của lstaxer.vlid để hỗ trợ việc kiểm tra tính hợp lệ của các cấu hình logic của μE-LS, bao gồm 5 chiến lược đề ra trong mã nguồn lstaxer.vlid.
 - [x] Đánh dấu các submodule của lstaxer.vlid để triển khai trong tương lai, bao gồm 2 tính năng là UST và PRE.
 - [x] Bổ sung thêm help cho các tùy chọn trong Kconfig.
-- [x] Sửa đổi triển khai tag `task` thành `tnorm` và `tpoll` để phân biệt tránh nhầm lẫn cú pháp giữa non-HSMC tnorm và tpoll. //FIXME - Chưa bổ sung tài liệu thay đổi, đã sửa đổi mẫu thử nghiệm và mã nguồn liên đới
+- [x] Sửa đổi triển khai tag `task` thành `tnorm` và `tpoll` để phân biệt tránh nhầm lẫn cú pháp giữa non-HSMC tnorm và tpoll. //STATUS - Đã sửa đổi tài liệu bổ sung kèm mã nguồn.
 - [x] Bổ sung triển khai template cho app.c với các khai báo jinja2 reusable.
 - [x] Thay đổi triển khai __init__.py để hỗ trợ thống nhất triển khai các submodule của pltf.
 - [x] Bổ sung triển khai tsgen.gda để hỗ trợ việc generate các cấu hình global data của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [x] Bổ sung thiết kế module để tinh gọn các khai báo NULL không sử dụng trong khai báo YAML của người dùng nhằm giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [x] Sửa đổi triển khai lstaxer.strucjec để bao quát toàn bộ cấu trúc actvobj, fsm, tsm, của tlist.
 - [ ] Bổ sung triển khai thiết kế lstaxer.lukupmodel để đưa các cấu hình post-validated vào pydantic model để chuẩn hóa toàn bộ logic triển khai trước khi translate thành mã C, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Đưa cân nhắc triển khai hoạt động của cfparsers hoặc pyspec vào post-validation của lstaxer.vlid để phối hợp lstaxer.kre8 generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 
