@@ -2,6 +2,7 @@ import yaml
 
 DEBUG_FLAG = True
 
+# TASK - Bổ sung cân nhắc thay thế việc sử dụng pytest + pydantic model để kiểm tra tối ưu hơn.
 def strucjec_target_tlist(yaml_text):
   events = yaml.parse(yaml_text)
   

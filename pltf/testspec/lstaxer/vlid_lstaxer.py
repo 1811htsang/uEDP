@@ -137,6 +137,8 @@ However, UST can be considered to be implemented in the future
 as it a good practice but not necessary for now.
 """
 
+# TASK - Ghi chú để bổ sung kiểm tra trong tương lai
+
 # NOTE - Post Resource Existance
 
 """
@@ -148,3 +150,5 @@ So PRE can be skipped in lstaxer.vlid.
 However, PRE can be considered to be implemented in the future
 as it a good practice but not necessary for now.
 """
+
+# TASK - Ghi chú để bổ sung kiểm tra trong tương lai

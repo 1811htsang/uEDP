@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Union
 # LINK - sources/app/lstaxizer.yaml
 # NOTE - This file is used to check against lstaxer.vlid
 
-# Cấu hình chung để Pydantic hiểu cả tên alias và tên biến
+# General Pydantic configuration to understand both alias names and variable names
 model_config = ConfigDict(populate_by_name=True)
 
 # CRITICAL 
@@ -269,4 +269,4 @@ class C_tnorm_obj(BaseModel):
 '''
 class C_tpoll_obj(BaseModel):
   tpoll: str
-  kwexec: List[C_act_obj]F
+  kwexec: List[C_act_obj]
