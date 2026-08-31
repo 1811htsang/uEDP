@@ -138,24 +138,30 @@ tlist:
         to: NULL
         sig: NULL
         data: NULL
+        ptype: NULL
       - actv: uedp_itnlog_set_output(pal_logdp_dispatch)
         to: NULL
         sig: NULL
         data: NULL
+        ptype: NULL
     on_actv: # NOTE - logic "chạy" (Active)
       steps:
       - actv: uedp_itnlog_log
         to: NULL
         sig: NULL
         data: "[USR][IDLE] Starting sequence..."
+        ptype: NULL
       - actv: uedp_task_norm_post_msg
         to: TASK_NORM_A
         sig: *sig1
+        data: NULL
+        ptype: NULL
     on_exit: # NOTE - logic "kết thúc" (Exit)
       actv: uedp_itnlog_log
       to: NULL
       sig: NULL
       data: "[USR][IDLE] Sequence finished."
+      ptype: NULL
   - id: tsm_task_usr_state_running
     trans:
     - sig: *sig2
@@ -165,12 +171,14 @@ tlist:
       to: NULL
       sig: NULL
       data: "[USR][RUNNING] Sequence started."
+      ptype: NULL
     on_actv:
       steps:
       - actv: uedp_itnlog_log
         to: NULL
         sig: NULL
         data: "[USR][RUNNING] Posting message to TASK_NORM_A..."
+        ptype: NULL
       - actv: uedp_task_norm_post_msg
         to: TASK_NORM_A
         sig: *sig1
@@ -182,6 +190,7 @@ tlist:
         to: NULL
         sig: NULL
         data: itnlog_dump_svc
+        ptype: NULL
   << : *tnorm1-ctrl
 - tnorm: TASK_NORM_A
   tsm:
@@ -203,14 +212,19 @@ tlist:
       to: TASK_NORM_B
       sig: *sig5
       data: NULL
+      ptype: NULL
     on_actv:
       steps:                # Chuyển trạng thái kèm hành động phức tạp
       - actv: uedp_post_msg
         to: TASK_NORM_B
         sig: *sig6
         data: NULL
+        ptype: NULL
       - actv: uedp_itnlog_log
+        to: NULL
+        sig: NULL
         data: "[TASK_NORM_A][WAITING_B] Posted SIG_0xAA to TASK_NORM_B."
+        ptype: NULL
     on_exit: NULL
   escal: # Cấu hình APE để xử lý khẩn cấp (nếu có)
     mode: slnf
@@ -228,9 +242,13 @@ tlist:
       - actv: uedp_task_norm_post_msg
         to: TASK_NORM_A
         sig: *sig3
+        data: *gda_status # Ghi log nội dung từ biến toàn cục
+        ptype: VAL        # Validator check: Copy nội dung (memcpy)
       - actv: uedp_task_norm_post_msg
         to: TASK_NORM_A
         sig: *sig4
+        data: *gda_status # Ghi log nội dung từ biến toàn cục
+        ptype: VAL        # Validator check: Copy nội dung (memcpy)
         # sig: *gda_status # Validator check: Không hợp lệ, không thể dùng anchor trong sig
   - id: fsm_task_b_state_busy
     on_recv:
@@ -240,7 +258,11 @@ tlist:
       - actv: uedp_task_norm_post_msg
         to: TASK_USR
         sig: *sig2
+        data: *gda_status # Ghi log nội dung từ biến toàn cục
+        ptype: REF        # Validator check: Truyền địa chỉ chuỗi status
       - actv: uedp_itnlog_log
+        to: NULL
+        sig: NULL
         data: *gda_status # Ghi log nội dung từ biến toàn cục
         ptype: VAL        # Validator check: Copy nội dung (memcpy)
   << : *tnorm3-ctrl # Validator check: Không hợp lệ, không thể dùng anchor trong sig
@@ -250,6 +272,7 @@ tlist:
     to: NULL
     sig: NULL
     data: NULL
+    ptype: NULL
   << : *tpoll1 # Validator check: Không hợp lệ, thiếu anchor
 - tpoll: TASK_POLL_BLINK
   exec: 
@@ -257,6 +280,7 @@ tlist:
     to: NULL
     sig: NULL
     data: NULL
+    ptype: NULL
   << : *tpoll2
 # ANCHOR - Interrupt Service Routine (ISR) - Xử lý ngắt
 

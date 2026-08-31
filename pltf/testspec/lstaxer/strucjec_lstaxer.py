@@ -4,162 +4,153 @@ DEBUG_FLAG = True
 
 def strucjec_target_tlist(yaml_text):
   events = yaml.parse(yaml_text)
-    
-  path_stack = []        # ROOT -> tlist -> [idx] -> task_map
+  
+  path_stack = []
   errors = []
   
-  # State tracking
+  # Theo dõi Task hiện tại
   in_tlist = False
-  current_task = "Unknown"
+  cur_task = {"name": "Unknown", "type": None, "tags": set(), "line": 0, "has_anchor": False}
   
-  # Task level containers
-  task_metadata = {
-    'has_tsm': False, 'tsm_null': True,
-    'has_fsm': False, 'fsm_null': True,
-    'has_exec': False, 'exec_is_list': False,
-    'line': 0
-  }
+  # Ngăn xếp theo dõi các Mapping (để xử lý actv lồng nhau)
+  # Mỗi phần tử: {"keys": set(), "is_actobj": False, "line": 0}
+  map_stack = []
   
-  # Sub-item tracking (TSM/FSM states)
-  current_sub_item = {'keys': set(), 'line': 0, 'type': None}
-  
-  # on_recv tracking
-  in_on_recv = False
-  on_recv_item = {'keys': set(), 'has_steps': False, 'has_actv': False}
+  # Context cho TSM/FSM/EXEC
+  sub_type = None 
+  waiting_for_val = None 
 
   for event in events:
-    # --- QUẢN LÝ CẤU TRÚC (STACK) ---
-    if isinstance(event, yaml.SequenceStartEvent):
+    # --- BẮT ĐẦU MAPPING ---
+    if isinstance(event, yaml.MappingStartEvent):
+      path_stack.append("MAP")
+      
+      # 1. Khởi tạo tracker cho Mapping mới
+      map_info = {
+        "keys": set(),
+        "is_actobj": False,
+        "line": event.start_mark.line + 1
+      }
+      map_stack.append(map_info)
+
+      # 2. Nhận diện bắt đầu Task trong tlist
+      if in_tlist and len(path_stack) == 3:
+        cur_task = {"name": "Unknown", "type": None, "tags": set(), 
+              "line": event.start_mark.line + 1, "has_anchor": False}
+        if event.anchor: cur_task["has_anchor"] = True
+
+    # --- KẾT THÚC MAPPING ---
+    elif isinstance(event, yaml.MappingEndEvent):
+      # Lấy thông tin mapping vừa kết thúc
+      finished_map = map_stack.pop()
+      
+      # 1. Nếu là Action Object -> Validate cấu trúc actv
+      if finished_map["is_actobj"]:
+        strucjec_target_atcvobj(cur_task, finished_map, errors)
+      
+      # 2. Nếu là Task trong tlist -> Validate cấu trúc Task
+      if in_tlist and len(path_stack) == 3:
+        strucjec_target_tnode(cur_task, errors)
+        
+      # 3. Nếu là Item trong TSM/FSM -> Validate các tag đặc thù (id, trans...)
+      if in_tlist and len(path_stack) == 5:
+        strucjec_target_sub_tnode(cur_task, sub_type, finished_map, errors)
+
+      path_stack.pop()
+
+    # --- BẮT ĐẦU SEQUENCE ---
+    elif isinstance(event, yaml.SequenceStartEvent):
       path_stack.append("SEQ")
+
+    # --- KẾT THÚC SEQUENCE ---
     elif isinstance(event, yaml.SequenceEndEvent):
       path_stack.pop()
-    elif isinstance(event, yaml.MappingStartEvent):
-      path_stack.append("MAP")
-      depth = len(path_stack)
-      
-      # Khởi tạo item trong tlist
-      if in_tlist and depth == 3:
-        task_metadata = {'has_tsm': False, 'tsm_null': True, 'has_fsm': False, 
-                          'fsm_null': True, 'has_exec': False, 'exec_is_list': False, 
-                          'line': event.start_mark.line + 1}
-      
-      # Khởi tạo item trong tsm/fsm list (Level 5)
-      if in_tlist and depth == 5:
-        current_sub_item = {'keys': set(), 'line': event.start_mark.line + 1}
-      
-      # Khởi tạo item trong on_recv list (Level 7)
-      if in_on_recv and depth == 7:
-        on_recv_item = {'keys': set(), 'has_steps': False, 'has_actv': False}
+      if in_tlist and len(path_stack) == 1: in_tlist = False
 
-    elif isinstance(event, yaml.MappingEndEvent):
-      depth = len(path_stack)
-      # Kết thúc task -> Kiểm tra ràng buộc tsm/fsm/exec
-      if in_tlist and depth == 3:
-        strucjec_target_tlogic(current_task, task_metadata, errors)
-      
-      # Kết thúc tsm/fsm item
-      if in_tlist and depth == 5:
-        strucjec_target_sub_tlogic(current_task, current_sub_item, errors)
-      
-      # Kết thúc on_recv item
-      if in_on_recv and depth == 7:
-        strucjec_target_sub_tlogic_onrecv(current_task, on_recv_item, event.start_mark.line + 1, errors)
-          
-      path_stack.pop()
-
-    # --- XỬ LÝ DỮ LIỆU (SCALAR) ---
+    # --- DỮ LIỆU (SCALAR) ---
     elif isinstance(event, yaml.ScalarEvent):
       val = event.value
-      depth = len(path_stack)
+      if len(path_stack) == 1 and val == 'tlist': in_tlist = True
 
-      # Nhận diện vùng tlist
-      if depth == 1 and val == 'tlist': in_tlist = True
-      
-      # Lấy tên Task (tnorm hoặc tpoll)
-      if in_tlist and depth == 3:
-        if val in ['tnorm', 'tpoll']: 
-          # Giả định event tiếp theo là giá trị tên task
-          pass 
-        else: 
-          # Nếu đây là VALUE của tnorm/tpoll
-          if not any(k in path_stack for k in ['SEQ']): # Tránh nhầm với list con
-            current_task = val
+      if in_tlist:
+        # Ghi nhận key cho Mapping hiện tại
+        if map_stack:
+          map_stack[-1]["keys"].add(val)
+          if val == 'actv': map_stack[-1]["is_actobj"] = True
 
-      # Kiểm tra tag tại task level
-      if in_tlist and depth == 3:
-        if val == 'tsm': task_metadata['has_tsm'] = True
-        if val == 'fsm': task_metadata['has_fsm'] = True
-        if val == 'exec': task_metadata['has_exec'] = True
-        
-        # Check nếu tsm/fsm có data (không phải NULL)
-        if val in ['tsm', 'fsm', 'exec']:
-          # Chúng ta sẽ check sự kiện tiếp theo để xem nó có phải SequenceStart không
-          pass
+        # Logic lấy tên Task và loại Task (tnorm/tpoll)
+        if len(path_stack) == 3:
+          if val in ['tnorm', 'tpoll']:
+            cur_task["type"] = val
+            waiting_for_val = "task_name"
+          elif waiting_for_val == "task_name":
+            cur_task["name"] = val
+            waiting_for_val = None
+          
+          if val in ['tsm', 'fsm', 'exec']:
+            cur_task["tags"].add(val)
+            sub_type = val.upper()
+            waiting_for_val = f"check_null_{val}"
+          
+          if val == '<<' or event.anchor: cur_task["has_anchor"] = True
 
-      # Thu thập keys cho TSM/FSM state
-      if in_tlist and depth == 5:
-        current_sub_item['keys'].add(val)
-        if val == 'on_recv': in_on_recv = True
+        # Check giá trị NULL cho tsm/fsm/exec
+        if waiting_for_val and waiting_for_val.startswith("check_null_"):
+          tag = waiting_for_val.split("_")[-1]
+          if val is None or val.upper() == "NULL":
+            cur_task["tags"].add(f"{tag}_IS_NULL")
+          waiting_for_val = None
 
-      # Thu thập keys cho on_recv item
-      if in_on_recv and depth == 7:
-        on_recv_item['keys'].add(val)
-        if val == 'steps': on_recv_item['has_steps'] = True
-        if val == 'actv': on_recv_item['has_actv'] = True
-
-    # --- KIỂM TRA KIỂU DỮ LIỆU (SEQUENCE VS NULL) ---
-    elif isinstance(event, (yaml.SequenceStartEvent, yaml.ScalarEvent)):
-      # Tự động nhận diện nếu tsm/fsm là List hay NULL dựa trên event tiếp theo
-      pass 
+    # --- THAM CHIẾU ALIAS (*) ---
+    elif isinstance(event, yaml.AliasEvent):
+      if in_tlist and len(path_stack) == 3: cur_task["has_anchor"] = True
 
   return errors
 
-def strucjec_target_tlogic(task, meta, errors):
-  loc = f"Task: {task} (Line:{meta['line']})"
+def strucjec_target_atcvobj(task, act_map, errors):
+  """Kiểm tra cấu trúc bắt buộc của một Action Object"""
+  tags = act_map["keys"]
+  required = ['actv', 'to', 'sig', 'data', 'ptype']
+  missing = [r for r in required if r not in tags]
   
-  # Ràng buộc 1: Nếu không có tsm/fsm (hoặc NULL) -> Bắt buộc có exec
-  # (Lưu ý: Logic kiểm tra NULL cần bắt qua ScalarEvent tiếp theo sau key tsm/fsm)
-  if not meta['has_tsm'] and not meta['has_fsm']:
-    if not meta['has_exec']:
-      errors.append({'loc': loc, 'msg': "Must define 'exec' if 'tsm' and 'fsm' are absent."})
+  if missing:
+    loc = f"Task: {task['name']} -> Action (Line:{act_map['line']})"
+    errors.append({'loc': loc, 'msg': f"Action object missing tags: {', '.join(missing)}"})
 
-def strucjec_target_sub_tlogic(task, item, errors):
-  keys = item['keys']
-  loc = f"Task: {task} (Line:{item['line']})"
-  
-  # Kiểm tra TSM Item
-  if 'on_actv' in keys or 'on_ntry' in keys: # Nhận diện đây là TSM
-    for req in ['trans', 'on_ntry', 'on_actv', 'on_exit']:
-      if req not in keys:
-        errors.append({'loc': loc, 'msg': f"TSM State missing '{req}'"})
-              
-  # Kiểm tra FSM Item
-  if 'on_recv' in keys:
-    pass # Ràng buộc on_recv được check ở hàm riêng
+def strucjec_target_tnode(task, errors):
+  t_label = f"{task['type'].upper()}: {task['name']} (L:{task['line']})"
+  tags = task['tags']
 
-def strucjec_target_sub_tlogic_onrecv(task, item, line, errors):
-  keys = item['keys']
-  loc = f"Task: {task} -> on_recv (Line:{line})"
+  if not task['has_anchor']:
+    errors.append({'loc': t_label, 'msg': "Missing anchor definition or alias (<<: *)."})
+
+  if task['type'] == 'tnorm':
+    # TNORM phải có logic: (tsm/fsm không NULL) HOẶC (exec không NULL)
+    has_sm = ('tsm' in tags and 'tsm_IS_NULL' not in tags) or ('fsm' in tags and 'fsm_IS_NULL' not in tags)
+    has_exec = 'exec' in tags and 'exec_IS_NULL' not in tags
+    if not (has_sm or has_exec):
+      errors.append({'loc': t_label, 'msg': "TNORM must have TSM/FSM or a valid 'exec' list."})
   
-  # Check sig, goto
-  for req in ['sig', 'goto']:
-    if req not in keys:
-      errors.append({'loc': loc, 'msg': f"on_recv item missing '{req}'"})
-  
-  # Check steps XOR actv
-  if not item['has_steps'] and not item['has_actv']:
-    errors.append({'loc': loc, 'msg': "on_recv item must have either 'steps' (list) or 'actv' (scalar)."})
+  elif task['type'] == 'tpoll':
+    if 'exec' not in tags or 'exec_IS_NULL' in tags:
+      errors.append({'loc': t_label, 'msg': "TPOLL must have a valid 'exec' list."})
+
+def strucjec_target_sub_tnode(task, s_type, item, errors):
+  tags = item["keys"]
+  loc = f"Task {task['name']} -> {s_type} Item (L:{item['line']})"
+  if s_type == 'TSM':
+    for r in ['id', 'trans', 'on_ntry', 'on_actv', 'on_exit']:
+      if r not in tags: errors.append({'loc': loc, 'msg': f"TSM missing '{r}'"})
+  elif s_type == 'FSM':
+    if 'id' not in tags or 'on_recv' not in tags:
+      errors.append({'loc': loc, 'msg': f"FSM missing 'id' or 'on_recv'"})
 
 def strucjec_debug_tlist(errors):
-  print(f"{'-'*30} strucjec `tlist` param  {'-'*30}\n")
-  print(f"{'TYPE':<10} | {'LOCATION':<40} | {'MESSAGE'}")
-  print("-" * 85)
-  
-  if not errors:
-    print(f"{'SUCCESS':<10} | {'All tasks':<40} | No issues found.")
+  print(f"{'TYPE':<10} | {'LOCATION':<45} | {'MESSAGE'}")
+  print("-" * 105)
+  if not errors: print("SUCCESS  | Structure is fully valid.")
   else:
-    for err in errors:
-      print(f"ERROR      | {err['loc']:<40} | {err['msg']}")
+    for e in errors: print(f"{'ERROR':<10} | {e['loc']:<45} | {e['msg']}")
 
   print("\n")
 
