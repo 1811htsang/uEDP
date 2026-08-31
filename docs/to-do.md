@@ -202,7 +202,8 @@ Kiểm tra trong `usrinp_pspec` để nắm rõ thông tin của task và thực
 // !SECTION 
 -->
 
-- [ ] Sửa đổi và cập nhật thiết kế DMP, D2MP tương ứng với sự xuất hiện của dpool GDA.
+- [ ] Sửa đổi và cập nhật thiết kế DMP, D2MP tương ứng với sự xuất hiện của dpool GDA. //NOTE - Ở task, yêu cầu cụ thể là sửa đổi tài liệu tương ứng.
+- [ ] Sửa đổi và cập nhật thiết kế PLD/μE-LS tương ứng với sự thay đổi của pyspec.usrinp và pyspec.tnorm //NOTE - Ở task này, yêu cầu cụ thể là bổ sung sửa đổi tài liệu tương ứng.
 - [ ] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
 - [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu.
 
