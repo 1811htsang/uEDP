@@ -65,6 +65,35 @@ StreamEndEvent()
 
 '''
 
+# ANCHOR - Hierarchy Level Dependency Chain - hl-dpendjain
+# NOTE - Only `tnorm`, `tpoll`, `sig`, `glbda` is used with incremental index, the rest is used with string name.
+level_1st_tag = ['tnorms', 'tpolls', 'sigs', 'glbda', 'tlist', 'isr', 'outexec']
+
+level_2nd_tag_tnorms = ['tsm_resrc', 'fsm_resrc', 'id_symbol', 'queue_name', 'handler', 'hex_val']
+level_2nd_tag_tpolls = ['id_symbol', 'handler', 'hex_val']
+level_2nd_tag_sigs = ['id_symbol', 'hex_val']
+level_2nd_tag_glbda = ['name', 'type', 'initial_value']
+level_2nd_tag_tlist = ['tnorm', 'tpoll']
+level_2nd_tag_isr = ['id', 'to', 'sig']
+level_2nd_tag_outexec = ['name', 'handler', 'context', 'state']
+level_2nd_tag = [level_2nd_tag_tnorms, level_2nd_tag_tpolls, level_2nd_tag_sigs, level_2nd_tag_glbda, level_2nd_tag_tlist, level_2nd_tag_isr, level_2nd_tag_outexec]
+
+level_3rd_tag_tsm_resrc = ['states', 'state_trans', 'object', 'table']
+level_3rd_tag_fsm_resrc = ['states', 'object']
+# NOTE - in tnorm and tpoll, the 3rd level tag is the intermadiate level tag, including `tsm`, `fsm` and `exec`
+level_3rd_tag = [level_3rd_tag_tsm_resrc, level_3rd_tag_fsm_resrc]
+
+# NOTE - This dpendjain is the core chain of action - actv-obj
+independent_level_actvobj_tag = ['actv', 'to', 'sig', 'data', 'ptype']
+
+level_4th_tag_tnorm_tsm_item = ['id', 'trans', 'on_ntry', 'on_actv', 'on_exit']
+level_4th_tag_tpoll_fsm_item = ['id', 'on_recv']
+level_4th_tag_tlist_exec_item = independent_level_actvobj_tag
+# NOTE - In special case of `exec`, the 4th level is the list of actv-obj, therefore, must be include
+level_4th_tag = [level_4th_tag_tnorm_tsm_item, level_4th_tag_tpoll_fsm_item, level_4th_tag_tlist_exec_item]
+
+
+
 def lukupmodel_parse_sample(yaml_text):
   events = yaml.parse(yaml_text)
   pprint.pprint(list(events))
