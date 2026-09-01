@@ -6,13 +6,13 @@ from ..cfparsers.dotcfg_cfp import cfp_parse_dotcfg
 
 def ustab_convert_yaml(context):
   # NOTE - 1. Chuyển toàn bộ context thành chuỗi YAML trong bộ nhớ
-  yaml_string = yaml.dump(context, default_flow_style=False)
+  yaml_string = yaml.dump(context, default_flow_style=False, allow_unicode=True, sort_keys=False)
   # NOTE - 2. Thay thế chuỗi "- - " thành "- "
   # Lưu ý: replace 2 lần nếu có dấu cách dư thừa hoặc thụt lề
   true_yaml = yaml_string.replace("- - ", "- ")
   # NOTE - Bổ sung thêm các dòng trống ở cuối kèm hướng dẫn anchor
   true_yaml += """
-# Anchor: sử dụng &<str> để định danh các phần tử 
+# Anchor: sử dụng &<str> để định danh anchor cho các phần tử trong YAML
 # >> sigs: &siglst
 # >>  '1', '2' of sigs: &sig1, &sig2, ...
 # >> tnorms: &tnormlst
