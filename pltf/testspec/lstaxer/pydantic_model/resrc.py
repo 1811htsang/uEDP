@@ -81,6 +81,7 @@ class C_tnorm_resrc_obj(BaseModel):
   hex_val: str
   id_symbol: str
   queue_name: str
+  anchor: str
   # tsm_resrc must have 'object', 'state_trans', 'states'
   # NOTE - default value is None, because tsm_resrc is not present in tnorm1, but it is present in tnorm3. Therefore, dev has chosen tsm_resrc from tnorm3 instead.
   tsm_resrc: Optional[C_tnorm_tsm_resrc_obj] = None
@@ -103,6 +104,7 @@ class C_tpoll_resrc_obj(BaseModel):
   hex_val: str
   handler: str
   id_symbol: str
+  anchor: str
 
 '''
 # STUB - GDA Stub for YAML file
@@ -121,3 +123,4 @@ class C_gda_resrc_obj(BaseModel):
   kwtype: str = Field(alias="type")  # Use alias to avoid conflict with Python's built-in type
   # NOTE - initial_value can be int or str, so we use Optional[int] = str to allow both types. it can be int or default value is str
   initial_value: Union[int, str, bool]
+  anchor: str

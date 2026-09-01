@@ -1,6 +1,8 @@
 from pydantic import BaseModel, field_validator, Field, ConfigDict
 from typing import List, Optional, Dict, Union
 
+from .resrc import C_tnorm_resrc_obj, C_tpoll_resrc_obj, C_gda_resrc_obj, C_sig_obj
+
 # LINK - sources/app/lstaxizer.yaml
 # NOTE - This file is used to check against lstaxer.vlid
 
