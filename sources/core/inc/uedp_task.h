@@ -29,15 +29,6 @@
 	typedef struct uedp_msg_t uedp_msg_t;
 
 	/**
-	 * @brief Định nghĩa các hằng số để quản lý kích thước 
-	 * 				của hàng đợi đối tượng tác vụ và hàng đợi ngắt
-	 * @attention Trong thiết kế hệ thống thì bắt buộc phải có hàng đợi dành cho ISR 
-	 * 						nhằm đảm bảo tính đồng bộ, an toàn và độc lập phần cứng khi xử lý các sự kiện ngắt
-	 */
-	#define QUEUE_OBJ_SIZE		(512) // Kích thước của hàng đợi đối tượng
-	#define QUEUE_ISR_SIZE		(128) // Kích thước của hàng đợi ngắt
-
-	/**
 	 * @brief Định nghĩa các kiểu dữ liệu để quản lý ID 
 	 * 				và mức độ ưu tiên của tác vụ trong hệ thống UEDP
 	 */
