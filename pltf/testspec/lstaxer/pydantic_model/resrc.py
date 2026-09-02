@@ -29,6 +29,7 @@ class C_sig_obj(BaseModel):
   index: str
   hex_val: str
   id_symbol: str
+  anchor: str
 
 '''
 # STUB - TNORM Stub for YAML file
