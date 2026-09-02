@@ -115,7 +115,7 @@ Logic gần như giữ nguyên so với `sources/common/pyspec/` cũ (đổi tê
 
 ### 3.3 `pltf/testspec/cfparsers/dotcfg_cfp.py` — trái tim của pipeline sinh code
 
-Đây là phần thay thế trực tiếp cho logic duyệt `kconf.unique_defined_syms` từng nằm rải rác trong `corecfg_gen`/`palcfg_gen` của `uedp.py` cũ. `dotcfg_cfp.parse_config(config_path)` đọc thẳng file `.config` (dạng text `CONFIG_KEY=value`) — **không cần** `kconfiglib` nữa ở bước này — và trả về một `context` dict có cấu trúc:
+Đây là phần thay thế trực tiếp cho logic duyệt `kconf.unique_defined_syms` từng nằm rải rác trong `corecfg_gen`/`palcfg_gen` của `uedp.py` cũ. `dotcfg_cfp.cfp_parse_dotcfg(config_path)` đọc thẳng file `.config` (dạng text `CONFIG_KEY=value`) — **không cần** `kconfiglib` nữa ở bước này — và trả về một `context` dict có cấu trúc:
 
 - `core_configs`, `pal_configs`: danh sách chuỗi `#define` cho `CORE_*` / `PAL_*`.
 - `tasknorm_defs`, `taskpoll_defs`, `sig_defs`: tự động gán ID hex tăng dần, bắt đầu từ `0xE6` (task norm), `0xD4` (task poll), `0x01` (signal) — khớp với dải `[HES] Heximal Encoding Signals` đã mô tả trong `arch-design.md` (`TASK_NORM` ở `0xEx`, `TASK_POLL` ở `0xDx`).
@@ -124,7 +124,7 @@ Logic gần như giữ nguyên so với `sources/common/pyspec/` cũ (đổi tê
 - `arch_name`, `arch_apis`: tên kiến trúc PAL và danh sách Hardware API cần sinh.
 - `task_tsm`, `task_fsm`: map task → danh sách state, dự trù cho tích hợp μE-LS sau này (xem mục 3.5).
 
-Mỗi generator (`*_tsgen.py`) tự gọi `dotcfg_cfp.parse_config()` độc lập — đây là điểm còn trùng lặp cần lưu ý, xem mục 5.
+Mỗi generator (`*_tsgen.py`) tự gọi `dotcfg_cfp.cfp_parse_dotcfg()` độc lập — đây là điểm còn trùng lặp cần lưu ý, xem mục 5.
 
 ### 3.4 `pltf/templates/` + `pltf/testspec/generators/` — sinh file bằng Jinja2
 
@@ -132,7 +132,7 @@ Khác với cơ chế "vá chuỗi vào giữa 2 marker" của KwDI, mỗi gener
 
 ```python
 # pltf/testspec/generators/corecfg_tsgen.py
-context = dotcfg_cfp.parse_config(config_dir)
+context = dotcfg_cfp.cfp_parse_dotcfg(config_dir)
 env = Environment(loader=FileSystemLoader('./pltf/templates'))
 template = env.get_template('corecfg_tmpl.txt')
 output = template.render(current_date=context["current_date"], core_configs=context['core_configs'])
@@ -259,7 +259,7 @@ Giữ nguyên từ KwDI, không đổi — vẫn loại `docs/` (chứa PDF tham
 ## 6. Việc còn thiếu / rủi ro cần lưu ý khi tiếp tục triển khai
 
 - **`yaml_cfp.py` chưa nối vào `tsgen.py`**: hiện chỉ là script debug độc lập (`python pltf/testspec/cfparsers/yaml_cfp.py`), chưa có generator nào tiêu thụ dữ liệu từ `test.yaml`. Đây là phần việc chính còn lại để hoàn thiện hướng μE-LS.
-- **Lặp code parse `.config`**: cả 6 generator (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) đều tự gọi `dotcfg_cfp.parse_config(config_dir)` riêng lẻ thay vì parse một lần rồi truyền chung `context` — có thể gộp lại trong `tsgen.py` để tránh đọc file `.config` nhiều lần.
+- **Lặp code parse `.config`**: cả 6 generator (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) đều tự gọi `dotcfg_cfp.cfp_parse_dotcfg(config_dir)` riêng lẻ thay vì parse một lần rồi truyền chung `context` — có thể gộp lại trong `tsgen.py` để tránh đọc file `.config` nhiều lần.
 - **`entrypoint.sh` luôn chạy `uedp.py menuconfig` ở mỗi lần container khởi động**: phù hợp cho phiên làm việc tương tác trên máy dev, nhưng chưa có nhánh non-interactive (ví dụ đọc thẳng `.config` có sẵn, bỏ qua menuconfig) để dùng trong CI/CD.
 - **Chưa có test tự động cho chính `pltf/`**: bản thân testing framework (parser, generator, template) hiện chưa có test riêng để đảm bảo không hồi quy khi sửa template hay parser.
 - **`arch_dir_tsgen.py`** dùng cú pháp f-string lồng dấu ngoặc kép kiểu Python 3.12+ (`f"{context["arch_name"]}"`) — cần xác nhận tương thích khi image build với `python:3.13-slim` (khớp) nhưng cần lưu ý nếu sau này đổi base image xuống bản Python cũ hơn.

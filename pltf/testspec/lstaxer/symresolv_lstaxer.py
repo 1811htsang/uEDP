@@ -152,7 +152,8 @@ def trace_yaml_context(yaml_text):
         is_key_turn = False
       else:
         # Logic định danh đặc biệt: task:NAME hoặc id:NAME
-        if current_key in ['task', 'id'] and path_stack:
+        # NOTE - cập nhật mới với task:NAME được phân tách thành tnorm:NAME hoặc tpoll:NAME
+        if current_key in ['tnorm', 'tpoll', 'id'] and path_stack:
           path_stack[-1] = f"{current_key}:{event.value}"
         
         # Nếu Scalar này là một phần tử đơn trong List (không phải key-value)

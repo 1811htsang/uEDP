@@ -1,8 +1,11 @@
-from pydantic import BaseModel, field_validator
-from typing import List, Optional, Dict
+from pydantic import BaseModel, field_validator, Field, ConfigDict
+from typing import List, Optional, Dict, Union
 
 # LINK - sources/app/lstaxizer.yaml
 # NOTE - This file is used to check against lstaxer.vlid
+
+# General Pydantic configuration to understand both alias names and variable names
+model_config = ConfigDict(populate_by_name=True)
 
 '''
 # STUB - Signal Stub for YAML file
@@ -22,10 +25,11 @@ Add anchor to mark the anchor to check the logic after that against this anchor.
 The anchor is must have in the class.
 '''
 class C_sig_obj(BaseModel):
+  model_config = model_config
   index: str
   hex_val: str
   id_symbol: str
-  anchor: str = None
+  anchor: str
 
 '''
 # STUB - TNORM Stub for YAML file
@@ -59,18 +63,31 @@ Therefore, dev has chosen tsm_resrc from tnorm3 instead of tnorm1.
 Add anchor to mark the anchor to check the logic after that against this anchor. 
 The anchor is must have in the class.
 '''
+class C_tnorm_tsm_resrc_obj(BaseModel):
+  model_config = model_config
+  kwobject: str = Field(alias="object")  # Use alias to avoid conflict with Python's built-in object
+  state_trans: List[str]
+  states: List[str]
+  table: str
+
+class C_tnorm_fsm_resrc_obj(BaseModel):
+  model_config = model_config
+  kwobject: str
+  states: List[str]
+
 class C_tnorm_resrc_obj(BaseModel):
+  model_config = model_config
   index: str
   handler: str
   hex_val: str
   id_symbol: str
   queue_name: str
+  anchor: str
   # tsm_resrc must have 'object', 'state_trans', 'states'
   # NOTE - default value is None, because tsm_resrc is not present in tnorm1, but it is present in tnorm3. Therefore, dev has chosen tsm_resrc from tnorm3 instead.
-  tsm_resrc: Dict[str, List[str], List[str], str] = None
+  tsm_resrc: Optional[C_tnorm_tsm_resrc_obj] = None
   # fsm_resrc must have 'object', 'states'
-  fsm_resrc: Dict[str, List[str]] = None
-  anchor: str = None
+  fsm_resrc: Optional[C_tnorm_fsm_resrc_obj] = None
 
 '''
 # STUB - TPOLL Stub for YAML file
@@ -83,11 +100,12 @@ Add anchor to mark the anchor to check the logic after that against this anchor.
 The anchor is must have in the class.
 '''
 class C_tpoll_resrc_obj(BaseModel):
+  model_config = model_config
   index: str
   hex_val: str
   handler: str
   id_symbol: str
-  anchor: str = None
+  anchor: str
 
 '''
 # STUB - GDA Stub for YAML file
@@ -100,9 +118,10 @@ Add anchor to mark the anchor to check the logic after that against this anchor.
 The anchor is must have in the class.
 '''
 class C_gda_resrc_obj(BaseModel):
+  model_config = model_config
   index: str
   name: str
-  type: str
+  kwtype: str = Field(alias="type")  # Use alias to avoid conflict with Python's built-in type
   # NOTE - initial_value can be int or str, so we use Optional[int] = str to allow both types. it can be int or default value is str
-  initial_value: Optional[int] = str
-  anchor: str = None
+  initial_value: Union[int, str, bool]
+  anchor: str

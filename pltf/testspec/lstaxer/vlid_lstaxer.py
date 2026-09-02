@@ -96,7 +96,7 @@ for r in trace_results:
           print(f"[ERROR] Alias *{alias_name} is defined in {source_side} context but used in {target_side} context.")
           symresolv_error += 1
       case '<<':
-        if source_side != 'tnorms':
+        if source_side != 'tnorms' and source_side != 'tpolls':
           print(f"[ERROR] Alias *{alias_name} is defined in {source_side} context but used in {target_side} context.")
           symresolv_error += 1
       case 'on_sig':
@@ -137,6 +137,8 @@ However, UST can be considered to be implemented in the future
 as it a good practice but not necessary for now.
 """
 
+# TASK - Ghi chú để bổ sung kiểm tra trong tương lai
+
 # NOTE - Post Resource Existance
 
 """
@@ -148,3 +150,5 @@ So PRE can be skipped in lstaxer.vlid.
 However, PRE can be considered to be implemented in the future
 as it a good practice but not necessary for now.
 """
+
+# TASK - Ghi chú để bổ sung kiểm tra trong tương lai

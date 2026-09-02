@@ -10,14 +10,24 @@
 # - Task FSM use flag
 # - Task FSM name
 # - Task FSM state name
-def task_norm_declaration(num_tasks_norm, num_tsm_states, num_fsm_states, is_tsm_enabled, is_fsm_enabled):
+# Function to generate blank task poll declarations based on user input for kconfig
+# Task declarations include:
+# - Task name
+# - Task priority
+# - Task message queue name
+# - Task handler name
+# - Task TSM use flag
+# - Task TSM name
+# - Task TSM state name
+# - Task FSM use flag
+# - Task FSM name
+# - Task FSM state name
+def task_norm_declaration(num_tasks_norm, num_tsm_states_list, num_fsm_states_list, tsm_flags, fsm_flags):
   # NOTE - Generate task declarations in Kconfig format
-  # TODO - Consider forward task to Minh
-  """
-  Add task specific generation logic for TSM and FSM states
-  in order to remove the situation where some task only use FSM or TSM, but not both. 
-  This will help to reduce the number of task declarations and make the configuration more efficient.
-  """
+  # RESOLVED - Mỗi task giờ có thể khai báo dùng FSM/TSM riêng biệt (tsm_flags[i-1],
+  # fsm_flags[i-1]) kèm số lượng state riêng (num_tsm_states_list[i-1],
+  # num_fsm_states_list[i-1]) thay vì dùng chung 1 cờ + 1 số lượng cho toàn bộ
+  # task norm. Dữ liệu này được thu thập theo từng task trong usrinp_pspec.user_input().
   kconfig_content = []
   kconfig_content.append('menu "Task Norm configuration"\n')
 
@@ -53,6 +63,12 @@ def task_norm_declaration(num_tasks_norm, num_tsm_states, num_fsm_states, is_tsm
     kconfig_content.append(f'\t\t\t\tFormat output as void <value>_nhler(uedp_msg_t* msg);.\n')
     kconfig_content.append(f'\t\t\t\tUsually prefer eg. `tnorm_a` to produce `tnorm_a_nhler(uedp_msg_t* msg);`.\n')
 
+    # NOTE - Lấy cờ dùng và số lượng state của RIÊNG task #i (index i-1 trong list)
+    is_tsm_enabled = tsm_flags[i - 1]
+    is_fsm_enabled = fsm_flags[i - 1]
+    num_tsm_states = num_tsm_states_list[i - 1]
+    num_fsm_states = num_fsm_states_list[i - 1]
+
     # NOTE - Config TSM
     if is_tsm_enabled == True:
       kconfig_content.append('menu "TSM Configuration"\n')
@@ -66,7 +82,7 @@ def task_norm_declaration(num_tasks_norm, num_tsm_states, num_fsm_states, is_tsm
       kconfig_content.append(f'\t\t\tFormat output as extern uedp_tsm_t <value>;\n')
       kconfig_content.append(f'\t\t\tUsually prefer eg. `tsm_task_1` to produce `extern uedp_tsm_t tsm_task_1;` in tsm objects.\n')
       kconfig_content.append(f'\t\t\tUsually prefer eg. `tsm_task_1` to produce `extern tsm_state_desc_t tsm_task_1_tbl[];` in tsm objects table which contains list of states.\n')
-      # NOTE - Config TSM state name
+      # NOTE - Config TSM state name (số lượng state riêng của task #i)
       for j in range(1, num_tsm_states + 1):
         kconfig_content.append(f'\tconfig APPCFG_TSM_TASK_{i}_STATE_{j}')
         kconfig_content.append(f'\t\tstring "Name of TSM task #{i} state #{j}"')
@@ -93,7 +109,7 @@ def task_norm_declaration(num_tasks_norm, num_tsm_states, num_fsm_states, is_tsm
       kconfig_content.append(f'\t\t\tThis is the name of FSM task.\n')
       kconfig_content.append(f'\t\t\tFormat output as extern uedp_fsm_t <value>;\n')
       kconfig_content.append(f'\t\t\tUsually prefer eg. `fsm_task_1` to produce `extern uedp_fsm_t fsm_task_1;` in fsm objects.\n')
-      # NOTE - Config FSM state name
+      # NOTE - Config FSM state name (số lượng state riêng của task #i)
       for j in range(1, num_fsm_states + 1):
         kconfig_content.append(f'\tconfig APPCFG_FSM_TASK_{i}_STATE_{j}') 
         kconfig_content.append(f'\t\tstring "Name of FSM task #{i} state #{j}"')

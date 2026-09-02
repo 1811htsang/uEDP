@@ -9,11 +9,14 @@ class gnnerate_ustab:
       "tpolls": {},
       "sigs": {}
     }
-    # Định nghĩa các base offset theo thiết kế HES của μE-OS
-    # FIXME - Chỗ này sẽ được Minh sửa follow theo task default removal
+    # ANCHOR - Định nghĩa các base offset theo thiết kế HES của μE-OS
+    # RESOLVED - Đã đánh số lại SYS/USR/IDLE liền kề từ MIN_ID (0xE0-0xE2, xem
+    # uedp_core.h) và cập nhật OFFSET: norm 0x06→0x03, poll 0x04→0x00 (không còn
+    # tác vụ poll mặc định). Giá trị offset auto-counter cập nhật theo MIN_ID +
+    # OFFSET mới: norm 0xE0+0x03=0xE3, poll 0xD0+0x00=0xD0.
     self.OFFSETS = {
-      "NORM": 0xE6,
-      "POLL": 0xD4,
+      "NORM": 0xE3,
+      "POLL": 0xD0,
       "SIG": 0x01
     }
   def ustab_parse_kconfig(self, filepath):
@@ -24,7 +27,7 @@ class gnnerate_ustab:
       if not line or line.startswith("#"):
         continue
       m = re.match(r'CONFIG_DECL_TASK_NORM_(\d+)_NAME="(.+)"', line)
-      if m: self._get_norm(m.group(1))["id_symbol"] = m.group(2) + "_IDS"      
+      if m: self._get_norm(m.group(1))["id_symbol"] = m.group(2)      
       m = re.match(r'CONFIG_DECL_MSG_QUEUE_(\d+)_NAME="(.+)"', line)
       if m: self._get_norm(m.group(1))["queue_name"] = m.group(2) + "_msgq"
       m = re.match(r'CONFIG_DECL_NORM_HANDLER_(\d+)_NAME="(.+)"', line)
