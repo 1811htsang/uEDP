@@ -75,6 +75,7 @@ pltf/testspec/__pycache__/*
 pltf/__pycache__/*
 pltf/testspec/ustab/__pycache__/*
 pltf/testspec/lstaxer/__pycache__/*
+pltf/testspec/lstaxer/pydantic_model/__pycache__/*
 
 # ESP-IDF
 eim_config.toml
