@@ -627,6 +627,8 @@ if __name__ == '__main__':
 '''
 1. Thực hiện phân tích cấu trúc trả về của event để phân tích chiến lược xử lý mapping vào model.
 2. Xây dựng các chuỗi phân tách phụ thuộc sẵn có từ lstaxer.strucjec để hỗ trợ triển khai.
+
+# STATUS - done
 '''
 
 # DOC - Sample output for strategy of parsing into pydantic model
