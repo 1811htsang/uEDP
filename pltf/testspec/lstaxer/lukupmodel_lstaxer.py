@@ -1,5 +1,6 @@
 import yaml, pprint
 from .pydantic_model import *
+from pydantic import BaseModel, field_validator, Field, ConfigDict
 
 # DOC - Event in yaml.parse
 '''
@@ -99,52 +100,528 @@ lvel_seqmap = {
 }
 # !SECTION
 
+def _extract_anchor_map_for_indexed_group(yaml_text, group_name):
+  """Collect anchor names for entries under an indexed YAML group like tnorms/tpolls/sigs."""
+  anchor_map = {}
+  current_index = None
+  in_group = False
+
+  for event in yaml.parse(yaml_text):
+    if isinstance(event, yaml.ScalarEvent):
+      if event.value == group_name:
+        in_group = True
+      elif in_group and event.value.isdigit():
+        current_index = event.value
+    elif isinstance(event, yaml.MappingStartEvent) and in_group and event.anchor:
+      if current_index is not None:
+        anchor_map[current_index] = event.anchor
+
+  return anchor_map
+
+
 def lukupmodel_tnorm_resrc(yaml_text):
-  events = yaml.parse(yaml_text)
-  pass_level_1st_tag = False
-  index = 1
-  for event in events:
-    # check if value is in level_1st_tag
-    if isinstance(event, yaml.ScalarEvent) and event.value == level_1st_tag[0]:  # tnorms
-      # get the next level tag from lvel_seqmap
-      next_level_tag = lvel_seqmap.get(event.value)
-      if next_level_tag:
-        # NOTE
-        '''
-        After passing, specific focusing on tnorms with incremental index, 
-        it must create a new instance of the model class.
-        After that, it must mapping the anchor to the model
-        before parsing any attribute of the model class, 
-        because the anchor is used to identify the instance of the model class.
-        '''
-        pass_level_1st_tag = True
-      else:
-        # CRITICAL - If the next level tag is not found, it means the mapping is not complete, raise an error
-        print(f"No next level tag found for {event.value}")
-        print(f"Current event: {event}")
-        exit(1)
-    if pass_level_1st_tag and isinstance(event, yaml.ScalarEvent) and event.value == str(index):
-      # NOTE
-      '''
-      After passing tnorm, must check for the incremental index in format of string
-      Then get the next line containing the anchor, which is used to identify the instance of the model class.
-      '''
-      print(f"Next level tag found: {event.value}")
-      print(f"Current event: {event}")
-      # TODO - Implement the mapping logic here
-      
-      pass_level_1st_tag = False  # One-time used
-  
+  """
+  Parse the raw `tnorms` mapping from YAML and split each indexed entry into the
+  resource model expected by `C_tnorm_resrc_obj`.
+
+  The event stream design in the notes shows the dependency chain:
+    tnorms -> index -> mapping anchor -> tsm_resrc -> ... -> fsm_resrc -> ...
+  We keep this in mind by using the YAML document structure rather than a raw
+  flat scalar parser, so the resulting model stays aligned with the schema in
+  `pydantic_model.resrc.C_tnorm_resrc_obj`.
+  """
+  payload = yaml.safe_load(yaml_text) or {}
+  entries = payload.get('tnorms', {})
+  if not isinstance(entries, dict):
+    return []
+
+  # Extract anchors when they are present in the source YAML. This mirrors the
+  # notes in the file: the object anchor is encountered right after the numeric
+  # index and before the nested resource blocks are mapped.
+  anchor_map = {}
+  current_index = None
+  in_tnorms = False
+  for event in yaml.parse(yaml_text):
+    if isinstance(event, yaml.ScalarEvent):
+      if event.value == 'tnorms':
+        in_tnorms = True
+      elif in_tnorms and event.value.isdigit():
+        current_index = event.value
+    elif isinstance(event, yaml.MappingStartEvent) and in_tnorms and event.anchor:
+      if current_index is not None:
+        anchor_map[current_index] = event.anchor
+
+  out = []
+  for index_key, item in entries.items():
+    if not isinstance(item, dict):
+      continue
+
+    model = C_tnorm_resrc_obj.model_construct(
+      index=str(index_key),
+      handler=str(item.get('handler', '')),
+      hex_val=str(item.get('hex_val', '')),
+      id_symbol=str(item.get('id_symbol', '')),
+      queue_name=str(item.get('queue_name', '')),
+      anchor=anchor_map.get(str(index_key), ''),
+      tsm_resrc=None,
+      fsm_resrc=None,
+    )
+
+    tsm_resrc = item.get('tsm_resrc')
+    if isinstance(tsm_resrc, dict):
+      model.tsm_resrc = C_tnorm_tsm_resrc_obj(
+        kwobject=str(tsm_resrc.get('object', '')),
+        state_trans=list(tsm_resrc.get('state_trans', [])),
+        states=list(tsm_resrc.get('states', [])),
+        table=str(tsm_resrc.get('table', '')),
+      )
+
+    fsm_resrc = item.get('fsm_resrc')
+    if isinstance(fsm_resrc, dict):
+      model.fsm_resrc = C_tnorm_fsm_resrc_obj(
+        kwobject=str(fsm_resrc.get('object', '')),
+        states=list(fsm_resrc.get('states', [])),
+      )
+
+    out.append(model)
+
+  return out
+
+
+def lukupmodel_tpoll_resrc(yaml_text):
+  """Parse tpolls entries into C_tpoll_resrc_obj objects."""
+  payload = yaml.safe_load(yaml_text) or {}
+  entries = payload.get('tpolls', {})
+  if not isinstance(entries, dict):
+    return []
+
+  anchor_map = _extract_anchor_map_for_indexed_group(yaml_text, 'tpolls')
+  out = []
+  for index_key, item in entries.items():
+    if not isinstance(item, dict):
+      continue
+
+    model = C_tpoll_resrc_obj.model_construct(
+      index=str(index_key),
+      hex_val=str(item.get('hex_val', '')),
+      handler=str(item.get('handler', '')),
+      id_symbol=str(item.get('id_symbol', '')),
+      anchor=anchor_map.get(str(index_key), ''),
+    )
+    out.append(model)
+
+  return out
+
+
+def lukupmodel_sig_resrc(yaml_text):
+  """Parse sigs entries into C_sig_obj objects."""
+  payload = yaml.safe_load(yaml_text) or {}
+  entries = payload.get('sigs', {})
+  if not isinstance(entries, dict):
+    return []
+
+  anchor_map = _extract_anchor_map_for_indexed_group(yaml_text, 'sigs')
+  out = []
+  for index_key, item in entries.items():
+    if not isinstance(item, dict):
+      continue
+
+    model = C_sig_obj.model_construct(
+      index=str(index_key),
+      hex_val=str(item.get('hex_val', '')),
+      id_symbol=str(item.get('id_symbol', '')),
+    )
+    model.anchor = anchor_map.get(str(index_key), '')
+    out.append(model)
+
+  return out
+
+
+def _normalize_alias_value(value, prefer_key=None):
+  if value is None:
+    return None
+  if isinstance(value, str):
+    return value if value.upper() != 'NULL' else None
+  if isinstance(value, (int, float, bool)):
+    return str(value)
+  if isinstance(value, dict):
+    if prefer_key and prefer_key in value:
+      return _normalize_alias_value(value.get(prefer_key))
+    for key in ('id_symbol', 'name', 'object', 'hex_val', 'value'):
+      if key in value:
+        return _normalize_alias_value(value.get(key))
+    return None
+  return None
+
+
+def _parse_action_obj(data):
+  if not isinstance(data, dict):
+    return None
+  return C_act_obj(
+    actv=str(data.get('actv', '')),
+    to=_normalize_alias_value(data.get('to')),
+    sig=_normalize_alias_value(data.get('sig'), 'id_symbol'),
+    data=_normalize_alias_value(data.get('data'), 'name'),
+    ptype=_normalize_alias_value(data.get('ptype')),
+  )
+
+
+def _parse_action_list(data):
+  if data is None:
+    return C_act_list_obj(steps=[])
+
+  if isinstance(data, list):
+    steps = [_parse_action_obj(item) for item in data if _parse_action_obj(item) is not None]
+    return C_act_list_obj(steps=steps)
+
+  if isinstance(data, dict):
+    if 'steps' in data:
+      steps = [_parse_action_obj(item) for item in data.get('steps', []) if _parse_action_obj(item) is not None]
+      return C_act_list_obj(steps=steps)
+    if 'actv' in data:
+      item = _parse_action_obj(data)
+      return C_act_list_obj(steps=[item] if item else [])
+
+  return C_act_list_obj(steps=[])
+
+
+def _parse_trans_obj(data):
+  if not isinstance(data, dict):
+    return None
+  return C_trans_obj(
+    sig=_normalize_alias_value(data.get('sig'), 'id_symbol') or '',
+    goto=_normalize_alias_value(data.get('goto')) or '',
+  )
+
+
+def _parse_tsm_obj(data):
+  if not isinstance(data, dict):
+    return None
+
+  trans_raw = data.get('trans', [])
+  trans_items = [_parse_trans_obj(item) for item in trans_raw if _parse_trans_obj(item) is not None]
+
+  return C_tsm_obj(
+    id=str(data.get('id', '')),
+    trans=C_trans_list_obj(trans=trans_items),
+    on_ntry=_parse_action_list(data.get('on_ntry')) if data.get('on_ntry') is not None else None,
+    on_actv=_parse_action_list(data.get('on_actv')) if data.get('on_actv') is not None else None,
+    on_exit=_parse_action_list(data.get('on_exit')) if data.get('on_exit') is not None else None,
+  )
+
+
+def _parse_onrecv_obj(data):
+  if not isinstance(data, dict):
+    return None
+
+  steps = _parse_action_list(data.get('steps'))
+  return C_onrecv_obj(
+    sig=_normalize_alias_value(data.get('sig'), 'id_symbol') or '',
+    goto=_normalize_alias_value(data.get('goto')) or '',
+    steps=steps,
+  )
+
+
+def _parse_fsm_obj(data):
+  if not isinstance(data, dict):
+    return None
+
+  recv_raw = data.get('on_recv', [])
+  recv_items = [_parse_onrecv_obj(item) for item in recv_raw if _parse_onrecv_obj(item) is not None]
+  return C_fsm_obj(
+    id=str(data.get('id', '')),
+    on_recv=C_onrecv_list_obj(on_recv=recv_items),
+  )
+
+
+def _parse_kwexec_obj(data):
+  if not isinstance(data, dict):
+    return None
+
+  return C_kwexec_obj(
+    on_sig=_normalize_alias_value(data.get('on_sig'), 'id_symbol') or '',
+    steps=_parse_action_list(data.get('steps')),
+  )
+
+
+def _parse_trig_obj(data):
+  if not isinstance(data, dict):
+    return None
+
+  post_urgent = data.get('post_urgent')
+  return C_trig_obj(
+    on_sig=_normalize_alias_value(data.get('on_sig'), 'id_symbol') or '',
+    post_urgent=_parse_action_list(post_urgent) if post_urgent is not None else None,
+  )
+
+
+def _parse_escal_obj(data):
+  if not isinstance(data, dict):
+    return None
+
+  trigger = data.get('trigger', [])
+  return C_escal_obj(
+    mode=str(data.get('mode', '')),
+    trigger=C_trig_list_obj(trigger=[_parse_trig_obj(item) for item in trigger if _parse_trig_obj(item) is not None]),
+  )
+
+
+def lukupmodel_tnorm_logic(yaml_text):
+  """Parse the `tlist` entries with a `tnorm` task into C_tnorm_obj models."""
+  payload = yaml.safe_load(yaml_text) or {}
+  tlist = payload.get('tlist', [])
+  if not isinstance(tlist, list):
+    return []
+
+  out = []
+  for item in tlist:
+    if not isinstance(item, dict) or 'tnorm' not in item:
+      continue
+
+    task_name = str(item.get('tnorm', ''))
+    model = C_tnorm_obj(task=task_name)
+
+    if 'tsm' in item:
+      tsm_raw = item.get('tsm', [])
+      model.tsm = C_tsm_list_obj(
+        tsm_list=[_parse_tsm_obj(x) for x in tsm_raw if _parse_tsm_obj(x) is not None]
+      )
+
+    if 'fsm' in item:
+      fsm_raw = item.get('fsm', [])
+      model.fsm = C_fsm_list_obj(
+        fsm_list=[_parse_fsm_obj(x) for x in fsm_raw if _parse_fsm_obj(x) is not None]
+      )
+
+    if 'kwexec' in item:
+      kwexec_raw = item.get('kwexec', [])
+      model.kwexec = C_kwexec_list_obj(
+        kwexec=[_parse_kwexec_obj(x) for x in kwexec_raw if _parse_kwexec_obj(x) is not None]
+      )
+
+    if 'escal' in item:
+      model.escal = _parse_escal_obj(item.get('escal'))
+
+    model.anchor = item.get('anchor') or None
+    out.append(model)
+
+  return out
+
+
+def lukupmodel_tpoll_logic(yaml_text):
+  """Parse the `tlist` entries with a `tpoll` task into C_tpoll_obj models."""
+  payload = yaml.safe_load(yaml_text) or {}
+  tlist = payload.get('tlist', [])
+  if not isinstance(tlist, list):
+    return []
+
+  out = []
+  for item in tlist:
+    if not isinstance(item, dict) or 'tpoll' not in item:
+      continue
+
+    task_name = str(item.get('tpoll', ''))
+    kwexec_raw = item.get('kwexec', [])
+    if 'exec' in item:
+      kwexec_raw = item.get('exec', [])
+
+    parsed_kwexec = []
+    if isinstance(kwexec_raw, list):
+      for entry in kwexec_raw:
+        if isinstance(entry, dict):
+          parsed_kwexec.append(_parse_action_obj(entry))
+    elif isinstance(kwexec_raw, dict):
+      action = _parse_action_obj(kwexec_raw)
+      if action:
+        parsed_kwexec.append(action)
+
+    out.append(C_tpoll_obj(tpoll=task_name, kwexec=[a for a in parsed_kwexec if a is not None]))
+
+  return out
+
+
+def lukupmodel_isr_logic(yaml_text):
+  """Parse top-level ISR entries into C_isr_obj models."""
+  payload = yaml.safe_load(yaml_text) or {}
+  entries = payload.get('isr', [])
+  if not isinstance(entries, list):
+    return []
+
+  out = []
+  for item in entries:
+    if not isinstance(item, dict):
+      continue
+    out.append(C_isr_obj(
+      id=str(item.get('id', '')),
+      to=_normalize_alias_value(item.get('to')) or '',
+      sig=_normalize_alias_value(item.get('sig'), 'id_symbol') or '',
+    ))
+
+  return out
+
+
+def lukupmodel_outexec_logic(yaml_text):
+  """Parse top-level OUTEXEC entries into C_outexec_obj models."""
+  payload = yaml.safe_load(yaml_text) or {}
+  entries = payload.get('outexec', [])
+  if not isinstance(entries, list):
+    return []
+
+  out = []
+  for item in entries:
+    if not isinstance(item, dict):
+      continue
+    out.append(C_outexec_obj(
+      name=str(item.get('name', '')),
+      handler=str(item.get('handler', '')),
+      context=_normalize_alias_value(item.get('context')),
+      state=_normalize_alias_value(item.get('state')) or '',
+    ))
+
+  return out
+
+
+def lukupmodel_glbda_logic(yaml_text):
+  """Parse the top-level `glbda` section into C_gda_resrc_obj models."""
+  payload = yaml.safe_load(yaml_text) or {}
+  entries = payload.get('glbda', [])
+  if not isinstance(entries, list):
+    # Some YAML variants use a mapping keyed by numeric index instead of a list.
+    entries = payload.get('glbda', {})
+    if isinstance(entries, dict):
+      items = []
+      for index_key, item in entries.items():
+        if isinstance(item, dict):
+          item_with_index = dict(item)
+          item_with_index['_index'] = str(index_key)
+          items.append(item_with_index)
+      entries = items
+    else:
+      return []
+
+  out = []
+  for idx, item in enumerate(entries, start=1):
+    if not isinstance(item, dict):
+      continue
+
+    index_key = str(item.get('_index', idx))
+    out.append(C_gda_resrc_obj(
+      index=index_key,
+      name=str(item.get('name', '')),
+      kwtype=str(item.get('type', item.get('kwtype', ''))),
+      initial_value=item.get('initial_value', ''),
+      anchor='',
+    ))
+
+  return out
+
 
 def lukupmodel_parse_sample(yaml_text):
   events = yaml.parse(yaml_text)
   pprint.pprint(list(events))
+  print('--- End of Event Stream ---')
 
 # STUB - Sample usage
-with open('sources/app/lstaxizer.yaml', 'r', encoding='utf-8') as f:
-  yaml_sample = f.read()
-lukupmodel_parse_sample(yaml_sample)
-lukupmodel_tnorm_resrc(yaml_sample)
+if __name__ == '__main__':
+  with open('sources/app/lstaxizer.yaml', 'r', encoding='utf-8') as f:
+    yaml_sample = f.read()
+
+  lukupmodel_parse_sample(yaml_sample)
+
+  tnorm_items = lukupmodel_tnorm_resrc(yaml_sample)
+  tpoll_items = lukupmodel_tpoll_resrc(yaml_sample)
+  sig_items = lukupmodel_sig_resrc(yaml_sample)
+
+  print('tnorm_count=', len(tnorm_items))
+  for item in tnorm_items:
+    print(item.index, item.id_symbol, item.handler, item.anchor)
+    print('tsm =', item.tsm_resrc.kwobject if item.tsm_resrc else None)
+    print('fsm =', item.fsm_resrc.kwobject if item.fsm_resrc else None)
+
+  print('\n')
+
+  print('tpoll_count=', len(tpoll_items))
+  for item in tpoll_items:
+    print(item.index, item.id_symbol, item.handler, item.anchor)
+
+  print('\n')
+
+  print('sig_count=', len(sig_items))
+  for item in sig_items:
+    print(item.index, item.id_symbol, item.hex_val, getattr(item, 'anchor', ''))
+
+  print('\n')
+
+  tnorm_logic_items = lukupmodel_tnorm_logic(yaml_sample)
+  tpoll_logic_items = lukupmodel_tpoll_logic(yaml_sample)
+  isr_logic_items = lukupmodel_isr_logic(yaml_sample)
+  outexec_logic_items = lukupmodel_outexec_logic(yaml_sample)
+  glbda_logic_items = lukupmodel_glbda_logic(yaml_sample)
+
+  print('tnorm_logic_count=', len(tnorm_logic_items))
+  print('\n')
+  for item in tnorm_logic_items:
+    print('task =', item.task)
+    print('anchor =', item.anchor)
+    if item.tsm:
+      print('tsm_count =', len(item.tsm.tsm_list))
+      for tsm in item.tsm.tsm_list:
+        print('  state_id =', tsm.id)
+        print('  trans =', [(t.sig, t.goto) for t in tsm.trans.trans])
+        if tsm.on_ntry:
+          print('  on_ntry =', [(a.actv, a.to, a.sig, a.data, a.ptype) for a in tsm.on_ntry.steps])
+        if tsm.on_actv:
+          print('  on_actv =', [(a.actv, a.to, a.sig, a.data, a.ptype) for a in tsm.on_actv.steps])
+        if tsm.on_exit:
+          print('  on_exit =', [(a.actv, a.to, a.sig, a.data, a.ptype) for a in tsm.on_exit.steps])
+    if item.fsm:
+      print('fsm_count =', len(item.fsm.fsm_list))
+      for fsm in item.fsm.fsm_list:
+        print('  fsm_id =', fsm.id)
+        for recv in fsm.on_recv.on_recv:
+          print('    recv_sig =', recv.sig, 'goto =', recv.goto)
+          print('    recv_steps =', [(a.actv, a.to, a.sig, a.data, a.ptype) for a in recv.steps.steps])
+    if item.kwexec:
+      print('kwexec_count =', len(item.kwexec.kwexec))
+      for kw in item.kwexec.kwexec:
+        print('  kw_on_sig =', kw.on_sig)
+        print('  kw_steps =', [(a.actv, a.to, a.sig, a.data, a.ptype) for a in kw.steps.steps])
+    if item.escal:
+      print('escal_mode =', item.escal.mode)
+      print('escal_triggers =', [(t.on_sig, t.post_urgent.steps if t.post_urgent else None) for t in item.escal.trigger.trigger])
+    print('\n')
+
+  print('tpoll_logic_count=', len(tpoll_logic_items))
+  for item in tpoll_logic_items:
+    print('tpoll =', item.tpoll)
+    print('kwexec_count =', len(item.kwexec))
+    for act in item.kwexec:
+      print('  action =', act.actv, act.to, act.sig, act.data, act.ptype)
+    print('\n')
+
+  print('isr_logic_count=', len(isr_logic_items))
+  for item in isr_logic_items:
+    print('isr_id =', item.id)
+    print('isr_to =', item.to)
+    print('isr_sig =', item.sig)
+    print('\n')
+
+  print('outexec_logic_count=', len(outexec_logic_items))
+  for item in outexec_logic_items:
+    print('name =', item.name)
+    print('handler =', item.handler)
+    print('context =', item.context)
+    print('state =', item.state)
+    print('\n')
+
+  print('glbda_logic_count=', len(glbda_logic_items))
+  for item in glbda_logic_items:
+    print('gda_index =', item.index)
+    print('gda_name =', item.name)
+    print('gda_type =', item.kwtype)
+    print('gda_initial_value =', item.initial_value)
+    print('\n')
+
 
 # TASK
 '''
