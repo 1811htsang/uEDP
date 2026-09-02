@@ -76,6 +76,7 @@ pltf/__pycache__/*
 pltf/testspec/ustab/__pycache__/*
 pltf/testspec/lstaxer/__pycache__/*
 pltf/testspec/lstaxer/pydantic_model/__pycache__/*
+pltf/testspec/generators/pre_logicdef/__pycache__/*
 
 # ESP-IDF
 eim_config.toml
@@ -88,3 +89,4 @@ config.yaml
 
 # Nogic extension database
 .nogic/*
+
