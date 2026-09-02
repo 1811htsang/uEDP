@@ -1,5 +1,5 @@
-# NOTE - Export modules for use in other packages
+"""Generator namespaces separated by the logic-definition phase."""
 
-from . import appcfg_tsgen, corecfg_tsgen, palcfg_tsgen, appdecl_tsgen, arch_dir_tsgen, arch_h_tsgen, arch_c_tsgen, cfpcall_tsgen
+from . import post_logicdef, pre_logicdef
 
-# NOTE - Export functions for use in other packages
+__all__ = ['pre_logicdef', 'post_logicdef']
