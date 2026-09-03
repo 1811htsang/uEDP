@@ -383,10 +383,50 @@ Cần cân nhắc tách phần bổ sung tài liệu này sang phiên bản 1.2.
 - [ ] Bổ sung tài liệu phát triển chức năng Priority Degradation của μE-OS để giảm mức ưu tiên của command được kích hoạt thông qua IOMS sau một khoảng thời gian nhất định để tránh tình trạng task bị chiếm dụng quá lâu do các tín hiệu vật lý liên tục kích hoạt cùng một chức năng, giúp đảm bảo tính ổn định và hiệu quả của hệ thống khi xử lý các tín hiệu vật lý.
 - [ ] Ra mắt phiên bản 1.2.2 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho IOMS và tính năng viot, idempotency cùng với tài liệu hướng dẫn sử dụng, tài liệu phát triển cho chức năng Priority Degradation của μE-OS để hỗ trợ việc sử dụng IOMS một cách hiệu quả và ổn định trong các ứng dụng yêu cầu tương tác thời gian thực thông qua các tín hiệu vật lý.
 
-Sau phiên bản này, μEDP (μEDP) sẽ bắt đầu chuyển đổi thành μE-OS với thiết kế mới và các tính năng nâng cao như HAS (Hardware Accelerated Scheduling), TIM (Tickless Idle Mode), uvfs (Micro-Virtual File System), compmng (Component Manager), SHA (Safe Heap Allocation), ESD (Execution Space Division), MPU/MMU Integration, SSI (Secure Signal Injection), AOCE (Advance Out-Context Execution), DIOMS (Degradable IOMS), ...
+### Phiên bản 1.2.3: AMP/HELF support for multicore systems
+
+//  SECTION - v1.2.3
+
+<!-- NOTE - Warning on compatibility issue
+Cần lưu ý về vấn đề API tương thích và nền tảng phần cứng. 
+Ví dụ, với STM32H723 đơn nhân, chúng ta không cần tính năng AMP/HELF, nhưng với ESP32S3 thì vốn dĩ đã có sẵn API theo hệ FreeRTOS nên việc triển khai AMP/HELF sẽ cần một API trung gian để đảm bảo tính tương thích giữa các nền tảng phần cứng khác nhau.
+-->
+
+- [ ] Bổ sung các tài liệu tham khảo về AMP/SMP để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của các kiến trúc đa lõi trong việc hỗ trợ việc phát triển các ứng dụng phức tạp với nhiều tác vụ tương tác với nhau một cách linh hoạt hơn.
+- [ ] Đưa vào các tài liệu thiết kế chi tiết cho việc triển khai AMP/HELF (Hardware Eventization with Logic Fragmentation).
+- [ ] Bổ sung entry cho task list để bắt đầu công việc.
+- [ ] Ra mắt phiên bản 1.2.3 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho việc triển khai AMP/HELF và tài liệu hướng dẫn sử dụng, nhằm đảm bảo rằng các tính năng mạng được tích hợp một cách hiệu quả và ổn định trong hệ thống, đồng thời hỗ trợ việc phát triển các ứng dụng mạng và giao tiếp với các thiết bị khác trong hệ thống một cách dễ dàng và hiệu quả hơn.
+
+//  !SECTION
+
+### Phiên bản 1.2.4: The integration of smoltcp
+
+//  SECTION - v1.2.4
+
+<!-- NOTE - Warning on compatibility issue
+smoltcp là network stack của Rust nên sẽ cần API trung gian và các công cụ hỗ trợ để tích hợp vào lõi μEDP. Ngoài ra, với nền tảng ESP32 hiện tại thì đã có nhà phát triển thực hiện kiểm thử việc tích hợp smoltcp vào ESP32-P4, nên có thể follow các hướng dẫn và tài liệu của họ để triển khai tích hợp smoltcp vào ESP-IDF trước khi tích hợp vào lõi μEDP trên kit ESP32-S3.
+
+Tuy nhiên, theo khuyến cáo của nhà phát triển, `Other RISC-V SoCs should work; the classic Xtensa ESP32 needs a different Rust target and hasn’t been done.` chỉ có nghĩa là các SoC RISC-V khác sẽ hoạt động, nhưng ESP32 cổ điển cần một target Rust khác và chưa được thực hiện.
+
+Điều này sẽ dẫn đến việc khi làm việc trên ESP32 sẽ có 2 hướng triển khai khác nhau: một là sử dụng API của ESP-IDF để tích hợp smoltcp, hai là sử dụng API trung gian của μEDP để tích hợp smoltcp. Cần cân nhắc việc triển khai API trung gian của μEDP để đảm bảo tính tương thích giữa các nền tảng phần cứng khác nhau và hỗ trợ việc phát triển các ứng dụng mạng một cách dễ dàng và hiệu quả hơn.
+
+Do đó, cần tái thử nghiệm lại quá trình tích hợp smoltcp vào ESP-IDF để đánh giá hiệu quả trước khi chuyển sang đưa smoltcp vào lõi μEDP.
+
+Ngoài ra cần lưu ý rằng, smoltcp chỉ là một network stack hỗ trợ TCP/IP ở tầng 3 - Network và 4 - Transport chứ không phải hỗ trợ các kết nối mạng như WiFi. Do đó, việc mapping xuống tầng 2 - Data Link sẽ cần một API trung gian để tích hợp với các driver phần cứng của ESP32-S3, ví dụ như driver WiFi hoặc driver Ethernet. Cần cân nhắc việc triển khai API trung gian của μEDP để đảm bảo tính tương thích giữa các nền tảng phần cứng khác nhau và hỗ trợ việc phát triển các ứng dụng mạng một cách dễ dàng và hiệu quả hơn.
+
+Hoặc có thể tận dụng BSP của từng phần cứng làm điểm cốt lõi để μEDP có API tương tác điều khiển hoặc forward các tác vụ mạng sang một nhân xử lý khác nếu có hỗ trợ AMP/HELF.
+-->
+
+- [ ] Review tổng quan thiết kế smoltcp để đánh giá tính khả thi và đề xuất bổ sung task list lộ trình thiết kế API cho smoltcp vào μEDP, nhằm đảm bảo rằng các tính năng mạng được tích hợp một cách hiệu quả và ổn định trong hệ thống.
+- [ ] Bổ sung tài liệu thiết kế chi tiết cho việc tích hợp smoltcp vào μEDP để hỗ trợ việc phát triển các ứng dụng mạng và giao tiếp với các thiết bị khác trong hệ thống một cách dễ dàng và hiệu quả hơn, đồng thời đảm bảo rằng các tính năng mạng được tích hợp một cách hiệu quả và ổn định trong hệ thống.
+- [ ] Ra mắt phiên bản 1.2.4 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho việc tích hợp smoltcp vào μEDP và tài liệu hướng dẫn sử dụng, nhằm đảm bảo rằng các tính năng mạng được tích hợp một cách hiệu quả và ổn định trong hệ thống, đồng thời hỗ trợ việc phát triển các ứng dụng mạng và giao tiếp với các thiết bị khác trong hệ thống một cách dễ dàng và hiệu quả hơn.
+
+//  !SECTION
+
+## Lộ trình phát triển μEDP sang μE-OS
+
+μEDP (μEDP) sẽ bắt đầu chuyển đổi thành μE-OS với thiết kế mới và các tính năng nâng cao như HAS (Hardware Accelerated Scheduling), TIM (Tickless Idle Mode), uvfs (Micro-Virtual File System), compmng (Component Manager), SHA (Safe Heap Allocation), ESD (Execution Space Division), MPU/MMU Integration, SSI (Secure Signal Injection), AOCE (Advance Out-Context Execution), DIOMS (Degradable IOMS), ...
 
 Các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS sẽ được cập nhật chi tiết hơn khi tiến trình chuyển đổi bắt đầu.
 
 Phiên bản sẽ được tách thành 1 repository mới với tên gọi μE-OS để phản ánh rõ hơn về mục tiêu của dự án là một hệ điều hành nhúng nhẹ, và sẽ tiếp tục phát triển theo lộ trình đã đề ra với các tính năng mới và cải tiến dựa trên thiết kế của HyperPanelOS, RTOS.
-
-//REVIEW - Cần cân nhắc đưa triển khai thiết kế smoltcp vào hoạt động chung với framework μEDP trước khi chuyển sang μE-OS để đảm bảo rằng các tính năng mạng được tích hợp một cách hiệu quả và ổn định trong hệ thống, đồng thời hỗ trợ việc phát triển các ứng dụng mạng và giao tiếp với các thiết bị khác trong hệ thống một cách dễ dàng và hiệu quả hơn.
