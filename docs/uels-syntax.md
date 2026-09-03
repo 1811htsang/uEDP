@@ -670,7 +670,7 @@ outexec:
 
 > Kết luận đơn giản: `act` là hành vi cơ bản, `actv` là hành vi được thực thi trong ngữ cảnh cụ thể, `steps` là danh sách các hành vi được thực hiện theo thứ tự.
 
-#### Quy tắc mapping action và payload
+### Quy tắc mapping action và payload
 
 `actv` là discriminator của action, không phải nơi chứa toàn bộ câu lệnh C trong mọi trường hợp. Với built-in action được PLTF hỗ trợ, các tham số phải nằm ở các trường semantic tương ứng:
 
@@ -709,7 +709,8 @@ Không được dùng `data` để chứa danh sách tham số của một funct
 
 <!-- TODO
 100826 - Cân nhắc thay đổi 2 keyword `act` và `actv` để tránh nhầm lẫn.
-110826 - Cân nhắc remove `cact` và chỉ dùng `steps` trong `on_recv` để thống nhất cú pháp. ~ Bổ sung task list để thực thi việc sửa đổi này. >> DONE
+110826 - Cân nhắc remove `cact` và chỉ dùng `steps` trong `on_recv` để thống nhất cú pháp. ~ Bổ sung task list để thực thi việc sửa đổi này. 
+#STATUS - DONE
 -->
 
 ### Khu vực dữ liệu toàn cục - Global Data Area
@@ -783,5 +784,6 @@ Có thể cân nhắc đưa cho Minh trong việc thực thi.
 
 Section này đã được review và cập nhật các task trong task list để thực hiện các thay đổi cần thiết trong mã nguồn và tài liệu từ phiên bản 1.1.6.
 
+#STATUS - DONE
 // !SECTION
 -->

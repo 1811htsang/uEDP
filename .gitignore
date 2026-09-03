@@ -91,3 +91,4 @@ config.yaml
 
 # Nogic extension database
 .nogic/*
+
