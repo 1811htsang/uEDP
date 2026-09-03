@@ -1,7 +1,3 @@
-//ANCHOR - khai báo thư viện app
-#include "app_cfg.h"
-#include "app_decl.h"
-
 //ANCHOR - khai báo thư viện uEDP
 #include "uedp_core.h"
 #include "uedp_fcr.h"
@@ -18,90 +14,145 @@
 #include "pal_memrp.h"
 #include "pal_rprintf.h"
 
+//ANCHOR - khai báo thư viện app
+#include "app_cfg.h"
+#include "app_decl.h"
+
 //ANCHOR - Biến debug số lượng các tác vụ đã được khởi tạo
 uint32_t system_action_count = 0x0u;
 
 //ANCHOR - Khai báo message queue cho các task
-{% for msgq in msgq_defs %}uedp_msg_t* {{msgq}}_msgq[UEDP_MSG_BLANK_QUEUE_SIZE];
+{% for item in queue_items -%}
+uedp_msg_t* {{ item.name }}[UEDP_MSG_BLANK_QUEUE_SIZE];
 {% endfor %}
 //ANCHOR - Khai báo các biến toàn cục GDA
 //NOTE - Sample `int x = 1;` or `char str[20] = "Hello";` or `float f = 3.14;`
-{% for item in glbda_defs %}
-{%- set is_string = 'char' in item.type -%}
-{{item.type}} {{ item.name }} = {% if is_string %}"{{ item.initial_value }}"{% else %}{{ item.initial_value }}{% endif %};
-{% endfor %}
-//ANCHOR - Khai báo TSM object quản lý cho tác vụ
-{% for tsmobject in tsmobj_defs %}uedp_tsm_t {{tsmobject}}; 
-{% endfor %}
-//ANCHOR - Khai báo FSM object quản lý cho tác vụ
-{% for fsmobject in fsmobj_defs %}uedp_fsm_t {{fsmobject}}; 
-{% endfor %}
-//ANCHOR - Khai báo bảng task norm 
+{%- for item in glbda_defs %}
+{{ item.type }} {{ item.name }} = {% if 'char' in item.type %}"{{ item.initial_value }}"{% elif item.type == 'bool' %}{% if item.initial_value %}true{% else %}false{% endif %}{% else %}{{ item.initial_value }}{% endif %}; 
+{%- endfor %}
+
+//ANCHOR - Khai báo bảng task norm
 task_norm_t app_task_table[] = {
-  //TODO - Bổ sung tiếp tục ở các session làm việc tiếp theo
-  {% for item in tnorm_defs %}{ {{item.id}}, {{item.base_pri}}, {{item.cur_pri}}, {{item.urgent_pending}}, {{item.tsm}}, {{item.fsm}}, {{item.handler}}, {{item.msgq}}, {{item.msgq_buff}} },
-  {% endfor %}
-  { UEDP_TASK_NORM_EOT_ID, UEDP_TASK_PRI_LEVEL_0, UEDP_TASK_PRI_LEVEL_0, false, <tsm>, <fsm>, NULL, NULL, NULL } //ANCHOR - Must have
-  //NOTE - LR: id, base_pri, cur_pri, urgent_pending, tsm, fsm, task_norm, msg_queue, msg_queue_buffer
+  {% for item in task_resource_items -%}
+    { {{ item.id }}, {{ item.priority }}, {{ item.priority }}, false, {{ item.fsm }}, {{ item.tsm }}, {{ item.handler }}, {0}, {{ item.queue }} },
+  {% endfor -%}
+  { UEDP_TASK_NORM_EOT_ID, UEDP_TASK_PRI_LEVEL_0, UEDP_TASK_PRI_LEVEL_0, false, NULL, NULL, NULL, {0}, NULL }
 };
 
 //ANCHOR - Khai báo bảng task poll
 task_poll_t app_poll_table[] = {
-  {% for item in tnorm_defs %}{ {{item.id}}, {{item.base_pri}}, {{item.cur_pri}}, {{item.urgent_pending}}, {{item.tsm}}, {{item.fsm}}, {{item.handler}}, {{item.msgq}}, {{item.msgq_buff}} },
-  {% endfor %}
-  { UEDP_TASK_NORM_EOT_ID, UEDP_TASK_PRI_LEVEL_0, UEDP_TASK_PRI_LEVEL_0, false, <tsm>, <fsm>, NULL, NULL, NULL } //ANCHOR - Must have
-  //NOTE - LR: id, base_pri, cur_pri, urgent_pending, tsm, fsm, task_norm, msg_queue, msg_queue_buffer
+  {% for item in poll_table_items -%}
+    { {{ item.id }}, false, {{ item.handler_name }} },
+  {% endfor -%}
+  { UEDP_TASK_POLL_EOT_ID, false, NULL }
 };
 
-//ANCHOR - Khai báo hàm on-ntry/actv (onst)/exit cho các trạng thái của TSM
-/** NOTE
-  * Implementation của hàm cần được khai báo
-  * trước do state_desc và tsm_table cần các khai báo từ hàm
-  */
-{% for tsmio in tsmio_lists %}
-void {{tsmio}}_ntry(uedp_msg_t* msg) {
+{% for task in tnorm_codegen -%}
+{% if task.tsm_states -%}
+{% for state in task.tsm_states -%}
+//ANCHOR - Khai báo value {{ state.state_id }}
+#define {{ state.state_id }} {{ state.state_value }}
 
-}
+//ANCHOR - Khai báo các hàm entry, active, exit cho state {{ state.state_id }}
+void {{ state.entry_name }}(uedp_msg_t* msg);
+void {{ state.active_name }}(uedp_msg_t* msg);
+void {{ state.exit_name }}(uedp_msg_t* msg);
 
-void {{tsmio}}_onst(uedp_msg_t* msg) {
-
-}
-
-void {{tsmio}}_exit(uedp_msg_t* msg) {
-
-}
-{% endfor %}
-//ANCHOR - Khai báo bảng chuyển trạng thái cho state
-{% for tran in appcfg_tsm_state_trans %}
-tsm_trans_t {{tran}}[] = {
-
+{% endfor -%}
+//ANCHOR - Khai báo tsm_object
+uedp_tsm_t {{ task.tsm_object }};
+{% for state in task.tsm_states %}
+tsm_trans_t {{ state.id }}_trans[] = {
+  {%- for transition in state.transitions %}
+  { {{ transition.sig }}, {{ transition.goto_value }}, {{ state.active_name if state.active_actions else 'NULL' }} },
+  {%- endfor %}
 };
 {% endfor %}
-//ANCHOR - Khai báo bảng state 
-{% for table in appcfg_tsm_tables %}
-tsm_state_desc_t {{table}}[] = {
-
+tsm_state_desc_t {{ task.tsm_table }}[] = {
+  {%- for state in task.tsm_states %}
+  { {{ state.state_id }}, {{ state.entry_name }}, {{ state.exit_name }}, {{ state.id }}_trans, (ui8)(sizeof({{ state.id }}_trans) / sizeof({{ state.id }}_trans[0])) },
+  {%- endfor %}
 };
-{% endfor %}
-//ANCHOR - Khai báo tham số khác viết tại đây
+{% endif -%}
+{% for state in task.fsm_states %}
+void {{ state.handler_name }}(uedp_msg_t* msg);
+{% endfor -%}
+{% if task.fsm_states %}
+//ANCHOR - Khai báo fsm_object
+uedp_fsm_t {{ task.fsm_object }};
+{% endif %}
+void {{ task.handler_name }}(uedp_msg_t* msg) {
+  {%- if task.fsm_states %}
+  uedp_fsm_dispatch(&{{ task.fsm_object }}, msg);
+  {%- else %}
+  {%- endif %}
+  system_action_count++;
+}
+{% for state in task.tsm_states %}
+void {{ state.entry_name }}(uedp_msg_t* msg) {
+  system_action_count++;
+{% for action in state.entry_actions %}
+{{ action | indent(2, true) }}
+{%- endfor %}
+}
 
-//ANCHOR - Khai báo hàm khác viết tại đây
+void {{ state.active_name }}(uedp_msg_t* msg) {
+  system_action_count++;
+{% for action in state.active_actions %}
+{{ action | indent(2, true) }}
+{%- endfor %}
+}
 
-//ANCHOR - Khai báo handler cho task norm
-{% for normhler in normhler_lists %}
-void {{normhler}}_nhler(uedp_msg_t* msg) {
+void {{ state.exit_name }}(uedp_msg_t* msg) {
+  system_action_count++;
+{% for action in state.exit_actions %}
+{{ action | indent(2, true) }}
+{%- endfor %}
+}
+{% endfor -%}
 
+{%- for state in task.fsm_states %}
+void {{ state.handler_name }}(uedp_msg_t* msg) {
+  system_action_count++;
+  {%- for recv in state.receives %}
+  if (msg->sig == {{ recv.sig }}) {
+  {% for action in recv.actions %}
+{{ action | indent(4, true) }}
+  {%- endfor %}
+  {%- if recv.goto_handler %}
+    uedp_fsm_go_next(&{{ task.fsm_object }}, {{ recv.goto_handler }});
+  {%- endif %}
+  }
+  {%- endfor %}
+}
+{% endfor -%}
+{%- endfor%}
+void logic_init(void) {
+  {%- for action in init_actions %}
+  {{ action }}
+  {%- endfor %}
+}
+{% for task in tpoll_codegen %}
+void {{ task.handler_name }}(void) {
+  system_action_count++;
+  {%- for action in task.actions %}
+  {{ action | indent(2, true) }}
+  {%- endfor %}
 }
 {% endfor %}
-//ANCHOR - Khai báo handler cho task poll
-{% for pollhler in pollhler_lists %}
-void {{pollhler}}_phler() {
-  
+{%- for item in isr %}
+void {{ item.id }}(void) {
+  /* ISR route: {{ item.to }}, signal: {{ item.sig }}. */
 }
 {% endfor %}
-//ANCHOR - Khai báo hàm state handler cho FSM
-{% for fsmio in fsmio_lists %}
-void {{fsmio}}_onst(uedp_msg_t* msg) {
-
+{%- for item in outexec %}
+void {{ item.handler }}(void) {
+  /* OUTEXEC {{ item.name }}, context: {{ item.context or 'NULL' }}, state: {{ item.state }}. */
 }
 {% endfor %}
+int main(void) {
+  uedp_core_init();
+  uedp_msg_pool_init();
+  logic_init();
+  return 0;
+}
