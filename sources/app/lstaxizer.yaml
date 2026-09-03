@@ -110,15 +110,15 @@ versh: "1.2.0-pre"
 # ANCHOR - Global Data Area (GDA) - Biến toàn cục
 
 glbda:
-- '1': &gda_status
+- &gda_status
   name: GDA_SYSTEM_STATUS # Validator check: kiểm tra lỗi từ lstaxer.strucjec
   type: "const char*"
   initial_value: "STATUS: INITIALIZING"
-- '2': &gda_counter
+- &gda_counter
   name: GDA_COUNTER
   type: "int"
   initial_value: 0
-- '3': &gda_flag
+- &gda_flag
   name: GDA_FLAG
   type: "bool"
   initial_value: false
@@ -132,7 +132,8 @@ tlist:
     trans:
     - sig: *sig1
       goto: tsm_task_usr_state_running
-    on_ntry: # NOTE - logic "khởi tạo" (Entry)
+    on_ntry:
+      # NOTE - logic "khởi tạo" (Entry)
       steps:
       - actv: uedp_itnlog_init()
         to: NULL
@@ -144,7 +145,8 @@ tlist:
         sig: NULL
         data: NULL
         ptype: NULL
-    on_actv: # NOTE - logic "chạy" (Active)
+    on_actv:
+      # NOTE - logic "chạy" (Active)
       steps:
       - actv: uedp_itnlog_log
         to: NULL
@@ -156,7 +158,8 @@ tlist:
         sig: *sig1
         data: NULL
         ptype: NULL
-    on_exit: # NOTE - logic "kết thúc" (Exit)
+    on_exit:
+      # NOTE - logic "kết thúc" (Exit)
       actv: uedp_itnlog_log
       to: NULL
       sig: NULL
@@ -182,8 +185,8 @@ tlist:
       - actv: uedp_task_norm_post_msg
         to: TASK_NORM_A
         sig: *sig1
-        data: *gda_status   # Validator check: tham chiếu anchor hợp lệ
-        ptype: REF          # D2MP: Truyền địa chỉ chuỗi status
+        data: *gda_status # Validator check: tham chiếu anchor hợp lệ
+        ptype: REF # D2MP: Truyền địa chỉ chuỗi status
     on_exit:
       steps:
       - actv: ocesvc_register
@@ -191,7 +194,7 @@ tlist:
         sig: NULL
         data: itnlog_dump_svc
         ptype: NULL
-  << : *tnorm1-ctrl
+  <<: *tnorm1-ctrl
 - tnorm: TASK_NORM_A
   tsm:
   - id: tsm_task_a_state_idle
@@ -204,7 +207,7 @@ tlist:
   - id: tsm_task_a_state_waiting
     trans:
     - sig: *sig3
-      goto: STAY            # Validator check: logic "bỏ qua" (Stay)
+      goto: STAY # Validator check: logic "bỏ qua" (Stay)
     - sig: *sig4
       goto: tsm_task_a_state_idle
     on_ntry:
@@ -214,7 +217,8 @@ tlist:
       data: NULL
       ptype: NULL
     on_actv:
-      steps:                # Chuyển trạng thái kèm hành động phức tạp
+      steps:
+      # Chuyển trạng thái kèm hành động phức tạp
       - actv: uedp_post_msg
         to: TASK_NORM_B
         sig: *sig6
@@ -226,12 +230,13 @@ tlist:
         data: "[TASK_NORM_A][WAITING_B] Posted SIG_0xAA to TASK_NORM_B."
         ptype: NULL
     on_exit: NULL
-  escal: # Cấu hình APE để xử lý khẩn cấp (nếu có)
+  escal:
+    # Cấu hình APE để xử lý khẩn cấp (nếu có)
     mode: slnf
     trigger:
     - on_sig: *sig7
-      post_urgent: NULL       # Chạy tiếp queue hiện tại với ưu tiên cao
-  << : *tnorm2-ctrl
+      post_urgent: NULL # Chạy tiếp queue hiện tại với ưu tiên cao
+  <<: *tnorm2-ctrl
 - tnorm: TASK_NORM_B
   fsm:
   - id: fsm_task_b_state_idle
@@ -243,12 +248,12 @@ tlist:
         to: TASK_NORM_A
         sig: *sig3
         data: *gda_status # Ghi log nội dung từ biến toàn cục
-        ptype: VAL        # Validator check: Copy nội dung (memcpy)
+        ptype: VAL # Validator check: Copy nội dung (memcpy)
       - actv: uedp_task_norm_post_msg
         to: TASK_NORM_A
         sig: *sig4
         data: *gda_status # Ghi log nội dung từ biến toàn cục
-        ptype: VAL        # Validator check: Copy nội dung (memcpy)
+        ptype: VAL # Validator check: Copy nội dung (memcpy)
         # sig: *gda_status # Validator check: Không hợp lệ, không thể dùng anchor trong sig
   - id: fsm_task_b_state_busy
     on_recv:
@@ -259,29 +264,29 @@ tlist:
         to: TASK_USR
         sig: *sig2
         data: *gda_status # Ghi log nội dung từ biến toàn cục
-        ptype: REF        # Validator check: Truyền địa chỉ chuỗi status
+        ptype: REF # Validator check: Truyền địa chỉ chuỗi status
       - actv: uedp_itnlog_log
         to: NULL
         sig: NULL
         data: *gda_status # Ghi log nội dung từ biến toàn cục
-        ptype: VAL        # Validator check: Copy nội dung (memcpy)
-  << : *tnorm3-ctrl # Validator check: Không hợp lệ, không thể dùng anchor trong sig
+        ptype: VAL # Validator check: Copy nội dung (memcpy)
+  <<: *tnorm3-ctrl # Validator check: Không hợp lệ, không thể dùng anchor trong sig
 - tpoll: TASK_POLL_MEMRP
-  exec: 
+  exec:
   - actv: pal_memrp_report()
     to: NULL
     sig: NULL
     data: NULL
     ptype: NULL
-  << : *tpoll1-ctrl # Validator check: Không hợp lệ, thiếu anchor
+  <<: *tpoll1-ctrl # Validator check: Không hợp lệ, thiếu anchor
 - tpoll: TASK_POLL_BLINK
-  exec: 
+  exec:
   - actv: pal_blink_led()
     to: NULL
     sig: NULL
     data: NULL
     ptype: NULL
-  << : *tpoll2-ctrl
+  <<: *tpoll2-ctrl
 # ANCHOR - Interrupt Service Routine (ISR) - Xử lý ngắt
 
 isr:

@@ -1,6 +1,6 @@
 from jinja2 import Environment, FileSystemLoader
 from . import cfpcall_tsgen
-from ..cfparsers import yaml_cfp
+from ...cfparsers import yaml_cfp
 import os
 import yaml
 

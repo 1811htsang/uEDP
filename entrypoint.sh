@@ -19,8 +19,12 @@ echo "[INFO] Running as uedp_user (UID: $USER_ID)"
 # Run the Python scripts as the new user
 echo "[ENTRY] call menuconfig"
 python uedp.py menuconfig
-echo "[ENTRY] call testspec.generator"
-python -m pltf.testspec.generators.tsgen
+echo "[ENTRY] call pre-logicdef generator"
+python -m pltf.testspec.generators.pre_logicdef.tsgen
+echo "[ENTRY] call post-logicdef app.c generator"
+python -m pltf.testspec.generators.post_logicdef.tsgen \
+  --yaml sources/app/lstaxizer.yaml \
+  --output sources/app/app.c
 echo "[ENTRY] call testspec.ustab.tsustab"
 python -m pltf.testspec.ustab.tsustab
 # Change ownership of all files in the /uedp-libs and /uedp-test directories to the new user

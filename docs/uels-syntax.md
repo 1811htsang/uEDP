@@ -670,6 +670,43 @@ outexec:
 
 > Kết luận đơn giản: `act` là hành vi cơ bản, `actv` là hành vi được thực thi trong ngữ cảnh cụ thể, `steps` là danh sách các hành vi được thực hiện theo thứ tự.
 
+#### Quy tắc mapping action và payload
+
+`actv` là discriminator của action, không phải nơi chứa toàn bộ câu lệnh C trong mọi trường hợp. Với built-in action được PLTF hỗ trợ, các tham số phải nằm ở các trường semantic tương ứng:
+
+```yaml
+- actv: post_msg
+  to: TASK_NORM_A
+  sig: SIG_USR_START
+  data:
+    value: GDA_SYSTEM_STATUS
+    type: const char*
+    mode: REF
+```
+
+Trong quy tắc này:
+
+- `to` và `sig` là tham số điều hướng message.
+- `data` chỉ là payload của message.
+- `data.value` là giá trị hoặc symbol được truyền.
+- `data.type` mô tả kiểu dữ liệu khi cần sinh thao tác `VAL`.
+- `data.mode` có thể là `REF` hoặc `VAL`; `ptype` dạng chuỗi cũ vẫn được hỗ trợ để tương thích.
+
+Không được dùng `data` để chứa danh sách tham số của một function call tùy ý. Với lệnh C chưa có built-in mapping, sử dụng escape hatch tường minh:
+
+```yaml
+- actv:
+    kind: c_stmt
+    code: |
+      pal_memrp_report(&memrp_info);
+- actv:
+    kind: c_call
+    function: helper
+    args: [arg_a, arg_b]
+```
+
+`c_stmt` và `c_call` được giữ nguyên để codegen nhưng không có semantic validation sâu như `post_msg`. Generator phải reject hoặc báo rõ khi built-in action thiếu tham số bắt buộc. Alias phải được resolve trước khi mapping; không dùng alias đã bị `safe_load()` chuyển thành `None` làm payload hợp lệ.
+
 <!-- TODO
 100826 - Cân nhắc thay đổi 2 keyword `act` và `actv` để tránh nhầm lẫn.
 110826 - Cân nhắc remove `cact` và chỉ dùng `steps` trong `on_recv` để thống nhất cú pháp. ~ Bổ sung task list để thực thi việc sửa đổi này. >> DONE
@@ -681,11 +718,11 @@ Bổ sung thêm phần mô tả về khu vực dữ liệu toàn cục (Global D
 
 ```yaml
 glbda:
-- '1': &gda1
+- &gda1
   name: GLOBAL_VAR_1
   type: int
   initial_value: 0
-- '2': &gda2
+- &gda2
   name: GLOBAL_VAR_2
   type: string
   initial_value: "default"
@@ -704,7 +741,7 @@ Ví dụ mẫu việc sử dụng biến toàn cục trong μE-LS:
 
 ```yaml
 glbda:
-- '1': &gda1
+- &gda1
   name: GLOBAL_COUNTER
   type: const char*
   initial_value: "msg: hello"

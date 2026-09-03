@@ -617,3 +617,36 @@ sta uedp_gdp_slot_t* internal_uedp_gdp_find(const char* name) {
 
 	return NULL;
 }
+
+//TASK - Cần review lại logic của hàm này.
+void uedp_msg_set_data(uedp_msg_t* msg, const ui8* data, ui8 size) {
+	if (!msg || !data || size == 0) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "set_data: null msg/data or size=0");
+		return;
+	}
+
+	if (msg->type == UEDP_MSG_TYPE_BLANK) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "set_data: cannot set data for BLANK msg");
+		return;
+	}
+
+	ui16 max_size = 0;
+	switch (msg->type) {
+		case UEDP_MSG_TYPE_ALLOC:
+			max_size = UEDP_MSG_ALLOC_DATA_MAX;
+			break;
+		case UEDP_MSG_TYPE_EXTAL:
+			max_size = UEDP_MSG_EXTAL_DATA_MAX;
+			break;
+		default:
+			UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "set_data: unknown msg type");
+			return;
+	}
+
+	if (size > max_size) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "set_data: size exceeds max for msg type");
+		return;
+	}
+
+	memcpy(msg->data, data, size);
+}

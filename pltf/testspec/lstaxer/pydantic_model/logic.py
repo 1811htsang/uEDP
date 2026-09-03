@@ -178,12 +178,20 @@ TNORM can have key type:
 - anchor -> must have in the class
 '''
 
+class C_data_obj(BaseModel):
+  value: str
+  type: Optional[str] = None
+  mode: Optional[str] = None
+
 class C_act_obj(BaseModel):
   actv: str
   to: Optional[str] = None
   sig: Optional[str] = None
-  data: Optional[str] = None
+  data: Optional[Union[str, C_data_obj]] = None
   ptype: Optional[str] = None
+  code: Optional[str] = None
+  function: Optional[str] = None
+  args: List[str] = Field(default_factory=list)
 
 class C_act_list_obj(BaseModel):
   steps: List[C_act_obj]

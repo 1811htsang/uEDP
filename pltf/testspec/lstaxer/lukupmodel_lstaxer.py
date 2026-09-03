@@ -119,6 +119,29 @@ def _extract_anchor_map_for_indexed_group(yaml_text, group_name):
   return anchor_map
 
 
+def _extract_anchor_list_for_group(yaml_text, group_name):
+  """Collect anchors attached to mapping items in a top-level YAML sequence."""
+  anchors = []
+  in_group = False
+  sequence_depth = None
+
+  for event in yaml.parse(yaml_text):
+    if isinstance(event, yaml.ScalarEvent) and event.value == group_name:
+      in_group = True
+      continue
+    if in_group and isinstance(event, yaml.SequenceStartEvent):
+      sequence_depth = 1
+      continue
+    if in_group and isinstance(event, yaml.SequenceEndEvent):
+      in_group = False
+      sequence_depth = None
+      continue
+    if in_group and sequence_depth == 1 and isinstance(event, yaml.MappingStartEvent):
+      anchors.append(event.anchor or '')
+
+  return anchors
+
+
 def lukupmodel_tnorm_resrc(yaml_text):
   """
   Parse the raw `tnorms` mapping from YAML and split each indexed entry into the
@@ -254,15 +277,43 @@ def _normalize_alias_value(value, prefer_key=None):
   return None
 
 
+def _parse_data_value(value):
+  if not isinstance(value, dict) or 'value' not in value:
+    return _normalize_alias_value(value, 'name')
+
+  return C_data_obj(
+    value=_normalize_alias_value(value.get('value'), 'name') or '',
+    type=_normalize_alias_value(value.get('type')),
+    mode=_normalize_alias_value(value.get('mode')),
+  )
+
+
 def _parse_action_obj(data):
   if not isinstance(data, dict):
     return None
+
+  action = data.get('actv')
+  code = None
+  function = None
+  args = []
+  if isinstance(action, dict):
+    action_kind = action.get('kind', action.get('type', 'c_call'))
+    action = str(action_kind)
+  if isinstance(data.get('actv'), dict):
+    action_spec = data['actv']
+    code = action_spec.get('code')
+    function = action_spec.get('function', action_spec.get('call'))
+    args = [str(arg) for arg in action_spec.get('args', [])]
+
   return C_act_obj(
-    actv=str(data.get('actv', '')),
+    actv=str(action or ''),
     to=_normalize_alias_value(data.get('to')),
     sig=_normalize_alias_value(data.get('sig'), 'id_symbol'),
-    data=_normalize_alias_value(data.get('data'), 'name'),
+    data=_parse_data_value(data.get('data')),
     ptype=_normalize_alias_value(data.get('ptype')),
+    code=code or data.get('code'),
+    function=function or data.get('function'),
+    args=args or [str(arg) for arg in data.get('args', [])],
   )
 
 
@@ -499,6 +550,7 @@ def lukupmodel_glbda_logic(yaml_text):
     else:
       return []
 
+  anchors = _extract_anchor_list_for_group(yaml_text, 'glbda')
   out = []
   for idx, item in enumerate(entries, start=1):
     if not isinstance(item, dict):
@@ -510,7 +562,7 @@ def lukupmodel_glbda_logic(yaml_text):
       name=str(item.get('name', '')),
       kwtype=str(item.get('type', item.get('kwtype', ''))),
       initial_value=item.get('initial_value', ''),
-      anchor='',
+      anchor=anchors[idx - 1] if idx - 1 < len(anchors) else '',
     ))
 
   return out

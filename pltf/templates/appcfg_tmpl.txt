@@ -23,7 +23,7 @@
   typedef struct task_poll_t task_poll_t;
   typedef struct tsm_trans_t tsm_trans_t;
   typedef struct tsm_state_desc_t tsm_state_desc_t;
-  typedef struct uedp_tsm_t uedp_tsm_t;
+  typedef struct tsm_trans_tbl_t uedp_tsm_t;
   typedef struct uedp_fsm_t uedp_fsm_t;
 
   /**
