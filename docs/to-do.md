@@ -275,7 +275,7 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 - [x] Bổ sung thiết kế module để tinh gọn các khai báo NULL không sử dụng trong khai báo YAML của người dùng nhằm giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [x] Sửa đổi triển khai lstaxer.strucjec để bao quát toàn bộ cấu trúc actvobj, fsm, tsm, của tlist.
 - [x] Bổ sung triển khai thiết kế lstaxer.lukupmodel để đưa các cấu hình post-validated vào pydantic model để chuẩn hóa toàn bộ logic triển khai trước khi translate thành mã C, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [ ] Đưa cân nhắc triển khai hoạt động của cfparsers hoặc pyspec vào post-validation của lstaxer.vlid để phối hợp lstaxer.kre8 generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [x] Đưa cân nhắc triển khai hoạt động của cfparsers hoặc pyspec vào post-validation của lstaxer.vlid để phối hợp lstaxer.kre8 generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 
 <!-- REVIEW
 1. Bổ sung cân nhắc phân tách PLD/μE-LS thành SA (semi-automation) và FA (full-automation) trên 2 phiên bản 1.1.7, 1.1.8 hay 1.1.8, 1.1.9.
@@ -283,13 +283,38 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 3. Cần review lại thiết kế cú pháp ở khu vực data để quản lý chi tiết vấn đề chuyển data-as-parameter thành data-as-global đối với các tham số truyền vào có sizeof() hoặc length nặng hoặc multiple param trong 1 function call.
 -->
 
-- [ ] Đưa calling của testspec.generator vào cùng phase với lstaxer.kre8 để cùng giai đoạn cấu hình sang mã nguồn.
+- [x] Đưa calling của testspec.generator vào cùng phase với lstaxer.kre8 để cùng giai đoạn cấu hình sang mã nguồn.
+- [x] Triển khai thiết kế lstaxer.kre8 để hỗ trợ việc generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [ ] Bổ sung rewrite cú pháp giải quyết vấn đề ambiguous data tag lên apps/lstaxizer.yaml để thực hiện regression test cho pipeline.
+- [ ] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing.
+- [ ] Triển khai BST cho pipeline PLD/μE-LS trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+
+<!-- STATUS
+Trong thiết kế trước đó:
+- testspec.generator được triển khai để sinh ra toàn bộ các cấu hình khai báo bắt buộc cho apps/lstaxizer.yaml
+- testspec.ustab được dùng để sinh ra bộ cấu hình tham chiếu cho logic. 
+- Các triển khai chưa được thêm vào chính là lstaxer.vlid (chứa pipeline từ lstaxer.strucjec đến lstaxer.symresolv) và sử dụng lstaxer.pydantic_model để mapping cấu hình sang parse-able state.
+
+Hiện tại: 
+- testspec.generator được phân tách thành 2 phần là generator.pre_logicdef và generator.post_logicdef để phân biệt các cấu hình được sinh ra trước khi định nghĩa logic và sau khi định nghĩa logic. 
+- lstaxer.lukupmodel được bổ sung để triển khai đưa toàn bộ các cấu hình YAML thành parse-able state pydantic model. 
+- lstaxer.kre8 được hoàn thiện triển khai cùng với generator.pos_logicdef để phối hợp triển khai sinh ra các mã nguồn C hoàn chỉnh.
+- Vấn đề nhập nhằng trong data đã được giải quyết với sự phân tách triệt để cú pháp và ràng buộc logic.
+
+Một số vấn đề còn tồn đọng:
+- Chưa review code style của các triển khai mới.
+- lstaxer.nullremov chưa được triển khai vào pipeline chung của PLD/μE-LS.
+- Chưa bổ sung BST cho pipeline này lên hệ thống phần cứng thực tế.
+-->
+
+<!-- NOTE - Expectation
+Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đọng của PLD/μE-LS để bắt đầu rebase các task thuộc về phiên bản 1.2.0 sang các phiên bản 1.1.7, 1.1.8, 1.1.9 để hoàn thiện các submodule cơ sở hạ tầng được dự trù trong phiên bản 1.2.0, bao gồm các tính năng PLTF.TSD/TLC.
+-->
+
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 - [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin. //LINK docs/uels-syntax.md:118
 - [ ] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //LINK docs/uels-syntax.md:199
-- [ ] Triển khai thiết kế lstaxer.vlid và lstaxer.model để triển khai validation lên lstaxizer.yaml kiểm tra thiết kế.
-- [ ] Triển khai thiết kế lstaxer.kre8 để hỗ trợ việc generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table - testspec.ustab) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Review lại thiết kế PLD (Parse-able Logic Descriptor) với các triển khai hiện có để đánh giá tính khả thi và hiệu quả của việc sử dụng PLD trong việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, đồng thời hỗ trợ việc tự động sinh mã nguồn C từ các mô tả logic này. //REVIEW - Cân nhắc đưa PLD/μE-LS sang phiên bản 1.1.7/8 để đảm bảo phiên bản 1.2.0 sẽ hoàn thiện PLTF với TSD, TLC cũng như có cơ sở testcase demo để đánh giá hiệu quả của các tính năng mới được triển khai trong phiên bản này.
 - [ ] Kiểm tra bổ sung API ngược để cho phép Kconfig output có thể dùng cho PLD và ngược lại. //REVIEW - Cần cân nhắc xóa task này để đảm bảo tính chất 1 chiều data flow để tránh PLD làm ảnh hưởng ngược đến Kconfig. Chỉ cho phép Kconfig output làm input cho PLD và không cho phép PLD output làm input cho Kconfig để đảm bảo tính nhất quán và tránh xung đột trong việc quản lý các cấu hình logic của μE-LS.
 - [ ] Mở rộng PLD với TSD (Test Scenario Descriptor) để hỗ trợ việc mô tả các kịch bản kiểm thử một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả kịch bản kiểm thử này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các kịch bản kiểm thử cho lõi μEDP.
