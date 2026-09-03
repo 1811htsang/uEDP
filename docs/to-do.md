@@ -217,12 +217,12 @@ Theo dõi ở uedp_core.h nhánh feat để nắm rõ các tag ANCHOR được c
 
 - [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như testspec.*, pyspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
 
-<!-- NOTE - Expectation
+<!-- NOTE - Expectation b4 BST task
 Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ được hoàn thiện với khả năng tự động hóa việc phân giải logic từ các cấu hình YAML sang các hàm thực thi trong lõi μEDP.
 
 Điều này đảm bảo:
 
-1. Minh sẽ thực hiện việc kiểm thử và đánh giá khả năng sinh code của PLD/μE-LS song song với việc perform BST trước khi chuyển sang triển khai TLC và TLD
+1. Minh sẽ thực hiện việc kiểm thử và đánh giá khả năng sinh code của PLD/μE-LS song song với việc perform BST trước khi chuyển sang triển khai TLC và TSD
 2. Lộ trình phân tách đảm bảo 1.1.6 sẽ hoàn thiện các tính năng PLD/μE-LS, 1.1.7 sẽ hoàn thiện TLD và 1.1.8 sẽ hoàn thiện TLC, từ đó đảm bảo 1.2.0 sẽ có đầy đủ các tính năng cơ sở hạ tầng cần thiết để triển khai sang thiết kế Test Strategy và Test Matrix cho các phạm vi test, re-test và regression test.
 3. Hỗ trợ việc triển khai testing với các phiên bản sau đó một cách dễ dàng và hiệu quả hơn, đồng thời đảm bảo hỗ trợ cho các nhân sự mới tham gia vào dự án có thể nhanh chóng nắm bắt và thực hiện các công việc liên quan.
 -->
@@ -307,33 +307,74 @@ Một số vấn đề còn tồn đọng:
 - Chưa bổ sung BST cho pipeline này lên hệ thống phần cứng thực tế.
 -->
 
-<!-- NOTE - Expectation
+<!-- NOTE - Expectation for pipeline
 Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đọng của PLD/μE-LS để bắt đầu rebase các task thuộc về phiên bản 1.2.0 sang các phiên bản 1.1.7, 1.1.8, 1.1.9 để hoàn thiện các submodule cơ sở hạ tầng được dự trù trong phiên bản 1.2.0, bao gồm các tính năng PLTF.TSD/TLC.
 -->
 
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
-- [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin. //LINK docs/uels-syntax.md:118
+- [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin đưa vào phiên bản 1.1.7 hoặc 1.1.8 để hỗ trợ việc tự động gán anchor cho các tag trong YAML.
+- [ ] Thực hiện chore filename để thống nhất các module riêng biệt của PLTF.
+
+<!-- SECTION - Idea cho remote-file alias
+# LINK docs/uels-syntax.md:118
+# LINK pltf/testspec/lstaxer/lukupmodel_lstaxer.py:5
+# LINK pltf/testspec/lstaxer/lukupmodel_lstaxer.py:706
+
+Dựa trên triển khai và kết quả trả về của yaml.parse(), Event sẽ hỗ trợ việc get/set parameter như anchor với `MappingStartEvent(anchor='tnorm1-ctrl', tag=None, implicit=True)` khi trước đó chúng ta gặp các ScalarEvent như `ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='1'`. 
+
+Tuy nhiên file inclusion của YAML chỉ đảm bảo việc thêm vào chứ không hề đảm bảo việc remote-alias từ file khác.
+Vì vậy, một ràng buộc chủ chốt phải có chính là thực hiện write toàn bộ file A với alias vào file B trước khi thực hiện bất kỳ thay đổi nào trên file B.
+
+Ngoài ra, hiện tại trong thiết kế của lstaxer.ustab sẽ sinh ra các incremental indexed item dạng '1', '2', '3', ... để phục vụ việc mapping các anchor và alias.
+
+Do đó, một ý tưởng có thể cân nhắc chính là:
+
+Khi chúng ta có 1 file A cần remote-alias từ file B:
+1. Chúng ta thực hiện parse file A để trích xuất event và xác định các incremental indexed item cần thiết.
+2. Chúng ta thực hiện gắn anchor vào các MappingStartEvent vào sau các ScalarEvent có value là incremental indexed item.
+3. Chúng ta thực hiện yaml.dump lại chính EventStream này vào chính file A để cập nhật các anchor và alias.
+4. Chúng ta thực hiện write toàn bộ file A với alias vào file B trước khi thực hiện bất kỳ thay đổi nào trên file B.
+
+# STATUS - Tuy nhiên, ở thời điểm hiện tại chưa có kiểm tra lại tính khả thi này nên ustab.ankorpin sẽ chưa được triển khai trước khi có kết quả kiểm tra khả thi. Nếu kết quả kiểm tra khả thi thì sẽ bổ sung ustab.ankorpin vào sau phiên bản 1.1.6 khi pipeline được chuẩn hóa và hoàn thiện hơn.
+
+# !SECTION
+-->
+
 - [ ] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //LINK docs/uels-syntax.md:199
 - [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table - testspec.ustab) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [ ] Review lại thiết kế PLD (Parse-able Logic Descriptor) với các triển khai hiện có để đánh giá tính khả thi và hiệu quả của việc sử dụng PLD trong việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, đồng thời hỗ trợ việc tự động sinh mã nguồn C từ các mô tả logic này. //REVIEW - Cân nhắc đưa PLD/μE-LS sang phiên bản 1.1.7/8 để đảm bảo phiên bản 1.2.0 sẽ hoàn thiện PLTF với TSD, TLC cũng như có cơ sở testcase demo để đánh giá hiệu quả của các tính năng mới được triển khai trong phiên bản này.
-- [ ] Kiểm tra bổ sung API ngược để cho phép Kconfig output có thể dùng cho PLD và ngược lại. //REVIEW - Cần cân nhắc xóa task này để đảm bảo tính chất 1 chiều data flow để tránh PLD làm ảnh hưởng ngược đến Kconfig. Chỉ cho phép Kconfig output làm input cho PLD và không cho phép PLD output làm input cho Kconfig để đảm bảo tính nhất quán và tránh xung đột trong việc quản lý các cấu hình logic của μE-LS.
+- [ ] Review lại thiết kế PLD (Parse-able Logic Descriptor) với các triển khai hiện có để đánh giá tính khả thi và hiệu quả của việc sử dụng PLD trong việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, đồng thời hỗ trợ việc tự động sinh mã nguồn C từ các mô tả logic này.
 - [ ] Mở rộng PLD với TSD (Test Scenario Descriptor) để hỗ trợ việc mô tả các kịch bản kiểm thử một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả kịch bản kiểm thử này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các kịch bản kiểm thử cho lõi μEDP.
-- [ ] Hoàn thiện thiết kế TLC (Test Level Coverager) để cho phép chỉ định mức kiểm tra từ ut (unit), ct (component), st (system) và it (integration) nhằm đảm bảo rằng các tính năng của lõi μEDP được kiểm thử đầy đủ và hiệu quả trên các mức độ khác nhau của hệ thống. //REVIEW - Cần cân nhắc tách TLC với TSD sang phiên bản 1.2.1 để tránh quá tải cho phiên bản 1.2.0 và đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+- [ ] Hoàn thiện thiết kế TLC (Test Level Coverager) để cho phép chỉ định mức kiểm tra từ ut (unit), ct (component), st (system) và it (integration) nhằm đảm bảo rằng các tính năng của lõi μEDP được kiểm thử đầy đủ và hiệu quả trên các mức độ khác nhau của hệ thống.
+
+<!-- NOTE - Expectation for PLTF.TSD/TLC
+Đưa 3 task bên trên sang phiên bản 1.2.1 để tránh quá tải cho phiên bản 1.2.0 và đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+-->
+
 - [ ] Thêm tài liệu thiết kế đưa smoltcp vào μEDP để bổ sung khả năng xử lý mạng tương thích hướng sự kiện, giúp mở rộng khả năng của lõi μEDP trong việc xử lý các ứng dụng mạng và giao tiếp với các thiết bị khác trong hệ thống.
 - [ ] Thêm tài liệu thiết kế chi tiết bootloader - μDB (Device Bootloader) để hỗ trợ việc khởi động và quản lý các thiết bị trong hệ thống một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các thiết bị được khởi động và quản lý một cách an toàn và hiệu quả.
 - [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
-- [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng của bộ điều phối phần cứng như NVIC và xử lý vấn đề về ISR nesting & preemption để đảm bảo hệ thống hoạt động ổn định và hiệu quả khi xử lý các sự kiện thời gian thực. //REVIEW - Cần cân nhắc tách phần bổ sung tài liệu này sang phiên bản 1.2.1 hoặc phiên bản 1.1.6, 1.1.7 để tránh quá tải cho phiên bản 1.2.0 và đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
-- [ ] Bổ sung tài liệu thiết kế PLTF (Portable Local Test Framework) nhằm cung cấp khả năng kiểm thử tự động đa quy mô. //NOTE - Task này vẫn được giữ nguyên tại phiên bản 1.2.0 thay vì đưa theo về phiên bản 1.1.7/8 để phản ánh đúng thiết kế tính năng PLTF nằm tại phiên bản 1.2.0, còn đối với phiên bản 1.1.7/8 sẽ lần lượt là PLD/μE-LS và PLTF.TSD/TLC.
+- [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng của bộ điều phối phần cứng như NVIC và xử lý vấn đề về ISR nesting & preemption để đảm bảo hệ thống hoạt động ổn định và hiệu quả khi xử lý các sự kiện thời gian thực.
+
+<!-- NOTE - Expectation for μE-OS Documentation
+Cần cân nhắc tách phần bổ sung tài liệu này sang phiên bản 1.2.2 hoặc phiên bản 1.1.6, 1.1.7 để tránh quá tải cho phiên bản 1.2.0 và đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+-->
+
 - [ ] Ra mắt phiên bản 1.2.0 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
 
 //  !SECTION
 
 ### Phiên bản 1.2.1: The Safe Input Filter
 
+//  SECTION - v1.2.1
+
+//NOTE - Cân nhắc rebase các task từ v1.2.0 sang v1.2.1 theo lộ trình và đề xuất dự kiến
+
 - [ ] Bổ sung tài liệu chi tiết cho thiết kế Safe Input Filter nhằm đảm bảo các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, nhằm đảm bảo tính ổn định và an toàn của hệ thống khi xử lý các tín hiệu từ bên ngoài.
 - [ ] Refine tính năng SOCI với OCE để đảm bảo rằng các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, đồng thời đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
 - [ ] Hoàn thiện thiết kế Safe Input Filter.
 - [ ] Ra mắt phiên bản 1.2.1 của lõi μEDP với đầy đủ tính năng Safe Input Filter và tài liệu hướng dẫn sử dụng.
+
+//  !SECTION
 
 ### Phiên bản 1.2.2: The I/O Mapping Shell
 
