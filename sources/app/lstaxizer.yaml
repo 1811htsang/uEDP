@@ -135,24 +135,17 @@ tlist:
     on_ntry:
       # NOTE - logic "khởi tạo" (Entry)
       steps:
-      - actv: uedp_itnlog_init()
-        to: NULL
-        sig: NULL
-        data: NULL
-        ptype: NULL
-      - actv: uedp_itnlog_set_output(pal_logdp_dispatch)
-        to: NULL
-        sig: NULL
-        data: NULL
-        ptype: NULL
+      - actv: 
+        kind: c_stmt
+        code: |
+          uedp_itnlog_init();
     on_actv:
       # NOTE - logic "chạy" (Active)
       steps:
-      - actv: uedp_itnlog_log
-        to: NULL
-        sig: NULL
-        data: "[USR][IDLE] Starting sequence..."
-        ptype: NULL
+      - actv: 
+          kind: c_call
+          function: uedp_itnlog_log
+          args: [34, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[USR][IDLE] Starting sequence..."']
       - actv: uedp_task_norm_post_msg
         to: TASK_NORM_A
         sig: *sig1
@@ -160,28 +153,25 @@ tlist:
         ptype: NULL
     on_exit:
       # NOTE - logic "kết thúc" (Exit)
-      actv: uedp_itnlog_log
-      to: NULL
-      sig: NULL
-      data: "[USR][IDLE] Sequence finished."
-      ptype: NULL
+      actv: 
+        kind: c_call
+        function: uedp_itnlog_log
+        args: [40, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[USR][IDLE] Sequence completed."']
   - id: tsm_task_usr_state_running
     trans:
     - sig: *sig2
       goto: tsm_task_usr_state_idle
     on_ntry:
-      actv: uedp_itnlog_log
-      to: NULL
-      sig: NULL
-      data: "[USR][RUNNING] Sequence started."
-      ptype: NULL
+      actv: 
+        kind: c_call
+        function: uedp_itnlog_log
+        args: [45, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[USR][RUNNING] Sequence started."']
     on_actv:
       steps:
-      - actv: uedp_itnlog_log
-        to: NULL
-        sig: NULL
-        data: "[USR][RUNNING] Posting message to TASK_NORM_A..."
-        ptype: NULL
+      - actv: 
+          kind: c_call
+          function: uedp_itnlog_log
+          args: [50, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[USR][RUNNING] Posting message to TASK_NORM_A..."']
       - actv: uedp_task_norm_post_msg
         to: TASK_NORM_A
         sig: *sig1
@@ -189,11 +179,15 @@ tlist:
         ptype: REF # D2MP: Truyền địa chỉ chuỗi status
     on_exit:
       steps:
-      - actv: ocesvc_register
-        to: NULL
-        sig: NULL
-        data: itnlog_dump_svc
-        ptype: NULL
+      - actv: 
+        kind: c_stmt
+        code: |
+          uedp_itnlog_log(
+            60,
+            ITNLOG_LEVEL_DEBUG,
+            ITNLOG_TAG_TSK,
+            "[USR][RUNNING] Sequence completed."
+          );
   <<: *tnorm1-ctrl
 - tnorm: TASK_NORM_A
   tsm:
@@ -224,11 +218,15 @@ tlist:
         sig: *sig6
         data: NULL
         ptype: NULL
-      - actv: uedp_itnlog_log
-        to: NULL
-        sig: NULL
-        data: "[TASK_NORM_A][WAITING_B] Posted SIG_0xAA to TASK_NORM_B."
-        ptype: NULL
+      - actv: 
+        kind: c_call
+        function: uedp_itnlog_log
+        args: [
+          70,
+          ITNLOG_LEVEL_DEBUG,
+          ITNLOG_TAG_TSK,
+          "[TASK_NORM_A][WAITING_B] Posted SIG_0xAA to TASK_NORM_B."
+        ]
     on_exit: NULL
   escal:
     # Cấu hình APE để xử lý khẩn cấp (nếu có)
@@ -265,27 +263,16 @@ tlist:
         sig: *sig2
         data: *gda_status # Ghi log nội dung từ biến toàn cục
         ptype: REF # Validator check: Truyền địa chỉ chuỗi status
-      - actv: uedp_itnlog_log
-        to: NULL
-        sig: NULL
-        data: *gda_status # Ghi log nội dung từ biến toàn cục
-        ptype: VAL # Validator check: Copy nội dung (memcpy)
+      - actv: 
+          kind: c_call
+          function: uedp_itnlog_log
+          args: [70, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[TASK_NORM_B][BUSY] Received SIG_0xAA from TASK_NORM_A."']
   <<: *tnorm3-ctrl # Validator check: Không hợp lệ, không thể dùng anchor trong sig
 - tpoll: TASK_POLL_MEMRP
-  exec:
-  - actv: pal_memrp_report()
-    to: NULL
-    sig: NULL
-    data: NULL
-    ptype: NULL
+  exec: NULL
   <<: *tpoll1-ctrl # Validator check: Không hợp lệ, thiếu anchor
 - tpoll: TASK_POLL_BLINK
-  exec:
-  - actv: pal_blink_led()
-    to: NULL
-    sig: NULL
-    data: NULL
-    ptype: NULL
+  exec: NULL
   <<: *tpoll2-ctrl
 # ANCHOR - Interrupt Service Routine (ISR) - Xử lý ngắt
 
