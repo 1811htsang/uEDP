@@ -285,7 +285,9 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 
 - [x] Đưa calling của testspec.generator vào cùng phase với lstaxer.kre8 để cùng giai đoạn cấu hình sang mã nguồn.
 - [x] Triển khai thiết kế lstaxer.kre8 để hỗ trợ việc generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [ ] Bổ sung rewrite cú pháp giải quyết vấn đề ambiguous data tag lên apps/lstaxizer.yaml để thực hiện regression test cho pipeline.
+- [x] Bổ sung rewrite cú pháp giải quyết vấn đề ambiguous data tag lên apps/lstaxizer.yaml để thực hiện regression test cho pipeline.
+- [ ] Thực hiện chore filename để thống nhất các module riêng biệt của PLTF.
+- [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax.
 - [ ] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing.
 - [ ] Triển khai BST cho pipeline PLD/μE-LS trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
@@ -305,6 +307,8 @@ Một số vấn đề còn tồn đọng:
 - Chưa review code style của các triển khai mới.
 - lstaxer.nullremov chưa được triển khai vào pipeline chung của PLD/μE-LS.
 - Chưa bổ sung BST cho pipeline này lên hệ thống phần cứng thực tế.
+
+Đã giải quyết vấn đề 1 với việc sửa đổi trong template nhưng chưa hoàn toàn ưng ý, có thể cân nhắc sửa đổi lại thêm.
 -->
 
 <!-- NOTE - Expectation for pipeline
@@ -313,7 +317,6 @@ Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đ�
 
 - [ ] Bổ sung phần tài liệu trình bày về hỗ trợ file inclusion nâng cao của YAML và các hạn chế của YAML trong triển khai khai thác remote-file alias. //LINK docs/uels-syntax.md:118
 - [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin đưa vào phiên bản 1.1.7 hoặc 1.1.8 để hỗ trợ việc tự động gán anchor cho các tag trong YAML.
-- [ ] Thực hiện chore filename để thống nhất các module riêng biệt của PLTF.
 
 <!-- SECTION - Idea cho remote-file alias
 # LINK docs/uels-syntax.md:118
