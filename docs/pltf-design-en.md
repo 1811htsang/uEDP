@@ -64,7 +64,7 @@ pltf/
 │   └── archc.txt
 └── testspec/
     ├── cfparsers/            # Reads .config (and, in future, YAML) into a structured context
-    │   ├── dotcfg_cfp.py
+    │   ├── dotcfg.py
     │   ├── yaml_cfp.py       # Draft for the μE-LS direction (see section 3.5)
     │   └── test.yaml
     └── generators/           # Each file is responsible for one output artifact
@@ -113,9 +113,9 @@ All 5 functions `corecfg_gen`, `palcfg_gen`, `app_cfg_gen`, `app_decl_gen`, `pal
 
 The logic is nearly identical to the old `sources/common/pyspec/` (files renamed with a `_pspec` suffix for consistency, e.g. `tsknrmdcl.py` → `tnorm.py`); it still generates `sources/app/kconfig/decl.kconfig` using raw Kconfig syntax (`menu`, `config ... string`, `default`, `depends on`). The difference is that these modules now live inside `pltf/`, imported by `uedp.py` via `pltf.pyspec.*` instead of `sources.common.pyspec.*`.
 
-### 3.3 `pltf/testspec/cfparsers/dotcfg_cfp.py` — the heart of the code-generation pipeline
+### 3.3 `pltf/testspec/cfparsers/dotcfg.py` — the heart of the code-generation pipeline
 
-This is the direct replacement for the logic that used to walk `kconf.unique_defined_syms`, scattered across `corecfg_gen`/`palcfg_gen` inside the old `uedp.py`. `dotcfg_cfp.cfp_parse_dotcfg(config_path)` reads the `.config` file (in `CONFIG_KEY=value` text form) directly — `kconfiglib` is **no longer needed** at this step — and returns a structured `context` dict:
+This is the direct replacement for the logic that used to walk `kconf.unique_defined_syms`, scattered across `corecfg_gen`/`palcfg_gen` inside the old `uedp.py`. `dotcfg.cfp_parse_dotcfg(config_path)` reads the `.config` file (in `CONFIG_KEY=value` text form) directly — `kconfiglib` is **no longer needed** at this step — and returns a structured `context` dict:
 
 - `core_configs`, `pal_configs`: lists of `#define` strings for `CORE_*` / `PAL_*`.
 - `tasknorm_defs`, `taskpoll_defs`, `sig_defs`: automatically assigned increasing hex IDs, starting at `0xE6` (task norm), `0xD4` (task poll), `0x01` (signal) — matching the `[HES] Heximal Encoding Signals` ranges already described in `arch-design.md` (`TASK_NORM` in the `0xEx` range, `TASK_POLL` in the `0xDx` range).
@@ -124,7 +124,7 @@ This is the direct replacement for the logic that used to walk `kconf.unique_def
 - `arch_name`, `arch_apis`: the PAL architecture name and the list of Hardware APIs to generate.
 - `task_tsm`, `task_fsm`: a task → state-list map, reserved for a future μE-LS integration (see section 3.5).
 
-Each generator (`*_tsgen.py`) calls `dotcfg_cfp.cfp_parse_dotcfg()` independently — this is a point of duplication worth noting; see section 5.
+Each generator (`*_tsgen.py`) calls `dotcfg.cfp_parse_dotcfg()` independently — this is a point of duplication worth noting; see section 5.
 
 ### 3.4 `pltf/templates/` + `pltf/testspec/generators/` — generating files with Jinja2
 
@@ -132,7 +132,7 @@ Unlike KwDI's "patch a string between 2 markers" mechanism, each generator in PL
 
 ```python
 # pltf/testspec/generators/corecfg_tsgen.py
-context = dotcfg_cfp.cfp_parse_dotcfg(config_dir)
+context = dotcfg.cfp_parse_dotcfg(config_dir)
 env = Environment(loader=FileSystemLoader('./pltf/templates'))
 template = env.get_template('corecfgh.txt')
 output = template.render(current_date=context["current_date"], core_configs=context['core_configs'])
@@ -167,7 +167,7 @@ Because it uses whole-file template rendering instead of patching, PLTF **no lon
 
 ### 3.5 Extension direction: μE-LS / YAML test spec (`cfparsers/yaml_cfp.py`, `test.yaml`)
 
-`pltf/testspec/cfparsers/yaml_cfp.py` and `test.yaml` are a **draft/PoC**, currently **not yet called by `tsgen.py`** — they only run standalone for parser debugging. This is a preparatory infrastructure step toward μE-LS (Logical Syntax-izer), described in detail in `docs/uels-syntax.md`: a YAML-based declaration syntax for Task/TSM/FSM/Signal/Action, part of the PLD (Parse-able Logical Descriptor) feature set, planned as the foundation for PLTF and TLC (Test Level Coverager) in this same version 1.2.0. `test.yaml` already illustrates a 3-task scenario (`KID_TASK_USR` using TSM, `KID_TASK_A` using TSM, `KID_TASK_B` using FSM) with `post_msg`/`log` actions — exactly the data model that `dotcfg_cfp.py` has already prepared the `task_tsm`/`task_fsm` fields to receive.
+`pltf/testspec/cfparsers/yaml_cfp.py` and `test.yaml` are a **draft/PoC**, currently **not yet called by `tsgen.py`** — they only run standalone for parser debugging. This is a preparatory infrastructure step toward μE-LS (Logical Syntax-izer), described in detail in `docs/uels-syntax.md`: a YAML-based declaration syntax for Task/TSM/FSM/Signal/Action, part of the PLD (Parse-able Logical Descriptor) feature set, planned as the foundation for PLTF and TLC (Test Level Coverager) in this same version 1.2.0. `test.yaml` already illustrates a 3-task scenario (`KID_TASK_USR` using TSM, `KID_TASK_A` using TSM, `KID_TASK_B` using FSM) with `post_msg`/`log` actions — exactly the data model that `dotcfg.py` has already prepared the `task_tsm`/`task_fsm` fields to receive.
 
 ## 4. New Docker & orchestration
 
@@ -249,7 +249,7 @@ Unchanged from KwDI — `docs/` (which holds large reference PDFs and instructio
 | Location of in-house code | `sources/common/{kconfiglib,pyspec}` | `pltf/{pyspec,templates,testspec}` (`kconfiglib` — a 3rd-party library — remains in `sources/common/kconfiglib`) |
 | Number of stages | 1 (merged together in `uedp.py`) | 2 (declaration+menuconfig in `uedp.py`, code generation in `pltf/testspec`) |
 | Code-generation mechanism | Patching a string between 2 markers into an existing `.h` file | Rendering an entirely new file via a Jinja2 template |
-| Input to the code-generation step | The `kconf` object directly (`kconfiglib`) | The `.config` file already written to disk (`dotcfg_cfp.py` re-parses it) |
+| Input to the code-generation step | The `kconf` object directly (`kconfiglib`) | The `.config` file already written to disk (`dotcfg.py` re-parses it) |
 | Docker image | `python:3.13-slim` + `kconfiglib` | + `gcc/cmake/gdb`, + ESP-IDF v5.1, + `jinja2/pytest/pyserial`, + `gosu` |
 | Container startup | `CMD` calling `uedp.py menuconfig` directly | `entrypoint.sh` (creates a user, handles UID/GID, runs the KwDI-stage → PLTF-stage in sequence, then drops into a shell) |
 | Orchestration | None (manual `docker run`) | `docker-compose.yaml` (`uedp_udc` service) |
@@ -259,7 +259,7 @@ Unchanged from KwDI — `docs/` (which holds large reference PDFs and instructio
 ## 6. Remaining work / risks to note going forward
 
 - **`yaml_cfp.py` is not yet wired into `tsgen.py`**: currently it's only an independent debug script (`python pltf/testspec/cfparsers/yaml_cfp.py`) — no generator yet consumes data from `test.yaml`. This is the main remaining piece of work to complete the μE-LS direction.
-- **Duplicated `.config` parsing code**: all 6 generators (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) each call `dotcfg_cfp.cfp_parse_dotcfg(config_dir)` separately instead of parsing once and sharing a common `context` — this could be consolidated inside `tsgen.py` to avoid reading the `.config` file multiple times.
+- **Duplicated `.config` parsing code**: all 6 generators (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) each call `dotcfg.cfp_parse_dotcfg(config_dir)` separately instead of parsing once and sharing a common `context` — this could be consolidated inside `tsgen.py` to avoid reading the `.config` file multiple times.
 - **`entrypoint.sh` always runs `uedp.py menuconfig` on every container startup**: fine for an interactive session on a dev machine, but there's no non-interactive branch yet (e.g., reading an existing `.config` directly and skipping menuconfig) for use in CI/CD.
 - **No automated tests for `pltf/` itself yet**: the testing framework itself (parser, generator, template) currently has no dedicated tests to guard against regressions when editing a template or a parser.
 - **`arch_dir_tsgen.py`** uses Python 3.12+-style nested double-quote f-strings (`f"{context["arch_name"]}"`) — worth confirming compatibility, since it matches the `python:3.13-slim` base image currently used, but is worth watching if the base image is ever downgraded to an older Python version.

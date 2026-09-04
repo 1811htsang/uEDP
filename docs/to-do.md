@@ -183,7 +183,7 @@ Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu r�
 #LINK - pltf/testspec/ustab/gnnerate_ustab.py:13
 #LINK - /workspaces/uEDP/sources/core/inc/uedp_core.h:29
 #LINK - /workspaces/uEDP/sources/core/inc/uedp_core.h:57
-#LINK - pltf/testspec/cfparsers/dotcfg_cfp.py:37
+#LINK - pltf/testspec/cfparsers/dotcfg.py:37
 
 #NOTE - 260826 đã thực hiện revert lại các sửa đổi của task để Minh sửa lại theo đúng yêu cầu của task này.
 

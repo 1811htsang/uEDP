@@ -64,7 +64,7 @@ pltf/
 │   └── archc.txt
 └── testspec/
     ├── cfparsers/            # Đọc .config (và tương lai là YAML) thành context có cấu trúc
-    │   ├── dotcfg_cfp.py
+    │   ├── dotcfg.py
     │   ├── yaml_cfp.py       # Bản nháp cho hướng μE-LS (xem mục 3.5)
     │   └── test.yaml
     └── generators/           # Mỗi file phụ trách 1 artifact đầu ra
@@ -113,9 +113,9 @@ Toàn bộ 5 hàm `corecfg_gen`, `palcfg_gen`, `app_cfg_gen`, `app_decl_gen`, `p
 
 Logic gần như giữ nguyên so với `sources/common/pyspec/` cũ (đổi tên file theo hậu tố `_pspec` cho nhất quán, ví dụ `tsknrmdcl.py` → `tnorm.py`), vẫn sinh `sources/app/kconfig/decl.kconfig` theo cú pháp Kconfig thô (`menu`, `config ... string`, `default`, `depends on`). Điểm khác biệt là các module này giờ nằm trong `pltf/`, được `uedp.py` import qua `pltf.pyspec.*` thay vì `sources.common.pyspec.*`.
 
-### 3.3 `pltf/testspec/cfparsers/dotcfg_cfp.py` — trái tim của pipeline sinh code
+### 3.3 `pltf/testspec/cfparsers/dotcfg.py` — trái tim của pipeline sinh code
 
-Đây là phần thay thế trực tiếp cho logic duyệt `kconf.unique_defined_syms` từng nằm rải rác trong `corecfg_gen`/`palcfg_gen` của `uedp.py` cũ. `dotcfg_cfp.cfp_parse_dotcfg(config_path)` đọc thẳng file `.config` (dạng text `CONFIG_KEY=value`) — **không cần** `kconfiglib` nữa ở bước này — và trả về một `context` dict có cấu trúc:
+Đây là phần thay thế trực tiếp cho logic duyệt `kconf.unique_defined_syms` từng nằm rải rác trong `corecfg_gen`/`palcfg_gen` của `uedp.py` cũ. `dotcfg.cfp_parse_dotcfg(config_path)` đọc thẳng file `.config` (dạng text `CONFIG_KEY=value`) — **không cần** `kconfiglib` nữa ở bước này — và trả về một `context` dict có cấu trúc:
 
 - `core_configs`, `pal_configs`: danh sách chuỗi `#define` cho `CORE_*` / `PAL_*`.
 - `tasknorm_defs`, `taskpoll_defs`, `sig_defs`: tự động gán ID hex tăng dần, bắt đầu từ `0xE6` (task norm), `0xD4` (task poll), `0x01` (signal) — khớp với dải `[HES] Heximal Encoding Signals` đã mô tả trong `arch-design.md` (`TASK_NORM` ở `0xEx`, `TASK_POLL` ở `0xDx`).
@@ -124,7 +124,7 @@ Logic gần như giữ nguyên so với `sources/common/pyspec/` cũ (đổi tê
 - `arch_name`, `arch_apis`: tên kiến trúc PAL và danh sách Hardware API cần sinh.
 - `task_tsm`, `task_fsm`: map task → danh sách state, dự trù cho tích hợp μE-LS sau này (xem mục 3.5).
 
-Mỗi generator (`*_tsgen.py`) tự gọi `dotcfg_cfp.cfp_parse_dotcfg()` độc lập — đây là điểm còn trùng lặp cần lưu ý, xem mục 5.
+Mỗi generator (`*_tsgen.py`) tự gọi `dotcfg.cfp_parse_dotcfg()` độc lập — đây là điểm còn trùng lặp cần lưu ý, xem mục 5.
 
 ### 3.4 `pltf/templates/` + `pltf/testspec/generators/` — sinh file bằng Jinja2
 
@@ -132,7 +132,7 @@ Khác với cơ chế "vá chuỗi vào giữa 2 marker" của KwDI, mỗi gener
 
 ```python
 # pltf/testspec/generators/corecfg_tsgen.py
-context = dotcfg_cfp.cfp_parse_dotcfg(config_dir)
+context = dotcfg.cfp_parse_dotcfg(config_dir)
 env = Environment(loader=FileSystemLoader('./pltf/templates'))
 template = env.get_template('corecfgh.txt')
 output = template.render(current_date=context["current_date"], core_configs=context['core_configs'])
@@ -167,7 +167,7 @@ Vì dùng template render-toàn-file thay vì patch, PLTF **không còn phụ th
 
 ### 3.5 Hướng mở rộng: μE-LS / YAML test spec (`cfparsers/yaml_cfp.py`, `test.yaml`)
 
-`pltf/testspec/cfparsers/yaml_cfp.py` và `test.yaml` là bản **nháp/PoC**, hiện **chưa được `tsgen.py` gọi tới** — chỉ chạy độc lập để debug. Đây là bước chuẩn bị hạ tầng cho μE-LS (Logical Syntax-izer), mô tả chi tiết trong `docs/uels-syntax.md`: một cú pháp khai báo dạng YAML cho Task/TSM/FSM/Signal/Action, thuộc tính năng PLD (Parse-able Logical Descriptor), dự kiến làm nền tảng cho PLTF và TLC (Test Level Coverager) ở chính phiên bản 1.2.0. `test.yaml` hiện đã minh hoạ một kịch bản 3 task (`KID_TASK_USR` dùng TSM, `KID_TASK_A` dùng TSM, `KID_TASK_B` dùng FSM) với các action `post_msg`/`log` — đúng mô hình dữ liệu mà `dotcfg_cfp.py` đã chuẩn bị sẵn field `task_tsm`/`task_fsm` để tiếp nhận.
+`pltf/testspec/cfparsers/yaml_cfp.py` và `test.yaml` là bản **nháp/PoC**, hiện **chưa được `tsgen.py` gọi tới** — chỉ chạy độc lập để debug. Đây là bước chuẩn bị hạ tầng cho μE-LS (Logical Syntax-izer), mô tả chi tiết trong `docs/uels-syntax.md`: một cú pháp khai báo dạng YAML cho Task/TSM/FSM/Signal/Action, thuộc tính năng PLD (Parse-able Logical Descriptor), dự kiến làm nền tảng cho PLTF và TLC (Test Level Coverager) ở chính phiên bản 1.2.0. `test.yaml` hiện đã minh hoạ một kịch bản 3 task (`KID_TASK_USR` dùng TSM, `KID_TASK_A` dùng TSM, `KID_TASK_B` dùng FSM) với các action `post_msg`/`log` — đúng mô hình dữ liệu mà `dotcfg.py` đã chuẩn bị sẵn field `task_tsm`/`task_fsm` để tiếp nhận.
 
 ## 4. Docker & orchestration mới
 
@@ -249,7 +249,7 @@ Giữ nguyên từ KwDI, không đổi — vẫn loại `docs/` (chứa PDF tham
 | Vị trí code tự viết | `sources/common/{kconfiglib,pyspec}` | `pltf/{pyspec,templates,testspec}` (`kconfiglib` — thư viện 3rd-party — vẫn ở lại `sources/common/kconfiglib`) |
 | Số giai đoạn | 1 (gộp chung trong `uedp.py`) | 2 (declaration+menuconfig trong `uedp.py`, sinh code trong `pltf/testspec`) |
 | Cơ chế sinh code | Vá chuỗi giữa 2 marker vào file `.h` có sẵn | Render toàn bộ file mới bằng Jinja2 template |
-| Input cho bước sinh code | Trực tiếp object `kconf` (`kconfiglib`) | File `.config` đã ghi ra đĩa (`dotcfg_cfp.py` tự parse lại) |
+| Input cho bước sinh code | Trực tiếp object `kconf` (`kconfiglib`) | File `.config` đã ghi ra đĩa (`dotcfg.py` tự parse lại) |
 | Docker image | `python:3.13-slim` + `kconfiglib` | + `gcc/cmake/gdb`, + ESP-IDF v5.1, + `jinja2/pytest/pyserial`, + `gosu` |
 | Khởi động container | `CMD` gọi thẳng `uedp.py menuconfig` | `entrypoint.sh` (tạo user, xử lý UID/GID, chạy tuần tự KwDI-stage → PLTF-stage, rồi vào shell) |
 | Orchestration | Không có (`docker run` thủ công) | `docker-compose.yaml` (service `uedp_udc`) |
@@ -259,7 +259,7 @@ Giữ nguyên từ KwDI, không đổi — vẫn loại `docs/` (chứa PDF tham
 ## 6. Việc còn thiếu / rủi ro cần lưu ý khi tiếp tục triển khai
 
 - **`yaml_cfp.py` chưa nối vào `tsgen.py`**: hiện chỉ là script debug độc lập (`python pltf/testspec/cfparsers/yaml_cfp.py`), chưa có generator nào tiêu thụ dữ liệu từ `test.yaml`. Đây là phần việc chính còn lại để hoàn thiện hướng μE-LS.
-- **Lặp code parse `.config`**: cả 6 generator (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) đều tự gọi `dotcfg_cfp.cfp_parse_dotcfg(config_dir)` riêng lẻ thay vì parse một lần rồi truyền chung `context` — có thể gộp lại trong `tsgen.py` để tránh đọc file `.config` nhiều lần.
+- **Lặp code parse `.config`**: cả 6 generator (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) đều tự gọi `dotcfg.cfp_parse_dotcfg(config_dir)` riêng lẻ thay vì parse một lần rồi truyền chung `context` — có thể gộp lại trong `tsgen.py` để tránh đọc file `.config` nhiều lần.
 - **`entrypoint.sh` luôn chạy `uedp.py menuconfig` ở mỗi lần container khởi động**: phù hợp cho phiên làm việc tương tác trên máy dev, nhưng chưa có nhánh non-interactive (ví dụ đọc thẳng `.config` có sẵn, bỏ qua menuconfig) để dùng trong CI/CD.
 - **Chưa có test tự động cho chính `pltf/`**: bản thân testing framework (parser, generator, template) hiện chưa có test riêng để đảm bảo không hồi quy khi sửa template hay parser.
 - **`arch_dir_tsgen.py`** dùng cú pháp f-string lồng dấu ngoặc kép kiểu Python 3.12+ (`f"{context["arch_name"]}"`) — cần xác nhận tương thích khi image build với `python:3.13-slim` (khớp) nhưng cần lưu ý nếu sau này đổi base image xuống bản Python cũ hơn.
