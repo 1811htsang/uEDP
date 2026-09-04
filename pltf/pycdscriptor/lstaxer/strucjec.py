@@ -1,4 +1,5 @@
 import yaml
+import pprint
 
 DEBUG_FLAG = True
 
@@ -46,7 +47,9 @@ def strucjec_target_tlist(yaml_text):
       finished_map = map_stack.pop()
       
       # 1. Nếu là Action Object -> Validate cấu trúc actv
-      if finished_map["is_actobj"]:
+      if finished_map["is_actobj"] and (
+        finished_map["keys"] & {'to', 'sig', 'data', 'ptype'}
+      ):
         strucjec_target_atcvobj(cur_task, finished_map, errors)
       
       # 2. Nếu là Task trong tlist -> Validate cấu trúc Task
@@ -106,6 +109,7 @@ def strucjec_target_tlist(yaml_text):
     elif isinstance(event, yaml.AliasEvent):
       if in_tlist and len(path_stack) == 3: cur_task["has_anchor"] = True
 
+  errors.extend(strucjec_validate_action_syntax(yaml_text))
   return errors
 
 def strucjec_target_atcvobj(task, act_map, errors):
@@ -117,6 +121,76 @@ def strucjec_target_atcvobj(task, act_map, errors):
   if missing:
     loc = f"Task: {task['name']} -> Action (Line:{act_map['line']})"
     errors.append({'loc': loc, 'msg': f"Action object missing tags: {', '.join(missing)}"})
+
+def strucjec_validate_action_syntax(yaml_text):
+  """Validate the explicit c_stmt/c_call action escape hatches."""
+  payload = yaml.safe_load(yaml_text) or {}
+  errors = []
+
+  for task in payload.get('tlist', []) or []:
+    if not isinstance(task, dict):
+      continue
+    task_name = task.get('tnorm', task.get('tpoll', 'Unknown'))
+    for action in _iter_action_objects(task):
+      actv = action.get('actv')
+      if isinstance(actv, dict):
+        if 'kind' not in actv:
+          errors.append({
+            'loc': f"Task: {task_name} -> actv",
+            'msg': "actv object missing required 'kind' field",
+          })
+        kind = actv.get('kind', actv.get('type'))
+        if kind == 'c_stmt':
+          if not isinstance(actv.get('code'), str) or not actv['code'].strip():
+            errors.append({
+              'loc': f"Task: {task_name} -> c_stmt",
+              'msg': "c_stmt requires a non-empty 'code' field",
+            })
+        elif kind == 'c_call':
+          if not isinstance(actv.get('function'), str) or not actv['function'].strip():
+            errors.append({
+              'loc': f"Task: {task_name} -> c_call",
+              'msg': "c_call requires a non-empty 'function' field",
+            })
+          if 'args' in actv and not isinstance(actv['args'], list):
+            errors.append({
+              'loc': f"Task: {task_name} -> c_call",
+              'msg': "c_call 'args' must be a list",
+            })
+      elif actv in ('c_stmt', 'c_call'):
+        required = ['code'] if actv == 'c_stmt' else ['function']
+        missing = [key for key in required if not action.get(key)]
+        if missing:
+          errors.append({
+            'loc': f"Task: {task_name} -> {actv}",
+            'msg': f"{actv} requires: {', '.join(missing)}",
+          })
+
+  return errors
+
+def _iter_action_objects(value):
+  """Yield mappings that represent actv objects below one tlist task."""
+  if isinstance(value, dict):
+    if 'actv' in value:
+      yield value
+    for child in value.values():
+      yield from _iter_action_objects(child)
+  elif isinstance(value, list):
+    for child in value:
+      yield from _iter_action_objects(child)
+
+def strucjec_debug_action_syntax(errors):
+  print(f"{'-'*30} strucjec `action syntax` param  {'-'*22}\n")
+  print(f"{'TYPE':<10} | {'LOCATION':<30} | {'MESSAGE'}")
+  print("-" * 85)
+  
+  if not errors:
+    print(f"{'SUCCESS':<10} | {'Action Syntax Validation':<30} | All action objects are valid.")
+  else:
+    for err in errors:
+      print(f"ERROR      | {err['loc']:<30} | {err['msg']}")
+
+  print("\n")
 
 def strucjec_target_tnode(task, errors):
   t_label = f"{task['type'].upper()}: {task['name']} (L:{task['line']})"
@@ -147,9 +221,9 @@ def strucjec_target_sub_tnode(task, s_type, item, errors):
       errors.append({'loc': loc, 'msg': f"FSM missing 'id' or 'on_recv'"})
 
 def strucjec_debug_tlist(errors):
-  print(f"{'TYPE':<10} | {'LOCATION':<45} | {'MESSAGE'}")
-  print("-" * 105)
-  if not errors: print("SUCCESS  | Structure is fully valid.")
+  print(f"{'TYPE':<10} | {'LOCATION':<30} | {'MESSAGE'}")
+  print("-" * 85)
+  if not errors: print(f"{'SUCCESS':<10} | Structure is fully valid.")
   else:
     for e in errors: print(f"{'ERROR':<10} | {e['loc']:<45} | {e['msg']}")
 
@@ -456,11 +530,13 @@ def strucjec_calib(yaml_sample):
   errors_glbda = strucjec_target_glbda(yaml_sample)
   errors_isr = strucjec_target_isr(yaml_sample)
   errors_outexec = strucjec_target_outexec(yaml_sample)
+  errors_action_syntax = strucjec_validate_action_syntax(yaml_sample)
   if DEBUG_FLAG:
     strucjec_debug_glbda(errors_glbda)
     strucjec_debug_tlist(errors_tlist)
     strucjec_debug_isr(errors_isr)
     strucjec_debug_outexec(errors_outexec)
+    strucjec_debug_action_syntax(errors_action_syntax)
   if errors_tlist or errors_glbda or errors_isr or errors_outexec:
     print("[INFO] Structure validation completed with errors.")
     print("[INFO] Please check the above errors and fix them in the YAML file.")
