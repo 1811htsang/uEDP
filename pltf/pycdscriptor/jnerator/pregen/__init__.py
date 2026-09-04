@@ -8,8 +8,7 @@ from . import (
   archhpgen,
   cfpcall,
   corecfgpgen,
-  palcfgpgen,
-  fpregen,
+  palcfgpgen
 )
 
 __all__ = [
@@ -20,6 +19,5 @@ __all__ = [
   'archhpgen',
   'cfpcall',
   'corecfgpgen',
-  'palcfgpgen',
-  'fpregen',
+  'palcfgpgen'
 ]
