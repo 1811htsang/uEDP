@@ -1,7 +1,7 @@
 import yaml
 from pprint import PrettyPrinter
 
-def cfp_parse_yaml(context):
+def cfp_parse_yaml_glbda(context):
   return context["glbda"]
 
 # STUB - Called sample to check the output of the cfp_parse_dotcfg function
@@ -15,6 +15,6 @@ def cfp_parse_yaml(context):
 # )
 # # NOTE - Extract glbda
 # pp.pprint(data["glbda"])
-# NOTE - Redirect to return context["glbda_defs"] in cfparsers/yaml_cfp.py
+# NOTE - Redirect to return context["glbda_defs"] in cfparsers/glbda.py
 # Return data["glbda"] ? It seems like fitting the required structure for context["glbda_defs"] in the template rendering.
 # return data["glbda"]
