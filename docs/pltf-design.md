@@ -63,7 +63,7 @@ pltf/
 │   ├── archh.txt
 │   └── archc.txt
 └── testspec/
-    ├── cfparsers/            # Đọc .config (và tương lai là YAML) thành context có cấu trúc
+    ├── attribarse/            # Đọc .config (và tương lai là YAML) thành context có cấu trúc
     │   ├── dotcfg.py
     │   ├── glbda.py       # Bản nháp cho hướng μE-LS (xem mục 3.5)
     │   └── test.yaml
@@ -113,7 +113,7 @@ Toàn bộ 5 hàm `corecfg_gen`, `palcfg_gen`, `app_cfg_gen`, `app_decl_gen`, `p
 
 Logic gần như giữ nguyên so với `sources/common/pyspec/` cũ (đổi tên file theo hậu tố `_pspec` cho nhất quán, ví dụ `tsknrmdcl.py` → `tnorm.py`), vẫn sinh `sources/app/kconfig/decl.kconfig` theo cú pháp Kconfig thô (`menu`, `config ... string`, `default`, `depends on`). Điểm khác biệt là các module này giờ nằm trong `pltf/`, được `uedp.py` import qua `pltf.pyspec.*` thay vì `sources.common.pyspec.*`.
 
-### 3.3 `pltf/testspec/cfparsers/dotcfg.py` — trái tim của pipeline sinh code
+### 3.3 `pltf/testspec/attribarse/dotcfg.py` — trái tim của pipeline sinh code
 
 Đây là phần thay thế trực tiếp cho logic duyệt `kconf.unique_defined_syms` từng nằm rải rác trong `corecfg_gen`/`palcfg_gen` của `uedp.py` cũ. `dotcfg.cfp_parse_dotcfg(config_path)` đọc thẳng file `.config` (dạng text `CONFIG_KEY=value`) — **không cần** `kconfiglib` nữa ở bước này — và trả về một `context` dict có cấu trúc:
 
@@ -165,9 +165,9 @@ if __name__ == "__main__":
 
 Vì dùng template render-toàn-file thay vì patch, PLTF **không còn phụ thuộc vào việc file đích đã tồn tại từ trước với marker cố định** — đây là điểm cải thiện trực tiếp lên giới hạn "sinh code kiểu vá chuỗi" đã nêu ở mục 2.3.
 
-### 3.5 Hướng mở rộng: μE-LS / YAML test spec (`cfparsers/glbda.py`, `test.yaml`)
+### 3.5 Hướng mở rộng: μE-LS / YAML test spec (`attribarse/glbda.py`, `test.yaml`)
 
-`pltf/testspec/cfparsers/glbda.py` và `test.yaml` là bản **nháp/PoC**, hiện **chưa được `tsgen.py` gọi tới** — chỉ chạy độc lập để debug. Đây là bước chuẩn bị hạ tầng cho μE-LS (Logical Syntax-izer), mô tả chi tiết trong `docs/uels-syntax.md`: một cú pháp khai báo dạng YAML cho Task/TSM/FSM/Signal/Action, thuộc tính năng PLD (Parse-able Logical Descriptor), dự kiến làm nền tảng cho PLTF và TLC (Test Level Coverager) ở chính phiên bản 1.2.0. `test.yaml` hiện đã minh hoạ một kịch bản 3 task (`KID_TASK_USR` dùng TSM, `KID_TASK_A` dùng TSM, `KID_TASK_B` dùng FSM) với các action `post_msg`/`log` — đúng mô hình dữ liệu mà `dotcfg.py` đã chuẩn bị sẵn field `task_tsm`/`task_fsm` để tiếp nhận.
+`pltf/testspec/attribarse/glbda.py` và `test.yaml` là bản **nháp/PoC**, hiện **chưa được `tsgen.py` gọi tới** — chỉ chạy độc lập để debug. Đây là bước chuẩn bị hạ tầng cho μE-LS (Logical Syntax-izer), mô tả chi tiết trong `docs/uels-syntax.md`: một cú pháp khai báo dạng YAML cho Task/TSM/FSM/Signal/Action, thuộc tính năng PLD (Parse-able Logical Descriptor), dự kiến làm nền tảng cho PLTF và TLC (Test Level Coverager) ở chính phiên bản 1.2.0. `test.yaml` hiện đã minh hoạ một kịch bản 3 task (`KID_TASK_USR` dùng TSM, `KID_TASK_A` dùng TSM, `KID_TASK_B` dùng FSM) với các action `post_msg`/`log` — đúng mô hình dữ liệu mà `dotcfg.py` đã chuẩn bị sẵn field `task_tsm`/`task_fsm` để tiếp nhận.
 
 ## 4. Docker & orchestration mới
 
@@ -254,11 +254,11 @@ Giữ nguyên từ KwDI, không đổi — vẫn loại `docs/` (chứa PDF tham
 | Khởi động container | `CMD` gọi thẳng `uedp.py menuconfig` | `entrypoint.sh` (tạo user, xử lý UID/GID, chạy tuần tự KwDI-stage → PLTF-stage, rồi vào shell) |
 | Orchestration | Không có (`docker run` thủ công) | `docker-compose.yaml` (service `uedp_udc`) |
 | Workspace | Trộn chung 1 thư mục | Tách `/uedp-libs` (core lib) và `/uedp-test` (PLTF workspace) |
-| Test spec nâng cao | Không có | `cfparsers/glbda.py` + `test.yaml` (bản nháp, hướng tới μE-LS/PLD — xem `docs/uels-syntax.md`) |
+| Test spec nâng cao | Không có | `attribarse/glbda.py` + `test.yaml` (bản nháp, hướng tới μE-LS/PLD — xem `docs/uels-syntax.md`) |
 
 ## 6. Việc còn thiếu / rủi ro cần lưu ý khi tiếp tục triển khai
 
-- **`glbda.py` chưa nối vào `tsgen.py`**: hiện chỉ là script debug độc lập (`python pltf/testspec/cfparsers/glbda.py`), chưa có generator nào tiêu thụ dữ liệu từ `test.yaml`. Đây là phần việc chính còn lại để hoàn thiện hướng μE-LS.
+- **`glbda.py` chưa nối vào `tsgen.py`**: hiện chỉ là script debug độc lập (`python pltf/testspec/attribarse/glbda.py`), chưa có generator nào tiêu thụ dữ liệu từ `test.yaml`. Đây là phần việc chính còn lại để hoàn thiện hướng μE-LS.
 - **Lặp code parse `.config`**: cả 6 generator (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) đều tự gọi `dotcfg.cfp_parse_dotcfg(config_dir)` riêng lẻ thay vì parse một lần rồi truyền chung `context` — có thể gộp lại trong `tsgen.py` để tránh đọc file `.config` nhiều lần.
 - **`entrypoint.sh` luôn chạy `uedp.py menuconfig` ở mỗi lần container khởi động**: phù hợp cho phiên làm việc tương tác trên máy dev, nhưng chưa có nhánh non-interactive (ví dụ đọc thẳng `.config` có sẵn, bỏ qua menuconfig) để dùng trong CI/CD.
 - **Chưa có test tự động cho chính `pltf/`**: bản thân testing framework (parser, generator, template) hiện chưa có test riêng để đảm bảo không hồi quy khi sửa template hay parser.

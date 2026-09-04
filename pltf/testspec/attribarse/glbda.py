@@ -15,6 +15,6 @@ def cfp_parse_yaml_glbda(context):
 # )
 # # NOTE - Extract glbda
 # pp.pprint(data["glbda"])
-# NOTE - Redirect to return context["glbda_defs"] in cfparsers/glbda.py
+# NOTE - Redirect to return context["glbda_defs"] in attribarse/glbda.py
 # Return data["glbda"] ? It seems like fitting the required structure for context["glbda_defs"] in the template rendering.
 # return data["glbda"]

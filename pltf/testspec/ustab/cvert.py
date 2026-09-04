@@ -2,7 +2,7 @@ import os
 import pprint
 import yaml
 import sys
-from ..cfparsers.dotcfg import cfp_parse_dotcfg
+from ..attribarse.dotcfg import cfp_parse_dotcfg
 
 def ustab_convert_yaml(context):
   # NOTE - 1. Chuyển toàn bộ context thành chuỗi YAML trong bộ nhớ

@@ -183,7 +183,7 @@ Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu r�
 #LINK - pltf/testspec/ustab/gnnerate.py:13
 #LINK - /workspaces/uEDP/sources/core/inc/uedp_core.h:29
 #LINK - /workspaces/uEDP/sources/core/inc/uedp_core.h:57
-#LINK - pltf/testspec/cfparsers/dotcfg.py:37
+#LINK - pltf/testspec/attribarse/dotcfg.py:37
 
 #NOTE - 260826 đã thực hiện revert lại các sửa đổi của task để Minh sửa lại theo đúng yêu cầu của task này.
 
@@ -243,12 +243,12 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 //  SECTION - v1.2.0
 
 - [x] Chỉnh sửa lại pyspec (Python Specifier - Bộ chỉ định tham số Python) cũ từ tính năng KwDI để đưa vào sử dụng kết hợp với PLTF.
-- [x] Triển khai testspec (Test Specifier - Bổ chỉ định tham số test) mới chứa cfparsers (config parsers) với việc tích hợp pipeline từ pyspec được điều chỉnh và template.
+- [x] Triển khai testspec (Test Specifier - Bổ chỉ định tham số test) mới chứa attribarse (config parsers) với việc tích hợp pipeline từ pyspec được điều chỉnh và template.
 - [x] Bổ sung bộ điều khiển chung (tsgen) để tích hợp pyspec + testspec tự động cho PLTF.
 - [x] Triển khai thiết kế lên Docker.
 - [x] Bổ sung triển khai thiết kế với Docker Compose để tự động build, chỉ định services, containers và các thông số môi trường cần thiết cho việc triển khai và kiểm thử lõi μEDP trên các nền tảng khác nhau một cách dễ dàng và nhất quán.
 - [x] Kiểm tra và đánh giá thiết kế syntax YAML của PLD/μE-LS cho Task và HSMC để đảm bảo rằng cú pháp được thiết kế một cách hợp lý, dễ đọc và dễ hiểu, đồng thời hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách hiệu quả.
-- [x] Triển khai single-call trên cfparsers (testspec.cfpcall) với concentrate import để tránh repetitive call và tăng tốc độ xử lý khi parse các cấu hình logic của μE-LS.
+- [x] Triển khai single-call trên attribarse (testspec.cfpcall) với concentrate import để tránh repetitive call và tăng tốc độ xử lý khi parse các cấu hình logic của μE-LS.
 - [x] Thiết kế syntax SII cho YAML.
 - [x] Thiết kế syntax PPLP cho YAML.
 - [x] Thiết kế syntax APE cho YAML.
@@ -275,7 +275,7 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 - [x] Bổ sung thiết kế module để tinh gọn các khai báo NULL không sử dụng trong khai báo YAML của người dùng nhằm giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [x] Sửa đổi triển khai lstaxer.strucjec để bao quát toàn bộ cấu trúc actvobj, fsm, tsm, của tlist.
 - [x] Bổ sung triển khai thiết kế lstaxer.lukupmodel để đưa các cấu hình post-validated vào pydantic model để chuẩn hóa toàn bộ logic triển khai trước khi translate thành mã C, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [x] Đưa cân nhắc triển khai hoạt động của cfparsers hoặc pyspec vào post-validation của lstaxer.vlid để phối hợp lstaxer.kre8 generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [x] Đưa cân nhắc triển khai hoạt động của attribarse hoặc pyspec vào post-validation của lstaxer.vlid để phối hợp lstaxer.kre8 generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 
 <!-- REVIEW
 1. Bổ sung cân nhắc phân tách PLD/μE-LS thành SA (semi-automation) và FA (full-automation) trên 2 phiên bản 1.1.7, 1.1.8 hay 1.1.8, 1.1.9.

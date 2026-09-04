@@ -1,6 +1,6 @@
 import os
 import sys
-from ...cfparsers import dotcfg
+from ...attribarse import dotcfg
 
 def main():
   cur_trm_dir = os.path.dirname("uEDP")

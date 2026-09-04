@@ -69,7 +69,7 @@ sources/test/*
 # Python cache
 sources/common/kconfiglib/__pycache__/*
 pltf/pyspec/__pycache__/*
-pltf/testspec/cfparsers/__pycache__/*
+pltf/testspec/attribarse/__pycache__/*
 pltf/testspec/jnerator/__pycache__/*
 pltf/testspec/__pycache__/*
 pltf/__pycache__/*

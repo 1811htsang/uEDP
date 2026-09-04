@@ -63,7 +63,7 @@ pltf/
 │   ├── archh.txt
 │   └── archc.txt
 └── testspec/
-    ├── cfparsers/            # Reads .config (and, in future, YAML) into a structured context
+    ├── attribarse/            # Reads .config (and, in future, YAML) into a structured context
     │   ├── dotcfg.py
     │   ├── glbda.py       # Draft for the μE-LS direction (see section 3.5)
     │   └── test.yaml
@@ -113,7 +113,7 @@ All 5 functions `corecfg_gen`, `palcfg_gen`, `app_cfg_gen`, `app_decl_gen`, `pal
 
 The logic is nearly identical to the old `sources/common/pyspec/` (files renamed with a `_pspec` suffix for consistency, e.g. `tsknrmdcl.py` → `tnorm.py`); it still generates `sources/app/kconfig/decl.kconfig` using raw Kconfig syntax (`menu`, `config ... string`, `default`, `depends on`). The difference is that these modules now live inside `pltf/`, imported by `uedp.py` via `pltf.pyspec.*` instead of `sources.common.pyspec.*`.
 
-### 3.3 `pltf/testspec/cfparsers/dotcfg.py` — the heart of the code-generation pipeline
+### 3.3 `pltf/testspec/attribarse/dotcfg.py` — the heart of the code-generation pipeline
 
 This is the direct replacement for the logic that used to walk `kconf.unique_defined_syms`, scattered across `corecfg_gen`/`palcfg_gen` inside the old `uedp.py`. `dotcfg.cfp_parse_dotcfg(config_path)` reads the `.config` file (in `CONFIG_KEY=value` text form) directly — `kconfiglib` is **no longer needed** at this step — and returns a structured `context` dict:
 
@@ -165,9 +165,9 @@ if __name__ == "__main__":
 
 Because it uses whole-file template rendering instead of patching, PLTF **no longer depends on the target file already existing with fixed markers** — this is a direct improvement on the "string-patching code generation" limitation noted in section 2.3.
 
-### 3.5 Extension direction: μE-LS / YAML test spec (`cfparsers/glbda.py`, `test.yaml`)
+### 3.5 Extension direction: μE-LS / YAML test spec (`attribarse/glbda.py`, `test.yaml`)
 
-`pltf/testspec/cfparsers/glbda.py` and `test.yaml` are a **draft/PoC**, currently **not yet called by `tsgen.py`** — they only run standalone for parser debugging. This is a preparatory infrastructure step toward μE-LS (Logical Syntax-izer), described in detail in `docs/uels-syntax.md`: a YAML-based declaration syntax for Task/TSM/FSM/Signal/Action, part of the PLD (Parse-able Logical Descriptor) feature set, planned as the foundation for PLTF and TLC (Test Level Coverager) in this same version 1.2.0. `test.yaml` already illustrates a 3-task scenario (`KID_TASK_USR` using TSM, `KID_TASK_A` using TSM, `KID_TASK_B` using FSM) with `post_msg`/`log` actions — exactly the data model that `dotcfg.py` has already prepared the `task_tsm`/`task_fsm` fields to receive.
+`pltf/testspec/attribarse/glbda.py` and `test.yaml` are a **draft/PoC**, currently **not yet called by `tsgen.py`** — they only run standalone for parser debugging. This is a preparatory infrastructure step toward μE-LS (Logical Syntax-izer), described in detail in `docs/uels-syntax.md`: a YAML-based declaration syntax for Task/TSM/FSM/Signal/Action, part of the PLD (Parse-able Logical Descriptor) feature set, planned as the foundation for PLTF and TLC (Test Level Coverager) in this same version 1.2.0. `test.yaml` already illustrates a 3-task scenario (`KID_TASK_USR` using TSM, `KID_TASK_A` using TSM, `KID_TASK_B` using FSM) with `post_msg`/`log` actions — exactly the data model that `dotcfg.py` has already prepared the `task_tsm`/`task_fsm` fields to receive.
 
 ## 4. New Docker & orchestration
 
@@ -254,11 +254,11 @@ Unchanged from KwDI — `docs/` (which holds large reference PDFs and instructio
 | Container startup | `CMD` calling `uedp.py menuconfig` directly | `entrypoint.sh` (creates a user, handles UID/GID, runs the KwDI-stage → PLTF-stage in sequence, then drops into a shell) |
 | Orchestration | None (manual `docker run`) | `docker-compose.yaml` (`uedp_udc` service) |
 | Workspace | Everything mixed into one directory | Separated into `/uedp-libs` (core lib) and `/uedp-test` (PLTF workspace) |
-| Advanced test spec | None | `cfparsers/glbda.py` + `test.yaml` (draft, heading toward μE-LS/PLD — see `docs/uels-syntax.md`) |
+| Advanced test spec | None | `attribarse/glbda.py` + `test.yaml` (draft, heading toward μE-LS/PLD — see `docs/uels-syntax.md`) |
 
 ## 6. Remaining work / risks to note going forward
 
-- **`glbda.py` is not yet wired into `tsgen.py`**: currently it's only an independent debug script (`python pltf/testspec/cfparsers/glbda.py`) — no generator yet consumes data from `test.yaml`. This is the main remaining piece of work to complete the μE-LS direction.
+- **`glbda.py` is not yet wired into `tsgen.py`**: currently it's only an independent debug script (`python pltf/testspec/attribarse/glbda.py`) — no generator yet consumes data from `test.yaml`. This is the main remaining piece of work to complete the μE-LS direction.
 - **Duplicated `.config` parsing code**: all 6 generators (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) each call `dotcfg.cfp_parse_dotcfg(config_dir)` separately instead of parsing once and sharing a common `context` — this could be consolidated inside `tsgen.py` to avoid reading the `.config` file multiple times.
 - **`entrypoint.sh` always runs `uedp.py menuconfig` on every container startup**: fine for an interactive session on a dev machine, but there's no non-interactive branch yet (e.g., reading an existing `.config` directly and skipping menuconfig) for use in CI/CD.
 - **No automated tests for `pltf/` itself yet**: the testing framework itself (parser, generator, template) currently has no dedicated tests to guard against regressions when editing a template or a parser.
