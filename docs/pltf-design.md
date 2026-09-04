@@ -33,7 +33,7 @@ KwDI gồm 3 phần chính, tất cả nằm gọn trong root repo và `sources/
 
 - **Không tách giai đoạn**: thu thập input, cấu hình tương tác (menuconfig), và sinh code nằm chung trong một hàm `main()` của `uedp.py`. Muốn sinh lại code từ một `.config` có sẵn (ví dụ trong CI) vẫn phải chạy lại toàn bộ `menuconfig` tương tác.
 - **Sinh code kiểu "vá chuỗi" (marker-based patch)**: `corecfg_gen`/`palcfg_gen` yêu cầu file `.h` đích phải **đã tồn tại sẵn** với đúng cặp marker mới patch được — không tạo file mới từ đầu được, dễ vỡ nếu ai đó lỡ xoá marker.
-- **`sources/common/testspec/`** (tiền thân dùng Jinja2) đã tồn tại nhưng chỉ là **bản nháp chưa nối vào luồng thật**: `appcfg_tsgen.py` gốc chỉ `print(output)` ra màn hình với `current_date` gán cứng `'16 May 2025'`, không đọc `.config` thật, không ghi file.
+- **`sources/common/testspec/`** (tiền thân dùng Jinja2) đã tồn tại nhưng chỉ là **bản nháp chưa nối vào luồng thật**: `appcfgpgen.py` gốc chỉ `print(output)` ra màn hình với `current_date` gán cứng `'16 May 2025'`, không đọc `.config` thật, không ghi file.
 - **Docker image tối giản**, chỉ có `kconfiglib`: không có `gcc/cmake/gdb`, không có ESP-IDF, không thể build hay chạy test ngay trong container — người dùng vẫn phải thoát container để build bằng tay.
 - **Không có `entrypoint.sh`/`docker-compose.yaml`**: container chạy `CMD` trực tiếp bằng root, không xử lý UID/GID → file được tạo ra (do mount volume) thuộc quyền sở hữu `root` trên máy host, gây phiền khi chỉnh sửa lại ở ngoài container.
 - **Không phân tách workspace**: không có khái niệm thư mục riêng cho "mã nguồn lõi" và "không gian làm việc kiểm thử" — mọi thứ trộn chung trong repo.
@@ -68,14 +68,14 @@ pltf/
     │   ├── glbda.py       # Bản nháp cho hướng μE-LS (xem mục 3.5)
     │   └── test.yaml
     └── generators/           # Mỗi file phụ trách 1 artifact đầu ra
-        ├── appcfg_tsgen.py
-        ├── corecfg_tsgen.py
-        ├── palcfg_tsgen.py
-        ├── appdecl_tsgen.py
-        ├── arch_dir_tsgen.py
-        ├── arch_h_tsgen.py
-        ├── arch_c_tsgen.py
-        └── tsgen.py          # Orchestrator, gọi tuần tự 7 generator ở trên
+        ├── appcfgpgen.py
+        ├── corecfgpgen.py
+        ├── palcfgpgen.py
+        ├── appdeclpgen.py
+        ├── archdirpgen.py
+        ├── archhpgen.py
+        ├── archcpgen.py
+        └── fpregen.py          # Orchestrator, gọi tuần tự 7 generator ở trên
 ```
 
 So với `sources/common/kconfiglib/` (vẫn giữ nguyên, không di chuyển vì đây là thư viện bên thứ 3, không phải phần tự viết), toàn bộ phần **tự viết** của KwDI (`pyspec`, `testspec`) được gom về một chỗ duy nhất là `pltf/`, tách khỏi `sources/common/` — phản ánh đúng ý nghĩa "Portable": `pltf/` không phụ thuộc vào cấu trúc `sources/`, có thể tái sử dụng cho một dự án μEDP khác chỉ cần trỏ đúng đường dẫn output.
@@ -131,7 +131,7 @@ Mỗi generator (`*_tsgen.py`) tự gọi `dotcfg.cfp_parse_dotcfg()` độc l�
 Khác với cơ chế "vá chuỗi vào giữa 2 marker" của KwDI, mỗi generator trong PLTF **render toàn bộ nội dung file từ template Jinja2 rồi ghi đè hoàn toàn** file đích:
 
 ```python
-# pltf/testspec/generators/corecfg_tsgen.py
+# pltf/testspec/generators/corecfgpgen.py
 context = dotcfg.cfp_parse_dotcfg(config_dir)
 env = Environment(loader=FileSystemLoader('./pltf/templates'))
 template = env.get_template('corecfgh.txt')
@@ -144,23 +144,23 @@ with open("sources/app/config/core_cfg.h", "w", encoding="utf-8") as f:
 
 | Generator | File sinh ra | Ghi chú |
 | --- | --- | --- |
-| `corecfg_tsgen.py` | `sources/app/config/core_cfg.h` | Thay `corecfg_gen()` cũ |
-| `palcfg_tsgen.py` | `sources/app/config/pal_cfg.h` | Thay `palcfg_gen()` cũ |
-| `appcfg_tsgen.py` | `sources/app/config/app_cfg.h` | Thay `app_cfg_gen()` cũ |
-| `appdecl_tsgen.py` | `sources/app/declaration/app_decl.h` | Thay `app_decl_gen()` cũ |
-| `arch_dir_tsgen.py` | thư mục `sources/pal/arch/<arch_name>/` | Tạo thư mục trước khi 2 generator dưới ghi file vào |
-| `arch_h_tsgen.py` | `sources/pal/arch/<arch_name>/<arch_name>_arch.h` | Thay `pal_arch_gen()` cũ (phần `.h`) |
-| `arch_c_tsgen.py` | `sources/pal/arch/<arch_name>/<arch_name>_arch.c` | Thay `pal_arch_gen()` cũ (phần `.c`) |
+| `corecfgpgen.py` | `sources/app/config/core_cfg.h` | Thay `corecfg_gen()` cũ |
+| `palcfgpgen.py` | `sources/app/config/pal_cfg.h` | Thay `palcfg_gen()` cũ |
+| `appcfgpgen.py` | `sources/app/config/app_cfg.h` | Thay `app_cfg_gen()` cũ |
+| `appdeclpgen.py` | `sources/app/declaration/app_decl.h` | Thay `app_decl_gen()` cũ |
+| `archdirpgen.py` | thư mục `sources/pal/arch/<arch_name>/` | Tạo thư mục trước khi 2 generator dưới ghi file vào |
+| `archhpgen.py` | `sources/pal/arch/<arch_name>/<arch_name>_arch.h` | Thay `pal_arch_gen()` cũ (phần `.h`) |
+| `archcpgen.py` | `sources/pal/arch/<arch_name>/<arch_name>_arch.c` | Thay `pal_arch_gen()` cũ (phần `.c`) |
 
 `tsgen.py` là orchestrator, chạy tuần tự cả 7 generator và in log tiến trình:
 
 ```python
-import appcfg_tsgen, corecfg_tsgen, palcfg_tsgen, appdecl_tsgen
-import arch_dir_tsgen, arch_h_tsgen, arch_c_tsgen
+import appcfgpgen, corecfgpgen, palcfgpgen, appdeclpgen
+import archdirpgen, archhpgen, archcpgen
 
 if __name__ == "__main__":
-  appcfg_tsgen.main(); corecfg_tsgen.main(); palcfg_tsgen.main()
-  appdecl_tsgen.main(); arch_dir_tsgen.main(); arch_h_tsgen.main(); arch_c_tsgen.main()
+  appcfgpgen.main(); corecfgpgen.main(); palcfgpgen.main()
+  appdeclpgen.main(); archdirpgen.main(); archhpgen.main(); archcpgen.main()
 ```
 
 Vì dùng template render-toàn-file thay vì patch, PLTF **không còn phụ thuộc vào việc file đích đã tồn tại từ trước với marker cố định** — đây là điểm cải thiện trực tiếp lên giới hạn "sinh code kiểu vá chuỗi" đã nêu ở mục 2.3.
@@ -262,7 +262,7 @@ Giữ nguyên từ KwDI, không đổi — vẫn loại `docs/` (chứa PDF tham
 - **Lặp code parse `.config`**: cả 6 generator (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) đều tự gọi `dotcfg.cfp_parse_dotcfg(config_dir)` riêng lẻ thay vì parse một lần rồi truyền chung `context` — có thể gộp lại trong `tsgen.py` để tránh đọc file `.config` nhiều lần.
 - **`entrypoint.sh` luôn chạy `uedp.py menuconfig` ở mỗi lần container khởi động**: phù hợp cho phiên làm việc tương tác trên máy dev, nhưng chưa có nhánh non-interactive (ví dụ đọc thẳng `.config` có sẵn, bỏ qua menuconfig) để dùng trong CI/CD.
 - **Chưa có test tự động cho chính `pltf/`**: bản thân testing framework (parser, generator, template) hiện chưa có test riêng để đảm bảo không hồi quy khi sửa template hay parser.
-- **`arch_dir_tsgen.py`** dùng cú pháp f-string lồng dấu ngoặc kép kiểu Python 3.12+ (`f"{context["arch_name"]}"`) — cần xác nhận tương thích khi image build với `python:3.13-slim` (khớp) nhưng cần lưu ý nếu sau này đổi base image xuống bản Python cũ hơn.
+- **`archdirpgen.py`** dùng cú pháp f-string lồng dấu ngoặc kép kiểu Python 3.12+ (`f"{context["arch_name"]}"`) — cần xác nhận tương thích khi image build với `python:3.13-slim` (khớp) nhưng cần lưu ý nếu sau này đổi base image xuống bản Python cũ hơn.
 
 ## 7. Kết luận
 

@@ -5,7 +5,7 @@ from typing import Any
 import argparse
 
 from ...lstaxer.kre8 import build_generator_context
-from .appc_tsgen import generate_appc
+from .modalcvert import generate_appc
 
 
 def load_context(yaml_path: str | Path) -> dict[str, Any]:

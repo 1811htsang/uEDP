@@ -20,9 +20,9 @@ echo "[INFO] Running as uedp_user (UID: $USER_ID)"
 echo "[ENTRY] call menuconfig"
 python uedp.py menuconfig
 echo "[ENTRY] call pre-logicdef generator"
-python -m pltf.testspec.generators.pre_logicdef.tsgen
+python -m pltf.testspec.generators.pre_logicdef.fpregen
 echo "[ENTRY] call post-logicdef app.c generator"
-python -m pltf.testspec.generators.post_logicdef.tsgen \
+python -m pltf.testspec.generators.post_logicdef.cgen \
   --yaml sources/app/lstaxizer.yaml \
   --output sources/app/app.c
 echo "[ENTRY] call testspec.ustab.custab"

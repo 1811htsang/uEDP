@@ -33,7 +33,7 @@ KwDI consists of 3 main parts, all located neatly at the repo root and in `sourc
 
 - **No stage separation**: input collection, interactive configuration (menuconfig), and code generation all live inside a single `main()` function of `uedp.py`. To regenerate code from an existing `.config` (e.g., in CI), the whole interactive `menuconfig` still has to be run again.
 - **"String-patching" code generation (marker-based patch)**: `corecfg_gen`/`palcfg_gen` require the target `.h` file to **already exist** with the correct marker pair before it can be patched — a brand-new file cannot be generated from scratch, and it's fragile if someone accidentally deletes a marker.
-- **`sources/common/testspec/`** (an earlier Jinja2-based prototype) already existed but was only a **draft never wired into the real flow**: the original `appcfg_tsgen.py` just `print(output)`ed to the screen with a hardcoded `current_date` of `'16 May 2025'` — it didn't read the real `.config` and didn't write a file.
+- **`sources/common/testspec/`** (an earlier Jinja2-based prototype) already existed but was only a **draft never wired into the real flow**: the original `appcfgpgen.py` just `print(output)`ed to the screen with a hardcoded `current_date` of `'16 May 2025'` — it didn't read the real `.config` and didn't write a file.
 - **A minimal Docker image**, with only `kconfiglib` installed: no `gcc/cmake/gdb`, no ESP-IDF, unable to build or run tests inside the container — users still had to leave the container to build by hand.
 - **No `entrypoint.sh`/`docker-compose.yaml`**: the container ran the `CMD` directly as root, with no UID/GID handling → files created (via the mounted volume) ended up owned by `root` on the host, which was inconvenient when editing them from outside the container.
 - **No workspace separation**: there was no concept of separate directories for "core source code" versus "testing workspace" — everything was mixed together in the repo.
@@ -68,14 +68,14 @@ pltf/
     │   ├── glbda.py       # Draft for the μE-LS direction (see section 3.5)
     │   └── test.yaml
     └── generators/           # Each file is responsible for one output artifact
-        ├── appcfg_tsgen.py
-        ├── corecfg_tsgen.py
-        ├── palcfg_tsgen.py
-        ├── appdecl_tsgen.py
-        ├── arch_dir_tsgen.py
-        ├── arch_h_tsgen.py
-        ├── arch_c_tsgen.py
-        └── tsgen.py          # Orchestrator, calls all 7 generators above in sequence
+        ├── appcfgpgen.py
+        ├── corecfgpgen.py
+        ├── palcfgpgen.py
+        ├── appdeclpgen.py
+        ├── archdirpgen.py
+        ├── archhpgen.py
+        ├── archcpgen.py
+        └── fpregen.py          # Orchestrator, calls all 7 generators above in sequence
 ```
 
 Compared with `sources/common/kconfiglib/` (kept unchanged, not moved, since it is a third-party library rather than in-house code), the entirety of KwDI's **in-house** portion (`pyspec`, `testspec`) is consolidated into a single location, `pltf/`, separate from `sources/common/` — reflecting the true meaning of "Portable": `pltf/` does not depend on the `sources/` structure and could be reused for a different μEDP project simply by pointing it at the correct output path.
@@ -131,7 +131,7 @@ Each generator (`*_tsgen.py`) calls `dotcfg.cfp_parse_dotcfg()` independently �
 Unlike KwDI's "patch a string between 2 markers" mechanism, each generator in PLTF **renders the entire file content from a Jinja2 template and then fully overwrites** the target file:
 
 ```python
-# pltf/testspec/generators/corecfg_tsgen.py
+# pltf/testspec/generators/corecfgpgen.py
 context = dotcfg.cfp_parse_dotcfg(config_dir)
 env = Environment(loader=FileSystemLoader('./pltf/templates'))
 template = env.get_template('corecfgh.txt')
@@ -144,23 +144,23 @@ There are 7 generators corresponding to 7 output artifacts:
 
 | Generator | File generated | Notes |
 | --- | --- | --- |
-| `corecfg_tsgen.py` | `sources/app/config/core_cfg.h` | Replaces the old `corecfg_gen()` |
-| `palcfg_tsgen.py` | `sources/app/config/pal_cfg.h` | Replaces the old `palcfg_gen()` |
-| `appcfg_tsgen.py` | `sources/app/config/app_cfg.h` | Replaces the old `app_cfg_gen()` |
-| `appdecl_tsgen.py` | `sources/app/declaration/app_decl.h` | Replaces the old `app_decl_gen()` |
-| `arch_dir_tsgen.py` | directory `sources/pal/arch/<arch_name>/` | Creates the directory before the 2 generators below write files into it |
-| `arch_h_tsgen.py` | `sources/pal/arch/<arch_name>/<arch_name>_arch.h` | Replaces the old `pal_arch_gen()` (the `.h` part) |
-| `arch_c_tsgen.py` | `sources/pal/arch/<arch_name>/<arch_name>_arch.c` | Replaces the old `pal_arch_gen()` (the `.c` part) |
+| `corecfgpgen.py` | `sources/app/config/core_cfg.h` | Replaces the old `corecfg_gen()` |
+| `palcfgpgen.py` | `sources/app/config/pal_cfg.h` | Replaces the old `palcfg_gen()` |
+| `appcfgpgen.py` | `sources/app/config/app_cfg.h` | Replaces the old `app_cfg_gen()` |
+| `appdeclpgen.py` | `sources/app/declaration/app_decl.h` | Replaces the old `app_decl_gen()` |
+| `archdirpgen.py` | directory `sources/pal/arch/<arch_name>/` | Creates the directory before the 2 generators below write files into it |
+| `archhpgen.py` | `sources/pal/arch/<arch_name>/<arch_name>_arch.h` | Replaces the old `pal_arch_gen()` (the `.h` part) |
+| `archcpgen.py` | `sources/pal/arch/<arch_name>/<arch_name>_arch.c` | Replaces the old `pal_arch_gen()` (the `.c` part) |
 
 `tsgen.py` is the orchestrator, running all 7 generators in sequence and printing progress logs:
 
 ```python
-import appcfg_tsgen, corecfg_tsgen, palcfg_tsgen, appdecl_tsgen
-import arch_dir_tsgen, arch_h_tsgen, arch_c_tsgen
+import appcfgpgen, corecfgpgen, palcfgpgen, appdeclpgen
+import archdirpgen, archhpgen, archcpgen
 
 if __name__ == "__main__":
-  appcfg_tsgen.main(); corecfg_tsgen.main(); palcfg_tsgen.main()
-  appdecl_tsgen.main(); arch_dir_tsgen.main(); arch_h_tsgen.main(); arch_c_tsgen.main()
+  appcfgpgen.main(); corecfgpgen.main(); palcfgpgen.main()
+  appdeclpgen.main(); archdirpgen.main(); archhpgen.main(); archcpgen.main()
 ```
 
 Because it uses whole-file template rendering instead of patching, PLTF **no longer depends on the target file already existing with fixed markers** — this is a direct improvement on the "string-patching code generation" limitation noted in section 2.3.
@@ -262,7 +262,7 @@ Unchanged from KwDI — `docs/` (which holds large reference PDFs and instructio
 - **Duplicated `.config` parsing code**: all 6 generators (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) each call `dotcfg.cfp_parse_dotcfg(config_dir)` separately instead of parsing once and sharing a common `context` — this could be consolidated inside `tsgen.py` to avoid reading the `.config` file multiple times.
 - **`entrypoint.sh` always runs `uedp.py menuconfig` on every container startup**: fine for an interactive session on a dev machine, but there's no non-interactive branch yet (e.g., reading an existing `.config` directly and skipping menuconfig) for use in CI/CD.
 - **No automated tests for `pltf/` itself yet**: the testing framework itself (parser, generator, template) currently has no dedicated tests to guard against regressions when editing a template or a parser.
-- **`arch_dir_tsgen.py`** uses Python 3.12+-style nested double-quote f-strings (`f"{context["arch_name"]}"`) — worth confirming compatibility, since it matches the `python:3.13-slim` base image currently used, but is worth watching if the base image is ever downgraded to an older Python version.
+- **`archdirpgen.py`** uses Python 3.12+-style nested double-quote f-strings (`f"{context["arch_name"]}"`) — worth confirming compatibility, since it matches the `python:3.13-slim` base image currently used, but is worth watching if the base image is ever downgraded to an older Python version.
 
 ## 7. Conclusion
 
