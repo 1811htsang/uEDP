@@ -194,7 +194,7 @@ def symresolv_load(yaml_content):
   return anchors, trace_results
 
 def symresolv_debug(anchors, trace_results):
-  print(f"{'-'*30} symresolv `anchor` param  {'-'*30}\n")
+  print(f"{'-'*30} symresolv `anchor` param  {'-'*28}\n")
   print(f"\n{'INDEX':<6} | {'ANCHOR':<15} | {'DEFINITION TRACE PATH'}")
   print("-" * 60)
   i = 0

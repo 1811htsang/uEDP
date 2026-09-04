@@ -2,17 +2,17 @@ tnorms:
   '1': &tnorm1-ctrl
     tsm_resrc:
       states:
-      - tsm_task_usr_state_idle
-      - tsm_task_usr_state_running
+        - tsm_task_usr_state_idle
+        - tsm_task_usr_state_running
       state_trans:
-      - tsm_task_usr_state_idle_trans
-      - tsm_task_usr_state_running_trans
+        - tsm_task_usr_state_idle_trans
+        - tsm_task_usr_state_running_trans
       object: tsm_task_usr
       table: tsm_task_usr_tbl
     fsm_resrc:
       states:
-      - FSM_TASK_1_STATE_1_ID
-      - FSM_TASK_1_STATE_2_ID
+        - FSM_TASK_1_STATE_1_ID
+        - FSM_TASK_1_STATE_2_ID
       object: FSM_TASK_1_ID
     id_symbol: TASK_NORM_USR
     queue_name: tnorm_usr_msgq
@@ -21,17 +21,17 @@ tnorms:
   '2': &tnorm2-ctrl
     tsm_resrc:
       states:
-      - tsm_task_a_state_idle
-      - tsm_task_a_state_waiting
+        - tsm_task_a_state_idle
+        - tsm_task_a_state_waiting
       state_trans:
-      - tsm_task_a_state_idle_trans
-      - tsm_task_a_state_waiting_trans
+        - tsm_task_a_state_idle_trans
+        - tsm_task_a_state_waiting_trans
       object: tsm_task_a
       table: tsm_task_a_tbl
     fsm_resrc:
       states:
-      - FSM_TASK_2_STATE_1_ID
-      - FSM_TASK_2_STATE_2_ID
+        - FSM_TASK_2_STATE_1_ID
+        - FSM_TASK_2_STATE_2_ID
       object: FSM_TASK_2_ID
     id_symbol: TASK_NORM_A
     queue_name: tnorm_a_msgq
@@ -40,17 +40,17 @@ tnorms:
   '3': &tnorm3-ctrl
     tsm_resrc:
       states:
-      - TSM_TASK_3_STATE_1_ID
-      - TSM_TASK_3_STATE_2_ID
+        - TSM_TASK_3_STATE_1_ID
+        - TSM_TASK_3_STATE_2_ID
       state_trans:
-      - TSM_TASK_3_STATE_1_ID_trans
-      - TSM_TASK_3_STATE_2_ID_trans
+        - TSM_TASK_3_STATE_1_ID_trans
+        - TSM_TASK_3_STATE_2_ID_trans
       object: TSM_TASK_3_ID
       table: TSM_TASK_3_ID_tbl
     fsm_resrc:
       states:
-      - fsm_task_b_state_idle
-      - fsm_task_b_state_busy
+        - fsm_task_b_state_idle
+        - fsm_task_b_state_busy
       object: fsm_task_b
     id_symbol: TASK_NORM_B
     queue_name: tnorm_b_msgq
@@ -111,180 +111,180 @@ versh: "1.2.0-pre"
 
 glbda:
 - &gda_status
-  name: GDA_SYSTEM_STATUS # Validator check: kiểm tra lỗi từ lstaxer.strucjec
-  type: "const char*"
-  initial_value: "STATUS: INITIALIZING"
+    name: GDA_SYSTEM_STATUS # Validator check: kiểm tra lỗi từ lstaxer.strucjec
+    type: "const char*"
+    initial_value: "STATUS: INITIALIZING"
 - &gda_counter
-  name: GDA_COUNTER
-  type: "int"
-  initial_value: 0
+    name: GDA_COUNTER
+    type: "int"
+    initial_value: 0
 - &gda_flag
-  name: GDA_FLAG
-  type: "bool"
-  initial_value: false
+    name: GDA_FLAG
+    type: "bool"
+    initial_value: false
 
 # ANCHOR - Task List (TLIST)
 
 tlist:
-- tnorm: TASK_NORM_USR
-  tsm:
-  - id: tsm_task_usr_state_idle
-    trans:
-    - sig: *sig1
-      goto: tsm_task_usr_state_running
-    on_ntry:
-      # NOTE - logic "khởi tạo" (Entry)
-      steps:
-      - actv: 
-        kind: c_stmt
-        code: |
-          uedp_itnlog_init();
-    on_actv:
-      # NOTE - logic "chạy" (Active)
-      steps:
-      - actv: 
-          kind: c_call
-          function: uedp_itnlog_log
-          args: [34, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[USR][IDLE] Starting sequence..."']
-      - actv: uedp_task_norm_post_msg
-        to: TASK_NORM_A
-        sig: *sig1
-        data: NULL
-        ptype: NULL
-    on_exit:
-      # NOTE - logic "kết thúc" (Exit)
-      actv: 
-        kind: c_call
-        function: uedp_itnlog_log
-        args: [40, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[USR][IDLE] Sequence completed."']
-  - id: tsm_task_usr_state_running
-    trans:
-    - sig: *sig2
-      goto: tsm_task_usr_state_idle
-    on_ntry:
-      actv: 
-        kind: c_call
-        function: uedp_itnlog_log
-        args: [45, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[USR][RUNNING] Sequence started."']
-    on_actv:
-      steps:
-      - actv: 
-          kind: c_call
-          function: uedp_itnlog_log
-          args: [50, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[USR][RUNNING] Posting message to TASK_NORM_A..."']
-      - actv: uedp_task_norm_post_msg
-        to: TASK_NORM_A
-        sig: *sig1
-        data: *gda_status # Validator check: tham chiếu anchor hợp lệ
-        ptype: REF # D2MP: Truyền địa chỉ chuỗi status
-    on_exit:
-      steps:
-      - actv: 
-        kind: c_stmt
-        code: |
-          uedp_itnlog_log(
-            60,
-            ITNLOG_LEVEL_DEBUG,
-            ITNLOG_TAG_TSK,
-            "[USR][RUNNING] Sequence completed."
-          );
-  <<: *tnorm1-ctrl
-- tnorm: TASK_NORM_A
-  tsm:
-  - id: tsm_task_a_state_idle
-    trans:
-    - sig: *sig1
-      goto: tsm_task_a_state_waiting
-    on_ntry: NULL
-    on_actv: NULL
-    on_exit: NULL
-  - id: tsm_task_a_state_waiting
-    trans:
-    - sig: *sig3
-      goto: STAY # Validator check: logic "bỏ qua" (Stay)
-    - sig: *sig4
-      goto: tsm_task_a_state_idle
-    on_ntry:
-      actv: uedp_post_msg
-      to: TASK_NORM_B
-      sig: *sig5
-      data: NULL
-      ptype: NULL
-    on_actv:
-      steps:
-      # Chuyển trạng thái kèm hành động phức tạp
-      - actv: uedp_post_msg
+  - tnorm: TASK_NORM_USR
+    tsm:
+      - id: tsm_task_usr_state_idle
+        trans:
+          - sig: *sig1
+            goto: tsm_task_usr_state_running
+        on_ntry:
+          # NOTE - logic "khởi tạo" (Entry)
+          steps:
+            - actv: 
+                kind: c_stmt
+                code: |
+                  uedp_itnlog_init();
+        on_actv:
+          # NOTE - logic "chạy" (Active)
+          steps:
+            - actv: 
+                kind: c_call
+                function: uedp_itnlog_log
+                args: [34, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[USR][IDLE] Starting sequence..."']
+            - actv: uedp_task_norm_post_msg
+              to: TASK_NORM_A
+              sig: *sig1
+              data: NULL
+              ptype: NULL
+        on_exit:
+          # NOTE - logic "kết thúc" (Exit)
+          actv: 
+            kind: c_call
+            function: uedp_itnlog_log
+            args: [40, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[USR][IDLE] Sequence completed."']
+      - id: tsm_task_usr_state_running
+        trans:
+          - sig: *sig2
+            goto: tsm_task_usr_state_idle
+        on_ntry:
+          actv: 
+            kind: c_call
+            function: uedp_itnlog_log
+            args: [45, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[USR][RUNNING] Sequence started."']
+        on_actv:
+          steps:
+            - actv: 
+                kind: c_call
+                function: uedp_itnlog_log
+                args: [50, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[USR][RUNNING] Posting message to TASK_NORM_A..."']
+            - actv: uedp_task_norm_post_msg
+              to: TASK_NORM_A
+              sig: *sig1
+              data: *gda_status # Validator check: tham chiếu anchor hợp lệ
+              ptype: REF # D2MP: Truyền địa chỉ chuỗi status
+        on_exit:
+          steps:
+            - actv: 
+                kind: c_stmt
+                code: |
+                  uedp_itnlog_log(
+                    60,
+                    ITNLOG_LEVEL_DEBUG,
+                    ITNLOG_TAG_TSK,
+                    "[USR][RUNNING] Sequence completed."
+                  );
+    <<: *tnorm1-ctrl
+  - tnorm: TASK_NORM_A
+    tsm:
+    - id: tsm_task_a_state_idle
+      trans:
+        - sig: *sig1
+          goto: tsm_task_a_state_waiting
+      on_ntry: NULL
+      on_actv: NULL
+      on_exit: NULL
+    - id: tsm_task_a_state_waiting
+      trans:
+        - sig: *sig3
+          goto: STAY # Validator check: logic "bỏ qua" (Stay)
+        - sig: *sig4
+          goto: tsm_task_a_state_idle
+      on_ntry:
+        actv: uedp_post_msg
         to: TASK_NORM_B
-        sig: *sig6
+        sig: *sig5
         data: NULL
         ptype: NULL
-      - actv: 
-        kind: c_call
-        function: uedp_itnlog_log
-        args: [
-          70,
-          ITNLOG_LEVEL_DEBUG,
-          ITNLOG_TAG_TSK,
-          "[TASK_NORM_A][WAITING_B] Posted SIG_0xAA to TASK_NORM_B."
-        ]
-    on_exit: NULL
-  escal:
-    # Cấu hình APE để xử lý khẩn cấp (nếu có)
-    mode: slnf
-    trigger:
-    - on_sig: *sig7
-      post_urgent: NULL # Chạy tiếp queue hiện tại với ưu tiên cao
-  <<: *tnorm2-ctrl
-- tnorm: TASK_NORM_B
-  fsm:
-  - id: fsm_task_b_state_idle
-    on_recv:
-    - sig: *sig5
-      goto: fsm_task_b_state_busy
-      steps:
-      - actv: uedp_task_norm_post_msg
-        to: TASK_NORM_A
-        sig: *sig3
-        data: *gda_status # Ghi log nội dung từ biến toàn cục
-        ptype: VAL # Validator check: Copy nội dung (memcpy)
-      - actv: uedp_task_norm_post_msg
-        to: TASK_NORM_A
-        sig: *sig4
-        data: *gda_status # Ghi log nội dung từ biến toàn cục
-        ptype: VAL # Validator check: Copy nội dung (memcpy)
-        # sig: *gda_status # Validator check: Không hợp lệ, không thể dùng anchor trong sig
-  - id: fsm_task_b_state_busy
-    on_recv:
-    - sig: *sig6
-      goto: fsm_task_b_state_idle
-      steps:
-      - actv: uedp_task_norm_post_msg
-        to: TASK_USR
-        sig: *sig2
-        data: *gda_status # Ghi log nội dung từ biến toàn cục
-        ptype: REF # Validator check: Truyền địa chỉ chuỗi status
-      - actv: 
-          kind: c_call
-          function: uedp_itnlog_log
-          args: [70, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[TASK_NORM_B][BUSY] Received SIG_0xAA from TASK_NORM_A."']
-  <<: *tnorm3-ctrl # Validator check: Không hợp lệ, không thể dùng anchor trong sig
-- tpoll: TASK_POLL_MEMRP
-  exec: NULL
-  <<: *tpoll1-ctrl # Validator check: Không hợp lệ, thiếu anchor
-- tpoll: TASK_POLL_BLINK
-  exec: NULL
-  <<: *tpoll2-ctrl
+      on_actv:
+        steps:
+        # Chuyển trạng thái kèm hành động phức tạp
+          - actv: uedp_post_msg
+            to: TASK_NORM_B
+            sig: *sig6
+            data: NULL
+            ptype: NULL
+          - actv: 
+              kind: c_call
+              function: uedp_itnlog_log
+              args: [
+                70,
+                ITNLOG_LEVEL_DEBUG,
+                ITNLOG_TAG_TSK,
+                "[TASK_NORM_A][WAITING_B] Posted SIG_0xAA to TASK_NORM_B."
+              ]
+      on_exit: NULL
+    escal:
+      # Cấu hình APE để xử lý khẩn cấp (nếu có)
+      mode: slnf
+      trigger:
+        - on_sig: *sig7
+          post_urgent: NULL # Chạy tiếp queue hiện tại với ưu tiên cao
+    <<: *tnorm2-ctrl
+  - tnorm: TASK_NORM_B
+    fsm:
+      - id: fsm_task_b_state_idle
+        on_recv:
+          - sig: *sig5
+            goto: fsm_task_b_state_busy
+            steps:
+              - actv: uedp_task_norm_post_msg
+                to: TASK_NORM_A
+                sig: *sig3
+                data: *gda_status # Ghi log nội dung từ biến toàn cục
+                ptype: VAL # Validator check: Copy nội dung (memcpy)
+              - actv: uedp_task_norm_post_msg
+                to: TASK_NORM_A
+                sig: *sig4
+                data: *gda_status # Ghi log nội dung từ biến toàn cục
+                ptype: VAL # Validator check: Copy nội dung (memcpy)
+                # sig: *gda_status # Validator check: Không hợp lệ, không thể dùng anchor trong sig
+      - id: fsm_task_b_state_busy
+        on_recv:
+          - sig: *sig6
+            goto: fsm_task_b_state_idle
+            steps:
+              - actv: uedp_task_norm_post_msg
+                to: TASK_USR
+                sig: *sig2
+                data: *gda_status # Ghi log nội dung từ biến toàn cục
+                ptype: REF # Validator check: Truyền địa chỉ chuỗi status
+              - actv: 
+                  kind: c_call
+                  function: uedp_itnlog_log
+                  args: [70, ITNLOG_LEVEL_DEBUG, ITNLOG_TAG_TSK, '"[TASK_NORM_B][BUSY] Received SIG_0xAA from TASK_NORM_A."']
+    <<: *tnorm3-ctrl # Validator check: Không hợp lệ, không thể dùng anchor trong sig
+  - tpoll: TASK_POLL_MEMRP
+    exec: NULL
+    <<: *tpoll1-ctrl # Validator check: Không hợp lệ, thiếu anchor
+  - tpoll: TASK_POLL_BLINK
+    exec: NULL
+    <<: *tpoll2-ctrl
 # ANCHOR - Interrupt Service Routine (ISR) - Xử lý ngắt
 
 isr:
-- id: ISR_HARD_STOP
-  to: TASK_NORM_A # Validator check: kiểm tra lỗi từ lstaxer.strucjec
-  sig: *sig7
+  - id: ISR_HARD_STOP
+    to: TASK_NORM_A # Validator check: kiểm tra lỗi từ lstaxer.strucjec
+    sig: *sig7
 
 # ANCHOR - Out-Context Execution (OUTEXEC) - Thực thi ngoài ngữ cảnh
 
 outexec:
-- name: OCE_ITNLOG_DUMP
-  handler: itnlog_dump_handler # Validator check: kiểm tra lỗi từ lstaxer.strucjec
-  context: NULL
-  state: READY
+  - name: OCE_ITNLOG_DUMP
+    handler: itnlog_dump_handler # Validator check: kiểm tra lỗi từ lstaxer.strucjec
+    context: NULL
+    state: READY
