@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 def main(context):
   cur_trm_dir = os.path.dirname("uEDP")
   env = Environment(loader = FileSystemLoader('./pltf/templates'))
-  template = env.get_template('appcfg_tmpl.txt')
+  template = env.get_template('appcfgh.txt')
   output = template.render(
     current_date = context["current_date"], 
     appcfg_libs = context["appcfg_libs"], 

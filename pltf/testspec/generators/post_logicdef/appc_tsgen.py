@@ -9,7 +9,7 @@ from ...lstaxer.kre8_lstaxer import build_generator_context
 
 
 _TEMPLATE_DIR = Path(__file__).resolve().parents[3] / 'templates'
-_TEMPLATE_NAME = 'app_c_tmpl.txt'
+_TEMPLATE_NAME = 'appc.txt'
 
 
 def _actions(action_list: dict[str, Any] | None) -> list[dict[str, Any]]:

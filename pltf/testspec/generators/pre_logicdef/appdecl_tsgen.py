@@ -6,7 +6,7 @@ from jinja2 import Environment, FileSystemLoader
 def main(context):
   cur_trm_dir = os.path.dirname("uEDP")
   env = Environment(loader = FileSystemLoader('./pltf/templates'))
-  template = env.get_template('appdecl_tmpl.txt')
+  template = env.get_template('appdeclh.txt')
   output = template.render(
     current_date = context["current_date"],
     tasknorm_defs = context['tasknorm_defs'], 
