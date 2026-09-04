@@ -70,14 +70,14 @@ sources/test/*
 sources/common/kconfiglib/__pycache__/*
 pltf/pyspec/__pycache__/*
 pltf/testspec/cfparsers/__pycache__/*
-pltf/testspec/generators/__pycache__/*
+pltf/testspec/jnerator/__pycache__/*
 pltf/testspec/__pycache__/*
 pltf/__pycache__/*
 pltf/testspec/ustab/__pycache__/*
 pltf/testspec/lstaxer/__pycache__/*
 pltf/testspec/lstaxer/pydantic_model/__pycache__/*
-pltf/testspec/generators/pre_logicdef/__pycache__/*
-pltf/testspec/generators/post_logicdef/__pycache__/*
+pltf/testspec/jnerator/pregen/__pycache__/*
+pltf/testspec/jnerator/postgen/__pycache__/*
 pltf/testspec/tests/*
 
 # ESP-IDF
