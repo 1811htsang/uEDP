@@ -52,7 +52,7 @@
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF)
    * @note Đã loại bỏ toàn bộ các khai báo tác vụ poll mặc định (WDG, SYSLF,
    *       MEMRP, IDLE) vì không còn được sử dụng ở bất kỳ đâu trong lõi,
-   *       PAL, tài liệu hay PLD/μE-LS (pltf/pyspec, pltf/pycdscriptor). Do không
+   *       PAL, tài liệu hay PLD/μE-LS (pltf/kconfigspec, pltf/pycdscriptor). Do không
    *       còn tác vụ mặc định nào được giữ lại, OFFSET được cập nhật từ 0x04
    *       xuống 0x00 để tác vụ poll đầu tiên do người dùng định nghĩa có thể
    *       bắt đầu ngay tại MIN_ID, không để trống không gian ID nào.

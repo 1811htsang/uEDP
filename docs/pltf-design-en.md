@@ -17,7 +17,7 @@ KwDI consists of 3 main parts, all located neatly at the repo root and in `sourc
 
 - `Kconfig` (root) + `sources/app/kconfig/{core,pal,decl}.kconfig`: define the configuration tree.
 - `sources/common/kconfiglib/`: the `kconfiglib` + `menuconfig` library (third-party) used to read the Kconfig tree and display an interactive `menuconfig` interface on the terminal.
-- `sources/common/pyspec/`: functions that generate `decl.kconfig` (task norm, task poll, signal, hardware API) based on the quantities the user enters (`usrinp.py`, `tsknrmdcl.py`, `tskpoldcl.py`, `sigdcl.py`, `hwapidcl.py`).
+- `sources/common/kconfigspec/`: functions that generate `decl.kconfig` (task norm, task poll, signal, hardware API) based on the quantities the user enters (`usrinp.py`, `tsknrmdcl.py`, `tskpoldcl.py`, `sigdcl.py`, `hwapidcl.py`).
 - `uedp.py` (root): the single script that orchestrates the entire flow — it collects input, calls `menuconfig`, and also **generates code itself** (`corecfg_gen`, `palcfg_gen`, `app_cfg_gen`, `app_decl_gen`, `pal_arch_gen`) by inserting `#define` strings directly between 2 markers (`// KCONFIG_CORECFG_START` / `// KCONFIG_CORECFG_END`) inside existing header files under `sources/app/config/`.
 - `Dockerfile` (original version): a `python:3.13-slim` image, installing only `kconfiglib`, `CMD ["python", "uedp.py", "menuconfig"]`.
 
@@ -49,7 +49,7 @@ New directory structure:
 
 ```text
 pltf/
-├── pyspec/                 # Generates decl.kconfig (replaces the old sources/common/pyspec)
+├── kconfigspec/                 # Generates decl.kconfig (replaces the old sources/common/kconfigspec)
 │   ├── usrinp.py
 │   ├── tnorm.py
 │   ├── tpoll.py
@@ -78,18 +78,18 @@ pltf/
         └── fpregen.py          # Orchestrator, calls all 7 generators above in sequence
 ```
 
-Compared with `sources/common/kconfiglib/` (kept unchanged, not moved, since it is a third-party library rather than in-house code), the entirety of KwDI's **in-house** portion (`pyspec`, `pycdscriptor`) is consolidated into a single location, `pltf/`, separate from `sources/common/` — reflecting the true meaning of "Portable": `pltf/` does not depend on the `sources/` structure and could be reused for a different μEDP project simply by pointing it at the correct output path.
+Compared with `sources/common/kconfiglib/` (kept unchanged, not moved, since it is a third-party library rather than in-house code), the entirety of KwDI's **in-house** portion (`kconfigspec`, `pycdscriptor`) is consolidated into a single location, `pltf/`, separate from `sources/common/` — reflecting the true meaning of "Portable": `pltf/` does not depend on the `sources/` structure and could be reused for a different μEDP project simply by pointing it at the correct output path.
 
 ### 3.1 `uedp.py` after the refactor
 
 `uedp.py` now has exactly one responsibility: generate `decl.kconfig` and run the interactive `menuconfig`.
 
 ```python
-from pltf.pyspec.usrinp import user_input
-from pltf.pyspec.tnorm import task_norm_declaration
-from pltf.pyspec.tpoll import task_poll_declaration
-from pltf.pyspec.sig import signal_declaration
-from pltf.pyspec.hwapi import hardware_api_declaration
+from pltf.kconfigspec.usrinp import user_input
+from pltf.kconfigspec.tnorm import task_norm_declaration
+from pltf.kconfigspec.tpoll import task_poll_declaration
+from pltf.kconfigspec.sig import signal_declaration
+from pltf.kconfigspec.hwapi import hardware_api_declaration
 
 def main():
   os.environ["KCONFIG_CONFIG"] = ".config"
@@ -109,9 +109,9 @@ def main():
 
 All 5 functions `corecfg_gen`, `palcfg_gen`, `app_cfg_gen`, `app_decl_gen`, `pal_arch_gen` **have been removed from `uedp.py`** — there is no more code-generation logic here at all. `uedp.py` now stops exactly at the step of writing out `.config`; code generation has been handed over entirely to `pltf/pycdscriptor/`. This is the most important change compared with KwDI: **separating "collecting configuration" from "generating code,"** which allows the code-generation step to be re-run multiple times from the same `.config` without repeating `menuconfig`.
 
-### 3.2 `pltf/pyspec/` — generating Kconfig declarations
+### 3.2 `pltf/kconfigspec/` — generating Kconfig declarations
 
-The logic is nearly identical to the old `sources/common/pyspec/` (files renamed with a `_pspec` suffix for consistency, e.g. `tsknrmdcl.py` → `tnorm.py`); it still generates `sources/app/kconfig/decl.kconfig` using raw Kconfig syntax (`menu`, `config ... string`, `default`, `depends on`). The difference is that these modules now live inside `pltf/`, imported by `uedp.py` via `pltf.pyspec.*` instead of `sources.common.pyspec.*`.
+The logic is nearly identical to the old `sources/common/kconfigspec/` (files renamed with a `_pspec` suffix for consistency, e.g. `tsknrmdcl.py` → `tnorm.py`); it still generates `sources/app/kconfig/decl.kconfig` using raw Kconfig syntax (`menu`, `config ... string`, `default`, `depends on`). The difference is that these modules now live inside `pltf/`, imported by `uedp.py` via `pltf.kconfigspec.*` instead of `sources.common.kconfigspec.*`.
 
 ### 3.3 `pltf/pycdscriptor/attribarse/dotcfg.py` — the heart of the code-generation pipeline
 
@@ -246,7 +246,7 @@ Unchanged from KwDI — `docs/` (which holds large reference PDFs and instructio
 
 | Aspect | KwDI (original) | PLTF (current) |
 | --- | --- | --- |
-| Location of in-house code | `sources/common/{kconfiglib,pyspec}` | `pltf/{pyspec,templates,pycdscriptor}` (`kconfiglib` — a 3rd-party library — remains in `sources/common/kconfiglib`) |
+| Location of in-house code | `sources/common/{kconfiglib,kconfigspec}` | `pltf/{kconfigspec,templates,pycdscriptor}` (`kconfiglib` — a 3rd-party library — remains in `sources/common/kconfiglib`) |
 | Number of stages | 1 (merged together in `uedp.py`) | 2 (declaration+menuconfig in `uedp.py`, code generation in `pltf/pycdscriptor`) |
 | Code-generation mechanism | Patching a string between 2 markers into an existing `.h` file | Rendering an entirely new file via a Jinja2 template |
 | Input to the code-generation step | The `kconf` object directly (`kconfiglib`) | The `.config` file already written to disk (`dotcfg.py` re-parses it) |

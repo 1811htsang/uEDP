@@ -31,7 +31,7 @@ Tác giả: Shang Huang - Huỳnh Thanh Sang
 ├── common/                      # Các tiện ích và cấu trúc dữ liệu chung được sử dụng trong toàn bộ dự án
 │   ├── container/               # Các cấu trúc dữ liệu như FIFO, Ring Buffer, Linked List được triển khai thuần C
 │   ├── kconfiglib/              # Chứa cấu hình thực thi Kconfig terminal
-│   ├── pyspec/                  # Cấu hình python để sinh code từ Kconfig terminal
+│   ├── kconfigspec/                  # Cấu hình python để sinh code từ Kconfig terminal
 │   └── xprintf/                 # Thư viện xprintf sử dụng cho việc format chuỗi log và xuất ra nhiều backend khác nhau
 └── test/                        # Các test case mẫu để kiểm tra các tính năng của μEDP
     ├── test01/                  # Test cơ bản với các tác vụ ISR và TSM 

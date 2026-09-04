@@ -17,7 +17,7 @@ KwDI gồm 3 phần chính, tất cả nằm gọn trong root repo và `sources/
 
 - `Kconfig` (root) + `sources/app/kconfig/{core,pal,decl}.kconfig`: định nghĩa cây cấu hình.
 - `sources/common/kconfiglib/`: thư viện `kconfiglib` + `menuconfig` (bên thứ 3) để đọc cây Kconfig và hiển thị giao diện `menuconfig` tương tác trên terminal.
-- `sources/common/pyspec/`: các hàm sinh `decl.kconfig` (task norm, task poll, signal, hardware API) dựa theo số lượng người dùng nhập vào (`usrinp.py`, `tsknrmdcl.py`, `tskpoldcl.py`, `sigdcl.py`, `hwapidcl.py`).
+- `sources/common/kconfigspec/`: các hàm sinh `decl.kconfig` (task norm, task poll, signal, hardware API) dựa theo số lượng người dùng nhập vào (`usrinp.py`, `tsknrmdcl.py`, `tskpoldcl.py`, `sigdcl.py`, `hwapidcl.py`).
 - `uedp.py` (root): script duy nhất điều phối toàn bộ luồng — vừa thu thập input, vừa gọi `menuconfig`, vừa **tự sinh code** (`corecfg_gen`, `palcfg_gen`, `app_cfg_gen`, `app_decl_gen`, `pal_arch_gen`) bằng cách chèn trực tiếp chuỗi `#define` vào giữa 2 marker (`// KCONFIG_CORECFG_START` / `// KCONFIG_CORECFG_END`) trong các file header có sẵn ở `sources/app/config/`.
 - `Dockerfile` (bản gốc): image `python:3.13-slim`, chỉ cài `kconfiglib`, `CMD ["python", "uedp.py", "menuconfig"]`.
 
@@ -49,7 +49,7 @@ Cấu trúc thư mục mới:
 
 ```text
 pltf/
-├── pyspec/                 # Sinh decl.kconfig (thay sources/common/pyspec cũ)
+├── kconfigspec/                 # Sinh decl.kconfig (thay sources/common/kconfigspec cũ)
 │   ├── usrinp.py
 │   ├── tnorm.py
 │   ├── tpoll.py
@@ -78,18 +78,18 @@ pltf/
         └── fpregen.py          # Orchestrator, gọi tuần tự 7 generator ở trên
 ```
 
-So với `sources/common/kconfiglib/` (vẫn giữ nguyên, không di chuyển vì đây là thư viện bên thứ 3, không phải phần tự viết), toàn bộ phần **tự viết** của KwDI (`pyspec`, `pycdscriptor`) được gom về một chỗ duy nhất là `pltf/`, tách khỏi `sources/common/` — phản ánh đúng ý nghĩa "Portable": `pltf/` không phụ thuộc vào cấu trúc `sources/`, có thể tái sử dụng cho một dự án μEDP khác chỉ cần trỏ đúng đường dẫn output.
+So với `sources/common/kconfiglib/` (vẫn giữ nguyên, không di chuyển vì đây là thư viện bên thứ 3, không phải phần tự viết), toàn bộ phần **tự viết** của KwDI (`kconfigspec`, `pycdscriptor`) được gom về một chỗ duy nhất là `pltf/`, tách khỏi `sources/common/` — phản ánh đúng ý nghĩa "Portable": `pltf/` không phụ thuộc vào cấu trúc `sources/`, có thể tái sử dụng cho một dự án μEDP khác chỉ cần trỏ đúng đường dẫn output.
 
 ### 3.1 `uedp.py` sau khi refactor
 
 `uedp.py` giờ chỉ còn đúng một trách nhiệm: sinh `decl.kconfig` và chạy `menuconfig` tương tác.
 
 ```python
-from pltf.pyspec.usrinp import user_input
-from pltf.pyspec.tnorm import task_norm_declaration
-from pltf.pyspec.tpoll import task_poll_declaration
-from pltf.pyspec.sig import signal_declaration
-from pltf.pyspec.hwapi import hardware_api_declaration
+from pltf.kconfigspec.usrinp import user_input
+from pltf.kconfigspec.tnorm import task_norm_declaration
+from pltf.kconfigspec.tpoll import task_poll_declaration
+from pltf.kconfigspec.sig import signal_declaration
+from pltf.kconfigspec.hwapi import hardware_api_declaration
 
 def main():
   os.environ["KCONFIG_CONFIG"] = ".config"
@@ -109,9 +109,9 @@ def main():
 
 Toàn bộ 5 hàm `corecfg_gen`, `palcfg_gen`, `app_cfg_gen`, `app_decl_gen`, `pal_arch_gen` **đã bị loại khỏi `uedp.py`** — không còn logic sinh code nào ở đây nữa. `uedp.py` dừng lại đúng ở bước ghi ra `.config`, việc sinh code được nhường hoàn toàn cho `pltf/pycdscriptor/`. Đây là thay đổi quan trọng nhất khi so với KwDI: **tách bạch "thu thập cấu hình" khỏi "sinh code"**, cho phép chạy lại bước sinh code nhiều lần từ cùng một `.config` mà không cần lặp lại `menuconfig`.
 
-### 3.2 `pltf/pyspec/` — sinh khai báo Kconfig
+### 3.2 `pltf/kconfigspec/` — sinh khai báo Kconfig
 
-Logic gần như giữ nguyên so với `sources/common/pyspec/` cũ (đổi tên file theo hậu tố `_pspec` cho nhất quán, ví dụ `tsknrmdcl.py` → `tnorm.py`), vẫn sinh `sources/app/kconfig/decl.kconfig` theo cú pháp Kconfig thô (`menu`, `config ... string`, `default`, `depends on`). Điểm khác biệt là các module này giờ nằm trong `pltf/`, được `uedp.py` import qua `pltf.pyspec.*` thay vì `sources.common.pyspec.*`.
+Logic gần như giữ nguyên so với `sources/common/kconfigspec/` cũ (đổi tên file theo hậu tố `_pspec` cho nhất quán, ví dụ `tsknrmdcl.py` → `tnorm.py`), vẫn sinh `sources/app/kconfig/decl.kconfig` theo cú pháp Kconfig thô (`menu`, `config ... string`, `default`, `depends on`). Điểm khác biệt là các module này giờ nằm trong `pltf/`, được `uedp.py` import qua `pltf.kconfigspec.*` thay vì `sources.common.kconfigspec.*`.
 
 ### 3.3 `pltf/pycdscriptor/attribarse/dotcfg.py` — trái tim của pipeline sinh code
 
@@ -246,7 +246,7 @@ Giữ nguyên từ KwDI, không đổi — vẫn loại `docs/` (chứa PDF tham
 
 | Khía cạnh | KwDI (gốc) | PLTF (hiện tại) |
 | --- | --- | --- |
-| Vị trí code tự viết | `sources/common/{kconfiglib,pyspec}` | `pltf/{pyspec,templates,pycdscriptor}` (`kconfiglib` — thư viện 3rd-party — vẫn ở lại `sources/common/kconfiglib`) |
+| Vị trí code tự viết | `sources/common/{kconfiglib,kconfigspec}` | `pltf/{kconfigspec,templates,pycdscriptor}` (`kconfiglib` — thư viện 3rd-party — vẫn ở lại `sources/common/kconfiglib`) |
 | Số giai đoạn | 1 (gộp chung trong `uedp.py`) | 2 (declaration+menuconfig trong `uedp.py`, sinh code trong `pltf/pycdscriptor`) |
 | Cơ chế sinh code | Vá chuỗi giữa 2 marker vào file `.h` có sẵn | Render toàn bộ file mới bằng Jinja2 template |
 | Input cho bước sinh code | Trực tiếp object `kconf` (`kconfiglib`) | File `.config` đã ghi ra đĩa (`dotcfg.py` tự parse lại) |
