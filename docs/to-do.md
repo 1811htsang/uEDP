@@ -289,8 +289,9 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 - [x] Đưa calling của pycdscriptor.generator vào cùng phase với lstaxer.kre8 để cùng giai đoạn cấu hình sang mã nguồn.
 - [x] Triển khai thiết kế lstaxer.kre8 để hỗ trợ việc generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [x] Bổ sung rewrite cú pháp giải quyết vấn đề ambiguous data tag lên apps/lstaxizer.yaml để thực hiện regression test cho pipeline.
-- [ ] Thực hiện chore filename để thống nhất các module riêng biệt của PLTF.
-- [ ] Sửa đổi vị trị ustab.custab trong pipeline trên entrypoint.sh
+- [x] Thực hiện chore filename để thống nhất các module riêng biệt của PLTF.
+- [ ] Sửa đổi vị trí ustab.custab trong pipeline trên entrypoint.sh nằm giữa jnerator.pregen.fpregen và jnerator.postgen.cgen. //CRITICAL - Follow theo task bên dưới sẽ đưa ustab.custab nằm cuối pipeline.
+- [ ] Phân tách entrypoint.sh để đưa jnerator.postgen.cgen và lstaxer.vlid vào jainerator.sh thành một pipeline riêng biệt.
 - [ ] Bổ sung khả năng kiểm tra theo syntax mới của PLD/μE-LS trên lstaxer.vlid.
 - [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax.
 - [ ] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing. //CRITICAL - Xem xét loại bỏ khỏi pipeline vì dư thừa và làm phức tạp thêm việc parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
