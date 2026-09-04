@@ -707,6 +707,8 @@ Không được dùng `data` để chứa danh sách tham số của một funct
 
 `c_stmt` và `c_call` được giữ nguyên để codegen nhưng không có semantic validation sâu như `post_msg`. Generator phải reject hoặc báo rõ khi built-in action thiếu tham số bắt buộc. Alias phải được resolve trước khi mapping; không dùng alias đã bị `safe_load()` chuyển thành `None` làm payload hợp lệ.
 
+Lưu ý rằng ở thời điểm hiện `args` chưa hỗ trợ để resolve alias trong danh sách, nên cần tránh dùng alias trong `args` nếu không muốn gặp lỗi runtime. Ngoài ra, trong cấu trúc sử dụng mapping action với `c_stmt` và `c_call` cần đảm bảo tag `kind`, `function`, và `args` được khai báo với indent lùi vào sau `actv` để tránh lỗi YAML. Các trường hợp này cần được kiểm tra kỹ lưỡng trong quá trình codegen để đảm bảo tính nhất quán và tránh lỗi runtime.
+
 <!-- TODO
 100826 - Cân nhắc thay đổi 2 keyword `act` và `actv` để tránh nhầm lẫn.
 110826 - Cân nhắc remove `cact` và chỉ dùng `steps` trong `on_recv` để thống nhất cú pháp. ~ Bổ sung task list để thực thi việc sửa đổi này. 

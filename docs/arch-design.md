@@ -142,6 +142,8 @@ Trong đó, Core được thiết kế với 4 loại pool sau:
 - `EXTAL`: Kích thước mặc định là 16 đơn vị, mỗi đơn vị có kích thước phụ thuộc vào `sizeof(void*) * 4u`, dùng để cấp phát các message từ bên ngoài core, cho phép cô lập tài nguyên để Core xử lý trước khi truyền vào hệ thống và các tác vụ được đăng ký để nhận các message này.
 - `ISR`: Kích thước mặc định là 16 đơn vị, mỗi đơn vị có kích thước phụ thuộc vào `sizeof(uedp_msg_isr_t)`, dùng để ISR truyền tín hiệu vào hệ thống trên FIFO, giúp cô lập tín hiệu từ ISR và đảm bảo an toàn khi truyền vào hệ thống.
 
+Ngoài 4 loại pool trên (đều cấp phát/giải phóng vùng nhớ gắn liền với vòng đời của message), Core còn cung cấp thêm **[GDP] Global Data Pool** (định danh nội bộ `GAXES`) - một cơ chế khác hẳn về bản chất, không cấp phát vùng nhớ mà chỉ đăng ký tra cứu tên ↔ con trỏ cho các biến toàn cục (static/global storage duration) đã tồn tại sẵn. GDP ra đời để phục vụ khối `glbda:` của PLD/μE-LS khi truyền `ptype: REF`/`ptype: VAL`, và được mô tả chi tiết trong [D2MP] bên dưới.
+
 ### [SII] Safe ISR Injection - Cơ chế an toàn để truyền tín hiệu từ ISR vào hệ thống
 
 Để đảm bảo an toàn khi truyền tín hiệu từ ISR vào hệ thống, μEDP bổ sung một FIFO nội bộ bên trong Core để lưu trữ các tín hiệu từ ISR. Khi có ngắt (ví dụ: UART, Timer), PAL sẽ đẩy tín hiệu vào FIFO này. Core sẽ "drain" (rút dữ liệu) từ FIFO này vào các Task Queue ở đầu mỗi chu kỳ Scheduler. Cơ chế này giúp loại bỏ hoàn toàn việc Core phải biết về ISR, đồng thời đảm bảo an toàn và hiệu quả khi truyền tín hiệu từ ISR vào hệ thống.
@@ -156,7 +158,15 @@ Dựa theo thiết kế bộ nhớ quản lý tin nhắn, nhằm đảm bảo vi
 
 Trong đó, nếu kích thước của dữ liệu nhỏ hơn kích thước đã khai báo của pool, Core cung cấp API là `uedp_msg_set_data_val` để truyền dữ liệu trực tiếp vào payload của message. Nếu kích thước của dữ liệu lớn hơn kích thước đã khai báo của pool, người dùng có thể sử dụng API `uedp_msg_set_data_ref` để truyền địa chỉ của dữ liệu vào payload của message.
 
-Do đó cần lưu ý rằng đối với việc truyền tham chiếu thì nên bổ sung 1 FIFO toàn cục để lưu trữ các tham chiếu này nhằm tránh việc truyền trực tiếp địa chỉ của biến cục bộ vào payload của message, điều này có thể dẫn đến lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi.
+Do đó cần lưu ý rằng đối với việc truyền tham chiếu tới **biến cục bộ** (local variable, thời gian sống giới hạn trong 1 lần gọi hàm), người dùng phải tự đảm bảo vùng nhớ đó còn hợp lệ tại thời điểm message được xử lý (thường là khai báo `static`), tránh lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi (dangling pointer).
+
+Riêng với trường hợp truyền tham chiếu tới **biến toàn cục thật sự** (static/global storage duration, phục vụ khối `glbda:` của PLD/μE-LS), Core cung cấp thêm cơ chế **[GDP] Global Data Pool** để quản lý việc này một cách tường minh, thay vì để người dùng tự quản lý con trỏ thô như trên. GDP là một bảng đăng ký tĩnh (`uedp_gdp_slot_t`, mặc định `UEDP_GDP_MAX_SLOTS = 16` slot) ánh xạ tên ↔ con trỏ, với 5 API: `uedp_gdp_init()` (khởi tạo bảng), `uedp_gdp_register()`/`uedp_gdp_unregister()` (đăng ký/huỷ đăng ký 1 biến toàn cục theo tên), `uedp_gdp_get_ref()` (lấy con trỏ tham chiếu trực tiếp, dùng cho `ptype: REF`), và `uedp_gdp_get_val()`/`uedp_gdp_set_val()` (sao chép giá trị ra/vào buffer, dùng cho `ptype: VAL`).
+
+Điểm khác biệt cốt lõi so với 4 pool `BLANK`/`ALLOC`/`EXTAL`/`ISR`: GDP **không cấp phát** vùng nhớ `data` (chỉ lưu con trỏ trỏ tới vùng nhớ đã tồn tại sẵn, do người dùng hoặc PLTF khai báo) và **không có khái niệm giải phóng/vòng đời** - biến toàn cục sống suốt vòng đời chương trình nên không có thao tác "free" một slot đã đăng ký. Điều này khác hẳn `ALLOC`, vốn gắn chặt với vòng đời `uedp_msg_alloc()`/`uedp_msg_free()` và không phù hợp để tái sử dụng cho mục đích lưu trữ biến toàn cục (sẽ phải tự chế thêm cơ chế "never-free" đè lên trên).
+
+`uedp_gdp_get_ref()` hiện **không** bọc `pal_enter_critical()`/`pal_exit_critical()`: do scheduler hiện tại là single-core, non-preemptive (mỗi vòng lập lịch chỉ dispatch đúng 1 task) và ISR không được phép gọi `actv`/`act`, nên không tồn tại đường tranh chấp thật sự ở bản hiện tại. Cần xem xét lại việc bọc critical section nếu μEDP phát triển tới môi trường đa nhân (AMP/SMP/HELF) trong tương lai. Toàn bộ quá trình cân nhắc và các phương án đã loại bỏ (ví dụ tái dùng `ALLOC`, hoặc bổ sung 1 FIFO tham chiếu toàn cục riêng) được ghi lại chi tiết tại `docs/review/dmp-gda.md`.
+
+Việc sinh vùng nhớ tĩnh thật cho khối `glbda:` (gọi `uedp_gdp_register()`) là trách nhiệm của một generator PLTF riêng (dự kiến `gda_tsgen.py`, thuộc phạm vi PLD/μE-LS) - core chỉ cung cấp API quản lý, không tự sinh code khai báo biến.
 
 Khi thực hiện lấy dữ liệu từ truyền tham chiếu thì người dùng có thể tham khảo cách khai báo trong `test02` như sau:
 
@@ -171,10 +181,6 @@ Trong đó `uintptr_t` cho phép lấy địa chỉ không cần xét đến ki�
 Ở đây, tài liệu lấy ví dụ về việc truyền tham chiếu một chuỗi ký tự từ Task A sang Task B thông qua message. Do bản thân `data_a_to_b` là con trỏ cấp 2 nên nếu chỉ sử dụng `char* received_str = *(char**)(msg->data)` thì chỉ lấy được thông tin địa chỉ con trỏ `data_a_to_b` mà không lấy được nội dung của chuỗi ký tự.
 
 Do đó, cần phải sử dụng thêm một bước để lấy được nội dung thực sự của chuỗi ký tự thông qua việc giải tham chiếu hai lần như trong ví dụ trên. Trong thực tế sử dụng thì người dùng sẽ tùy thuộc vào kiểu dữ liệu cụ thể mà có cách giải tham chiếu phù hợp để lấy được nội dung thực sự từ payload của message khi sử dụng cơ chế truyền tham chiếu này.
-
-<!-- LINK docs/uels-syntax.md:745
-Dựa trên TODO, cân nhắc bổ sung thêm 1 dpool GDA kèm tài liệu giữa DMP và D2MP để quản lý truyền tham chiêu tương ứng khi sử dụng liên kết với tính năng PLD/μE-LS.
--->
 
 ### [HSMC] Hybrid State Machine Control - Cơ chế quản lý máy trạng thái kết hợp giữa TSM và FSM
 
