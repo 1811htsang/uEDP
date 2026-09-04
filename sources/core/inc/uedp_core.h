@@ -30,7 +30,7 @@
    *       được cập nhật từ 0x06 xuống 0x03 tương ứng với số lượng tác vụ mặc
    *       định còn được giữ lại (3 thay vì 6):
    *       - `UEDP_TASK_NORM_USR_ID` và `UEDP_TASK_NORM_EOT_ID` là 2 ID bắt buộc
-   *         phải có trong bảng tác vụ của người dùng (xem app_cfg.h, appcfg_tmpl.txt).
+   *         phải có trong bảng tác vụ của người dùng (xem app_cfg.h, appcfgh.txt).
    *       - `UEDP_TASK_NORM_IDLE_ID` được dùng làm giá trị sentinel khởi tạo/reset
    *         của `g_active_task_norm_id` trong uedp_task.c.
    *       - `UEDP_TASK_NORM_SYS_ID` được dùng trong uedp_msg.c làm src_task_id khi
