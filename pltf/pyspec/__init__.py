@@ -1,11 +1,11 @@
 # NOTE - Export modules for use in other packages
 
-from . import hwapi_pspec, sig_pspec, tnorm_pspec, tpoll_pspec, usrinp_pspec
+from . import hwapi, sig, tnorm, tpoll, usrinp
 
 # NOTE - Export functions for use in other packages
 
-from .hwapi_pspec import hardware_api_declaration
-from .sig_pspec import signal_declaration
-from .tnorm_pspec import task_norm_declaration
-from .tpoll_pspec import task_poll_declaration
-from .usrinp_pspec import user_input
+from .hwapi import hardware_api_declaration
+from .sig import signal_declaration
+from .tnorm import task_norm_declaration
+from .tpoll import task_poll_declaration
+from .usrinp import user_input

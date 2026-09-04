@@ -27,7 +27,7 @@ def task_norm_declaration(num_tasks_norm, num_tsm_states_list, num_fsm_states_li
   # RESOLVED - Mỗi task giờ có thể khai báo dùng FSM/TSM riêng biệt (tsm_flags[i-1],
   # fsm_flags[i-1]) kèm số lượng state riêng (num_tsm_states_list[i-1],
   # num_fsm_states_list[i-1]) thay vì dùng chung 1 cờ + 1 số lượng cho toàn bộ
-  # task norm. Dữ liệu này được thu thập theo từng task trong usrinp_pspec.user_input().
+  # task norm. Dữ liệu này được thu thập theo từng task trong usrinp.user_input().
   kconfig_content = []
   kconfig_content.append('menu "Task Norm configuration"\n')
 
