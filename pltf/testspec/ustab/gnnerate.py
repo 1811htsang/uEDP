@@ -1,8 +1,8 @@
 import re
 import json
-from .cvert_ustab import ustab_convert_yaml
+from .cvert import ustab_convert_yaml
 
-class gnnerate_ustab:
+class gnnerate:
   def __init__(self):
     self.ust = {
       "tnorms": {},
@@ -73,7 +73,7 @@ class gnnerate_ustab:
       data["hex_val"] = hex(self.OFFSETS["SIG"] + int(idx) - 1)
 # Calling
 def generate_ustab_from_kconfig(kconfig_path):
-  generator = gnnerate_ustab()
+  generator = gnnerate()
   ustab_data = generator.ustab_parse_kconfig(kconfig_path)
   yaml_output = ustab_convert_yaml(ustab_data)
   return yaml_output

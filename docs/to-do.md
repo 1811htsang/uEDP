@@ -180,7 +180,7 @@ Tức là có 1 space trước dấu `//` và 1 space trước dấu `!SECTION`,
 <!-- SECTION - L178
 Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu rõ hơn yêu cầu của task này. Cần kiểm tra các tài liệu và mã nguồn liên đới như PLD/μE-LS, pltf.pyspec/testspec để đảm bảo rằng các khai báo task này không còn được sử dụng trong các tính năng hiện tại và tương lai của lõi μEDP.
 
-#LINK - pltf/testspec/ustab/gnnerate_ustab.py:13
+#LINK - pltf/testspec/ustab/gnnerate.py:13
 #LINK - /workspaces/uEDP/sources/core/inc/uedp_core.h:29
 #LINK - /workspaces/uEDP/sources/core/inc/uedp_core.h:57
 #LINK - pltf/testspec/cfparsers/dotcfg.py:37

@@ -25,8 +25,8 @@ echo "[ENTRY] call post-logicdef app.c generator"
 python -m pltf.testspec.generators.post_logicdef.tsgen \
   --yaml sources/app/lstaxizer.yaml \
   --output sources/app/app.c
-echo "[ENTRY] call testspec.ustab.tsustab"
-python -m pltf.testspec.ustab.tsustab
+echo "[ENTRY] call testspec.ustab.custab"
+python -m pltf.testspec.ustab.custab
 # Change ownership of all files in the /uedp-libs and /uedp-test directories to the new user
 chown -R $USER_ID:$GROUP_ID /uedp-libs/*
 echo -e "[DONE]"
