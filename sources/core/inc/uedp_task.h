@@ -29,15 +29,6 @@
 	typedef struct uedp_msg_t uedp_msg_t;
 
 	/**
-	 * @brief Định nghĩa các hằng số để quản lý kích thước 
-	 * 				của hàng đợi đối tượng tác vụ và hàng đợi ngắt
-	 * @attention Trong thiết kế hệ thống thì bắt buộc phải có hàng đợi dành cho ISR 
-	 * 						nhằm đảm bảo tính đồng bộ, an toàn và độc lập phần cứng khi xử lý các sự kiện ngắt
-	 */
-	#define QUEUE_OBJ_SIZE		(512) // Kích thước của hàng đợi đối tượng
-	#define QUEUE_ISR_SIZE		(128) // Kích thước của hàng đợi ngắt
-
-	/**
 	 * @brief Định nghĩa các kiểu dữ liệu để quản lý ID 
 	 * 				và mức độ ưu tiên của tác vụ trong hệ thống UEDP
 	 */
@@ -71,6 +62,8 @@
 		task_pri_t base_pri;
 		task_pri_t cur_pri;
 		bool urgent_pending;
+		uedp_fsm_t* fsm;
+		uedp_tsm_t* tsm;
 		pf_task_norm task_norm;
 		fifo_t msg_queue; 
 		uedp_msg_t** msg_queue_buffer;
@@ -177,6 +170,34 @@
 	 * @return RETR_STAT Trạng thái của việc đăng ký tin nhắn khẩn cấp
 	 */
 	RETR_STAT uedp_task_norm_post_urgent(task_id_t tid, uedp_msg_t* msg);
+
+	/**
+	 * @brief Lấy con trỏ đến máy trạng thái toàn cục (TSM) hiện đang gắn với một tác vụ message-driven
+	 * @param tid ID của tác vụ cần lấy TSM
+	 * @return uedp_tsm_t* Con trỏ đến TSM của tác vụ, hoặc NULL nếu tác vụ không tồn tại hoặc chưa gán TSM
+	 */
+	uedp_tsm_t* uedp_task_norm_get_tsm(task_id_t tid);
+
+	/**
+	 * @brief Gán một máy trạng thái toàn cục (TSM) cho một tác vụ message-driven
+	 * @param tid ID của tác vụ cần gán TSM
+	 * @param tsm Con trỏ đến TSM cần gán cho tác vụ
+	 */
+	void uedp_task_norm_set_tsm(task_id_t tid, uedp_tsm_t* tsm);
+
+	/**
+	 * @brief Lấy con trỏ đến máy trạng thái cục bộ (FSM) hiện đang gắn với một tác vụ message-driven
+	 * @param tid ID của tác vụ cần lấy FSM
+	 * @return uedp_fsm_t* Con trỏ đến FSM của tác vụ, hoặc NULL nếu tác vụ không tồn tại hoặc chưa gán FSM
+	 */
+	uedp_fsm_t* uedp_task_norm_get_fsm(task_id_t tid);
+
+	/**
+	 * @brief Gán một máy trạng thái cục bộ (FSM) cho một tác vụ message-driven
+	 * @param tid ID của tác vụ cần gán FSM
+	 * @param fsm Con trỏ đến FSM cần gán cho tác vụ
+	 */
+	void uedp_task_norm_set_fsm(task_id_t tid, uedp_fsm_t* fsm);
 
 #endif //__TASK_H__
 

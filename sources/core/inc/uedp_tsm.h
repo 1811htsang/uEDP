@@ -4,9 +4,7 @@
  * @brief Header file for Transition State Machine (TSM) management in UEDP system
  * @version 0.1
  * @date 2026-04-17
- * 
  * @copyright MIT License
- * 
  */
 #ifndef __UEDP_TSM_H__
 	#define __UEDP_TSM_H__
@@ -58,11 +56,11 @@
 	 * @param tran_count: Số lượng transition trong mảng transitions
 	 */
 	typedef struct tsm_state_desc_t {
-		tsm_state_id_t 			state_id;     
-		tsm_func_f  				on_entry;     
-		tsm_func_f  				on_exit;      
-		const tsm_trans_t* 	transitions; 
-		ui8      						trans_count;  
+		tsm_state_id_t state_id;     
+		tsm_func_f on_entry;     
+		tsm_func_f on_exit;      
+		const tsm_trans_t* transitions; 
+		ui8 trans_count;  
 	} tsm_state_desc_t;
 
 	/**
@@ -74,10 +72,10 @@
 	 * @param on_state_changed: Hàm callback sẽ được gọi khi trạng thái thay đổi, nhận vào ID của trạng thái mới
 	 */
 	typedef struct tsm_trans_tbl_t {
-		tsm_state_id_t  cur_state;    
-		tsm_state_id_t  prev_state;   
+		tsm_state_id_t cur_state;    
+		tsm_state_id_t prev_state;   
 		const tsm_state_desc_t* state_table;
-		ui8      state_count;
+		ui8 state_count;
 		tsm_on_state_f on_state_changed;
 	} uedp_tsm_t;
 

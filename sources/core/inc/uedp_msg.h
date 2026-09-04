@@ -4,9 +4,7 @@
  * @brief Message definitions and utilities for UEDP system
  * @version 0.1
  * @date 2026-04-16
- * 
  * @copyright MIT License
- * 
  */
 #ifndef __UEDP_MSG_H__
 	#define __UEDP_MSG_H__
@@ -18,10 +16,21 @@
 	#include <stdint.h>
 	#include <stdlib.h>
 	#include <stdio.h>
+	#include <stdbool.h>
 	#include "uedp_core.h"
 	#include "uedp_task.h"
 
-	typedef struct pal_memrp_info_t pal_memrp_info_t; // Forward declaration để tránh include vòng
+	/**
+	 * @brief Forward declaration for task id
+	 */
+
+	typedef ui16	task_id_t; 	// ID của tác vụ
+
+	/**
+	 * @brief Forward declaration for memory pool info
+	 */
+
+	typedef struct pal_memrp_info_t pal_memrp_info_t;
 
 	/**
 	 * @brief Định nghĩa các loại Pool tin nhắn (Nội bộ Core sử dụng)
@@ -174,5 +183,108 @@
 	 *            info->max_used sẽ là số lượng tin nhắn tối đa đã từng được sử dụng trong alloc_pool, info->total sẽ là tổng số tin nhắn có thể chứa trong alloc_pool.
 	 */
 	void internal_uedp_msg_pool_get_info(uedp_msg_type_t pool_id, pal_memrp_info_t* info);
+
+	/**
+	 * @brief Thiết lập ID của tác vụ nguồn gửi tin nhắn
+	 * @param msg: Con trỏ đến tin nhắn cần thiết lập ID nguồn
+	 * @param src_task_id: ID của tác vụ nguồn gửi tin nhắn
+	 */
+	void uedp_msg_set_src_task_id(uedp_msg_t* msg, task_id_t src_task_id);
+
+	/**
+	 * @brief Thiết lập ID của tác vụ đích nhận tin nhắn
+	 * @param msg: Con trỏ đến tin nhắn cần thiết lập ID đích
+	 * @param des_task_id: ID của tác vụ đích nhận tin nhắn
+	 */
+	void uedp_msg_set_des_task_id(uedp_msg_t* msg, task_id_t des_task_id);
+
+	/* ============================================================================
+	 * [GDP] Global Data Pool — dpool riêng cho biến toàn cục (định danh nội bộ GAXES),
+	 * phục vụ D2MP khi truyền `ptype: REF`/`ptype: VAL` từ khối `glbda:` của PLD/μE-LS.
+	 *
+	 * Theo kết luận cuối cùng trong docs/review/dmp-gda.md: GDP KHÔNG dùng lại ALLOC
+	 * pool, vì biến toàn cục không có khái niệm "free" (sống suốt vòng đời chương
+	 * trình) - trong khi ALLOC gắn chặt với vòng đời uedp_msg_alloc()/uedp_msg_free().
+	 * GDP chỉ "gán vị trí an toàn" (đăng ký tên <-> con trỏ), không quản lý vòng đời.
+	 * ============================================================================ */
+
+	/**
+	 * @brief Số lượng slot dữ liệu toàn cục tối đa GDP có thể quản lý cùng lúc
+	 * @attention Hiện để default trực tiếp tại đây (giống pattern LOGDP_MAX_OUTPUT_FN) - có thể
+	 *            đưa vào Kconfig/PLTF codegen sau này giống các Pool khác (BLANK/ALLOC/EXTAL/ISR) nếu cần.
+	 */
+	#ifndef UEDP_GDP_MAX_SLOTS
+		#define UEDP_GDP_MAX_SLOTS (16u)
+	#endif
+
+	/**
+	 * @brief Khai báo 1 slot dữ liệu toàn cục trong GDP
+	 * @param name Tên định danh biến (tương ứng `name` trong khối `glbda:` của μE-LS), dùng để tra cứu
+	 * @param data Con trỏ tới vùng nhớ thật chứa dữ liệu
+	 * @param size Kích thước dữ liệu tính bằng byte
+	 * @param in_use Đánh dấu slot đang được sử dụng hay còn trống
+	 * @attention GDP KHÔNG cấp phát vùng nhớ `data` - chỉ lưu con trỏ trỏ tới vùng nhớ đã tồn tại sẵn
+	 *            (static/global storage duration, do người dùng hoặc PLTF khai báo). Khác với các Pool
+	 *            BLANK/ALLOC/EXTAL/ISR ở trên (tự cấp phát + tự quản lý vòng đời qua alloc/free), GDP
+	 *            không có khái niệm "free" một slot đã đăng ký - biến toàn cục sống suốt vòng đời chương trình.
+	 */
+	typedef struct uedp_gdp_slot_t {
+		const char* name;
+		void*       data;
+		ui16        size;
+		bool        in_use;
+	} uedp_gdp_slot_t;
+
+	/**
+	 * @brief Khởi tạo bảng GDP - cần gọi trước khi dùng bất kỳ API GDP nào khác
+	 */
+	void uedp_gdp_init(void);
+
+	/**
+	 * @brief Đăng ký 1 biến toàn cục vào GDP
+	 * @param name Tên định danh, dùng để tra cứu lại sau này - không được trùng với tên đã đăng ký
+	 * @param data_ptr Con trỏ tới vùng nhớ thật của biến (static/global - KHÔNG phải biến cục bộ,
+	 *                 vì GDP không sở hữu/copy vùng nhớ này, chỉ lưu con trỏ trỏ tới nó)
+	 * @param size Kích thước dữ liệu tính bằng byte
+	 * @return RETR_STAT STAT_OK nếu đăng ký thành công, STAT_ERROR nếu tham số không hợp lệ/trùng tên/hết slot
+	 */
+	RETR_STAT uedp_gdp_register(const char* name, void* data_ptr, ui16 size);
+
+	/**
+	 * @brief Huỷ đăng ký 1 biến toàn cục khỏi GDP
+	 * @param name Tên định danh cần huỷ đăng ký
+	 * @return RETR_STAT STAT_OK nếu thành công, STAT_ERROR nếu không tìm thấy
+	 * @attention KHÔNG giải phóng vùng nhớ `data` - GDP chưa bao giờ sở hữu nó, chỉ gỡ bỏ liên kết tra cứu.
+	 */
+	RETR_STAT uedp_gdp_unregister(const char* name);
+
+	/**
+	 * @brief Lấy con trỏ tham chiếu trực tiếp tới dữ liệu (dùng cho `ptype: REF` của μE-LS)
+	 * @param name Tên định danh cần lấy
+	 * @return void* Con trỏ tới dữ liệu, hoặc NULL nếu không tìm thấy (UEDP_FCR_GDP_NOT_FOUND đã được raise)
+	 * @attention Con trỏ trả về trỏ trực tiếp vào vùng nhớ thật - không bọc critical section, vì theo
+	 *            docs/review/dmp-gda.md (mục "Phản hồi vòng 2"): scheduler hiện tại single-core,
+	 *            non-preemptive, ISR không được gọi `actv`/`act` -> không có đường tranh chấp thật sự.
+	 *            Cần xem xét lại nếu μEDP phát triển tới môi trường đa nhân (AMP/SMP/HELF).
+	 */
+	void* uedp_gdp_get_ref(const char* name);
+
+	/**
+	 * @brief Sao chép giá trị hiện tại của 1 biến GDP ra buffer đích (dùng cho `ptype: VAL` của μE-LS)
+	 * @param name Tên định danh cần đọc
+	 * @param out_buf Buffer đích để chứa dữ liệu sao chép ra
+	 * @param buf_size Kích thước buffer đích - phải >= kích thước đã đăng ký, nếu không sẽ raise FCR
+	 * @return RETR_STAT STAT_OK nếu thành công
+	 */
+	RETR_STAT uedp_gdp_get_val(const char* name, void* out_buf, ui16 buf_size);
+
+	/**
+	 * @brief Ghi đè giá trị mới vào 1 biến GDP đã đăng ký (dùng cho `ptype: VAL` của μE-LS)
+	 * @param name Tên định danh cần ghi
+	 * @param in_buf Dữ liệu nguồn để sao chép vào
+	 * @param buf_size Kích thước dữ liệu nguồn - phải khớp đúng kích thước đã đăng ký, nếu không sẽ raise FCR
+	 * @return RETR_STAT STAT_OK nếu thành công
+	 */
+	RETR_STAT uedp_gdp_set_val(const char* name, const void* in_buf, ui16 buf_size);
 
 #endif //__UEDP_MSG_H__

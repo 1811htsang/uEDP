@@ -122,7 +122,7 @@ Lưu ý khi tích hợp:
 - `pal_rprintf_flush_entry()` chỉ thực sự xuất dữ liệu khi `is_ready()` trả về `true`.
 - Định dạng mặc định của `rprintf` là một dòng có timestamp, task ID, signal ID và message, được tạo bằng `xfprintf()` thay vì ghép chuỗi thủ công.
 
-## IV. Logic thiết kế chi tiết
+## Logic thiết kế chi tiết
 
 ### [DMP] Deterministic Memory Pooling - Quản lý bộ nhớ tin nhắn với cấp phát tĩnh độc lập vào kiến trúc
 
@@ -142,6 +142,8 @@ Trong đó, Core được thiết kế với 4 loại pool sau:
 - `EXTAL`: Kích thước mặc định là 16 đơn vị, mỗi đơn vị có kích thước phụ thuộc vào `sizeof(void*) * 4u`, dùng để cấp phát các message từ bên ngoài core, cho phép cô lập tài nguyên để Core xử lý trước khi truyền vào hệ thống và các tác vụ được đăng ký để nhận các message này.
 - `ISR`: Kích thước mặc định là 16 đơn vị, mỗi đơn vị có kích thước phụ thuộc vào `sizeof(uedp_msg_isr_t)`, dùng để ISR truyền tín hiệu vào hệ thống trên FIFO, giúp cô lập tín hiệu từ ISR và đảm bảo an toàn khi truyền vào hệ thống.
 
+Ngoài 4 loại pool trên (đều cấp phát/giải phóng vùng nhớ gắn liền với vòng đời của message), Core còn cung cấp thêm **[GDP] Global Data Pool** (định danh nội bộ `GAXES`) - một cơ chế khác hẳn về bản chất, không cấp phát vùng nhớ mà chỉ đăng ký tra cứu tên ↔ con trỏ cho các biến toàn cục (static/global storage duration) đã tồn tại sẵn. GDP ra đời để phục vụ khối `glbda:` của PLD/μE-LS khi truyền `ptype: REF`/`ptype: VAL`, và được mô tả chi tiết trong [D2MP] bên dưới.
+
 ### [SII] Safe ISR Injection - Cơ chế an toàn để truyền tín hiệu từ ISR vào hệ thống
 
 Để đảm bảo an toàn khi truyền tín hiệu từ ISR vào hệ thống, μEDP bổ sung một FIFO nội bộ bên trong Core để lưu trữ các tín hiệu từ ISR. Khi có ngắt (ví dụ: UART, Timer), PAL sẽ đẩy tín hiệu vào FIFO này. Core sẽ "drain" (rút dữ liệu) từ FIFO này vào các Task Queue ở đầu mỗi chu kỳ Scheduler. Cơ chế này giúp loại bỏ hoàn toàn việc Core phải biết về ISR, đồng thời đảm bảo an toàn và hiệu quả khi truyền tín hiệu từ ISR vào hệ thống.
@@ -156,7 +158,15 @@ Dựa theo thiết kế bộ nhớ quản lý tin nhắn, nhằm đảm bảo vi
 
 Trong đó, nếu kích thước của dữ liệu nhỏ hơn kích thước đã khai báo của pool, Core cung cấp API là `uedp_msg_set_data_val` để truyền dữ liệu trực tiếp vào payload của message. Nếu kích thước của dữ liệu lớn hơn kích thước đã khai báo của pool, người dùng có thể sử dụng API `uedp_msg_set_data_ref` để truyền địa chỉ của dữ liệu vào payload của message.
 
-Do đó cần lưu ý rằng đối với việc truyền tham chiếu thì nên bổ sung 1 FIFO toàn cục để lưu trữ các tham chiếu này nhằm tránh việc truyền trực tiếp địa chỉ của biến cục bộ vào payload của message, điều này có thể dẫn đến lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi.
+Do đó cần lưu ý rằng đối với việc truyền tham chiếu tới **biến cục bộ** (local variable, thời gian sống giới hạn trong 1 lần gọi hàm), người dùng phải tự đảm bảo vùng nhớ đó còn hợp lệ tại thời điểm message được xử lý (thường là khai báo `static`), tránh lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi (dangling pointer).
+
+Riêng với trường hợp truyền tham chiếu tới **biến toàn cục thật sự** (static/global storage duration, phục vụ khối `glbda:` của PLD/μE-LS), Core cung cấp thêm cơ chế **[GDP] Global Data Pool** để quản lý việc này một cách tường minh, thay vì để người dùng tự quản lý con trỏ thô như trên. GDP là một bảng đăng ký tĩnh (`uedp_gdp_slot_t`, mặc định `UEDP_GDP_MAX_SLOTS = 16` slot) ánh xạ tên ↔ con trỏ, với 5 API: `uedp_gdp_init()` (khởi tạo bảng), `uedp_gdp_register()`/`uedp_gdp_unregister()` (đăng ký/huỷ đăng ký 1 biến toàn cục theo tên), `uedp_gdp_get_ref()` (lấy con trỏ tham chiếu trực tiếp, dùng cho `ptype: REF`), và `uedp_gdp_get_val()`/`uedp_gdp_set_val()` (sao chép giá trị ra/vào buffer, dùng cho `ptype: VAL`).
+
+Điểm khác biệt cốt lõi so với 4 pool `BLANK`/`ALLOC`/`EXTAL`/`ISR`: GDP **không cấp phát** vùng nhớ `data` (chỉ lưu con trỏ trỏ tới vùng nhớ đã tồn tại sẵn, do người dùng hoặc PLTF khai báo) và **không có khái niệm giải phóng/vòng đời** - biến toàn cục sống suốt vòng đời chương trình nên không có thao tác "free" một slot đã đăng ký. Điều này khác hẳn `ALLOC`, vốn gắn chặt với vòng đời `uedp_msg_alloc()`/`uedp_msg_free()` và không phù hợp để tái sử dụng cho mục đích lưu trữ biến toàn cục (sẽ phải tự chế thêm cơ chế "never-free" đè lên trên).
+
+`uedp_gdp_get_ref()` hiện **không** bọc `pal_enter_critical()`/`pal_exit_critical()`: do scheduler hiện tại là single-core, non-preemptive (mỗi vòng lập lịch chỉ dispatch đúng 1 task) và ISR không được phép gọi `actv`/`act`, nên không tồn tại đường tranh chấp thật sự ở bản hiện tại. Cần xem xét lại việc bọc critical section nếu μEDP phát triển tới môi trường đa nhân (AMP/SMP/HELF) trong tương lai. Toàn bộ quá trình cân nhắc và các phương án đã loại bỏ (ví dụ tái dùng `ALLOC`, hoặc bổ sung 1 FIFO tham chiếu toàn cục riêng) được ghi lại chi tiết tại `docs/review/dmp-gda.md`.
+
+Việc sinh vùng nhớ tĩnh thật cho khối `glbda:` (gọi `uedp_gdp_register()`) là trách nhiệm của một generator PLTF riêng (dự kiến `gda_tsgen.py`, thuộc phạm vi PLD/μE-LS) - core chỉ cung cấp API quản lý, không tự sinh code khai báo biến.
 
 Khi thực hiện lấy dữ liệu từ truyền tham chiếu thì người dùng có thể tham khảo cách khai báo trong `test02` như sau:
 
@@ -463,26 +473,26 @@ Cập nhật thêm 1 hàm `fifo_put_head()` để thực hiện insert lật ng�
 
 ### [OCE] Out-Context Execution - Thực thi ngoài ngữ cảnh
 
-Out-Context Execution (OCE) là một thiết kế quan trọng trong μEDP nhằm đảm bảo rằng các tác vụ phụ trợ như thao tác bộ nhớ, quản lý giao thức mạng. Thiết kế này giúp duy trì tính ổn định và hiệu suất của hệ thống bằng cách tách biệt rõ ràng giữa các tác vụ chính và các tác vụ phụ trợ.
+Out-Context Execution (OCE) là lớp dịch vụ hậu trường của μEDP, dùng cho các công việc không nên chạy trong đường đi chính của Norm Task và Polling Task, ví dụ như flush log, đồng bộ dữ liệu, hoặc các tác vụ I/O nền. Mục tiêu của lớp này là tận dụng khoảng rảnh của CPU mà không làm ảnh hưởng đến tính thời gian của scheduler chính.
 
-Các dịch vụ thuộc về OCE được định danh là `ocesvc` và có phân vùng bộ nhớ riêng biệt để đảm bảo rằng các tác vụ này không can thiệp vào bộ nhớ của các tác vụ chính. Các dịch vụ OCE được thực thi trong một ngữ cảnh riêng biệt, có thể là một task polling hoặc một thread riêng, tùy thuộc vào nền tảng và yêu cầu cụ thể của ứng dụng.
+Trong implementation hiện tại, mỗi service OCE được mô hình hóa bằng `ocesvc_t` và được quản lý qua một danh sách liên kết đơn nội bộ. Danh sách này có một node sentinel `head` để giữ trạng thái rỗng và làm mốc duyệt, trong đó `head.id` được giữ ở `UINT8_MAX` để không trùng với ID hợp lệ của service.
 
-Ở mức thiết kế framework như μEDP thì OCE được triển khai đơn giản nằm ngoài vòng lặp chính của scheduler để đảm bảo rằng các tác vụ chính (Norm Task) và các tác vụ polling (Polling Task) đã được xử lý xong xuôi trước khi OCE bắt đầu thực thi. Điều này giúp đảm bảo rằng các tác vụ phụ trợ không làm gián đoạn hoặc ảnh hưởng đến hiệu suất của các tác vụ chính, đồng thời tận dụng được nhịp nghỉ của CPU để thực hiện các công việc phụ trợ một cách hiệu quả.
+Các đặc điểm chính của thiết kế hiện tại:
 
-Ví dụ cơ bản:
+- `ocesvc_t` đóng vai trò là SCB tối giản cho một service OCE.
+- `ocesvc_ctrl_t` giữ con trỏ `head` và `fill_size` của các service thật, không tính sentinel.
+- `ocesvc_register()` chỉ commit `id`, `state`, `next`, và `fill_size` sau khi append vào list thành công.
+- `ocesvc_unregister()` chỉ xóa service đã đăng ký, không cho phép tháo sentinel `head`.
+- `ocesvc_scheduler()` thực thi theo FCFS và chỉ chạy tối đa một service READY trong một vòng scheduler.
 
-```c
-while (1) {
-  ciedpc_task_scheduler(); // Xử lý tất cả các Norm Task và Polling Task
-  if (STAT_NRDY) { // Nếu không còn Task nào ready
-    // Gọi các tác vụ cần thực thi trong OCE
-  }
-}
-```
+Luồng vận hành đề xuất là:
 
-Lưu ý rằng OCE ở μEDP chỉ đơn giản là cơ chế để người dùng tự khai báo dịch vụ phụ trợ mà không làm gián đoạn các tác vụ chính. Người dùng có thể triển khai các dịch vụ OCE theo nhu cầu của ứng dụng, nhưng cần đảm bảo rằng các dịch vụ này được thiết kế để thực thi nhanh chóng và hiệu quả, tránh việc chiếm dụng quá nhiều thời gian của CPU, đồng thời có thể được cấu hình để chạy theo các điều kiện nhất định (ví dụ: chỉ chạy khi nhịp rảnh đủ dài).
+1. Scheduler chính xử lý xong Norm Task và Polling Task.
+2. Nếu hệ thống còn thời gian rảnh, OCE scheduler duyệt từ `head->next` và tìm service READY đầu tiên.
+3. Service đó được chuyển sang `RUNNING`, gọi handler, rồi chuyển sang `COMPLETED` sau khi xử lý xong.
+4. Nếu không có service READY, OCE không chiếm thêm thời gian CPU.
 
-Ở μE-OS thì sẽ nâng cấp thành AOCE (Advance OCE) với SCB (Service Control Block) để quản lý các dịch vụ OCE một cách linh hoạt hơn và xử lý ưu tiên theo mức > theo thời gian, kèm theo cơ chế leaning expetime, quantum và error callback. Điều này sẽ giúp μE-OS hoàn thiện triển khai OCE một cách chuyên nghiệp hơn, đồng thời cung cấp cho người dùng nhiều công cụ hơn để quản lý và tối ưu hóa các dịch vụ phụ trợ trong hệ thống.
+Thiết kế này giữ OCE tách biệt với đường đi thời gian thực của Core, nhưng vẫn đủ đơn giản để triển khai trên nhiều nền tảng. Ở giai đoạn sau, μE-OS có thể mở rộng từ mô hình này sang AOCE với các trường bổ sung như priority, quantum, timeout và error callback, nhưng nền tảng hiện tại vẫn nên được hiểu là FCFS service dispatch trên linked list.
 
 #### Phân biệt TASK_POLL và ocesvc
 
@@ -514,12 +524,97 @@ Kết luận:
 - **Độ phức tạp của vòng lặp chính:** Phải quản lý thêm một lớp thực thi bên ngoài `ciedpc_task_scheduler()`.
 - **Nguy cơ trễ nhịp sau:** Nếu OCE thực hiện một việc quá nặng (như ghi file lớn vào SD Card mà không chia nhỏ), nó sẽ làm chậm thời điểm bắt đầu của vòng lập lịch tiếp theo. Điều này được triển khai bằng SCB trong AOCE để phân chia công việc thành các quantum nhỏ hơn và có cơ chế timeout để tránh việc OCE chiếm dụng quá lâu.
 
-#### Thiết kế triển khai
+#### Thiết kế triển khai hiện tại
 
-- Scheduler sau khi xử lý xong tất cả các Task Norm và Task Polling sẽ kiểm tra nếu `STAT_NRDY` (không còn Task nào ready), thì sẽ gọi `uedp_ocesvc_dispatch()`.
-- `uedp_ocesvc_dispatch()` sẽ kiểm tra một hàng đợi OCE nội bộ để xem có dịch vụ nào cần thực thi không. Nếu có, nó sẽ gọi callback tương ứng với dịch vụ đó để thực hiện công việc cần thiết.
-- Các dịch vụ OCE sẽ được thiết kế để thực thi nhanh chóng và hiệu quả, tránh việc chiếm dụng quá nhiều thời gian của CPU, đồng thời có thể được cấu hình để chạy theo các điều kiện nhất định (ví dụ: chỉ chạy khi nhịp rảnh đủ dài).
+- Scheduler sau khi xử lý xong tất cả các Task Norm và Task Polling sẽ chuyển sang OCE khi hệ thống còn rảnh.
+- OCE scheduler duyệt danh sách liên kết nội bộ, tìm service READY đầu tiên, và chỉ thực thi tối đa một service trong mỗi vòng scheduler.
+- Cách triển khai này giữ OCE ở mức FCFS đơn giản, không cần một hàng đợi riêng ngoài linked list hiện có.
 
-Thiết kế này là tạm thời để giải quyết vấn đề về việc xử lý các tác vụ phụ trợ một cách an toàn và hiệu quả trong khi vẫn đảm bảo rằng các tác vụ chính của hệ thống có thể hoạt động một cách ổn định và nhạy bén.
+Thiết kế này đủ để phục vụ các dịch vụ hậu trường nhẹ và có thể mở rộng dần lên AOCE khi μE-OS cần thêm priority, quantum, timeout, và error callback.
 
-Ở μE-OS thì sẽ nâng cấp thành AOCE (Advance OCE) với SCB (Service Control Block) để quản lý các dịch vụ OCE một cách linh hoạt hơn và xử lý ưu tiên theo mức > theo thời gian, kèm theo cơ chế leaning expetime, quantum và error callback.
+Ở μE-OS thì sẽ nâng cấp thành AOCE (Advance OCE) với SCB (Service Control Block) để quản lý các dịch vụ OCE một cách linh hoạt hơn và xử lý ưu tiên theo thời gian, kèm theo cơ chế expected execution time, quantum và error callback.
+
+### [FCR] Fatal Code Return - Định danh và xử lý lỗi nghiêm trọng
+
+Trước khi có FCR, các lỗi nghiêm trọng bên trong Core (pool hết chỗ, con trỏ không hợp lệ, ID tác vụ sai, transition không tồn tại...) được xử lý **im lặng và không nhất quán** giữa các module: có nơi `return NULL`, có nơi `return STAT_ERROR`, có nơi chỉ để lại comment `// có thể ghi log lỗi ở đây` mà không thực sự làm gì. Hệ quả là khi một lỗi nghiêm trọng xảy ra trên thiết bị thật, không có dấu vết nào được ghi lại và không có hành động xử lý nhất quán nào được thực thi.
+
+FCR (Fatal Code Return) giải quyết vấn đề này bằng một **bảng mã lỗi tập trung**: mỗi lỗi nghiêm trọng trong Core được gán một mã cố định, tra ra mức độ nghiêm trọng và hành động xử lý tương ứng, rồi luôn được ghi log qua `itnlog` trước khi thực thi hành động đó.
+
+#### Thiết kế mã lỗi
+
+Mã lỗi FCR (`uedp_fcr_code_t`, kiểu `ui16`) dùng chung nguyên lý encoding với `[HES]`: byte cao là mã **MODULE** phát sinh lỗi, byte thấp là mã **SUB-CODE** cụ thể trong module đó, ghép bằng macro `UEDP_FCR_CODE(mod, sub)`. Dải `0x9x` được chọn cho FCR vì các dải `0xAx` → `0xFx` đã bị chiếm bởi `TASK_NORM`/`TASK_POLL`/`TASK_PRI`/`FSM_SIG`/`TSM_SIG`/`TSM_STATE` (xem `[HES]`).
+
+| Module | Mã | Ý nghĩa |
+| --- | --- | --- |
+| `UEDP_FCR_MOD_MSG` | `0x90` | Quản lý tin nhắn (`uedp_msg`) |
+| `UEDP_FCR_MOD_TASK` | `0x91` | Quản lý tác vụ (`uedp_task`) |
+| `UEDP_FCR_MOD_TIMER` | `0x92` | Quản lý timer (`uedp_timer`) |
+| `UEDP_FCR_MOD_SM` | `0x93` | Máy trạng thái (`uedp_fsm`/`uedp_tsm`) |
+| `UEDP_FCR_MOD_ITNLOG` | `0x94` | Logger nội bộ (`uedp_itnlog`) |
+| `UEDP_FCR_MOD_OCE` | `0x95` | Out-Context Execution (`uedp_ocesvc`) |
+| `UEDP_FCR_MOD_PAL` | `0x96` | PAL / dịch vụ phần cứng (logdp, rprintf, memrp, arch...) |
+| `0x97` → `0x9D` | *(chưa dùng)* | Để trống cho module core sinh sau này |
+| `UEDP_FCR_MOD_APP` | `0x9E` | Dành cho tầng ứng dụng tự khai báo mã lỗi riêng |
+| `UEDP_FCR_MOD_UNK` | `0x9F` | Fallback khi tra bảng không tìm thấy mã lỗi |
+
+Mỗi mã lỗi được gắn với một `uedp_fcr_entry_t` gồm mô tả ngắn (`desc`), mức độ nghiêm trọng (`severity`: `WARN`/`ERROR`/`FATAL`), và hành động xử lý (`action`):
+
+- `UEDP_FCR_ACT_LOG_ONLY`: chỉ ghi log, không can thiệp luồng chạy.
+- `UEDP_FCR_ACT_RESET_TASK`: đánh dấu để tầng trên tự khôi phục tác vụ liên quan (FCR không tự ý reset TSM/FSM của tác vụ khác).
+- `UEDP_FCR_ACT_SYS_RESET`: gọi `pal_sys_reset()` khởi động lại toàn hệ thống.
+- `UEDP_FCR_ACT_SYS_PANIC`: gọi `pal_sys_fatal()` dừng hệ thống ngay lập tức.
+
+#### Luồng raise
+
+```c
+void uedp_fcr_raise(uedp_fcr_code_t code, const char* file, ui32 line, const char* extra_msg) {
+  const uedp_fcr_entry_t* entry = uedp_fcr_lookup(code);
+
+  // 1. Luôn ghi log trước, kể cả khi hành động tiếp theo là SYS_PANIC/SYS_RESET
+  uedp_itnlog_log(pal_sys_get_tick(), internal_uedp_fcr_sev_to_level(entry->severity),
+                  ITNLOG_TAG_FCR, (extra_msg != NULL) ? extra_msg : entry->desc);
+
+  // 2. Thực thi hành động tương ứng
+  switch (entry->action) { /* LOG_ONLY / RESET_TASK / SYS_RESET / SYS_PANIC */ }
+}
+```
+
+Hai macro `UEDP_FCR_RAISE(code)` và `UEDP_FCR_RAISE_MSG(code, extra)` tự động điền `__FILE__`/`__LINE__`, trong đó `RAISE_MSG` cho phép truyền thêm mô tả ngữ cảnh cụ thể (ví dụ tên hàm, giá trị tham số sai) thay cho `desc` mặc định trong bảng.
+
+`uedp_fcr_lookup()` duyệt tuyến tính bảng `g_fcr_table[]`; nếu không tìm thấy mã lỗi sẽ trả về entry `UEDP_FCR_UNKNOWN` (mặc định `SEV_FATAL` + `ACT_SYS_PANIC`) — cố ý chọn hành động nghiêm trọng nhất cho trường hợp "không rõ lỗi gì" để tránh bỏ sót.
+
+#### Tích hợp với itnlog
+
+FCR không tự ghi log trực tiếp mà đi qua `uedp_itnlog_log()` với tag riêng `ITNLOG_TAG_FCR`, ánh xạ `severity` sang mức log tương ứng (`WARN`/`ERROR` → `ITNLOG_LEVEL_WARN`/`ERROR`, `FATAL` → `ITNLOG_LEVEL_FATAL`). Việc này tận dụng lại toàn bộ cơ chế `[PPLP]` đã có (ring buffer, filter theo tag/level, dispatch ra nhiều backend qua `logdp`) thay vì xây một đường log riêng cho lỗi nghiêm trọng.
+
+#### Các điểm đã tích hợp FCR vào Core
+
+FCR chỉ có giá trị khi được "khâu" vào đúng những chỗ lỗi thật sự im lặng trước đó, thay vì chỉ tồn tại như một module đứng riêng. Tính đến bản này, FCR đã được raise tại hơn 40 điểm trên 7 file lõi:
+
+| File | Một số mã lỗi tiêu biểu |
+| --- | --- |
+| `uedp_msg.c` | `MSG_POOL_EXHAUSTED`, `MSG_INVALID_PTR`, `MSG_ISR_FIFO_FULL`, `MSG_POOL_MISCONFIG` |
+| `uedp_task.c` | `TASK_INVALID_ID`, `TASK_QUEUE_FULL`, `TASK_INVALID_PRI`, `TASK_PRI_EXHAUSTED` |
+| `uedp_timer.c` | `TIMER_POOL_EXHAUSTED`, `TIMER_INVALID_PARAM`, `TIMER_CORRUPTED` |
+| `uedp_tsm.c` | `SM_INVALID_TRANS`, `SM_NULL_HANDLER` |
+| `uedp_fsm.c` / `uedp_fsm.h` | `SM_NULL_HANDLER` (cả ở `go_next`/`go_back` lẫn `uedp_fsm_dispatch()`) |
+| `uedp_ocesvc.c` | `OCE_REGISTRY_FULL`, `OCE_INVALID_SVC`, `OCE_APPEND_FAILED`, `OCE_NOT_INIT` |
+| `pal_logdp.c` | `PAL_LOGDP_TABLE_FULL` (thay hẳn lệnh gọi `pal_sys_fatal()` trực tiếp cũ) |
+
+Nguyên tắc chọn nơi raise: **chỉ raise ở những nhánh thật sự bất thường**, không raise ở những nhánh hợp lệ xảy ra thường xuyên trong vận hành bình thường — ví dụ `TSM_STATE_STAY` (ở lại state hiện tại), `g_task_norm_ready == 0` (scheduler rảnh, xảy ra mỗi vòng lặp khi idle), hay `uedp_timer_remove()` gọi trên một timer chưa từng được set. Raise tràn lan vào các nhánh bình thường sẽ biến FCR thành nguồn nhiễu log thay vì tín hiệu cảnh báo có giá trị.
+
+> **Bài học trong quá trình tích hợp**: khi bắt đầu raise FCR từ nhiều điểm hơn trong Core, một lỗi tiềm ẩn có sẵn trong `uedp_itnlog_log()` đã bị lộ ra: hàm này dereference `uedp_task_norm_get_current_msg()->sig` mà không kiểm tra NULL. Trước đây không ai gọi `itnlog_log()` từ ngoài ngữ cảnh một task đang dispatch nên lỗi này không bao giờ xảy ra; nhưng FCR lại raise được từ nhiều nơi, kể cả từ `main()` lúc setup (trước khi task nào chạy) — khiến `g_current_msg` vẫn là `NULL` và gây crash ngay lần raise đầu tiên. Đã sửa bằng một dòng kiểm tra NULL phòng thủ trong `itnlog_log()`. Đây là minh chứng cụ thể cho lý do FCR cần được viết và test cẩn thận: bản thân việc thêm cơ chế báo lỗi cũng có thể vô tình mở ra đường crash mới nếu các module nó phụ thuộc (ở đây là `itnlog`) chưa đủ phòng thủ.
+
+#### Hạn chế / việc còn thiếu
+
+- `UEDP_FCR_ACT_RESET_TASK` ở bản 0.1 **chưa tự động khôi phục** tác vụ liên quan — mới dừng ở mức ghi log `ERROR`, việc reset TSM/FSM về trạng thái an toàn vẫn phải do tầng trên (task giám sát hoặc OCE) tự xử lý.
+- `UEDP_FCR_ITNLOG_BUF_CORRUPT` đã có mã trong bảng nhưng **chưa có logic kiểm tra hash thực sự** ở phía đọc (`uedp_itnlog_dump()`) — hiện `itnlog` chỉ tính hash lúc ghi, chưa so sánh lại lúc đọc để phát hiện corrupt.
+- Người dùng ở tầng ứng dụng có thể tự khai báo mã lỗi riêng qua `UEDP_FCR_CODE(UEDP_FCR_MOD_APP, x)`, nhưng hiện chưa có cơ chế cho phép tầng ứng dụng **tự đăng ký thêm entry** vào `g_fcr_table[]` lúc runtime — bảng hiện là `static const`, muốn thêm entry mới phải sửa trực tiếp `uedp_fcr.c`.
+
+## Công cụ hỗ trợ phát triển (Development Tools)
+
+### [KwDI] Kconfig with Docker Integration - Tích hợp Kconfig với Docker
+
+Kconfig là một công cụ cấu hình phổ biến trong các dự án Linux kernel và các dự án nhúng khác. Nó cho phép người dùng dễ dàng cấu hình các tính năng của phần mềm thông qua một giao diện dòng lệnh hoặc giao diện đồ họa. Trong μEDP, Kconfig được tích hợp với Docker để cung cấp một môi trường phát triển nhất quán và dễ dàng triển khai trên nhiều nền tảng khác nhau.
+
+Với Docker, người dùng có thể dễ dàng tạo ra các container chứa đầy đủ các công cụ cần thiết để biên dịch và chạy μEDP, đồng thời đảm bảo rằng môi trường phát triển là nhất quán trên tất cả các máy tính thông qua việc sử dụng môi trường linux phát triển ban đầu của nhà phát triển. Điều này giúp giảm thiểu các vấn đề liên quan đến sự khác biệt về môi trường phát triển giữa các máy tính khác nhau, đồng thời giúp người dùng dễ dàng triển khai và kiểm tra các tính năng mới của μEDP mà không cần phải lo lắng về việc cài đặt và cấu hình các công cụ phát triển trên máy tính của mình.
