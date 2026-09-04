@@ -50,18 +50,18 @@ Cấu trúc thư mục mới:
 ```text
 pltf/
 ├── pyspec/                 # Sinh decl.kconfig (thay sources/common/pyspec cũ)
-│   ├── usrinp_pspec.py
-│   ├── tnorm_pspec.py
-│   ├── tpoll_pspec.py
-│   ├── sig_pspec.py
-│   └── hwapi_pspec.py
+│   ├── usrinp.py
+│   ├── tnorm.py
+│   ├── tpoll.py
+│   ├── sig.py
+│   └── hwapi.py
 ├── templates/               # Jinja2 template — sinh FILE MỚI, không vá chuỗi nữa
-│   ├── appcfg_tmpl.txt
-│   ├── appdecl_tmpl.txt
-│   ├── corecfg_tmpl.txt
-│   ├── palcfg_tmpl.txt
-│   ├── arch_h_tmpl.txt
-│   └── arch_c_tmpl.txt
+│   ├── appcfgh.txt
+│   ├── appdeclh.txt
+│   ├── corecfgh.txt
+│   ├── palcfgh.txt
+│   ├── archh.txt
+│   └── archc.txt
 └── testspec/
     ├── cfparsers/            # Đọc .config (và tương lai là YAML) thành context có cấu trúc
     │   ├── dotcfg_cfp.py
@@ -85,11 +85,11 @@ So với `sources/common/kconfiglib/` (vẫn giữ nguyên, không di chuyển v
 `uedp.py` giờ chỉ còn đúng một trách nhiệm: sinh `decl.kconfig` và chạy `menuconfig` tương tác.
 
 ```python
-from pltf.pyspec.usrinp_pspec import user_input
-from pltf.pyspec.tnorm_pspec import task_norm_declaration
-from pltf.pyspec.tpoll_pspec import task_poll_declaration
-from pltf.pyspec.sig_pspec import signal_declaration
-from pltf.pyspec.hwapi_pspec import hardware_api_declaration
+from pltf.pyspec.usrinp import user_input
+from pltf.pyspec.tnorm import task_norm_declaration
+from pltf.pyspec.tpoll import task_poll_declaration
+from pltf.pyspec.sig import signal_declaration
+from pltf.pyspec.hwapi import hardware_api_declaration
 
 def main():
   os.environ["KCONFIG_CONFIG"] = ".config"
@@ -111,7 +111,7 @@ Toàn bộ 5 hàm `corecfg_gen`, `palcfg_gen`, `app_cfg_gen`, `app_decl_gen`, `p
 
 ### 3.2 `pltf/pyspec/` — sinh khai báo Kconfig
 
-Logic gần như giữ nguyên so với `sources/common/pyspec/` cũ (đổi tên file theo hậu tố `_pspec` cho nhất quán, ví dụ `tsknrmdcl.py` → `tnorm_pspec.py`), vẫn sinh `sources/app/kconfig/decl.kconfig` theo cú pháp Kconfig thô (`menu`, `config ... string`, `default`, `depends on`). Điểm khác biệt là các module này giờ nằm trong `pltf/`, được `uedp.py` import qua `pltf.pyspec.*` thay vì `sources.common.pyspec.*`.
+Logic gần như giữ nguyên so với `sources/common/pyspec/` cũ (đổi tên file theo hậu tố `_pspec` cho nhất quán, ví dụ `tsknrmdcl.py` → `tnorm.py`), vẫn sinh `sources/app/kconfig/decl.kconfig` theo cú pháp Kconfig thô (`menu`, `config ... string`, `default`, `depends on`). Điểm khác biệt là các module này giờ nằm trong `pltf/`, được `uedp.py` import qua `pltf.pyspec.*` thay vì `sources.common.pyspec.*`.
 
 ### 3.3 `pltf/testspec/cfparsers/dotcfg_cfp.py` — trái tim của pipeline sinh code
 
@@ -134,7 +134,7 @@ Khác với cơ chế "vá chuỗi vào giữa 2 marker" của KwDI, mỗi gener
 # pltf/testspec/generators/corecfg_tsgen.py
 context = dotcfg_cfp.cfp_parse_dotcfg(config_dir)
 env = Environment(loader=FileSystemLoader('./pltf/templates'))
-template = env.get_template('corecfg_tmpl.txt')
+template = env.get_template('corecfgh.txt')
 output = template.render(current_date=context["current_date"], core_configs=context['core_configs'])
 with open("sources/app/config/core_cfg.h", "w", encoding="utf-8") as f:
   f.write(output)

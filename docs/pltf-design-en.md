@@ -50,18 +50,18 @@ New directory structure:
 ```text
 pltf/
 ├── pyspec/                 # Generates decl.kconfig (replaces the old sources/common/pyspec)
-│   ├── usrinp_pspec.py
-│   ├── tnorm_pspec.py
-│   ├── tpoll_pspec.py
-│   ├── sig_pspec.py
-│   └── hwapi_pspec.py
+│   ├── usrinp.py
+│   ├── tnorm.py
+│   ├── tpoll.py
+│   ├── sig.py
+│   └── hwapi.py
 ├── templates/               # Jinja2 templates — generate NEW files, no more string-patching
-│   ├── appcfg_tmpl.txt
-│   ├── appdecl_tmpl.txt
-│   ├── corecfg_tmpl.txt
-│   ├── palcfg_tmpl.txt
-│   ├── arch_h_tmpl.txt
-│   └── arch_c_tmpl.txt
+│   ├── appcfgh.txt
+│   ├── appdeclh.txt
+│   ├── corecfgh.txt
+│   ├── palcfgh.txt
+│   ├── archh.txt
+│   └── archc.txt
 └── testspec/
     ├── cfparsers/            # Reads .config (and, in future, YAML) into a structured context
     │   ├── dotcfg_cfp.py
@@ -85,11 +85,11 @@ Compared with `sources/common/kconfiglib/` (kept unchanged, not moved, since it 
 `uedp.py` now has exactly one responsibility: generate `decl.kconfig` and run the interactive `menuconfig`.
 
 ```python
-from pltf.pyspec.usrinp_pspec import user_input
-from pltf.pyspec.tnorm_pspec import task_norm_declaration
-from pltf.pyspec.tpoll_pspec import task_poll_declaration
-from pltf.pyspec.sig_pspec import signal_declaration
-from pltf.pyspec.hwapi_pspec import hardware_api_declaration
+from pltf.pyspec.usrinp import user_input
+from pltf.pyspec.tnorm import task_norm_declaration
+from pltf.pyspec.tpoll import task_poll_declaration
+from pltf.pyspec.sig import signal_declaration
+from pltf.pyspec.hwapi import hardware_api_declaration
 
 def main():
   os.environ["KCONFIG_CONFIG"] = ".config"
@@ -111,7 +111,7 @@ All 5 functions `corecfg_gen`, `palcfg_gen`, `app_cfg_gen`, `app_decl_gen`, `pal
 
 ### 3.2 `pltf/pyspec/` — generating Kconfig declarations
 
-The logic is nearly identical to the old `sources/common/pyspec/` (files renamed with a `_pspec` suffix for consistency, e.g. `tsknrmdcl.py` → `tnorm_pspec.py`); it still generates `sources/app/kconfig/decl.kconfig` using raw Kconfig syntax (`menu`, `config ... string`, `default`, `depends on`). The difference is that these modules now live inside `pltf/`, imported by `uedp.py` via `pltf.pyspec.*` instead of `sources.common.pyspec.*`.
+The logic is nearly identical to the old `sources/common/pyspec/` (files renamed with a `_pspec` suffix for consistency, e.g. `tsknrmdcl.py` → `tnorm.py`); it still generates `sources/app/kconfig/decl.kconfig` using raw Kconfig syntax (`menu`, `config ... string`, `default`, `depends on`). The difference is that these modules now live inside `pltf/`, imported by `uedp.py` via `pltf.pyspec.*` instead of `sources.common.pyspec.*`.
 
 ### 3.3 `pltf/testspec/cfparsers/dotcfg_cfp.py` — the heart of the code-generation pipeline
 
@@ -134,7 +134,7 @@ Unlike KwDI's "patch a string between 2 markers" mechanism, each generator in PL
 # pltf/testspec/generators/corecfg_tsgen.py
 context = dotcfg_cfp.cfp_parse_dotcfg(config_dir)
 env = Environment(loader=FileSystemLoader('./pltf/templates'))
-template = env.get_template('corecfg_tmpl.txt')
+template = env.get_template('corecfgh.txt')
 output = template.render(current_date=context["current_date"], core_configs=context['core_configs'])
 with open("sources/app/config/core_cfg.h", "w", encoding="utf-8") as f:
   f.write(output)

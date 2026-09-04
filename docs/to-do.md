@@ -195,11 +195,11 @@ Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu r�
 - [x] Thay đổi triển khai pyspec.usrinp để cho phép mỗi task có thể khai báo việc sử dụng FSM/TSM riêng biệt kèm số lượng trạng thái khác nhau.
 
 <!-- SECTION - L191
-Kiểm tra trong `usrinp_pspec` để nắm rõ thông tin của task và thực hiện thay đổi tương ứng trên `tnorm_pspec`.
+Kiểm tra trong `usrinp` để nắm rõ thông tin của task và thực hiện thay đổi tương ứng trên `tnorm`.
 
-#LINK - pltf/pyspec/usrinp_pspec.py:27
-#LINK - pltf/pyspec/tnorm_pspec.py:56
-#LINK - pltf/pyspec/tnorm_pspec.py:84
+#LINK - pltf/pyspec/usrinp.py:27
+#LINK - pltf/pyspec/tnorm.py:56
+#LINK - pltf/pyspec/tnorm.py:84
 
 #STATUS - task đã hoàn thành.
 
