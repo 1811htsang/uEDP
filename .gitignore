@@ -68,17 +68,17 @@ sources/test/*
 
 # Python cache
 sources/common/kconfiglib/__pycache__/*
-pltf/pyspec/__pycache__/*
-pltf/testspec/cfparsers/__pycache__/*
-pltf/testspec/generators/__pycache__/*
-pltf/testspec/__pycache__/*
+pltf/kconfigspec/__pycache__/*
+pltf/pycdscriptor/attribarse/__pycache__/*
+pltf/pycdscriptor/jnerator/__pycache__/*
+pltf/pycdscriptor/__pycache__/*
 pltf/__pycache__/*
-pltf/testspec/ustab/__pycache__/*
-pltf/testspec/lstaxer/__pycache__/*
-pltf/testspec/lstaxer/pydantic_model/__pycache__/*
-pltf/testspec/generators/pre_logicdef/__pycache__/*
-pltf/testspec/generators/post_logicdef/__pycache__/*
-pltf/testspec/tests/*
+pltf/pycdscriptor/ustab/__pycache__/*
+pltf/pycdscriptor/lstaxer/__pycache__/*
+pltf/pycdscriptor/lstaxer/pydantic_model/__pycache__/*
+pltf/pycdscriptor/jnerator/pregen/__pycache__/*
+pltf/pycdscriptor/jnerator/postgen/__pycache__/*
+pltf/pycdscriptor/tests/*
 
 # ESP-IDF
 eim_config.toml
