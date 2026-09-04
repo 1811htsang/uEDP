@@ -33,7 +33,7 @@ KwDI gồm 3 phần chính, tất cả nằm gọn trong root repo và `sources/
 
 - **Không tách giai đoạn**: thu thập input, cấu hình tương tác (menuconfig), và sinh code nằm chung trong một hàm `main()` của `uedp.py`. Muốn sinh lại code từ một `.config` có sẵn (ví dụ trong CI) vẫn phải chạy lại toàn bộ `menuconfig` tương tác.
 - **Sinh code kiểu "vá chuỗi" (marker-based patch)**: `corecfg_gen`/`palcfg_gen` yêu cầu file `.h` đích phải **đã tồn tại sẵn** với đúng cặp marker mới patch được — không tạo file mới từ đầu được, dễ vỡ nếu ai đó lỡ xoá marker.
-- **`sources/common/testspec/`** (tiền thân dùng Jinja2) đã tồn tại nhưng chỉ là **bản nháp chưa nối vào luồng thật**: `appcfgpgen.py` gốc chỉ `print(output)` ra màn hình với `current_date` gán cứng `'16 May 2025'`, không đọc `.config` thật, không ghi file.
+- **`sources/common/pycdscriptor/`** (tiền thân dùng Jinja2) đã tồn tại nhưng chỉ là **bản nháp chưa nối vào luồng thật**: `appcfgpgen.py` gốc chỉ `print(output)` ra màn hình với `current_date` gán cứng `'16 May 2025'`, không đọc `.config` thật, không ghi file.
 - **Docker image tối giản**, chỉ có `kconfiglib`: không có `gcc/cmake/gdb`, không có ESP-IDF, không thể build hay chạy test ngay trong container — người dùng vẫn phải thoát container để build bằng tay.
 - **Không có `entrypoint.sh`/`docker-compose.yaml`**: container chạy `CMD` trực tiếp bằng root, không xử lý UID/GID → file được tạo ra (do mount volume) thuộc quyền sở hữu `root` trên máy host, gây phiền khi chỉnh sửa lại ở ngoài container.
 - **Không phân tách workspace**: không có khái niệm thư mục riêng cho "mã nguồn lõi" và "không gian làm việc kiểm thử" — mọi thứ trộn chung trong repo.
@@ -43,7 +43,7 @@ KwDI gồm 3 phần chính, tất cả nằm gọn trong root repo và `sources/
 Nguyên tắc cốt lõi của PLTF là **tách rõ 2 giai đoạn** vốn bị gộp chung trong KwDI:
 
 - **Giai đoạn 1 — Declaration & Interactive Config** (vẫn do `uedp.py` đảm nhiệm, nhưng đã được rút gọn).
-- **Giai đoạn 2 — Test/Config Generation** (chuyển toàn bộ sang `pltf/testspec/`, dùng Jinja2 template thay vì vá chuỗi).
+- **Giai đoạn 2 — Test/Config Generation** (chuyển toàn bộ sang `pltf/pycdscriptor/`, dùng Jinja2 template thay vì vá chuỗi).
 
 Cấu trúc thư mục mới:
 
@@ -62,7 +62,7 @@ pltf/
 │   ├── palcfgh.txt
 │   ├── archh.txt
 │   └── archc.txt
-└── testspec/
+└── pycdscriptor/
     ├── attribarse/            # Đọc .config (và tương lai là YAML) thành context có cấu trúc
     │   ├── dotcfg.py
     │   ├── glbda.py       # Bản nháp cho hướng μE-LS (xem mục 3.5)
@@ -78,7 +78,7 @@ pltf/
         └── fpregen.py          # Orchestrator, gọi tuần tự 7 generator ở trên
 ```
 
-So với `sources/common/kconfiglib/` (vẫn giữ nguyên, không di chuyển vì đây là thư viện bên thứ 3, không phải phần tự viết), toàn bộ phần **tự viết** của KwDI (`pyspec`, `testspec`) được gom về một chỗ duy nhất là `pltf/`, tách khỏi `sources/common/` — phản ánh đúng ý nghĩa "Portable": `pltf/` không phụ thuộc vào cấu trúc `sources/`, có thể tái sử dụng cho một dự án μEDP khác chỉ cần trỏ đúng đường dẫn output.
+So với `sources/common/kconfiglib/` (vẫn giữ nguyên, không di chuyển vì đây là thư viện bên thứ 3, không phải phần tự viết), toàn bộ phần **tự viết** của KwDI (`pyspec`, `pycdscriptor`) được gom về một chỗ duy nhất là `pltf/`, tách khỏi `sources/common/` — phản ánh đúng ý nghĩa "Portable": `pltf/` không phụ thuộc vào cấu trúc `sources/`, có thể tái sử dụng cho một dự án μEDP khác chỉ cần trỏ đúng đường dẫn output.
 
 ### 3.1 `uedp.py` sau khi refactor
 
@@ -107,13 +107,13 @@ def main():
   kconf.write_config(".config")
 ```
 
-Toàn bộ 5 hàm `corecfg_gen`, `palcfg_gen`, `app_cfg_gen`, `app_decl_gen`, `pal_arch_gen` **đã bị loại khỏi `uedp.py`** — không còn logic sinh code nào ở đây nữa. `uedp.py` dừng lại đúng ở bước ghi ra `.config`, việc sinh code được nhường hoàn toàn cho `pltf/testspec/`. Đây là thay đổi quan trọng nhất khi so với KwDI: **tách bạch "thu thập cấu hình" khỏi "sinh code"**, cho phép chạy lại bước sinh code nhiều lần từ cùng một `.config` mà không cần lặp lại `menuconfig`.
+Toàn bộ 5 hàm `corecfg_gen`, `palcfg_gen`, `app_cfg_gen`, `app_decl_gen`, `pal_arch_gen` **đã bị loại khỏi `uedp.py`** — không còn logic sinh code nào ở đây nữa. `uedp.py` dừng lại đúng ở bước ghi ra `.config`, việc sinh code được nhường hoàn toàn cho `pltf/pycdscriptor/`. Đây là thay đổi quan trọng nhất khi so với KwDI: **tách bạch "thu thập cấu hình" khỏi "sinh code"**, cho phép chạy lại bước sinh code nhiều lần từ cùng một `.config` mà không cần lặp lại `menuconfig`.
 
 ### 3.2 `pltf/pyspec/` — sinh khai báo Kconfig
 
 Logic gần như giữ nguyên so với `sources/common/pyspec/` cũ (đổi tên file theo hậu tố `_pspec` cho nhất quán, ví dụ `tsknrmdcl.py` → `tnorm.py`), vẫn sinh `sources/app/kconfig/decl.kconfig` theo cú pháp Kconfig thô (`menu`, `config ... string`, `default`, `depends on`). Điểm khác biệt là các module này giờ nằm trong `pltf/`, được `uedp.py` import qua `pltf.pyspec.*` thay vì `sources.common.pyspec.*`.
 
-### 3.3 `pltf/testspec/attribarse/dotcfg.py` — trái tim của pipeline sinh code
+### 3.3 `pltf/pycdscriptor/attribarse/dotcfg.py` — trái tim của pipeline sinh code
 
 Đây là phần thay thế trực tiếp cho logic duyệt `kconf.unique_defined_syms` từng nằm rải rác trong `corecfg_gen`/`palcfg_gen` của `uedp.py` cũ. `dotcfg.cfp_parse_dotcfg(config_path)` đọc thẳng file `.config` (dạng text `CONFIG_KEY=value`) — **không cần** `kconfiglib` nữa ở bước này — và trả về một `context` dict có cấu trúc:
 
@@ -126,12 +126,12 @@ Logic gần như giữ nguyên so với `sources/common/pyspec/` cũ (đổi tê
 
 Mỗi generator (`*_tsgen.py`) tự gọi `dotcfg.cfp_parse_dotcfg()` độc lập — đây là điểm còn trùng lặp cần lưu ý, xem mục 5.
 
-### 3.4 `pltf/templates/` + `pltf/testspec/generators/` — sinh file bằng Jinja2
+### 3.4 `pltf/templates/` + `pltf/pycdscriptor/generators/` — sinh file bằng Jinja2
 
 Khác với cơ chế "vá chuỗi vào giữa 2 marker" của KwDI, mỗi generator trong PLTF **render toàn bộ nội dung file từ template Jinja2 rồi ghi đè hoàn toàn** file đích:
 
 ```python
-# pltf/testspec/generators/corecfgpgen.py
+# pltf/pycdscriptor/generators/corecfgpgen.py
 context = dotcfg.cfp_parse_dotcfg(config_dir)
 env = Environment(loader=FileSystemLoader('./pltf/templates'))
 template = env.get_template('corecfgh.txt')
@@ -167,7 +167,7 @@ Vì dùng template render-toàn-file thay vì patch, PLTF **không còn phụ th
 
 ### 3.5 Hướng mở rộng: μE-LS / YAML test spec (`attribarse/glbda.py`, `test.yaml`)
 
-`pltf/testspec/attribarse/glbda.py` và `test.yaml` là bản **nháp/PoC**, hiện **chưa được `tsgen.py` gọi tới** — chỉ chạy độc lập để debug. Đây là bước chuẩn bị hạ tầng cho μE-LS (Logical Syntax-izer), mô tả chi tiết trong `docs/uels-syntax.md`: một cú pháp khai báo dạng YAML cho Task/TSM/FSM/Signal/Action, thuộc tính năng PLD (Parse-able Logical Descriptor), dự kiến làm nền tảng cho PLTF và TLC (Test Level Coverager) ở chính phiên bản 1.2.0. `test.yaml` hiện đã minh hoạ một kịch bản 3 task (`KID_TASK_USR` dùng TSM, `KID_TASK_A` dùng TSM, `KID_TASK_B` dùng FSM) với các action `post_msg`/`log` — đúng mô hình dữ liệu mà `dotcfg.py` đã chuẩn bị sẵn field `task_tsm`/`task_fsm` để tiếp nhận.
+`pltf/pycdscriptor/attribarse/glbda.py` và `test.yaml` là bản **nháp/PoC**, hiện **chưa được `tsgen.py` gọi tới** — chỉ chạy độc lập để debug. Đây là bước chuẩn bị hạ tầng cho μE-LS (Logical Syntax-izer), mô tả chi tiết trong `docs/uels-syntax.md`: một cú pháp khai báo dạng YAML cho Task/TSM/FSM/Signal/Action, thuộc tính năng PLD (Parse-able Logical Descriptor), dự kiến làm nền tảng cho PLTF và TLC (Test Level Coverager) ở chính phiên bản 1.2.0. `test.yaml` hiện đã minh hoạ một kịch bản 3 task (`KID_TASK_USR` dùng TSM, `KID_TASK_A` dùng TSM, `KID_TASK_B` dùng FSM) với các action `post_msg`/`log` — đúng mô hình dữ liệu mà `dotcfg.py` đã chuẩn bị sẵn field `task_tsm`/`task_fsm` để tiếp nhận.
 
 ## 4. Docker & orchestration mới
 
@@ -200,14 +200,14 @@ echo "source $IDF_PATH/export.sh > /dev/null 2>&1" >> /home/uedp_user/.bashrc
 # [ENTRY 1] Giai đoạn KwDI — thu thập input + menuconfig
 python uedp.py menuconfig
 # [ENTRY 2] Giai đoạn PLTF — sinh code từ .config
-python pltf/testspec/generators/tsgen.py
+python pltf/pycdscriptor/generators/tsgen.py
 exec gosu uedp_user bash
 ```
 
 Ba điểm thiết kế đáng chú ý:
 
 - **Xử lý UID/GID qua biến môi trường `MY_UID`/`MY_GID`** (mặc định `1000`): giải quyết trực tiếp vấn đề "file sinh ra thuộc quyền `root` trên host" của KwDI, vì volume `.:/uedp-libs` được mount 2 chiều.
-- **Gộp cả 2 giai đoạn KwDI + PLTF trong cùng một lần chạy container**: `entrypoint.sh` gọi `uedp.py menuconfig` (giai đoạn KwDI, giữ nguyên) rồi gọi ngay `pltf/testspec/generators/tsgen.py` (giai đoạn PLTF, mới) — với người dùng, trải nghiệm vẫn là "một lệnh, một lần chạy", nhưng bên trong đã là 2 pipeline tách biệt, có thể gọi lại độc lập.
+- **Gộp cả 2 giai đoạn KwDI + PLTF trong cùng một lần chạy container**: `entrypoint.sh` gọi `uedp.py menuconfig` (giai đoạn KwDI, giữ nguyên) rồi gọi ngay `pltf/pycdscriptor/generators/tsgen.py` (giai đoạn PLTF, mới) — với người dùng, trải nghiệm vẫn là "một lệnh, một lần chạy", nhưng bên trong đã là 2 pipeline tách biệt, có thể gọi lại độc lập.
 - **`exec gosu uedp_user bash`** ở cuối: sau khi sinh code xong, container không thoát ngay mà rơi vào shell với quyền user thường, cho phép làm việc tiếp (`cd /uedp-test` để phát triển PLTF, hoặc `exit` để chỉ lấy code vừa sinh).
 
 ### 4.3 `docker-compose.yaml`
@@ -246,8 +246,8 @@ Giữ nguyên từ KwDI, không đổi — vẫn loại `docs/` (chứa PDF tham
 
 | Khía cạnh | KwDI (gốc) | PLTF (hiện tại) |
 | --- | --- | --- |
-| Vị trí code tự viết | `sources/common/{kconfiglib,pyspec}` | `pltf/{pyspec,templates,testspec}` (`kconfiglib` — thư viện 3rd-party — vẫn ở lại `sources/common/kconfiglib`) |
-| Số giai đoạn | 1 (gộp chung trong `uedp.py`) | 2 (declaration+menuconfig trong `uedp.py`, sinh code trong `pltf/testspec`) |
+| Vị trí code tự viết | `sources/common/{kconfiglib,pyspec}` | `pltf/{pyspec,templates,pycdscriptor}` (`kconfiglib` — thư viện 3rd-party — vẫn ở lại `sources/common/kconfiglib`) |
+| Số giai đoạn | 1 (gộp chung trong `uedp.py`) | 2 (declaration+menuconfig trong `uedp.py`, sinh code trong `pltf/pycdscriptor`) |
 | Cơ chế sinh code | Vá chuỗi giữa 2 marker vào file `.h` có sẵn | Render toàn bộ file mới bằng Jinja2 template |
 | Input cho bước sinh code | Trực tiếp object `kconf` (`kconfiglib`) | File `.config` đã ghi ra đĩa (`dotcfg.py` tự parse lại) |
 | Docker image | `python:3.13-slim` + `kconfiglib` | + `gcc/cmake/gdb`, + ESP-IDF v5.1, + `jinja2/pytest/pyserial`, + `gosu` |
@@ -258,7 +258,7 @@ Giữ nguyên từ KwDI, không đổi — vẫn loại `docs/` (chứa PDF tham
 
 ## 6. Việc còn thiếu / rủi ro cần lưu ý khi tiếp tục triển khai
 
-- **`glbda.py` chưa nối vào `tsgen.py`**: hiện chỉ là script debug độc lập (`python pltf/testspec/attribarse/glbda.py`), chưa có generator nào tiêu thụ dữ liệu từ `test.yaml`. Đây là phần việc chính còn lại để hoàn thiện hướng μE-LS.
+- **`glbda.py` chưa nối vào `tsgen.py`**: hiện chỉ là script debug độc lập (`python pltf/pycdscriptor/attribarse/glbda.py`), chưa có generator nào tiêu thụ dữ liệu từ `test.yaml`. Đây là phần việc chính còn lại để hoàn thiện hướng μE-LS.
 - **Lặp code parse `.config`**: cả 6 generator (`appcfg`, `corecfg`, `palcfg`, `appdecl`, `arch_h`, `arch_c`) đều tự gọi `dotcfg.cfp_parse_dotcfg(config_dir)` riêng lẻ thay vì parse một lần rồi truyền chung `context` — có thể gộp lại trong `tsgen.py` để tránh đọc file `.config` nhiều lần.
 - **`entrypoint.sh` luôn chạy `uedp.py menuconfig` ở mỗi lần container khởi động**: phù hợp cho phiên làm việc tương tác trên máy dev, nhưng chưa có nhánh non-interactive (ví dụ đọc thẳng `.config` có sẵn, bỏ qua menuconfig) để dùng trong CI/CD.
 - **Chưa có test tự động cho chính `pltf/`**: bản thân testing framework (parser, generator, template) hiện chưa có test riêng để đảm bảo không hồi quy khi sửa template hay parser.

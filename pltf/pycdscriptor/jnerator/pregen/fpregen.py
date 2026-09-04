@@ -4,7 +4,7 @@ except ImportError:
   import appcfgpgen, corecfgpgen, palcfgpgen, appdeclpgen, archdirpgen, archhpgen, archcpgen, cfpcall
 
 if __name__ == "__main__":
-  print("[INFO] testspec.gen is called")
+  print("[INFO] pycdscriptor.gen is called")
   print("[INFO] generating context from .config")
   context = cfpcall.main()
   print("[INFO] context is generated")
@@ -22,4 +22,4 @@ if __name__ == "__main__":
   print("[INFO] architecture header file is generated")
   archcpgen.main(context)
   print("[INFO] architecture source file is generated")
-  print("[INFO] testspec.gen has done")
+  print("[INFO] pycdscriptor.gen has done")

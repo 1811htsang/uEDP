@@ -689,7 +689,7 @@ if __name__ == '__main__':
 
 ''' 
 # SECTION - Idea for parsing into pydantic model
-# LINK - pltf/testspec/lstaxer/lukupmodel.py:70
+# LINK - pltf/pycdscriptor/lstaxer/lukupmodel.py:70
 
 Follow from sample idea with parsing follow specific attribute,
 we should add another mapping to specify which chain should be ignored

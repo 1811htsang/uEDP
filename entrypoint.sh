@@ -20,13 +20,13 @@ echo "[INFO] Running as uedp_user (UID: $USER_ID)"
 echo "[ENTRY] call menuconfig"
 python uedp.py menuconfig
 echo "[ENTRY] call pre-logicdef generator"
-python -m pltf.testspec.jnerator.pregen.fpregen
+python -m pltf.pycdscriptor.jnerator.pregen.fpregen
 echo "[ENTRY] call post-logicdef app.c generator"
-python -m pltf.testspec.jnerator.postgen.cgen \
+python -m pltf.pycdscriptor.jnerator.postgen.cgen \
   --yaml sources/app/lstaxizer.yaml \
   --output sources/app/app.c
-echo "[ENTRY] call testspec.ustab.custab"
-python -m pltf.testspec.ustab.custab
+echo "[ENTRY] call pycdscriptor.ustab.custab"
+python -m pltf.pycdscriptor.ustab.custab
 # Change ownership of all files in the /uedp-libs and /uedp-test directories to the new user
 chown -R $USER_ID:$GROUP_ID /uedp-libs/*
 echo -e "[DONE]"
