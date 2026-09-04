@@ -286,29 +286,29 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 3. Cần review lại thiết kế cú pháp ở khu vực data để quản lý chi tiết vấn đề chuyển data-as-parameter thành data-as-global đối với các tham số truyền vào có sizeof() hoặc length nặng hoặc multiple param trong 1 function call.
 -->
 
-- [x] Đưa calling của pycdscriptor.generator vào cùng phase với lstaxer.kre8 để cùng giai đoạn cấu hình sang mã nguồn.
+- [x] Đưa calling của pycdscriptor.jnerator vào cùng phase với lstaxer.kre8 để cùng giai đoạn cấu hình sang mã nguồn.
 - [x] Triển khai thiết kế lstaxer.kre8 để hỗ trợ việc generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [x] Bổ sung rewrite cú pháp giải quyết vấn đề ambiguous data tag lên apps/lstaxizer.yaml để thực hiện regression test cho pipeline.
 - [x] Thực hiện chore filename để thống nhất các module riêng biệt của PLTF.
-- [ ] Sửa đổi vị trí ustab.custab trong pipeline trên entrypoint.sh nằm giữa jnerator.pregen.fpregen và jnerator.postgen.cgen. //CRITICAL - Follow theo task bên dưới sẽ đưa ustab.custab nằm cuối pipeline.
-- [ ] Phân tách entrypoint.sh để đưa jnerator.postgen.cgen và lstaxer.vlid vào jainerator.sh thành một pipeline riêng biệt.
+- [x] Sửa đổi vị trí ustab.custab trong pipeline trên entrypoint.sh nằm giữa jnerator.pregen.fpregen và jnerator.postgen.cgen. //CRITICAL - Follow theo task bên dưới sẽ đưa ustab.custab nằm cuối pipeline.
+- [x] Phân tách entrypoint.sh để đưa jnerator.postgen.cgen và lstaxer.vlid vào jainerator.sh thành một pipeline riêng biệt.
+- [x] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing. //CRITICAL - Xem xét loại bỏ khỏi pipeline vì dư thừa và làm phức tạp thêm việc parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Bổ sung khả năng kiểm tra theo syntax mới của PLD/μE-LS trên lstaxer.vlid.
 - [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax.
-- [ ] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing. //CRITICAL - Xem xét loại bỏ khỏi pipeline vì dư thừa và làm phức tạp thêm việc parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [ ] Bổ sung sửa đổi tài liệu thiết kế PLTF.
 - [ ] Kiểm tra lại các thay đổi mới trong tài liệu cú pháp sau hiệu chỉnh của bên nhánh chore để đảm bảo documentation và source code được đồng bộ và nhất quán. //NOTE - Follow theo commit số `bab87c3dece35ccfcb71888f1086b1c45fa0b4f7` của nhánh chore.
 - [ ] Triển khai BST cho pipeline PLD/μE-LS trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- STATUS
 Trong thiết kế trước đó:
-- pycdscriptor.generator được triển khai để sinh ra toàn bộ các cấu hình khai báo bắt buộc cho apps/lstaxizer.yaml
+- pycdscriptor.jnerator được triển khai để sinh ra toàn bộ các cấu hình khai báo bắt buộc cho apps/lstaxizer.yaml
 - pycdscriptor.ustab được dùng để sinh ra bộ cấu hình tham chiếu cho logic. 
 - Các triển khai chưa được thêm vào chính là lstaxer.vlid (chứa pipeline từ lstaxer.strucjec đến lstaxer.symresolv) và sử dụng lstaxer.pydantic_model để mapping cấu hình sang parse-able state.
 
 Hiện tại: 
-- pycdscriptor.generator được phân tách thành 2 phần là generator.pregen và generator.postgen để phân biệt các cấu hình được sinh ra trước khi định nghĩa logic và sau khi định nghĩa logic. 
+- pycdscriptor.jnerator được phân tách thành 2 phần là jnerator.pregen và jnerator.postgen để phân biệt các cấu hình được sinh ra trước khi định nghĩa logic và sau khi định nghĩa logic. 
 - lstaxer.lukupmodel được bổ sung để triển khai đưa toàn bộ các cấu hình YAML thành parse-able state pydantic model. 
-- lstaxer.kre8 được hoàn thiện triển khai cùng với generator.pos_logicdef để phối hợp triển khai sinh ra các mã nguồn C hoàn chỉnh.
+- lstaxer.kre8 được hoàn thiện triển khai cùng với jnerator.pos_logicdef để phối hợp triển khai sinh ra các mã nguồn C hoàn chỉnh.
 - Vấn đề nhập nhằng trong data đã được giải quyết với sự phân tách triệt để cú pháp và ràng buộc logic.
 
 Một số vấn đề còn tồn đọng:
@@ -317,6 +317,8 @@ Một số vấn đề còn tồn đọng:
 - Chưa bổ sung BST cho pipeline này lên hệ thống phần cứng thực tế.
 
 Đã giải quyết vấn đề 1 với việc sửa đổi trong template nhưng chưa hoàn toàn ưng ý, có thể cân nhắc sửa đổi lại thêm.
+
+Đã giải quyết vấn đề 2 với việc loại bỏ lstaxer.nullremov khỏi pipeline chung của PLD/μE-LS do lo ngại về phá vỡ cấu trúc và tăng phức tạp xử lý khi parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 -->
 
 <!-- NOTE - Expectation for pipeline
