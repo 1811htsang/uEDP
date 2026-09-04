@@ -18,6 +18,16 @@ Cú pháp của μE-LS được thiết kế để dễ đọc và dễ viết, 
 - **Phân biệt chữ hoa/thường:** YAML có phân biệt chữ hoa và chữ thường (`Task` khác với `task`).
 - **Phần mở rộng tệp:** Thường sử dụng `.yaml` hoặc `.yml`.
 
+Một lưu ý quan trọng để viết file cấu hình chính là đảm bảo nguyên tắc "Hữu trưởng thứ, Trống lui, Tồn giữ". Nghĩa là nếu xét giữa một tag A (tag cha) và tag B (tag con), tag cha NULL thì tag con nên thụt lùi, tag cha khác NULL thì tag con không thụt lùi. Nếu tag cha NULL mà tag con không thụt lùi thì parser sẽ báo lỗi. Nếu tag cha khác NULL mà tag con thụt lùi thì parser sẽ báo lỗi.
+
+Ví dụ:
+
+```yaml
+- task: KID_TASK_A # Giữa task và tsm, task khác NULL nên tsm không thụt lùi
+  tsm: # Giữa tsm và id, tsm NULL nên id thụt lùi
+    - id: STATE_A_IDLE
+```
+
 ### Cấu trúc dữ liệu cơ bản
 
 #### Cặp Key-Value
@@ -37,9 +47,9 @@ Sử dụng dấu gạch ngang `-` kèm theo một khoảng trắng cho mỗi ph
 
 ```yaml
 signals:
-- SIG_START
-- SIG_STOP
-- SIG_TIMER
+  - SIG_START
+  - SIG_STOP
+  - SIG_TIMER
 ```
 
 #### Dictionaries / Nested Objects
@@ -569,73 +579,73 @@ tlist:
   tsm:
   - id: STATE_USR_IDLE
     trans:
-    - sig: SIG_START
-      goto: STATE_USR_RUN
+      - sig: SIG_START
+        goto: STATE_USR_RUN
     on_ntry: NULL
     on_actv: NULL
     on_exit: NULL
   - id: STATE_USR_RUN
     trans:
-    - sig: SIG_STOP
-      goto: STATE_USR_IDLE
+      - sig: SIG_STOP
+        goto: STATE_USR_IDLE
     on_ntry:
       steps:
-      - actv: post_msg
-        to: KID_TASK_A
-        sig: SIG_A
-        data: NULL
+        - actv: post_msg
+          to: KID_TASK_A
+          sig: SIG_A
+          data: NULL
     on_actv:
       steps:
-      - actv: log
-        to: KID_TASK_USR
-        sig: SIG_LOG
-        data: "Task is running"
+        - actv: log
+          to: KID_TASK_USR
+          sig: SIG_LOG
+          data: "Task is running"
     on_exit:
       steps:
-      - actv: log
-        to: KID_TASK_USR
-        sig: SIG_LOG
-        data: "Task is stopping"
+        - actv: log
+          to: KID_TASK_USR
+          sig: SIG_LOG
+          data: "Task is stopping"
 - tnorm: KID_TASK_A
   fsm:
   - id: STATE_A_IDLE
     on_recv:
-    - sig: SIG_A
-      goto: STATE_A_BUSY
-      steps:
-      - actv: post_msg
-        to: KID_TASK_B
-        sig: SIG_B
-        data: NULL
+      - sig: SIG_A
+        goto: STATE_A_BUSY
+        steps:
+          - actv: post_msg
+            to: KID_TASK_B
+            sig: SIG_B
+            data: NULL
   - id: STATE_A_BUSY
     on_recv:
-    - sig: SIG_B
-      goto: STATE_A_IDLE
-      steps:
-      - actv: post_msg
-        to: KID_TASK_USR
-        sig: SIG_DONE
-        data: NULL
+      - sig: SIG_B
+        goto: STATE_A_IDLE
+        steps:
+          - actv: post_msg
+            to: KID_TASK_USR
+            sig: SIG_DONE
+            data: NULL
 - tnorm: KID_TASK_SIMPLE
   exec:
-  - on_sig: SIG_SIMPLE
-    steps:
-    - actv: post_msg
-      to: KID_TASK_A
-      sig: SIG_A
-      data: NULL
+    - on_sig: SIG_SIMPLE
+      steps:
+        - actv: post_msg
+          to: KID_TASK_A
+          sig: SIG_A
+          data: NULL
 
 - tpoll: KID_TASK_POLL
   exec:
-  - actv: poll_led
-    to: NULL
-    sig: NULL
-    data: NULL
+    - actv: poll_led
+      to: NULL
+      sig: NULL
+      data: NULL
 
 isr:
-- id: KID_ISR_TIMER
-  to: KID_TASK_TIM
-  sig: KID_SIG_TIM_TICK
+  - id: KID_ISR_TIMER
+    to: KID_TASK_TIM
+    sig: KID_SIG_TIM_TICK
 
 pplp:
   itnlog:
@@ -668,10 +678,10 @@ escal:
       data: NULL
 
 outexec:
-- name: OCE_ITNLOG_DUMP
-  handler: itnlog_dump
-  context: pplp_ctx
-  state: READY
+  - name: OCE_ITNLOG_DUMP
+    handler: itnlog_dump
+    context: pplp_ctx
+    state: READY
 ```
 
 ### Phân biệt `act`, `actv` và `steps`
@@ -719,7 +729,9 @@ Không được dùng `data` để chứa danh sách tham số của một funct
 
 `c_stmt` và `c_call` được giữ nguyên để codegen nhưng không có semantic validation sâu như `post_msg`. Generator phải reject hoặc báo rõ khi built-in action thiếu tham số bắt buộc. Alias phải được resolve trước khi mapping; không dùng alias đã bị `safe_load()` chuyển thành `None` làm payload hợp lệ.
 
-Lưu ý rằng ở thời điểm hiện `args` chưa hỗ trợ để resolve alias trong danh sách, nên cần tránh dùng alias trong `args` nếu không muốn gặp lỗi runtime. Ngoài ra, trong cấu trúc sử dụng mapping action với `c_stmt` và `c_call` cần đảm bảo tag `kind`, `function`, và `args` được khai báo với indent lùi vào sau `actv` để tránh lỗi YAML. Các trường hợp này cần được kiểm tra kỹ lưỡng trong quá trình codegen để đảm bảo tính nhất quán và tránh lỗi runtime.
+Lưu ý rằng ở thời điểm hiện `args` chưa hỗ trợ để resolve alias trong danh sách, nên cần tránh dùng alias trong `args` nếu không muốn gặp lỗi runtime.
+
+Ngoài ra, trong cấu trúc sử dụng mapping action với `c_stmt` và `c_call` cần đảm bảo tag `kind`, `function`, và `args` được khai báo với indent lùi vào sau `actv` để tránh lỗi YAML. Các trường hợp này cần được kiểm tra kỹ lưỡng trong quá trình codegen để đảm bảo tính nhất quán và tránh lỗi runtime.
 
 <!-- TODO
 100826 - Cân nhắc thay đổi 2 keyword `act` và `actv` để tránh nhầm lẫn.
