@@ -4,16 +4,16 @@ import sys
 # [2] Config specifier
 current_dir = os.path.dirname(os.path.abspath(__file__))
 kconfig_dir = os.path.join(current_dir, "sources", "common", "kconfiglib")
-pyspec_dir = os.path.join(current_dir, "sources", "common", "pyspec")
+kconfigspec_dir = os.path.join(current_dir, "sources", "common", "kconfigspec")
 # [3] Python inserter
 sys.path.insert(0, kconfig_dir)
-sys.path.insert(1, pyspec_dir)
+sys.path.insert(1, kconfigspec_dir)
 # [4] Import kconfiglib và menuconfig after add to sys.path
 import kconfiglib
 import menuconfig
 import argparse
-# [5] Import user input function from pyspec
-from pltf.pyspec import user_input, task_norm_declaration, task_poll_declaration, signal_declaration, hardware_api_declaration
+# [5] Import user input function from kconfigspec
+from pltf.kconfigspec import user_input, task_norm_declaration, task_poll_declaration, signal_declaration, hardware_api_declaration
 # [6] Global variables to hold user input values (if needed)
 DEFAULT_VALS = {
   "num_tasks_norm": 8,

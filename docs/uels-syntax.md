@@ -206,11 +206,11 @@ Cần kiểm tra các trường hợp đặc biệt trong cú pháp để xử l
 
 ### Đánh giá so với source code hiện tại
 
-Kết luận đối chiếu với core source và testspec hiện tại là: syntax đang dùng trong tài liệu phải giữ nguyên theo trục `on_ntry`, `on_actv`, `actv`, `steps`, `on_recv`, vì đây mới là shape mà generator và ví dụ test hiện tại đang bám vào. Các đề xuất như `on_entry`, `on_active`, `action`, `guard`, hay `data_kind: VALUE/REF` là hợp lý về mặt UX, nhưng hiện mới ở mức đề xuất mở rộng, chưa nên ghi như syntax chính thức của pre-1.2.0.
+Kết luận đối chiếu với core source và pycdscriptor hiện tại là: syntax đang dùng trong tài liệu phải giữ nguyên theo trục `on_ntry`, `on_actv`, `actv`, `steps`, `on_recv`, vì đây mới là shape mà generator và ví dụ test hiện tại đang bám vào. Các đề xuất như `on_entry`, `on_active`, `action`, `guard`, hay `data_kind: VALUE/REF` là hợp lý về mặt UX, nhưng hiện mới ở mức đề xuất mở rộng, chưa nên ghi như syntax chính thức của pre-1.2.0.
 
 | Đề xuất | Đánh giá theo source | Hành động trên tài liệu |
 | --- | --- | --- |
-| `on_entry` / `on_active` | Chưa có trong testspec và generator hiện tại vẫn dùng `on_ntry` / `on_actv` | Giữ keyword hiện tại là chính thức, có thể ghi thêm alias đề xuất ở ghi chú |
+| `on_entry` / `on_active` | Chưa có trong pycdscriptor và generator hiện tại vẫn dùng `on_ntry` / `on_actv` | Giữ keyword hiện tại là chính thức, có thể ghi thêm alias đề xuất ở ghi chú |
 | `action` thay cho `actv` | Core ví dụ và parser hiện tại vẫn dùng `actv` | Không đổi syntax chính, chỉ có thể nhắc đây là tên gợi nhớ cho UX tương lai |
 | `guard` trong `trans` | Chưa thấy support ở core TSM/FSM hiện tại | Ghi là hướng mở rộng, không đưa vào grammar chính thức |
 | `data_kind: VALUE/REF` cho `post_msg` | Core đã có D2MP và API `uedp_msg_set_data_val/ref`, nhưng chưa có trường PLD tương ứng | Mô tả ở phần mở rộng/D2MP, không coi là field bắt buộc của μE-LS hiện tại |

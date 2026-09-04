@@ -1,0 +1,68 @@
+//ANCHOR - Architecture-specific implementation for {{arch_name}}
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include "{{arch_name}}_arch.h"
+#include "uedp_core.h"
+#include "uedp_task.h"
+#include "uedp_msg.h"
+#include "uedp_timer.h"
+#include "uedp_itnlog.h"
+
+//CRITICAL - Đảm bảo phải có ủy quyền timer_tick để gắn vào timer phần cứng
+
+extern void uedp_timer_tick(void);
+
+//ANCHOR - Implementation cho uedp_core.h
+
+sta int is_inited = 0x0u;
+
+void uedp_core_init(void) {
+  pal_core_init();
+  uedp_msg_pool_init();
+  uedp_timer_init();
+  uedp_itnlog_init();
+  is_inited = 0x1u;
+}
+
+//ANCHOR - Implementation cho pal_core.h
+
+void pal_core_init(void) {
+  
+}
+
+void pal_enter_critical(void) {
+
+}
+
+void pal_exit_critical(void) {
+
+}
+
+ui8 pal_math_get_highest_bit32(ui32 mask) {
+
+}
+
+ui32 pal_sys_get_tick(void) {
+
+}
+
+void pal_sys_reset(void) {
+
+}
+
+void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
+
+}
+
+//ANCHOR - Implementation custom API cho {{arch_name}}.h
+/** CRITICAL - 
+  * Các parameter <return_type> và <parameters> cần được thay thế bằng kiểu dữ liệu thực tế 
+  * theo nhu cầu của người dùng
+  */
+
+{% for api in arch_apis %}<return_type> {{arch_name}}_{{api}} (<parameters>) {
+
+}
+
+{% endfor %}
