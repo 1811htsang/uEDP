@@ -1,4 +1,4 @@
-//ANCHOR - khai báo thư viện uEDP
+//ANCHOR - Khai báo thư viện uEDP
 #include "uedp_core.h"
 #include "uedp_fcr.h"
 #include "uedp_fsm.h"
@@ -9,12 +9,12 @@
 #include "uedp_timer.h"
 #include "uedp_fsm.h"
 
-//ANCHOR - khai báo thư viện hệ thống
+//ANCHOR - Khai báo thư viện hệ thống
 #include "pal_logdp.h"
 #include "pal_memrp.h"
 #include "pal_rprintf.h"
 
-//ANCHOR - khai báo thư viện app
+//ANCHOR - Khai báo thư viện app
 #include "app_cfg.h"
 #include "app_decl.h"
 

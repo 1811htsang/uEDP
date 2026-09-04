@@ -1,11 +1,4 @@
-/**
- * @file {{arch_name}}_arch.c
- * @author Shang Huang
- * @brief Source file for {{arch_name}} Platform Abstraction Layer in UEDP
- * @version 0.1
- * @date {{current_date}}
- * @copyright MIT License
- */
+//ANCHOR - Architecture-specific implementation for {{arch_name}}
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -16,17 +9,14 @@
 #include "uedp_timer.h"
 #include "uedp_itnlog.h"
 
-sta int is_inited = 0x0u;
-
-/**
- * @brief Đảm bảo uedp_timer_tick được biết đến
- */
+//CRITICAL - Đảm bảo phải có ủy quyền timer_tick để gắn vào timer phần cứng
 
 extern void uedp_timer_tick(void);
 
-/**
- * @brief Implementation cho uedp_core.h
- */
+
+//ANCHOR - Implementation cho uedp_core.h
+
+sta int is_inited = 0x0u;
 
 void uedp_core_init(void) {
   pal_core_init();
@@ -36,9 +26,7 @@ void uedp_core_init(void) {
   is_inited = 0x1u;
 }
 
-/**
- * @brief Implementation cho pal_core.h
- */
+//ANCHOR - Implementation cho pal_core.h
 
 void pal_core_init(void) {
   
@@ -68,9 +56,11 @@ void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
 
 }
 
-/**
- * @brief Implementation custom API cho {{arch_name}}.h
- */
+//ANCHOR - Implementation custom API cho {{arch_name}}.h
+/** CRITICAL - 
+  * Các parameter <return_type> và <parameters> cần được thay thế bằng kiểu dữ liệu thực tế 
+  * theo nhu cầu của người dùng
+  */
 
 {% for api in arch_apis %}<return_type> {{arch_name}}_{{api}} (<parameters>) {
 
