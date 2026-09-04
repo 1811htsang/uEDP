@@ -13,7 +13,6 @@
 
 extern void uedp_timer_tick(void);
 
-
 //ANCHOR - Implementation cho uedp_core.h
 
 sta int is_inited = 0x0u;
