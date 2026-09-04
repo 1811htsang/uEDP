@@ -30,7 +30,7 @@
    *       được cập nhật từ 0x06 xuống 0x03 tương ứng với số lượng tác vụ mặc
    *       định còn được giữ lại (3 thay vì 6):
    *       - `UEDP_TASK_NORM_USR_ID` và `UEDP_TASK_NORM_EOT_ID` là 2 ID bắt buộc
-   *         phải có trong bảng tác vụ của người dùng (xem app_cfg.h, appcfg_tmpl.txt).
+   *         phải có trong bảng tác vụ của người dùng (xem app_cfg.h, appcfgh.txt).
    *       - `UEDP_TASK_NORM_IDLE_ID` được dùng làm giá trị sentinel khởi tạo/reset
    *         của `g_active_task_norm_id` trong uedp_task.c.
    *       - `UEDP_TASK_NORM_SYS_ID` được dùng trong uedp_msg.c làm src_task_id khi
@@ -52,7 +52,7 @@
    *            trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF)
    * @note Đã loại bỏ toàn bộ các khai báo tác vụ poll mặc định (WDG, SYSLF,
    *       MEMRP, IDLE) vì không còn được sử dụng ở bất kỳ đâu trong lõi,
-   *       PAL, tài liệu hay PLD/μE-LS (pltf/pyspec, pltf/testspec). Do không
+   *       PAL, tài liệu hay PLD/μE-LS (pltf/kconfigspec, pltf/pycdscriptor). Do không
    *       còn tác vụ mặc định nào được giữ lại, OFFSET được cập nhật từ 0x04
    *       xuống 0x00 để tác vụ poll đầu tiên do người dùng định nghĩa có thể
    *       bắt đầu ngay tại MIN_ID, không để trống không gian ID nào.

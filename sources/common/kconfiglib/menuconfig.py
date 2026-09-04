@@ -2352,7 +2352,6 @@ def _draw_jump_to_dialog(edit_box, matches_win, bot_sep_win, help_win,
 
     # Draw arrows pointing up if the symbol list is scrolled down
     if scroll > 0:
-        # TODO: Bit ugly that _style["frame"] is repeated here
         _safe_hline(edit_box, 2, 4, curses.ACS_UARROW, _N_SCROLL_ARROWS,
                     _style["frame"])
 

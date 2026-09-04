@@ -178,12 +178,12 @@ Tức là có 1 space trước dấu `//` và 1 space trước dấu `!SECTION`,
 - [x] Remove các khai báo task NORM và POLL mặc định không sử dụng.
 
 <!-- SECTION - L178
-Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu rõ hơn yêu cầu của task này. Cần kiểm tra các tài liệu và mã nguồn liên đới như PLD/μE-LS, pltf.pyspec/testspec để đảm bảo rằng các khai báo task này không còn được sử dụng trong các tính năng hiện tại và tương lai của lõi μEDP.
+Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu rõ hơn yêu cầu của task này. Cần kiểm tra các tài liệu và mã nguồn liên đới như PLD/μE-LS, pltf.kconfigspec/pycdscriptor để đảm bảo rằng các khai báo task này không còn được sử dụng trong các tính năng hiện tại và tương lai của lõi μEDP.
 
-#LINK - pltf/testspec/ustab/gnnerate_ustab.py:13
+#LINK - pltf/pycdscriptor/ustab/gnnerate.py:13
 #LINK - /workspaces/uEDP/sources/core/inc/uedp_core.h:29
 #LINK - /workspaces/uEDP/sources/core/inc/uedp_core.h:57
-#LINK - pltf/testspec/cfparsers/dotcfg_cfp.py:37
+#LINK - pltf/pycdscriptor/attribarse/dotcfg.py:37
 
 #NOTE - 260826 đã thực hiện revert lại các sửa đổi của task để Minh sửa lại theo đúng yêu cầu của task này.
 
@@ -192,14 +192,14 @@ Xem `uedp_core.h` và các tag FIXME trong workspace nhánh feat để hiểu r�
 // !SECTION 
 -->
 
-- [x] Thay đổi triển khai pyspec.usrinp để cho phép mỗi task có thể khai báo việc sử dụng FSM/TSM riêng biệt kèm số lượng trạng thái khác nhau.
+- [x] Thay đổi triển khai kconfigspec.usrinp để cho phép mỗi task có thể khai báo việc sử dụng FSM/TSM riêng biệt kèm số lượng trạng thái khác nhau.
 
 <!-- SECTION - L191
-Kiểm tra trong `usrinp_pspec` để nắm rõ thông tin của task và thực hiện thay đổi tương ứng trên `tnorm_pspec`.
+Kiểm tra trong `usrinp` để nắm rõ thông tin của task và thực hiện thay đổi tương ứng trên `tnorm`.
 
-#LINK - pltf/pyspec/usrinp_pspec.py:27
-#LINK - pltf/pyspec/tnorm_pspec.py:56
-#LINK - pltf/pyspec/tnorm_pspec.py:84
+#LINK - pltf/kconfigspec/usrinp.py:27
+#LINK - pltf/kconfigspec/tnorm.py:56
+#LINK - pltf/kconfigspec/tnorm.py:84
 
 #STATUS - task đã hoàn thành.
 
@@ -207,15 +207,18 @@ Kiểm tra trong `usrinp_pspec` để nắm rõ thông tin của task và thực
 -->
 
 - [x] Sửa đổi và cập nhật thiết kế DMP, D2MP tương ứng với sự xuất hiện của dpool GDA. //NOTE - Ở task, yêu cầu cụ thể là sửa đổi tài liệu tương ứng.
-- [ ] Sửa đổi và cập nhật thiết kế PLD/μE-LS tương ứng với sự thay đổi của pyspec.usrinp và pyspec.tnorm //NOTE - Ở task này, yêu cầu cụ thể là bổ sung sửa đổi tài liệu tương ứng.
+- [ ] Sửa đổi và cập nhật thiết kế PLD/μE-LS tương ứng với sự thay đổi của kconfigspec.usrinp và kconfigspec.tnorm //NOTE - Ở task này, yêu cầu cụ thể là bổ sung sửa đổi tài liệu tương ứng.
 - [ ] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
+- [ ] Bổ sung phiên bản tiếng anh của `user-manual` để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
+- [ ] Kiểm tra lại `README.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
+- [ ] Kiểm tra lại `dmp-gda.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
 - [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu.
 
 <!-- NOTE - Lưu ý cho task bên trên
 Theo dõi ở uedp_core.h nhánh feat để nắm rõ các tag ANCHOR được comment theo format kết hợp cùng doxygen-type.
 -->
 
-- [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như testspec.*, pyspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
+- [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như pycdscriptor.*, kconfigspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
 
 <!-- NOTE - Expectation b4 BST task
 Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ được hoàn thiện với khả năng tự động hóa việc phân giải logic từ các cấu hình YAML sang các hàm thực thi trong lõi μEDP.
@@ -242,13 +245,13 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 
 //  SECTION - v1.2.0
 
-- [x] Chỉnh sửa lại pyspec (Python Specifier - Bộ chỉ định tham số Python) cũ từ tính năng KwDI để đưa vào sử dụng kết hợp với PLTF.
-- [x] Triển khai testspec (Test Specifier - Bổ chỉ định tham số test) mới chứa cfparsers (config parsers) với việc tích hợp pipeline từ pyspec được điều chỉnh và template.
-- [x] Bổ sung bộ điều khiển chung (tsgen) để tích hợp pyspec + testspec tự động cho PLTF.
+- [x] Chỉnh sửa lại kconfigspec (Python Specifier - Bộ chỉ định tham số Python) cũ từ tính năng KwDI để đưa vào sử dụng kết hợp với PLTF.
+- [x] Triển khai pycdscriptor (Test Specifier - Bổ chỉ định tham số test) mới chứa attribarse (config parsers) với việc tích hợp pipeline từ kconfigspec được điều chỉnh và template.
+- [x] Bổ sung bộ điều khiển chung (tsgen) để tích hợp kconfigspec + pycdscriptor tự động cho PLTF.
 - [x] Triển khai thiết kế lên Docker.
 - [x] Bổ sung triển khai thiết kế với Docker Compose để tự động build, chỉ định services, containers và các thông số môi trường cần thiết cho việc triển khai và kiểm thử lõi μEDP trên các nền tảng khác nhau một cách dễ dàng và nhất quán.
 - [x] Kiểm tra và đánh giá thiết kế syntax YAML của PLD/μE-LS cho Task và HSMC để đảm bảo rằng cú pháp được thiết kế một cách hợp lý, dễ đọc và dễ hiểu, đồng thời hỗ trợ việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách hiệu quả.
-- [x] Triển khai single-call trên cfparsers (testspec.cfpcall) với concentrate import để tránh repetitive call và tăng tốc độ xử lý khi parse các cấu hình logic của μE-LS.
+- [x] Triển khai single-call trên attribarse (pycdscriptor.cfpcall) với concentrate import để tránh repetitive call và tăng tốc độ xử lý khi parse các cấu hình logic của μE-LS.
 - [x] Thiết kế syntax SII cho YAML.
 - [x] Thiết kế syntax PPLP cho YAML.
 - [x] Thiết kế syntax APE cho YAML.
@@ -275,7 +278,7 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 - [x] Bổ sung thiết kế module để tinh gọn các khai báo NULL không sử dụng trong khai báo YAML của người dùng nhằm giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [x] Sửa đổi triển khai lstaxer.strucjec để bao quát toàn bộ cấu trúc actvobj, fsm, tsm, của tlist.
 - [x] Bổ sung triển khai thiết kế lstaxer.lukupmodel để đưa các cấu hình post-validated vào pydantic model để chuẩn hóa toàn bộ logic triển khai trước khi translate thành mã C, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [x] Đưa cân nhắc triển khai hoạt động của cfparsers hoặc pyspec vào post-validation của lstaxer.vlid để phối hợp lstaxer.kre8 generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [x] Đưa cân nhắc triển khai hoạt động của attribarse hoặc kconfigspec vào post-validation của lstaxer.vlid để phối hợp lstaxer.kre8 generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 
 <!-- REVIEW
 1. Bổ sung cân nhắc phân tách PLD/μE-LS thành SA (semi-automation) và FA (full-automation) trên 2 phiên bản 1.1.7, 1.1.8 hay 1.1.8, 1.1.9.
@@ -283,22 +286,26 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 3. Cần review lại thiết kế cú pháp ở khu vực data để quản lý chi tiết vấn đề chuyển data-as-parameter thành data-as-global đối với các tham số truyền vào có sizeof() hoặc length nặng hoặc multiple param trong 1 function call.
 -->
 
-- [x] Đưa calling của testspec.generator vào cùng phase với lstaxer.kre8 để cùng giai đoạn cấu hình sang mã nguồn.
+- [x] Đưa calling của pycdscriptor.generator vào cùng phase với lstaxer.kre8 để cùng giai đoạn cấu hình sang mã nguồn.
 - [x] Triển khai thiết kế lstaxer.kre8 để hỗ trợ việc generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [x] Bổ sung rewrite cú pháp giải quyết vấn đề ambiguous data tag lên apps/lstaxizer.yaml để thực hiện regression test cho pipeline.
 - [ ] Thực hiện chore filename để thống nhất các module riêng biệt của PLTF.
+- [ ] Sửa đổi vị trị ustab.custab trong pipeline trên entrypoint.sh
+- [ ] Bổ sung khả năng kiểm tra theo syntax mới của PLD/μE-LS trên lstaxer.vlid.
 - [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax.
-- [ ] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing.
+- [ ] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing. //CRITICAL - Xem xét loại bỏ khỏi pipeline vì dư thừa và làm phức tạp thêm việc parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [ ] Bổ sung sửa đổi tài liệu thiết kế PLTF.
+- [ ] Kiểm tra lại các thay đổi mới trong tài liệu cú pháp sau hiệu chỉnh của bên nhánh chore để đảm bảo documentation và source code được đồng bộ và nhất quán. //NOTE - Follow theo commit số `bab87c3dece35ccfcb71888f1086b1c45fa0b4f7` của nhánh chore.
 - [ ] Triển khai BST cho pipeline PLD/μE-LS trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- STATUS
 Trong thiết kế trước đó:
-- testspec.generator được triển khai để sinh ra toàn bộ các cấu hình khai báo bắt buộc cho apps/lstaxizer.yaml
-- testspec.ustab được dùng để sinh ra bộ cấu hình tham chiếu cho logic. 
+- pycdscriptor.generator được triển khai để sinh ra toàn bộ các cấu hình khai báo bắt buộc cho apps/lstaxizer.yaml
+- pycdscriptor.ustab được dùng để sinh ra bộ cấu hình tham chiếu cho logic. 
 - Các triển khai chưa được thêm vào chính là lstaxer.vlid (chứa pipeline từ lstaxer.strucjec đến lstaxer.symresolv) và sử dụng lstaxer.pydantic_model để mapping cấu hình sang parse-able state.
 
 Hiện tại: 
-- testspec.generator được phân tách thành 2 phần là generator.pre_logicdef và generator.post_logicdef để phân biệt các cấu hình được sinh ra trước khi định nghĩa logic và sau khi định nghĩa logic. 
+- pycdscriptor.generator được phân tách thành 2 phần là generator.pregen và generator.postgen để phân biệt các cấu hình được sinh ra trước khi định nghĩa logic và sau khi định nghĩa logic. 
 - lstaxer.lukupmodel được bổ sung để triển khai đưa toàn bộ các cấu hình YAML thành parse-able state pydantic model. 
 - lstaxer.kre8 được hoàn thiện triển khai cùng với generator.pos_logicdef để phối hợp triển khai sinh ra các mã nguồn C hoàn chỉnh.
 - Vấn đề nhập nhằng trong data đã được giải quyết với sự phân tách triệt để cú pháp và ràng buộc logic.
@@ -319,9 +326,10 @@ Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đ�
 - [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin đưa vào phiên bản 1.1.7 hoặc 1.1.8 để hỗ trợ việc tự động gán anchor cho các tag trong YAML.
 
 <!-- SECTION - Idea cho remote-file alias
+# NOTE - bên nhánh chore vừa bổ sung hiệu chỉnh về tên gọi nên kiểm tra xem breaking change có xảy ra hay không. Nếu có thì cần cân nhắc sửa đổi lại tên gọi để tránh xung đột với các triển khai hiện tại.
 # LINK docs/uels-syntax.md:118
-# LINK pltf/testspec/lstaxer/lukupmodel_lstaxer.py:5
-# LINK pltf/testspec/lstaxer/lukupmodel_lstaxer.py:706
+# LINK pltf/pycdscriptor/lstaxer/lukupmodel.py:5
+# LINK pltf/pycdscriptor/lstaxer/lukupmodel.py:706
 
 Dựa trên triển khai và kết quả trả về của yaml.parse(), Event sẽ hỗ trợ việc get/set parameter như anchor với `MappingStartEvent(anchor='tnorm1-ctrl', tag=None, implicit=True)` khi trước đó chúng ta gặp các ScalarEvent như `ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='1'`. 
 
@@ -344,7 +352,7 @@ Khi chúng ta có 1 file A cần remote-alias từ file B:
 -->
 
 - [ ] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //LINK docs/uels-syntax.md:199
-- [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table - testspec.ustab) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+- [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table - pycdscriptor.ustab) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [ ] Review lại thiết kế PLD (Parse-able Logic Descriptor) với các triển khai hiện có để đánh giá tính khả thi và hiệu quả của việc sử dụng PLD trong việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, đồng thời hỗ trợ việc tự động sinh mã nguồn C từ các mô tả logic này.
 - [ ] Mở rộng PLD với TSD (Test Scenario Descriptor) để hỗ trợ việc mô tả các kịch bản kiểm thử một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả kịch bản kiểm thử này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các kịch bản kiểm thử cho lõi μEDP.
 - [ ] Hoàn thiện thiết kế TLC (Test Level Coverager) để cho phép chỉ định mức kiểm tra từ ut (unit), ct (component), st (system) và it (integration) nhằm đảm bảo rằng các tính năng của lõi μEDP được kiểm thử đầy đủ và hiệu quả trên các mức độ khác nhau của hệ thống.
