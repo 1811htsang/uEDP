@@ -209,6 +209,9 @@ Kiểm tra trong `usrinp` để nắm rõ thông tin của task và thực hiệ
 - [x] Sửa đổi và cập nhật thiết kế DMP, D2MP tương ứng với sự xuất hiện của dpool GDA. //NOTE - Ở task, yêu cầu cụ thể là sửa đổi tài liệu tương ứng.
 - [ ] Sửa đổi và cập nhật thiết kế PLD/μE-LS tương ứng với sự thay đổi của kconfigspec.usrinp và kconfigspec.tnorm //NOTE - Ở task này, yêu cầu cụ thể là bổ sung sửa đổi tài liệu tương ứng.
 - [ ] Bổ sung sửa đổi và cập nhật tài liệu `user-manual` đang thiếu các thông tin về các tính năng mới được triển khai trong phiên bản 1.1.5 và 1.1.6, bao gồm các hướng dẫn sử dụng chi tiết và các ví dụ minh họa cụ thể để giúp người dùng hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng này trong việc phát triển ứng dụng trên nền tảng μEDP.
+- [ ] Bổ sung phiên bản tiếng anh của `user-manual` để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
+- [ ] Kiểm tra lại `README.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
+- [ ] Kiểm tra lại `dmp-gda.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
 - [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu.
 
 <!-- NOTE - Lưu ý cho task bên trên
@@ -287,8 +290,12 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 - [x] Triển khai thiết kế lstaxer.kre8 để hỗ trợ việc generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [x] Bổ sung rewrite cú pháp giải quyết vấn đề ambiguous data tag lên apps/lstaxizer.yaml để thực hiện regression test cho pipeline.
 - [ ] Thực hiện chore filename để thống nhất các module riêng biệt của PLTF.
+- [ ] Sửa đổi vị trị ustab.custab trong pipeline trên entrypoint.sh
+- [ ] Bổ sung khả năng kiểm tra theo syntax mới của PLD/μE-LS trên lstaxer.vlid.
 - [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax.
-- [ ] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing.
+- [ ] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing. //CRITICAL - Xem xét loại bỏ khỏi pipeline vì dư thừa và làm phức tạp thêm việc parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [ ] Bổ sung sửa đổi tài liệu thiết kế PLTF.
+- [ ] Kiểm tra lại các thay đổi mới trong tài liệu cú pháp sau hiệu chỉnh của bên nhánh chore để đảm bảo documentation và source code được đồng bộ và nhất quán. //NOTE - Follow theo commit số `bab87c3dece35ccfcb71888f1086b1c45fa0b4f7` của nhánh chore.
 - [ ] Triển khai BST cho pipeline PLD/μE-LS trên phần cứng thật để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- STATUS
@@ -319,6 +326,7 @@ Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đ�
 - [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin đưa vào phiên bản 1.1.7 hoặc 1.1.8 để hỗ trợ việc tự động gán anchor cho các tag trong YAML.
 
 <!-- SECTION - Idea cho remote-file alias
+# NOTE - bên nhánh chore vừa bổ sung hiệu chỉnh về tên gọi nên kiểm tra xem breaking change có xảy ra hay không. Nếu có thì cần cân nhắc sửa đổi lại tên gọi để tránh xung đột với các triển khai hiện tại.
 # LINK docs/uels-syntax.md:118
 # LINK pltf/pycdscriptor/lstaxer/lukupmodel.py:5
 # LINK pltf/pycdscriptor/lstaxer/lukupmodel.py:706

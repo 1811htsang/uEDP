@@ -13,6 +13,12 @@ Trong khi đó, `arch-design.md` mục **[KwDI] Kconfig with Docker Integration*
 
 ### 2.1 Thành phần
 
+<!-- CRITICAL
+Xem lại commit số c3f4c9866ec1ea548f2e108f059328fe0dd68183 để revert lại các thay đổi liên quan đến kiến trúc thiết gốc của KwDI
+
+Lưu ý này áp dụng đối với cả bản VN và EN.
+-->
+
 KwDI gồm 3 phần chính, tất cả nằm gọn trong root repo và `sources/common/`:
 
 - `Kconfig` (root) + `sources/app/kconfig/{core,pal,decl}.kconfig`: định nghĩa cây cấu hình.

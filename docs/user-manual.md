@@ -8,6 +8,12 @@ Tác giả: Shang Huang - Huỳnh Thanh Sang
 
 ## II. Cấu trúc thư mục
 
+<!-- CRITICAL
+Xem lại commit số c3f4c9866ec1ea548f2e108f059328fe0dd68183 để revert lại các thay đổi liên quan đến cấu trúc thư mục của project
+
+Lưu ý này áp dụng đối với cả bản VN và EN (hiện tại chưa có)
+-->
+
 ```text
 μEDP/
 ├── core/                        # Định nghĩa và triển khai logic chính của μEDP
