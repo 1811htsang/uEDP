@@ -320,8 +320,8 @@ Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đ�
 
 <!-- SECTION - Idea cho remote-file alias
 # LINK docs/uels-syntax.md:118
-# LINK pltf/testspec/lstaxer/lukupmodel_lstaxer.py:5
-# LINK pltf/testspec/lstaxer/lukupmodel_lstaxer.py:706
+# LINK pltf/testspec/lstaxer/lukupmodel.py:5
+# LINK pltf/testspec/lstaxer/lukupmodel.py:706
 
 Dựa trên triển khai và kết quả trả về của yaml.parse(), Event sẽ hỗ trợ việc get/set parameter như anchor với `MappingStartEvent(anchor='tnorm1-ctrl', tag=None, implicit=True)` khi trước đó chúng ta gặp các ScalarEvent như `ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='1'`. 
 

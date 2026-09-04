@@ -5,7 +5,7 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
 
-from ...lstaxer.kre8_lstaxer import build_generator_context
+from ...lstaxer.kre8 import build_generator_context
 
 
 _TEMPLATE_DIR = Path(__file__).resolve().parents[3] / 'templates'

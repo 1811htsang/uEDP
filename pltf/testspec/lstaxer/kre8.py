@@ -5,7 +5,7 @@ from typing import Any
 import yaml
 import pprint
 
-from .lukupmodel_lstaxer import (
+from .lukupmodel import (
 	lukupmodel_glbda_logic,
 	lukupmodel_isr_logic,
 	lukupmodel_outexec_logic,

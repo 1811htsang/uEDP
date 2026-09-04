@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 import argparse
 
-from ...lstaxer.kre8_lstaxer import build_generator_context
+from ...lstaxer.kre8 import build_generator_context
 from .appc_tsgen import generate_appc
 
 

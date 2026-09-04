@@ -1,7 +1,7 @@
 from pydantic import BaseModel, field_validator
 from typing import List, Optional, Dict
-from .symresolv_lstaxer import symresolv_load, symresolv_debug
-from .strucjec_lstaxer import strucjec_calib
+from .symresolv import symresolv_load, symresolv_debug
+from .strucjec import strucjec_calib
 
 # NOTE - Validation Strategy for lstaxer.vlid 
 """
