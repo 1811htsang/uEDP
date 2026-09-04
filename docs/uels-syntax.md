@@ -186,6 +186,8 @@ Cần rewrite lại phần này tương ứng với các khối phát triển đ
 | APE | Gọi urgent message / priority escalation | `escal -> trigger -> post_urgent` | `mode: slnf`, `mode: non-slnf`, `scope: self`, `keep_queue_order`, `extra_rounds`, `post_urgent` | `uedp_task_norm_post_urgent()`, `uedp_task_norm_set_urgent()` |
 | OCE | Service chạy ngoài luồng logic chính | `outexec -> name/handler/context/state` | `name`, `handler`, `context`, `state` | `ocesvc_register()`, `ocesvc_scheduler()` |
 
+Số lượng state trong `tsm`/`fsm` của mỗi `tnorm` (hàng Task Norm ở trên) khớp 1-1 với khai báo `APPCFG_TSM_TASK_{i}_STATE_{j}`/`APPCFG_FSM_TASK_{i}_STATE_{j}` do `kconfigspec.tnorm` sinh riêng cho từng task #i — xem mục "Đồng bộ với `kconfigspec.usrinp` / `kconfigspec.tnorm`" bên dưới.
+
 ### Các lưu ý chung
 
 Nếu tính năng không sử dụng thì set giá trị đi kèm là `NULL` hoặc bỏ qua. Điều này áp dụng đối với các tính năng như:
@@ -335,6 +337,16 @@ tlist:
 ```
 
 Trong current core, task poll chỉ nên dùng cho logic nhẹ, còn các tác vụ dọn dẹp hệ thống, flush log hoặc đồng bộ nền nên được đẩy sang OCE.
+
+### Đồng bộ với `kconfigspec.usrinp` / `kconfigspec.tnorm`
+
+Tầng khai báo Kconfig (`pltf/kconfigspec/usrinp.py` + `pltf/kconfigspec/tnorm.py`, sinh ra `sources/app/kconfig/decl.kconfig`) trước đây chỉ hỏi **một lần duy nhất** "Do you want to use FSM?" / "Do you want to use TSM?" kèm **một số lượng state dùng chung** cho toàn bộ `num_tasks_norm` task đã khai báo. Điều này không khớp với model μE-LS mô tả ở trên: mỗi `tnorm` trong `tlist` tự quyết định dùng `tsm` hay `fsm` (hoặc cả hai, hoặc không dùng cái nào), với số lượng state hoàn toàn độc lập theo độ dài mảng `tsm:`/`fsm:` khai báo riêng cho task đó.
+
+`kconfigspec.usrinp.user_input()` và `kconfigspec.tnorm.task_norm_declaration()` đã được sửa đổi để hỏi và sinh cấu hình **theo từng task**: với mỗi task #i (`i` từ 1 đến `num_tasks_norm`), người dùng được hỏi riêng có dùng FSM không, có dùng TSM không, và nếu có thì bao nhiêu state — kết quả trả về là 4 list (`fsm_flags`, `tsm_flags`, `num_fsm_states_list`, `num_tsm_states_list`), trong đó phần tử thứ `i - 1` ứng với task #i. `task_norm_declaration()` dùng đúng 4 list này để sinh `APPCFG_TSM_TASK_{i}`/`APPCFG_FSM_TASK_{i}` kèm các state con `_STATE_{j}`, với số lượng `j` riêng biệt cho từng task, thay vì dùng chung 1 số `num_tsm_states`/`num_fsm_states` cho tất cả task như bản cũ.
+
+Với PLD/μE-LS, thay đổi này có ý nghĩa: dữ liệu `task_tsm`/`task_fsm` mà `dotcfg_cfp.py` build từ `.config` (xem `pltf-design.md` mục 3.3) giờ có thể ánh xạ 1-1 với độ dài mảng `tsm:`/`fsm:` của từng `tnorm` trong `tlist`, không còn bị giới hạn "cả hệ thống chỉ có 1 số lượng state chung" như trước — một task hoàn toàn có thể vừa dùng TSM vừa dùng FSM cùng lúc (hoặc không dùng cái nào), với số state khác hẳn task còn lại, mà không ảnh hưởng tới phần khai báo của các task khác trong cùng `decl.kconfig`. Đây là điều kiện cần để pipeline sinh code từ μE-LS (xem mục 3.5 `pltf-design.md`, μE-LS Codegen) có thể đọc đúng số lượng state khai báo trong YAML mà không còn bị giới hạn bởi 1 con số cấu hình chung ở tầng Kconfig như trước.
+
+Lưu ý: `kconfigspec` chỉ sinh khung khai báo tên (`APPCFG_TSM_TASK_{i}`, `APPCFG_TSM_TASK_{i}_STATE_{j}`, `APPCFG_FSM_TASK_{i}`, `APPCFG_FSM_TASK_{i}_STATE_{j}`, ...) ở tầng Kconfig — nội dung logic thật của từng state (`trans`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps`) vẫn đến hoàn toàn từ khai báo `tsm:`/`fsm:` trong μE-LS, không phải từ Kconfig.
 
 ### PPLP - Cấu hình logging pipeline
 
