@@ -1,124 +1,80 @@
 import yaml
-import os
 import pprint
-with open('pltf/pycdscriptor/lstaxer/testobj_ankorpin.yaml', 'r', encoding='utf-8') as f:
-  yaml_sample = f.read()
-events = yaml.parse(yaml_sample)
-pprint.pprint(list(events))
+from yaml.events import ScalarEvent, MappingStartEvent
 
-print('\n')
-# DOC
-'''
-Follow from lstaxer.lukupmodel documentation
-and task list,
-we will use sample yaml file to test
-the idea for the ankorpin module.
-'''
+def ankorpin_process_and_remap(input_path, output_path):
+  # 1. Đọc nội dung file
+  with open(input_path, 'r', encoding='utf-8') as f:
+    yaml_text = f.read()
 
-anchor_pivot_list = ['tnorms', 'tpolls', 'sigs', 'glbda']
+  # 2. Parse toàn bộ events vào một list để có thể duyệt nhiều lần hoặc xử lý tuần tự
+  # Không sử dụng generator trực tiếp nếu muốn xử lý phức tạp
+  events = list(yaml.parse(yaml_text))
+  modified_events = []
 
-# ANCHOR
-'''
-Find any ScalarEvent with value in anchor_pivot_list 
-or value is an incremental index
-'''
+  # Trạng thái theo dõi
+  current_section = None
+  pending_index = None
+  
+  # Cấu trúc prefix cho từng section
+  prefixes = {
+    'tnorms': 'tnorm',
+    'tpolls': 'tpoll',
+    'sigs': 'sig',
+    'glbda': 'gda'
+  }
 
-def ankorpin_add_anchor(type, event):
+  for event in events:
+    # Nhận diện Section (tnorms, tpolls, sigs, glbda)
+    if isinstance(event, ScalarEvent):
+      if event.value in prefixes:
+        current_section = event.value
+      # Nhận diện Index (ví dụ '1', '2'...) bên trong các section mục tiêu
+      elif current_section and event.value.isdigit():
+        pending_index = event.value
 
-def ankorpin_lukup_tnorm_pivot(yaml_text):
-  payload = yaml.safe_load(yaml_text) or {}
-  entries = payload.get('tnorms', {})
-  if not isinstance(entries, dict):
-    return []
+    # Khi gặp MappingStartEvent ngay sau một Index
+    elif isinstance(event, MappingStartEvent) and pending_index:
+      prefix = prefixes[current_section]
+      # Tạo Anchor name (ví dụ: tnorm1-ctrl, sig2-ctrl)
+      # Bạn có thể tùy chỉnh logic đặt tên ở đây
+      anchor_name = f"{prefix}{pending_index}-ank"
+      
+      # Tạo Event mới với Anchor được chèn vào (Event cũ là immutable)
+      event = MappingStartEvent(
+        anchor=anchor_name,
+        tag=event.tag,
+        implicit=event.implicit,
+        start_mark=event.start_mark,
+        end_mark=event.end_mark,
+        flow_style=event.flow_style
+      )
+      # Reset index sau khi đã gán cho Mapping
+      pending_index = None
 
-  # Extract anchors when they are present in the source YAML. This mirrors the
-  # notes in the file: the object anchor is encountered right after the numeric
-  # index and before the nested resource blocks are mapped.
-  anchor_map = {}
-  current_index = None
-  in_tnorms = False
-  for event in yaml.parse(yaml_text):
-    if isinstance(event, yaml.ScalarEvent):
-      if event.value == 'tnorms':
-        in_tnorms = True
-      elif in_tnorms and event.value.isdigit():
-        current_index = event.value
-        # ANCHOR - add anchor for `ankorpin_add_anchor` function
-    elif isinstance(event, yaml.MappingStartEvent) and in_tnorms and event.anchor:
-      if current_index is not None:
-        anchor_map[current_index] = event.anchor
+    modified_events.append(event)
 
-  result = []
-  for index, entry in entries.items():
-    anchor = anchor_map.get(index)
-    result.append({
-      'index': index,
-      'anchor': anchor
-    })
-  return result
+  # 3. Ghi lại nội dung vào file bằng emit
+  with open(output_path, 'w', encoding='utf-8') as f:
+    yaml.emit(modified_events, f)
+  
+  return modified_events
 
-def ankorpin_lukup_tpoll_pivot(yaml_text):
-  payload = yaml.safe_load(yaml_text) or {}
-  entries = payload.get('tpolls', {})
-  if not isinstance(entries, dict):
-    return []
+def ankorpin_map():
+  input_file = 'sources/app/lstaxizer.yaml'
+  output_file = 'sources/app/lstaxizer.yaml_anchored.yaml'
 
-  # Extract anchors when they are present in the source YAML. This mirrors the
-  # notes in the file: the object anchor is encountered right after the numeric
-  # index and before the nested resource blocks are mapped.
-  anchor_map = {}
-  current_index = None
-  in_tpolls = False
-  for event in yaml.parse(yaml_text):
-    if isinstance(event, yaml.ScalarEvent):
-      if event.value == 'tpolls':
-        in_tpolls = True
-      elif in_tpolls and event.value.isdigit():
-        current_index = event.value
-    elif isinstance(event, yaml.MappingStartEvent) and in_tpolls and event.anchor:
-      if current_index is not None:
-        anchor_map[current_index] = event.anchor
+  try:
+    final_events = ankorpin_process_and_remap(input_file, output_file)
+    print(f"Successfully processed YAML. Output saved to: {output_file}")
+    # ANCHOR - replace output file to input file
+    with open(input_file, 'w', encoding='utf-8') as f:
+      yaml.emit(final_events, f)
+    # ANCHOR - delete the temporary output file
+    import os
+    os.remove(output_file)
+  except Exception as e:
+    print(f"Error processing YAML: {e}")
 
-  result = []
-  for index, entry in entries.items():
-    anchor = anchor_map.get(index)
-    result.append({
-      'index': index,
-      'anchor': anchor
-    })
-  return result
-
-def ankorpin_lukup_sigs_pivot(yaml_text):
-  payload = yaml.safe_load(yaml_text) or {}
-  entries = payload.get('sigs', {})
-  if not isinstance(entries, dict):
-    return []
-
-  # Extract anchors when they are present in the source YAML. This mirrors the
-  # notes in the file: the object anchor is encountered right after the numeric
-  # index and before the nested resource blocks are mapped.
-  anchor_map = {}
-  current_index = None
-  in_sigs = False
-  for event in yaml.parse(yaml_text):
-    if isinstance(event, yaml.ScalarEvent):
-      if event.value == 'sigs':
-        in_sigs = True
-      elif in_sigs and event.value.isdigit():
-        current_index = event.value
-    elif isinstance(event, yaml.MappingStartEvent) and in_sigs and event.anchor:
-      if current_index is not None:
-        anchor_map[current_index] = event.anchor
-
-  result = []
-  for index, entry in entries.items():
-    anchor = anchor_map.get(index)
-    result.append({
-      'index': index,
-      'anchor': anchor
-    })
-  return result
-
-pprint.pprint(ankorpin_lukup_tnorm_pivot(yaml_sample))
-pprint.pprint(ankorpin_lukup_tpoll_pivot(yaml_sample))
-pprint.pprint(ankorpin_lukup_sigs_pivot(yaml_sample))
+if __name__ == "__main__":
+  ankorpin_map()
