@@ -110,18 +110,18 @@ versh: "1.2.0-pre"
 # ANCHOR - Global Data Area (GDA) - Biến toàn cục
 
 glbda:
-- &gda_status
-    name: GDA_SYSTEM_STATUS # Validator check: kiểm tra lỗi từ lstaxer.strucjec
-    type: "const char*"
-    initial_value: "STATUS: INITIALIZING"
-- &gda_counter
-    name: GDA_COUNTER
-    type: "int"
-    initial_value: 0
-- &gda_flag
-    name: GDA_FLAG
-    type: "bool"
-    initial_value: false
+  - &gda_status
+      name: GDA_SYSTEM_STATUS # Validator check: kiểm tra lỗi từ lstaxer.strucjec
+      type: "const char*"
+      initial_value: "STATUS: INITIALIZING"
+  - &gda_counter
+      name: GDA_COUNTER
+      type: "int"
+      initial_value: 0
+  - &gda_flag
+      name: GDA_FLAG
+      type: "bool"
+      initial_value: false
 
 # ANCHOR - Task List (TLIST)
 
