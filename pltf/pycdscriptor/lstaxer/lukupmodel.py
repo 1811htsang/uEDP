@@ -118,7 +118,6 @@ def _extract_anchor_map_for_indexed_group(yaml_text, group_name):
 
   return anchor_map
 
-
 def _extract_anchor_list_for_group(yaml_text, group_name):
   """Collect anchors attached to mapping items in a top-level YAML sequence."""
   anchors = []
@@ -140,7 +139,6 @@ def _extract_anchor_list_for_group(yaml_text, group_name):
       anchors.append(event.anchor or '')
 
   return anchors
-
 
 def lukupmodel_tnorm_resrc(yaml_text):
   """
@@ -210,7 +208,6 @@ def lukupmodel_tnorm_resrc(yaml_text):
 
   return out
 
-
 def lukupmodel_tpoll_resrc(yaml_text):
   """Parse tpolls entries into C_tpoll_resrc_obj objects."""
   payload = yaml.safe_load(yaml_text) or {}
@@ -235,7 +232,6 @@ def lukupmodel_tpoll_resrc(yaml_text):
 
   return out
 
-
 def lukupmodel_sig_resrc(yaml_text):
   """Parse sigs entries into C_sig_obj objects."""
   payload = yaml.safe_load(yaml_text) or {}
@@ -259,7 +255,6 @@ def lukupmodel_sig_resrc(yaml_text):
 
   return out
 
-
 def _normalize_alias_value(value, prefer_key=None):
   if value is None:
     return None
@@ -276,7 +271,6 @@ def _normalize_alias_value(value, prefer_key=None):
     return None
   return None
 
-
 def _parse_data_value(value):
   if not isinstance(value, dict) or 'value' not in value:
     return _normalize_alias_value(value, 'name')
@@ -286,7 +280,6 @@ def _parse_data_value(value):
     type=_normalize_alias_value(value.get('type')),
     mode=_normalize_alias_value(value.get('mode')),
   )
-
 
 def _parse_action_obj(data):
   if not isinstance(data, dict):
@@ -316,7 +309,6 @@ def _parse_action_obj(data):
     args=args or [str(arg) for arg in data.get('args', [])],
   )
 
-
 def _parse_action_list(data):
   if data is None:
     return C_act_list_obj(steps=[])
@@ -335,7 +327,6 @@ def _parse_action_list(data):
 
   return C_act_list_obj(steps=[])
 
-
 def _parse_trans_obj(data):
   if not isinstance(data, dict):
     return None
@@ -343,7 +334,6 @@ def _parse_trans_obj(data):
     sig=_normalize_alias_value(data.get('sig'), 'id_symbol') or '',
     goto=_normalize_alias_value(data.get('goto')) or '',
   )
-
 
 def _parse_tsm_obj(data):
   if not isinstance(data, dict):
@@ -360,7 +350,6 @@ def _parse_tsm_obj(data):
     on_exit=_parse_action_list(data.get('on_exit')) if data.get('on_exit') is not None else None,
   )
 
-
 def _parse_onrecv_obj(data):
   if not isinstance(data, dict):
     return None
@@ -371,7 +360,6 @@ def _parse_onrecv_obj(data):
     goto=_normalize_alias_value(data.get('goto')) or '',
     steps=steps,
   )
-
 
 def _parse_fsm_obj(data):
   if not isinstance(data, dict):
@@ -384,7 +372,6 @@ def _parse_fsm_obj(data):
     on_recv=C_onrecv_list_obj(on_recv=recv_items),
   )
 
-
 def _parse_kwexec_obj(data):
   if not isinstance(data, dict):
     return None
@@ -393,7 +380,6 @@ def _parse_kwexec_obj(data):
     on_sig=_normalize_alias_value(data.get('on_sig'), 'id_symbol') or '',
     steps=_parse_action_list(data.get('steps')),
   )
-
 
 def _parse_trig_obj(data):
   if not isinstance(data, dict):
@@ -405,7 +391,6 @@ def _parse_trig_obj(data):
     post_urgent=_parse_action_list(post_urgent) if post_urgent is not None else None,
   )
 
-
 def _parse_escal_obj(data):
   if not isinstance(data, dict):
     return None
@@ -415,7 +400,6 @@ def _parse_escal_obj(data):
     mode=str(data.get('mode', '')),
     trigger=C_trig_list_obj(trigger=[_parse_trig_obj(item) for item in trigger if _parse_trig_obj(item) is not None]),
   )
-
 
 def lukupmodel_tnorm_logic(yaml_text):
   """Parse the `tlist` entries with a `tnorm` task into C_tnorm_obj models."""
@@ -458,7 +442,6 @@ def lukupmodel_tnorm_logic(yaml_text):
 
   return out
 
-
 def lukupmodel_tpoll_logic(yaml_text):
   """Parse the `tlist` entries with a `tpoll` task into C_tpoll_obj models."""
   payload = yaml.safe_load(yaml_text) or {}
@@ -490,7 +473,6 @@ def lukupmodel_tpoll_logic(yaml_text):
 
   return out
 
-
 def lukupmodel_isr_logic(yaml_text):
   """Parse top-level ISR entries into C_isr_obj models."""
   payload = yaml.safe_load(yaml_text) or {}
@@ -509,7 +491,6 @@ def lukupmodel_isr_logic(yaml_text):
     ))
 
   return out
-
 
 def lukupmodel_outexec_logic(yaml_text):
   """Parse top-level OUTEXEC entries into C_outexec_obj models."""
@@ -530,7 +511,6 @@ def lukupmodel_outexec_logic(yaml_text):
     ))
 
   return out
-
 
 def lukupmodel_glbda_logic(yaml_text):
   """Parse the top-level `glbda` section into C_gda_resrc_obj models."""
@@ -566,7 +546,6 @@ def lukupmodel_glbda_logic(yaml_text):
     ))
 
   return out
-
 
 def lukupmodel_parse_sample(yaml_text):
   events = yaml.parse(yaml_text)

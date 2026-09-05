@@ -1,0 +1,75 @@
+tnorms:
+  '1': 
+    tsm_resrc:
+      states:
+        - tsm_task_usr_state_idle
+        - tsm_task_usr_state_running
+      state_trans:
+        - tsm_task_usr_state_idle_trans
+        - tsm_task_usr_state_running_trans
+      object: tsm_task_usr
+      table: tsm_task_usr_tbl
+    fsm_resrc:
+      states:
+        - FSM_TASK_1_STATE_1_ID
+        - FSM_TASK_1_STATE_2_ID
+      object: FSM_TASK_1_ID
+    id_symbol: TASK_NORM_USR
+    queue_name: tnorm_usr_msgq
+    handler: tnorm_usr_nhler
+    hex_val: '0xe3'
+  '2':
+    tsm_resrc:
+      states:
+        - tsm_task_a_state_idle
+        - tsm_task_a_state_waiting
+      state_trans:
+        - tsm_task_a_state_idle_trans
+        - tsm_task_a_state_waiting_trans
+      object: tsm_task_a
+      table: tsm_task_a_tbl
+    fsm_resrc:
+      states:
+        - FSM_TASK_2_STATE_1_ID
+        - FSM_TASK_2_STATE_2_ID
+      object: FSM_TASK_2_ID
+    id_symbol: TASK_NORM_A
+    queue_name: tnorm_a_msgq
+    handler: tnorm_a_nhler
+    hex_val: '0xe4'
+tpolls:
+  '1':
+    id_symbol: TASK_POLL_MEMRP
+    handler: tpoll_memrp
+    hex_val: '0xd0'
+  '2':
+    id_symbol: TASK_POLL_BLINK
+    handler: tpoll_blink
+    hex_val: '0xd1'
+
+sigs:
+  '1':
+    id_symbol: SIG_1
+    handler: sig_1_handler
+    hex_val: '0xf0'
+  '2':
+    id_symbol: SIG_2
+    handler: sig_2_handler
+    hex_val: '0xf1'
+  '3':
+    id_symbol: SIG_0X34
+    hex_val: '0x3'
+
+glbda:
+  - 
+      name: GDA_SYSTEM_STATUS # Validator check: kiểm tra lỗi từ lstaxer.strucjec
+      type: "const char*"
+      initial_value: "STATUS: INITIALIZING"
+  - 
+      name: GDA_COUNTER
+      type: "int"
+      initial_value: 0
+  - 
+      name: GDA_FLAG
+      type: "bool"
+      initial_value: false
