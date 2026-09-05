@@ -77,8 +77,8 @@ python uedp.py menuconfig
 - Cấu hình tên tác vụ norm, tên hàng đợi tin nhắn, tên handler cho từng tác vụ norm.
 - Cấu hình tên tác vụ poll, tên handler cho từng tác vụ poll.
 - Cấu hình tên tín hiệu.
-- Cấu hình object quản lý, bảng quản lý trạng thái (state descriptor), bảng quản lý chuyển trạng thái (transition descriptor) cho từng TSM.
-- Cấu hình object quản lý, tên trạng thái cho từng FSM.
+- Cấu hình object quản lý, bảng quản lý trạng thái (state descriptor), bảng quản lý chuyển trạng thái (transition descriptor) cho từng TSM. Kể từ 1.1.6, mỗi tác vụ norm được hỏi **riêng biệt** có dùng TSM hay không và dùng bao nhiêu state, không còn dùng chung 1 lựa chọn cho toàn bộ tác vụ.
+- Cấu hình object quản lý, tên trạng thái cho từng FSM. Tương tự TSM, mỗi tác vụ norm cũng được hỏi riêng có dùng FSM hay không và số lượng state riêng, kể từ 1.1.6.
 
 #### Cấu hình hỗ trợ tự động sinh code từ Kconfig
 
@@ -90,6 +90,8 @@ python uedp.py menuconfig
 #### Lưu ý khi sử dụng Kconfig
 
 Kconfig chỉ hỗ trợ sinh code cho các giá trị định nghĩa, tên handler và tên trạng thái. Các logic xử lý trong handler, logic chuyển trạng thái trong TSM và FSM vẫn cần được người dùng tự triển khai trong phần implementation của ứng dụng ở `app.c`.
+
+Kể từ phiên bản 1.1.6, khi chạy `menuconfig`, với mỗi tác vụ norm đã khai báo (`Số lượng tác vụ norm sử dụng trong ứng dụng`), công cụ sẽ hỏi lần lượt: "Task #i có dùng TSM không?", nếu có thì hỏi tiếp số lượng state; rồi "Task #i có dùng FSM không?", nếu có thì hỏi số lượng state tương ứng. Một tác vụ hoàn toàn có thể dùng cả TSM lẫn FSM cùng lúc, chỉ một trong hai, hoặc không dùng cái nào, và số lượng state của mỗi tác vụ không bị ràng buộc phải giống nhau. Đây là điểm khác biệt so với các phiên bản trước 1.1.6, khi công cụ chỉ hỏi 1 lần cho toàn bộ ứng dụng và áp dụng cùng 1 số lượng state cho mọi tác vụ norm dùng TSM/FSM.
 
 ### Message Pool
 
@@ -111,13 +113,107 @@ Khi khởi tạo bằng `uedp_msg_pool_init()`, Core dựng sẵn các pool tĩn
 3. Dùng `uedp_msg_set_data_val()` nếu muốn copy giá trị vào payload.
 4. Dùng `uedp_msg_set_data_ref()` nếu muốn truyền tham chiếu đến dữ liệu có vòng đời đủ dài.
 
-#### Điểm cần lưu ý
+#### Điểm cần lưu ý khi sử dụng message pool
 
 - `uedp_msg_alloc()` tự chọn pool theo kích thước payload, nên giá trị `size` phải phản ánh đúng nhu cầu dữ liệu.
 - Nếu dùng truyền tham chiếu thì buffer tham chiếu phải còn sống sau thời điểm message được xử lý.
 - `uedp_msg_drain_isr_pool()` là đường đi riêng cho tín hiệu ISR; không nên tự đẩy dữ liệu ISR vào queue task thường.
 - Với `ALLOC` và `EXTAL`, `data` là con trỏ tới vùng nhớ riêng của từng message, không phải payload inline nằm ngay trong header.
 - Không cần tự gọi `uedp_msg_free()` cho message từ pool `ISR`, vì Core sẽ tự giải phóng sau khi handler chạy xong ở mỗi vòng lập lịch.
+
+#### Định danh tác vụ nguồn/đích cho message
+
+Kể từ phiên bản 1.1.5, `uedp_msg_t` hỗ trợ gán riêng ID của tác vụ nguồn (task gửi) và tác vụ đích (task nhận) cho từng message, thay vì chỉ có duy nhất tham số `des_task_id` truyền vào lúc `uedp_msg_alloc()`:
+
+- `uedp_msg_set_src_task_id(msg, src_task_id)`: gán ID của tác vụ nguồn gửi message.
+- `uedp_msg_set_des_task_id(msg, des_task_id)`: gán/đổi lại ID của tác vụ đích nhận message.
+
+Ví dụ: task A muốn gửi cho task B một message nhưng vẫn cần task B biết message này đến từ task A (ví dụ để phản hồi lại đúng nơi gửi):
+
+```c
+uedp_msg_t* msg = uedp_msg_alloc(UEDP_TASK_NORM_B_ID, SIG_REQUEST, 0);
+uedp_msg_set_src_task_id(msg, UEDP_TASK_NORM_A_ID);
+uedp_task_norm_send_msg(msg);
+```
+
+Trong handler của task B, có thể đọc lại `msg->src_task_id` để biết nơi gửi và dùng `uedp_msg_set_des_task_id()` trên một message phản hồi mới để gửi ngược lại đúng task A. Đây là cơ chế đơn giản, người dùng tự chọn ID phù hợp - Core không tự ràng buộc hay xác thực cặp nguồn/đích này.
+
+> **Lưu ý**: kể từ 1.1.5, API `internal_uedp_msg_pool_panic` đã được loại bỏ khỏi Core. Các lỗi nghiêm trọng liên quan đến message pool (hết chỗ, con trỏ không hợp lệ, ISR FIFO đầy...) giờ được báo cáo qua cơ chế FCR (xem mục "FCR (Fatal Code Return)" bên dưới) thay vì gọi thẳng panic như trước.
+
+### FCR (Fatal Code Return) - Xử lý lỗi nghiêm trọng
+
+Kể từ phiên bản 1.1.5, μEDP bổ sung FCR để định danh và xử lý các lỗi nghiêm trọng bên trong Core (pool hết chỗ, con trỏ không hợp lệ, ID tác vụ sai, transition không tồn tại...) một cách nhất quán, thay vì mỗi module tự xử lý im lặng theo cách riêng như trước.
+
+Mỗi lỗi nghiêm trọng được gán một mã cố định (`uedp_fcr_code_t`), tra ra mức độ nghiêm trọng (`severity`: `WARN`/`ERROR`/`FATAL`) và một hành động xử lý tương ứng, rồi luôn được ghi log qua `itnlog` (tag `ITNLOG_TAG_FCR`) trước khi thực thi hành động đó:
+
+- `UEDP_FCR_ACT_LOG_ONLY`: chỉ ghi log, không can thiệp luồng chạy.
+- `UEDP_FCR_ACT_RESET_TASK`: đánh dấu để tầng trên (task giám sát hoặc OCE) tự khôi phục tác vụ liên quan.
+- `UEDP_FCR_ACT_SYS_RESET`: gọi `pal_sys_reset()` khởi động lại toàn hệ thống.
+- `UEDP_FCR_ACT_SYS_PANIC`: gọi `pal_sys_fatal()` dừng hệ thống ngay lập tức.
+
+#### Tự khai báo mã lỗi ở tầng ứng dụng
+
+Ứng dụng có thể tự khai báo mã lỗi riêng bằng module `UEDP_FCR_MOD_APP` và tự raise khi phát hiện điều kiện bất thường trong logic của mình:
+
+```c
+#define APP_FCR_SENSOR_TIMEOUT UEDP_FCR_CODE(UEDP_FCR_MOD_APP, 0x01)
+
+// Khi phát hiện cảm biến không phản hồi trong thời gian cho phép:
+UEDP_FCR_RAISE_MSG(APP_FCR_SENSOR_TIMEOUT, "sensor #2 timeout sau 500ms");
+```
+
+`UEDP_FCR_RAISE(code)` và `UEDP_FCR_RAISE_MSG(code, extra)` tự động điền `__FILE__`/`__LINE__` vào entry log; `RAISE_MSG` cho phép truyền thêm mô tả ngữ cảnh cụ thể (ví dụ tên hàm, giá trị tham số sai) để dễ debug hơn so với mô tả mặc định trong bảng mã lỗi.
+
+#### Điểm cần lưu ý
+
+- Vì tra bảng mã lỗi không thấy sẽ mặc định rơi vào `UEDP_FCR_UNKNOWN` (`SEV_FATAL` + `ACT_SYS_PANIC`), người dùng nên luôn đăng ký đúng mã lỗi mình định dùng thay vì truyền mã tuỳ ý.
+- `UEDP_FCR_ACT_SYS_RESET`/`UEDP_FCR_ACT_SYS_PANIC` sẽ dừng hoặc khởi động lại toàn hệ thống ngay khi raise - cần cân nhắc kỹ trước khi raise các mã lỗi thuộc nhóm này từ logic ứng dụng.
+- Hiện tại `g_fcr_table[]` là bảng `static const`, tầng ứng dụng chưa thể tự đăng ký thêm entry mới lúc runtime - muốn thêm mã lỗi và hành động xử lý tương ứng phải khai báo trực tiếp trong mã nguồn Core.
+- `UEDP_FCR_ACT_RESET_TASK` hiện chưa tự động khôi phục tác vụ liên quan, mới dừng ở mức ghi log `ERROR` - việc khôi phục vẫn cần tầng trên tự xử lý.
+
+### Dpool GDA (Global Data Pool) - Quản lý dữ liệu toàn cục
+
+Kể từ phiên bản 1.1.6, μEDP bổ sung GDP (Global Data Pool) để quản lý biến toàn cục dùng chung giữa nhiều tác vụ một cách tường minh, phục vụ cho khối `glbda:` của PLD/μE-LS (xem `docs/uels-syntax.md` và `docs/review/dmp-gda.md`). Khác với `Message Pool`, GDP không cấp phát vùng nhớ và không có khái niệm "free" một slot đã đăng ký - nó chỉ đăng ký tên định danh trỏ tới một vùng nhớ `static`/`global` đã tồn tại sẵn do người dùng tự khai báo, vì biến toàn cục được xem là sống suốt vòng đời chương trình.
+
+#### Cách dùng Dpool GDA
+
+1. Gọi `uedp_gdp_init()` một lần sau `uedp_core_init()`, trước khi dùng bất kỳ API GDP nào khác.
+2. Khai báo biến toàn cục (`static`/`global`) trong ứng dụng, sau đó đăng ký vào GDP bằng `uedp_gdp_register(name, data_ptr, size)`.
+3. Dùng `uedp_gdp_get_ref(name)` khi cần con trỏ tham chiếu trực tiếp tới dữ liệu (tương ứng `ptype: REF` trong μE-LS).
+4. Dùng `uedp_gdp_get_val(name, out_buf, buf_size)` / `uedp_gdp_set_val(name, in_buf, buf_size)` khi cần đọc/ghi giá trị qua sao chép thay vì giữ tham chiếu trực tiếp (tương ứng `ptype: VAL` trong μE-LS).
+5. Gọi `uedp_gdp_unregister(name)` nếu không còn cần tra cứu biến đó qua GDP nữa (vùng nhớ thật vẫn không bị giải phóng).
+
+Ví dụ khai báo và sử dụng một biến trạng thái toàn cục dùng chung giữa 2 task:
+
+```c
+static ui32 g_system_status = 0;
+
+void app_init(void) {
+  uedp_gdp_init();
+  uedp_gdp_register("GDA_SYSTEM_STATUS", &g_system_status, sizeof(g_system_status));
+}
+
+// Task A cập nhật trạng thái bằng cách ghi giá trị mới (ptype: VAL)
+void task_a_update_status(ui32 new_status) {
+  uedp_gdp_set_val("GDA_SYSTEM_STATUS", &new_status, sizeof(new_status));
+}
+
+// Task B đọc trực tiếp qua con trỏ tham chiếu (ptype: REF)
+void task_b_check_status(void) {
+  ui32* status_ref = (ui32*)uedp_gdp_get_ref("GDA_SYSTEM_STATUS");
+  if (status_ref != NULL && *status_ref != 0) {
+    // xử lý khi hệ thống có trạng thái khác 0
+  }
+}
+```
+
+#### Điểm cần lưu ý khi sử dụng Dpool GDA
+
+- GDP không sở hữu vùng nhớ `data` - nếu đăng ký một biến cục bộ (local variable) thay vì `static`/`global`, con trỏ sẽ trỏ tới vùng nhớ không còn hợp lệ sau khi hàm khai báo kết thúc.
+- Số lượng slot tối đa GDP quản lý cùng lúc mặc định là `UEDP_GDP_MAX_SLOTS` (16), có thể override bằng macro trước khi include header nếu cần nhiều hơn.
+- `uedp_gdp_get_val()`/`uedp_gdp_set_val()` sẽ raise FCR nếu `buf_size` không khớp/không đủ so với kích thước đã đăng ký, thay vì âm thầm đọc/ghi sai vùng nhớ.
+- `uedp_gdp_get_ref()` trả về con trỏ trực tiếp vào vùng nhớ thật, không bọc critical section - phù hợp với scheduler single-core, non-preemptive hiện tại của μEDP; cần xem xét lại nếu chạy trên môi trường đa nhân.
+- Tên đăng ký (`name`) trong GDP nên khớp với `name` khai báo trong khối `glbda:` của μE-LS để giữ nhất quán giữa tài liệu thiết kế PLD/μE-LS và code thực thi.
 
 ### Task
 
@@ -338,6 +434,23 @@ int main(void) {
 - `xprintf` thường không cần gọi trực tiếp trong ứng dụng khi đã dùng `rprintf`, vì `rprintf` đã dùng `xfprintf()` để format chuỗi đầu ra.
 - `pal_rprintf_service_t` cho phép `init = NULL` nếu backend đã được BSP hoặc application khởi tạo sẵn.
 
+#### Đặt tên cho backend rprintf
+
+Kể từ phiên bản 1.1.5, `pal_rprintf_service_t` có thêm trường `name` (chuỗi, ví dụ `"UART"`, `"FILE"`, `"CONSOLE"`) để đặt nhãn logic cho backend. Trường này không ảnh hưởng tới logic dispatch của Core - nó chỉ phục vụ mục đích debug trace và ánh xạ 1-1 với trường `contract` trong khối `pplp.rprintf[]` của cú pháp μE-LS, giúp tài liệu thiết kế PLD/μE-LS và code thực thi khớp tên với nhau:
+
+```c
+static pal_rprintf_service_t linux_rprintf = {
+  .name = "CONSOLE",
+  .entry = {0},
+  .init = NULL,
+  .putc = linux_putc,
+  .write = linux_write,
+  .is_ready = linux_is_ready,
+};
+```
+
+Nếu ứng dụng có nhiều backend rprintf, nên đặt `name` khác nhau và khớp với `contract` tương ứng đã khai báo trong μE-LS để dễ tra cứu khi debug.
+
 ### Khai báo các giá trị TASK_NORM, TASK_POLL, SIG và STATE
 
 Dựa theo dải tín hiệu, chúng ta thực hiện tham khảo trong testcase như sau:
@@ -498,16 +611,17 @@ Sau khi đã hoàn thành việc khai báo các handler, khởi tạo TSM table 
 
 1. `uedp_core_init()`
 2. `uedp_msg_pool_init()`
-3. `uedp_timer_init()`
-4. `uedp_tsm_init()` và `uedp_fsm_init()` nếu có TSM và FSM
-5. `uedp_itnlog_init()` nếu dùng logger.
-6. Khởi tạo backend xuất log nếu dùng `rprintf`.
-7. Đăng ký callback vào `pal_logdp_register()` nếu muốn fan-out log ra nhiều đích.
-8. `uedp_itnlog_set_output()` và các API cấu hình log khác nếu dùng đường xuất log dạng chuỗi.
-9. `uedp_task_norm_create()`
-10. `uedp_task_poll_create()` nếu có poll task
-11. Gửi message khởi đầu vào `UEDP_TASK_NORM_USR_ID`
-12. Vòng lặp `uedp_task_scheduler()`
+3. `uedp_gdp_init()` nếu có dùng biến toàn cục qua GDP (Dpool GDA)
+4. `uedp_timer_init()`
+5. `uedp_tsm_init()` và `uedp_fsm_init()` nếu có TSM và FSM
+6. `uedp_itnlog_init()` nếu dùng logger.
+7. Khởi tạo backend xuất log nếu dùng `rprintf`.
+8. Đăng ký callback vào `pal_logdp_register()` nếu muốn fan-out log ra nhiều đích.
+9. `uedp_itnlog_set_output()` và các API cấu hình log khác nếu dùng đường xuất log dạng chuỗi.
+10. `uedp_task_norm_create()`
+11. `uedp_task_poll_create()` nếu có poll task
+12. Gửi message khởi đầu vào `UEDP_TASK_NORM_USR_ID`
+13. Vòng lặp `uedp_task_scheduler()`
 
 ## IV. Các lưu ý quan trọng
 
@@ -515,4 +629,6 @@ Sau khi đã hoàn thành việc khai báo các handler, khởi tạo TSM table 
 - Khi sử dụng cơ chế truyền tham chiếu để truyền địa chỉ của dữ liệu vào payload của message, cần đảm bảo rằng các buffer chứa dữ liệu này có phạm vi toàn cục để tránh lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi.
 - Trong thiết kế TSM, việc sử dụng cơ chế "Stay" và "Back" giúp tối ưu hóa hiệu suất và tránh lặp lại các hàm on_entry và on_exit không cần thiết, tuy nhiên cần lưu ý rằng việc sử dụng cơ chế này cần phải được thực hiện một cách cẩn thận để đảm bảo rằng logic chuyển trạng thái vẫn được duy trì một cách chính xác và không gây ra lỗi logic trong hệ thống.
 - Khi thiết kế FSM, việc sử dụng mô hình Pointer-Swapping giúp đạt được sự linh hoạt tối đa, tuy nhiên cần lưu ý rằng việc thay đổi logic xử lý ngay lập tức chỉ bằng một phép gán con trỏ có thể dẫn đến lỗi nếu không được quản lý cẩn thận, do đó cần đảm bảo rằng các trạng thái và logic xử lý được thiết kế một cách rõ ràng và dễ hiểu để tránh nhầm lẫn và lỗi logic trong hệ thống.
+- Kể từ 1.1.5, các lỗi nghiêm trọng trong Core được báo cáo qua FCR; cần lưu ý rằng một số mã lỗi có hành động xử lý là `UEDP_FCR_ACT_SYS_RESET`/`UEDP_FCR_ACT_SYS_PANIC`, sẽ khởi động lại hoặc dừng hệ thống ngay khi raise, kể cả khi raise từ mã lỗi tự khai báo ở tầng ứng dụng.
+- Kể từ 1.1.6, khi dùng Dpool GDA, chỉ nên đăng ký các biến có phạm vi `static`/`global` vào GDP; đăng ký một biến cục bộ sẽ khiến con trỏ lấy qua `uedp_gdp_get_ref()` trỏ tới vùng nhớ không còn hợp lệ sau khi hàm khai báo kết thúc.
 - Trong quá trình phát triển ứng dụng, nên tuân thủ theo các hướng dẫn và cấu trúc đã đề ra để đảm bảo tính nhất quán và dễ quản lý trong hệ thống, đồng thời nên thường xuyên kiểm tra và debug để đảm bảo rằng hệ thống hoạt động một cách ổn định và hiệu quả.
