@@ -23,6 +23,8 @@ echo "[ENTRY] call pycdscriptor.jnerator.pregen.fpregen"
 python -m pltf.pycdscriptor.jnerator.pregen.fpregen
 echo "[ENTRY] call pycdscriptor.ustab.custab"
 python -m pltf.pycdscriptor.ustab.custab
+echo "[ENTRY] call pycdscriptor.lstaxer.ankorpin"
+python -m pltf.pycdscriptor.lstaxer.ankorpin
 # Change ownership of all files in the /uedp-libs and /uedp-test directories to the new user
 chown -R $USER_ID:$GROUP_ID /uedp-libs/*
 echo -e "[DONE]"
