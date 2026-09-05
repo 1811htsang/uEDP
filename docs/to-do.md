@@ -294,6 +294,37 @@ Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ �
 - [x] Phân tách entrypoint.sh để đưa jnerator.postgen.cgen và lstaxer.vlid vào jainerator.sh thành một pipeline riêng biệt.
 - [x] Cân nhắc đưa lstaxer.nullremov vào pipeline chung của PLD/μE-LS để lstaxer.lukupmodel giảm tải các parsing. //CRITICAL - Xem xét loại bỏ khỏi pipeline vì dư thừa và làm phức tạp thêm việc parse các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 - [x] Bổ sung khả năng kiểm tra theo syntax mới của PLD/μE-LS trên lstaxer.vlid.
+- [x] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin đưa vào phiên bản 1.1.7 hoặc 1.1.8 để hỗ trợ việc tự động gán anchor cho các tag trong YAML.
+
+<!-- SECTION - Idea cho remote-file alias
+# NOTE - bên nhánh chore vừa bổ sung hiệu chỉnh về tên gọi nên kiểm tra xem breaking change có xảy ra hay không. Nếu có thì cần cân nhắc sửa đổi lại tên gọi để tránh xung đột với các triển khai hiện tại.
+# LINK docs/uels-syntax.md:118
+# LINK pltf/pycdscriptor/lstaxer/lukupmodel.py:5
+# LINK pltf/pycdscriptor/lstaxer/lukupmodel.py:706
+
+Dựa trên triển khai và kết quả trả về của yaml.parse(), Event sẽ hỗ trợ việc get/set parameter như anchor với `MappingStartEvent(anchor='tnorm1-ctrl', tag=None, implicit=True)` khi trước đó chúng ta gặp các ScalarEvent như `ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='1'`. 
+
+Tuy nhiên file inclusion của YAML chỉ đảm bảo việc thêm vào chứ không hề đảm bảo việc remote-alias từ file khác.
+Vì vậy, một ràng buộc chủ chốt phải có chính là thực hiện write toàn bộ file A với alias vào file B trước khi thực hiện bất kỳ thay đổi nào trên file B.
+
+Ngoài ra, hiện tại trong thiết kế của lstaxer.ustab sẽ sinh ra các incremental indexed item dạng '1', '2', '3', ... để phục vụ việc mapping các anchor và alias.
+
+Do đó, một ý tưởng có thể cân nhắc chính là:
+
+Khi chúng ta có 1 file A cần remote-alias từ file B:
+1. Chúng ta thực hiện parse file A để trích xuất event và xác định các incremental indexed item cần thiết.
+2. Chúng ta thực hiện gắn anchor vào các MappingStartEvent vào sau các ScalarEvent có value là incremental indexed item.
+3. Chúng ta thực hiện yaml.dump lại chính EventStream này vào chính file A để cập nhật các anchor và alias.
+4. Chúng ta thực hiện write toàn bộ file A với alias vào file B trước khi thực hiện bất kỳ thay đổi nào trên file B.
+
+# STATUS - Tuy nhiên, ở thời điểm hiện tại chưa có kiểm tra lại tính khả thi này nên ustab.ankorpin sẽ chưa được triển khai trước khi có kết quả kiểm tra khả thi. Nếu kết quả kiểm tra khả thi thì sẽ bổ sung ustab.ankorpin vào sau phiên bản 1.1.6 khi pipeline được chuẩn hóa và hoàn thiện hơn.
+
+# STATUS - Đã hoàn thiện và kiểm tra trên testobj, có thể đưa vào pipeline. Cần cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8.
+
+# !SECTION
+-->
+
+- [x] Hoàn thiện thiết kế lstaxer.ankorpin để hỗ trợ việc tự động gán anchor cho các tag trong YAML, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP. //STATUS - Đã hoàn thiện thiết kế và kiểm tra, có thể đưa vào pipeline.
 - [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8. //TASK - Đã thống nhất đưa vào lộ trình phát triển của phiên bản 1.1.7
 - [ ] Bổ sung khả năng phân giải pplp vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8. //TASK - Đã thống nhất đưa vào lộ trình phát triển của phiên bản 1.1.7
 - [ ] Bổ sung sửa đổi tài liệu thiết kế PLTF bản EN và VN.
@@ -330,34 +361,6 @@ Cần dự trù hoàn thành toàn bộ pipeline và các vấn đề tồn đ�
 
 <!-- STATUS
 Loại bỏ task bên trên do tính năng file inclusion là tính năng specific của PyYAML, ruamel.yaml và không phải là tính năng chuẩn của YAML. Do đó, việc triển khai remote-file alias sẽ không được hỗ trợ trong các phiên bản hiện tại của μE-LS.
--->
-
-- [ ] Tìm hiểu các giải pháp trong việc thực thi remote-file alias trên YAML để hỗ trợ rebuilt ustab.ankorpin đưa vào phiên bản 1.1.7 hoặc 1.1.8 để hỗ trợ việc tự động gán anchor cho các tag trong YAML.
-
-<!-- SECTION - Idea cho remote-file alias
-# NOTE - bên nhánh chore vừa bổ sung hiệu chỉnh về tên gọi nên kiểm tra xem breaking change có xảy ra hay không. Nếu có thì cần cân nhắc sửa đổi lại tên gọi để tránh xung đột với các triển khai hiện tại.
-# LINK docs/uels-syntax.md:118
-# LINK pltf/pycdscriptor/lstaxer/lukupmodel.py:5
-# LINK pltf/pycdscriptor/lstaxer/lukupmodel.py:706
-
-Dựa trên triển khai và kết quả trả về của yaml.parse(), Event sẽ hỗ trợ việc get/set parameter như anchor với `MappingStartEvent(anchor='tnorm1-ctrl', tag=None, implicit=True)` khi trước đó chúng ta gặp các ScalarEvent như `ScalarEvent(anchor=None, tag=None, implicit=(False, True), value='1'`. 
-
-Tuy nhiên file inclusion của YAML chỉ đảm bảo việc thêm vào chứ không hề đảm bảo việc remote-alias từ file khác.
-Vì vậy, một ràng buộc chủ chốt phải có chính là thực hiện write toàn bộ file A với alias vào file B trước khi thực hiện bất kỳ thay đổi nào trên file B.
-
-Ngoài ra, hiện tại trong thiết kế của lstaxer.ustab sẽ sinh ra các incremental indexed item dạng '1', '2', '3', ... để phục vụ việc mapping các anchor và alias.
-
-Do đó, một ý tưởng có thể cân nhắc chính là:
-
-Khi chúng ta có 1 file A cần remote-alias từ file B:
-1. Chúng ta thực hiện parse file A để trích xuất event và xác định các incremental indexed item cần thiết.
-2. Chúng ta thực hiện gắn anchor vào các MappingStartEvent vào sau các ScalarEvent có value là incremental indexed item.
-3. Chúng ta thực hiện yaml.dump lại chính EventStream này vào chính file A để cập nhật các anchor và alias.
-4. Chúng ta thực hiện write toàn bộ file A với alias vào file B trước khi thực hiện bất kỳ thay đổi nào trên file B.
-
-# STATUS - Tuy nhiên, ở thời điểm hiện tại chưa có kiểm tra lại tính khả thi này nên ustab.ankorpin sẽ chưa được triển khai trước khi có kết quả kiểm tra khả thi. Nếu kết quả kiểm tra khả thi thì sẽ bổ sung ustab.ankorpin vào sau phiên bản 1.1.6 khi pipeline được chuẩn hóa và hoàn thiện hơn.
-
-# !SECTION
 -->
 
 - [ ] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //LINK docs/uels-syntax.md:199
