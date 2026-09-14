@@ -215,6 +215,8 @@ Kiểm tra trong `usrinp` để nắm rõ thông tin của task và thực hiệ
 - [x] Hỗ trợ newcomer trong việc nắm bắt các thay đổi mới trong tài liệu cú pháp và source code của dự án μEDP, bao gồm việc giải thích các thay đổi về module name, thiết kế logic của các module và các hướng dẫn phát triển chi tiết để giúp newcomer hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng mới trong việc phát triển ứng dụng trên nền tảng μEDP. //NOTE - Minh sẽ thực hiện hướng dẫn.
 - [x] Kiểm tra lại `README.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
 - [x] Kiểm tra lại `dmp-gda.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
+- [x] Bổ sung tài liệu tìm hiểu về smoltcp để hiểu về kiến trúc, tính năng hỗ trợ, cách smoltcp triển khai logic xử lý mạng hướng sự kiện.
+- [ ] Sửa đổi README.md để trình bày về những thay đổi trong việc bổ sung các testobj và các thay đổi trong thiết kế syntax của μE-LS.
 - [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu.
 
 <!-- NOTE - Lưu ý cho task bên trên
@@ -525,8 +527,22 @@ Sang đã review tài liệu thiết kế và approved.
 - [x] Bổ sung template C-type API cho archobj STM32F103 (abbr F103) để hỗ trợ task BST.
 - [x] Sửa đổi đường dẫn tại line số 17 của `dmp-gda.md` để trỏ đến đúng vị trí của `pltf.pycdscriptor.jnerators`.
 - [x] Bổ sung status cho đề xuất số 1 để xác nhận các thay đổi đã triển khai.
-- [ ] Sửa đổi README.md để trình bày về những thay đổi trong việc bổ sung các testobj và các thay đổi trong thiết kế syntax của μE-LS.
-- [ ] Thực hiện bổ sung C-type API cho archobj STM32F103 (abbr F103), archobj STM32H723 (abbr H723) và archobj ESP32S3 (abbr S3N16) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD. //NOTE - Do trước đó việc bổ sung đã quên mất kiểm tra nội dung nên cần phải raise lại
+- [x] Modify template của C-type API cho archobj STM32F103 (abbr F103) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Sửa đổi entrypoint.sh để hỗ trợ việc Docker mode và Interact mode riêng biệt.
+- [x] Cập nhật config file sample để hỗ trợ BST trên uutobj F103.
+- [x] Sửa đổi lại pregen/hwapi mục help.
+- [x] Cập nhật bảng FCR với bổ sung entry khi `pal_sys_fatal` được gọi.
+- [ ] Thực hiện bổ sung C-type API cho archobj STM32F103 (abbr F103), archobj STM32H723 (abbr H723) và archobj ESP32S3 (abbr S3N16) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+
+<!-- SECTION
+
+//NOTE - Do trước đó việc bổ sung đã quên mất kiểm tra nội dung nên cần phải raise lại
+
+//STATUS - Đã bổ sung đa số API với sự bổ sung BSP của uutobj F103 nhưng chưa hoàn thiện, vẫn cần tiếp tục hoàn thiện cho F103.
+
+//!SECTION
+-->
+
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- NOTE - Expectation for PLTF.TSD/TLC
