@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # NOTE - Set UUID and GID for the user to run the container as, defaulting to 1000 if not provided
-fn_interactive() {
+fn_docker() {
   set -e
   USER_ID=${MY_UID:-1000}
   GROUP_ID=${MY_GID:-1000}
@@ -36,6 +36,17 @@ fn_interactive() {
   exec gosu uedp_user bash
 }
 
+fn_interactive() {
+  echo "[ENTRY] call menuconfig"
+  python uedp.py menuconfig
+  echo "[ENTRY] call pycdscriptor.jnerator.pregen.fpregen"
+  python -m pltf.pycdscriptor.jnerator.pregen.fpregen
+  echo "[ENTRY] call pycdscriptor.ustab.custab"
+  python -m pltf.pycdscriptor.ustab.custab
+  echo "[ENTRY] call pycdscriptor.ustab.ankorpin"
+  python -m pltf.pycdscriptor.ustab.ankorpin
+}
+
 fn_non_interactive() {
   echo "[ENTRY] call pycdscriptor.jnerator.pregen.fpregen"
   python -m pltf.pycdscriptor.jnerator.pregen.fpregen
@@ -53,6 +64,9 @@ if [ "$parameter" == "--it" ]; then
 elif [ "$parameter" == "--n-it" ]; then
   echo "[INFO] Running in non-interactive mode"
   fn_non_interactive
+elif [ "$parameter" == "--docker" ]; then
+  echo "[INFO] Running in docker mode"
+  fn_docker
 else
   echo "[ERROR] Invalid parameter. Use --it for interactive or --n-it for non-interactive."
   exit 1
