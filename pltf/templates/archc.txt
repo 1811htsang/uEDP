@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "{{arch_name}}_arch.h"
+#include "{{arch_name}}.h"
 #include "uedp_core.h"
 #include "uedp_task.h"
 #include "uedp_msg.h"
