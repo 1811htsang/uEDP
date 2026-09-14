@@ -1,11 +1,4 @@
-/**
- * @file stm32f103.c
- * @author Shang Huang
- * @brief Implementation of STM32 Architecture Abstraction Layer for UEDP
- * @version 0.1
- * @date 2026-04-20
- * @copyright MIT License
- */
+//ANCHOR - Architecture-specific implementation for STM32F103 microcontroller
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -15,19 +8,109 @@
 #include "uedp_msg.h"
 #include "uedp_timer.h"
 #include "uedp_itnlog.h"
-#include "pal_memrp.h"
+#include "uedp_fcr.h"
 
-sta int is_inited = 0x0u;
+//ANCHOR - STM32F103 BSP include
+#include "core_cm3.h"
+#include "stm32f1xx.h"
+#include "stm32f1xx_hal.h"
+#include "stm32f1xx_hal_exti.h"
 
-/**
- * @brief Đảm bảo uedp_timer_tick được biết đến
- */
+//CRITICAL - Đảm bảo phải có ủy quyền timer_tick để gắn vào timer phần cứng
 
 extern void uedp_timer_tick(void);
 
-/**
- * @brief Khai báo hàm nội bộ 
- */
+//ANCHOR - Implementation cho uedp_core.h
+
+sta ui8 is_inited = 0x0u;
+
+void uedp_core_init(void) {
+  pal_core_init();
+  uedp_msg_pool_init();
+  uedp_timer_init();
+  uedp_itnlog_init();
+  is_inited = 0x1u;
+}
+
+//ANCHOR - Implementation cho pal_core.h
+
+//ANCHOR - GVI for PRIMASK register
+
+sta ui32 primask_gvi = 0x0u;
+
+void pal_core_init(void) {
+  stm32f103_init_env();
+}
+
+void pal_enter_critical(void) {
+  __disable_irq();
+  primask_gvi = __get_PRIMASK();
+}
+
+void pal_exit_critical(void) {
+  __enable_irq();
+  __set_PRIMASK(primask_gvi);
+}
+
+ui8 pal_math_get_highest_bit32(ui32 mask) {
+  if (mask == 0) {
+    return -1;
+  }
+  return 31 - __CLZ(mask);
+}
+
+ui32 pal_sys_get_tick(void) {
+  return HAL_GetTick();
+}
+
+void pal_sys_reset(void) {
+  NVIC_SystemReset();
+}
+
+void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
+  uedp_fcr_raise(UEDP_FCR_PAL_FATAL_API_CALLED, file, line, msg);
+}
+
+//ANCHOR - Implementation custom API cho {{arch_name}}.h
+/** CRITICAL - 
+  * Các parameter <return_type> và <parameters> cần được thay thế bằng kiểu dữ liệu thực tế 
+  * theo nhu cầu của người dùng
+  */
+
+void stm32f103_init_env(void) {
+  stm32f103_nvic_config();
+}
+
+void stm32f103_sleep(void) {
+  HAL_SuspendTick();
+  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+}
+
+void stm32f103_wakeup(void) {
+  HAL_ResumeTick();
+}
+
+void stm32f103_nvic_config(void) {
+	NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
+}
+
+void stm32f103_exti_init(ui32 IRQnum) {
+
+}
+
+void stm32f103_check_hardfault_reason(char* retr) {
+
+}
+
+void SysTick_Handler(void) {
+  
+}
+
+__attribute__((naked)) void HardFault_Handler(void) {
+
+}
+
+//ANCHOR - Implementation cho internal API handling
 
 static void internal_hardfault_decoder(uint32_t *stack);
 
@@ -53,88 +136,3 @@ extern ui32 _end;              /* Start of Heap (thường sau bss) 	        */
 UEDP_ATTR_UNUSED void internal_hardfault_decoder(uint32_t *stack) {
 	
 }
-
-/**
- * @brief Implementation cho uedp_core.h
- */
-
-void uedp_core_init(void) {
-  pal_core_init();
-  uedp_msg_pool_init();
-  uedp_timer_init();
-  uedp_itnlog_init();
-  is_inited = 0x1u;
-}
-
-/**
- * @brief Implementation cho pal_core.h
- */
-
-void pal_core_init(void) {
-  pal_stm32_f103_init_env();
-}
-
-void pal_enter_critical(void) {
-
-}
-
-void pal_exit_critical(void) {
-
-}
-
-ui8 pal_math_get_highest_bit32(ui32 mask) {
-
-}
-
-ui32 pal_sys_get_tick(void) {
-
-}
-
-void pal_sys_reset(void) {
-
-}
-
-void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
-
-}
-
-/**
- * @brief Implementation cho stm32_arch.h
- */
-
-void pal_stm32_f103_init_env(void) {
-  /**
-   * @brief Việc bổ sung các triển khai
-   *        tùy thuộc vào nhu cầu riêng của từng dự án, có thể là khởi tạo clock, GPIO, UART, v.v.
-   */
-  pal_memrp_get_sys_info(NULL, NULL, NULL); // Gọi hàm này để đảm bảo các biểu tượng linker script được sử dụng và không bị tối ưu hóa mất
-  pal_stm32_f103_nvic_config();
-}
-
-void pal_stm32_f103_idle_sleep(void) {
-
-}
-
-void pal_stm32_f103_nvic_config(void) {
-//	NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
-}
-
-void pal_stm32_f103_exti_init(ui32 IRQnum) {
-
-}
-
-void pal_stm32_f103_check_hardfault_reason(char* retr) {
-}
-
-void pal_memrp_get_sys_info(ui32 *rom_used, ui32 *ram_used, ui32 *stack_curr) {
-
-}
-
-void SysTick_Handler(void) {
-}
-
-__attribute__((naked)) void HardFault_Handler(void) {
-
-}
-
-
