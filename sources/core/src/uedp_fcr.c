@@ -1,5 +1,5 @@
-/**
-  * @file uedp_fcr.c
+/** ANCHOR - Implementation of Fatal Code Return (FCR) in UEDP
+ * @file uedp_fcr.c
  * @author Hai Minh
  * @brief Implementation of Fatal Code Return (FCR)
  * @version 0.1
@@ -12,7 +12,7 @@
 #include "uedp_itnlog.h"
 #include "pal_core.h"
 
-/**
+/** ANCHOR - Bảng mã lỗi nghiêm trọng của lõi UEDP
  * @brief Bảng mã lỗi nghiêm trọng của lõi UEDP
  * @attention Đây là bảng "tĩnh" (static const), không cần khởi tạo runtime.
  *            Mỗi module trong lõi UEDP chỉ nên có tối đa 256 mã lỗi con (0x00 -> 0xFF),
@@ -76,7 +76,7 @@ const uedp_fcr_entry_t* uedp_fcr_lookup(uedp_fcr_code_t code) {
   return &g_fcr_table[UEDP_FCR_TABLE_SIZE - 1];
 }
 
-/**
+/** ANCHOR - Chuyển đổi mức độ nghiêm trọng FCR sang mức độ log tương ứng của itnlog
  * @brief Chuyển đổi mức độ nghiêm trọng FCR sang mức độ log tương ứng của itnlog
  */
 sta uedp_itnlog_level_t internal_uedp_fcr_sev_to_level(uedp_fcr_severity_t severity) {

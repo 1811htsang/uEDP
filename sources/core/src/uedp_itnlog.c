@@ -1,4 +1,4 @@
-/**
+/** ANCHOR - Implementation of internal logger for UEDP
  * @file uedp_itnlog.c
  * @author Shang Huang
  * @brief Implementation of internal logger for UEDP
@@ -14,7 +14,7 @@
 #include "uedp_tsm.h"
 #include "uedp_itnlog.h"
 
-/**
+/** ANCHOR - Khai báo cấu trúc để lưu trữ thông tin về trạng thái của internal logger
  * @brief Khai báo cấu trúc để lưu trữ thông tin về trạng thái của internal logger
  * @param total_captured Tổng số log entry đã được ghi lại trong internal logger
  * @param underflow_flag Cờ hiệu cho biết ring buffer đã bị trống ít nhất một lần
@@ -24,7 +24,7 @@ typedef struct uedp_itnlog_status_t {
   ui8 underflow_flag;
 } uedp_itnlog_status_t;
 
-/**
+/** ANCHOR - Khai báo ring buffer để lưu trữ log entry
  * @brief Khai báo ring buffer để lưu trữ log entry
  * @param itnlog_ring_buffer Buffer để truyền vào cho ring buffer, được khai báo với kích thước UEDP_ITNLOG_MAX_LOG_ENTRIES
  * @param itnlog_ringbuf Cấu trúc ring buffer để quản lý việc lưu trữ log entry trong itnlog_ring_buffer
@@ -35,22 +35,16 @@ sta uedp_itnlog_entry_t itnlog_ring_buffer[UEDP_ITNLOG_MAX_LOG_ENTRIES] = {0};
 sta ring_buffer_t itnlog_ringbuf = {0};
 sta uedp_itnlog_status_t itnlog_status = {0}; 
 
-/**
- * @brief Khai báo các biến toàn cục để lưu trữ thông tin về bộ lọc log của internal logger
- */
+// ANCHOR - Khai báo các biến toàn cục để lưu trữ thông tin về bộ lọc log của internal logger
 
 sta uedp_itnlog_level_t itnlog_filter_level = ITNLOG_LEVEL_DEBUG; // Mức độ log mặc định là DEBUG
 sta const char* itnlog_filter_tag = NULL; // Thẻ log mặc định là NULL, có nghĩa là không lọc theo thẻ
 
-/**
- * @brief Khai báo biến toàn cục để lưu trữ hàm output cho internal logger
- */
+// ANCHOR - Khai báo biến toàn cục để lưu trữ hàm output cho internal logger
  
 sta uedp_itnlog_output_func_t itnlog_output_func = NULL; // Hàm output mặc định là NULL, có nghĩa là không có đích đến cụ thể cho log
 
-/**
- * @brief Khai báo các hàm quản lý nội bộ cho internal logger
- */
+ // ANCHOR - Khai báo các hàm quản lý nội bộ cho internal logger
 
 sta void internal_uedp_itnlog_add_entry(uedp_itnlog_entry_t* entry);
 sta uedp_itnlog_entry_t internal_uedp_itnlog_remove_entry(void);
@@ -58,7 +52,7 @@ sta void internal_uedp_itnlog_calc_hash(uedp_itnlog_entry_t* entry);
 
 void internal_uedp_itnlog_add_entry(uedp_itnlog_entry_t* entry) {
   if (itnlog_status.total_captured >= UEDP_ITNLOG_MAX_LOG_ENTRIES) {
-    /**
+    /** NOTE - Nếu số lượng log entry đã ghi lại vượt quá ngưỡng tối đa, thì thực hiện dump toàn bộ log entry hiện có ra đích đến và reset trạng thái của internal logger
      * @brief Nếu vượt ngưỡng thì flush toàn bộ log entry hiện có 
      *        trong ring buffer ra đích đến và reset trạng thái 
      *        của internal logger
@@ -119,7 +113,7 @@ uedp_itnlog_entry_t uedp_itnlog_clear(void) {
 void uedp_itnlog_dump(void) {
   while (!ring_buffer_is_empty(&itnlog_ringbuf)) {
     uedp_itnlog_entry_t entry = internal_uedp_itnlog_remove_entry();
-    /**
+    /** NOTE - Logic kiểm tra bộ lọc log trước khi xuất log entry ra đích đến
      * @brief Logic kiểm tra bộ lọc log trước khi xuất log entry ra đích đến
      * @note 
      * Điều kiện kiểm tra là:

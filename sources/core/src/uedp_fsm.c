@@ -1,4 +1,4 @@
-/**
+/** ANCHOR - Triển khai các hàm và logic liên quan đến Finite State Machine (FSM) trong hệ thống UEDP
  * @file fsm.c
  * @author Shang Huang
  * @brief Triển khai các hàm và logic liên quan đến Finite State Machine (FSM) trong hệ thống UEDP
