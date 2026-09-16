@@ -12,8 +12,7 @@
   // ANCHOR - Khai báo thư viện sử dụng
   #include "uedp_core.h"
 
-  /**
-   * @brief Định nghĩa kiểu dữ liệu cho mã lỗi FCR
+  /** ANCHOR - Định nghĩa kiểu dữ liệu cho mã lỗi FCR
    * @attention Mã lỗi FCR được thiết kế theo encoding tương tự các dải tín hiệu khác
    *            trong UEDP (xem [HES] Heximal Encoding Signals ở arch-design.md):
    *            byte cao (bit 15-8) là mã MODULE (module nào phát sinh lỗi),
