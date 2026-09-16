@@ -1,7 +1,6 @@
 /** ANCHOR - Implementation of timer management for UEDP system
  * @file uedp_timer.c
  * @author Shang Huang
- * @brief Implementation of timer management for UEDP system
  * @version 0.1
  * @date 2026-04-18
  * @copyright MIT License
@@ -16,7 +15,6 @@
 #include "uedp_fcr.h"
 
 /** ANCHOR - Cấu trúc quản lý toàn bộ hệ thống Timer
- * @brief Cấu trúc quản lý toàn bộ hệ thống Timer
  * @param head: Con trỏ đến đầu danh sách liên kết các timer đang chạy
  * @param free_list: Con trỏ đến danh sách các nút timer đang rảnh trong Pool
  * @param active_count: Số lượng timer đang chạy, dùng để quản lý và giới hạn số lượng timer hoạt động cùng lúc

@@ -1,7 +1,6 @@
 /** ANCHOR - Implementation of message management for UEDP system
  * @file uedp_msg.c
  * @author Shang Huang
- * @brief Implementation of message management for UEDP system
  * @version 0.1
  * @date 2026-08-04
  * @copyright MIT License
@@ -16,7 +15,6 @@
 #include "fifo.h"
 
 /** ANCHOR - Khai báo cấu trúc quản lý Pool tin nhắn
- * @brief Khai báo cấu trúc quản lý Pool tin nhắn
  * @param free_list Con trỏ đến đầu của Pool tin nhắn
  * @param used_count Số lượng tin nhắn đang được sử dụng trong Pool
  * @param max_used Số lượng tin nhắn tối đa đã từng được sử dụng trong Pool
@@ -28,7 +26,6 @@ typedef struct uedp_msg_pool_header_t {
 } uedp_msg_pool_header_t;
 
 /** ANCHOR - Khai báo các Pool tin nhắn
- * @brief Khai báo các Pool tin nhắn
  * @attention Mỗi pool có thể được setup kích thước và kiểu dữ liệu khác nhau, lưu ý rằng arr[i][j] thì j tương ứng từng cột, i là tương ứng từng hàng, 
  * 						nên khi khởi tạo pool cần đảm bảo tính toán đúng offset để tránh tràn bộ nhớ hoặc ghi đè dữ liệu
  */
@@ -39,7 +36,6 @@ sta uedp_msg_t blank_pool[UEDP_MSG_BLANK_QUEUE_SIZE] = {0};
 uedp_msg_pool_header_t g_blank_pool_ctrl = {0};
 
 /** ANCHOR - Alloc pool với kích thước là 16 [sizeof(void*) * 2u] units
- * @brief Alloc pool với kích thước là 16 [sizeof(void*) * 2u] units
  * @example
  * +-----------------------------------+-----+-----+-----+-------+----------------------+
  * | Index Queue T->B Index Data L->R  | [0] | [1] | [2] | [...] | [sizeof(void*) * 2u] |
@@ -56,7 +52,6 @@ sta ui8 alloc_pool_data[UEDP_MSG_ALLOC_QUEUE_SIZE][UEDP_MSG_ALLOC_DATA_MAX] = {0
 uedp_msg_pool_header_t g_alloc_pool_ctrl = {0};
 
 /** ANCHOR - Extal pool với kích thước là 16 [sizeof(void*) * 4u] units
- * @brief Extal pool với kích thước là 16 [sizeof(void*) * 4u] units
  * @example
  * +-----------------------------------+-----+-----+-----+-------+----------------------+
  * | Index Queue T->B Index Data L->R  | [0] | [1] | [2] | [...] | [sizeof(void*) * 4u] |
@@ -198,7 +193,6 @@ void uedp_msg_ref_dec(uedp_msg_t* msg) {
 }
 
 /** ANCHOR - Thiết lập ID của tác vụ nguồn gửi tin nhắn
- * @brief Thiết lập ID của tác vụ nguồn gửi tin nhắn
  * @param msg: Con trỏ đến tin nhắn cần thiết lập ID nguồn
  * @param src_task_id: ID của tác vụ nguồn gửi tin nhắn
  */
@@ -211,7 +205,6 @@ void uedp_msg_set_src_task_id(uedp_msg_t* msg, task_id_t src_task_id) {
 }
 
 /** ANCHOR - thiết lập ID của tác vụ đích nhận tin nhắn
- * @brief Thiết lập ID của tác vụ đích nhận tin nhắn
  * @param msg: Con trỏ đến tin nhắn cần thiết lập ID đích
  * @param des_task_id: ID của tác vụ đích nhận tin nhắn
  */
@@ -224,7 +217,6 @@ void uedp_msg_set_des_task_id(uedp_msg_t* msg, task_id_t des_task_id) {
 }
 
 /** ANCHOR - Khởi tạo Pool tin nhắn
- * @brief Khởi tạo Pool tin nhắn
  * @param header Chứa thông tin quản lý của Pool
  * @param pool Con trỏ đến mảng chứa các tin nhắn trong Pool
  * @param data_mem Con trỏ đến mảng chứa vùng dữ liệu cho các tin nhắn trong Pool
@@ -249,8 +241,7 @@ void internal_uedp_msg_pool_init(
 		return;
 	}
 
-	/** NOTE - Kiểm tra nếu data_size là 0 hoặc kích thước phân bố dữ liệu không phù hợp với data_size thì coi như không phù hợp và trả về, không khởi tạo Pool vì sẽ lãng phí bộ nhớ.
-	 * @brief Kiểm tra nếu data_size là 0 hoặc kích thước phân bố dữ liệu không phù hợp với data_size
+	/** NOTE - 		Kiểm tra nếu data_size là 0 hoặc kích thước phân bố dữ liệu không phù hợp với data_size
 	 * 				thì coi như không phù hợp và trả về, không khởi tạo Pool vì sẽ lãng phí bộ nhớ.
 	 * 				Ví dụ giả sử norm_pool[12][8] nghĩa là có thể chứa 12 unit tin nhắn, mỗi unit tin nhắn có thể chứa tối đa 8 bytes dữ liệu, 
 	 * 				nếu data_size là 0 hoặc data_size lớn hơn 8 bytes thì sẽ không khởi tạo Pool.
@@ -303,7 +294,6 @@ void internal_uedp_msg_pool_init(
 }
 
 /** ANCHOR - Lấy một tin nhắn từ Pool
- * @brief Lấy một tin nhắn từ Pool
  * @param header Chứa thông tin quản lý của Pool
  */
 uedp_msg_t* internal_uedp_msg_pool_pop(uedp_msg_pool_header_t* header) {
@@ -337,7 +327,6 @@ uedp_msg_t* internal_uedp_msg_pool_pop(uedp_msg_pool_header_t* header) {
 }
 
 /** ANCHOR - Trả một tin nhắn về Pool
- * @brief Trả một tin nhắn về Pool
  * @param header Chứa thông tin quản lý của Pool
  * @param msg Con trỏ đến tin nhắn cần trả về Pool
  */
@@ -361,7 +350,6 @@ void internal_uedp_msg_pool_push(uedp_msg_pool_header_t* header, uedp_msg_t* msg
 }
 
 /** ANCHOR - Tìm Pool tin nhắn phù hợp nhất dựa trên kích thước dữ liệu yêu cầu
- * @brief Tìm Pool tin nhắn phù hợp nhất dựa trên kích thước dữ liệu yêu cầu
  * @param size Kích thước dữ liệu yêu cầu cho tin nhắn
  * @return uedp_msg_pool_header_t* Con trỏ đến Pool tin nhắn phù hợp nhất hoặc NULL nếu không có Pool nào phù hợp
  * @attention Pool EXTAL và ISR không được xem xét trong hàm này vì nó được thiết kế để đảm bảo signal từ ngoài vào core được
@@ -595,7 +583,6 @@ RETR_STAT uedp_gdp_set_val(const char* name, const void* in_buf, ui16 buf_size) 
 }
 
 /** ANCHOR - Hàm nội bộ để tìm 1 slot GDP theo tên
- * @brief Hàm nội bộ để tìm 1 slot GDP theo tên
  * @param name Tên định danh cần tìm
  * @return uedp_gdp_slot_t* Con trỏ tới slot nếu tìm thấy, NULL nếu không tìm thấy hoặc name là NULL
  */

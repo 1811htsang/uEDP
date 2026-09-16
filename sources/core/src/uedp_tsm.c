@@ -1,12 +1,9 @@
 /** ANCHOR - Implementation of Transition State Machine (TSM) management for UEDP system
  * @file uedp_tsm.c
  * @author Shang Huang
- * @brief Implementation of Transition State Machine (TSM) management for UEDP system
  * @version 0.1
  * @date 2026-08-04
- * 
  * @copyright MIT License
- * 
  */
 #include "uedp_tsm.h"
 #include "uedp_msg.h"

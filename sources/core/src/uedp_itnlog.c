@@ -1,7 +1,6 @@
 /** ANCHOR - Implementation of internal logger for UEDP
  * @file uedp_itnlog.c
  * @author Shang Huang
- * @brief Implementation of internal logger for UEDP
  * @version 0.1
  * @date 2026-05-14
  * @copyright MIT License
@@ -15,7 +14,6 @@
 #include "uedp_itnlog.h"
 
 /** ANCHOR - Khai báo cấu trúc để lưu trữ thông tin về trạng thái của internal logger
- * @brief Khai báo cấu trúc để lưu trữ thông tin về trạng thái của internal logger
  * @param total_captured Tổng số log entry đã được ghi lại trong internal logger
  * @param underflow_flag Cờ hiệu cho biết ring buffer đã bị trống ít nhất một lần
  */
@@ -25,7 +23,6 @@ typedef struct uedp_itnlog_status_t {
 } uedp_itnlog_status_t;
 
 /** ANCHOR - Khai báo ring buffer để lưu trữ log entry
- * @brief Khai báo ring buffer để lưu trữ log entry
  * @param itnlog_ring_buffer Buffer để truyền vào cho ring buffer, được khai báo với kích thước UEDP_ITNLOG_MAX_LOG_ENTRIES
  * @param itnlog_ringbuf Cấu trúc ring buffer để quản lý việc lưu trữ log entry trong itnlog_ring_buffer
  * @param itnlog_ringbuf_ctrl Cấu trúc quản lý cho ring buffer
@@ -52,11 +49,7 @@ sta void internal_uedp_itnlog_calc_hash(uedp_itnlog_entry_t* entry);
 
 void internal_uedp_itnlog_add_entry(uedp_itnlog_entry_t* entry) {
   if (itnlog_status.total_captured >= UEDP_ITNLOG_MAX_LOG_ENTRIES) {
-    /** NOTE - Nếu số lượng log entry đã ghi lại vượt quá ngưỡng tối đa, thì thực hiện dump toàn bộ log entry hiện có ra đích đến và reset trạng thái của internal logger
-     * @brief Nếu vượt ngưỡng thì flush toàn bộ log entry hiện có 
-     *        trong ring buffer ra đích đến và reset trạng thái 
-     *        của internal logger
-     */
+    // NOTE - Nếu số lượng log entry đã ghi lại vượt quá ngưỡng tối đa, thì thực hiện dump toàn bộ log entry hiện có ra đích đến và reset trạng thái của internal logger
     uedp_itnlog_dump();
     memset(&itnlog_status, 0, sizeof(itnlog_status));
   }
@@ -114,7 +107,6 @@ void uedp_itnlog_dump(void) {
   while (!ring_buffer_is_empty(&itnlog_ringbuf)) {
     uedp_itnlog_entry_t entry = internal_uedp_itnlog_remove_entry();
     /** NOTE - Logic kiểm tra bộ lọc log trước khi xuất log entry ra đích đến
-     * @brief Logic kiểm tra bộ lọc log trước khi xuất log entry ra đích đến
      * @note 
      * Điều kiện kiểm tra là:
      * - Mức độ log của log entry phải lớn hơn hoặc bằng mức độ log được lọc (itnlog_filter_level)
