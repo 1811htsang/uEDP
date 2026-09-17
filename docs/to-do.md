@@ -222,12 +222,14 @@ Kiểm tra trong `usrinp` để nắm rõ thông tin của task và thực hiệ
 <!-- NOTE - Lưu ý cho task bên trên
 Theo dõi ở uedp_core.h nhánh feat để nắm rõ các tag ANCHOR được comment theo format kết hợp cùng doxygen-type.
 Minh sẽ hỗ trợ Khánh và Đạt thực thi task này
+
+Khánh đã hoàn thành ở `sources/core/src`
+Đạt chưa hoàn thành ở `sources/core/inc`
 -->
 
 - [x] Bổ sung tài liệu tìm hiểu về smoltcp để hiểu về kiến trúc, tính năng hỗ trợ, cách smoltcp triển khai logic xử lý mạng hướng sự kiện.
 - [ ] Sửa đổi README.md để trình bày về những thay đổi trong việc bổ sung các testobj và các thay đổi trong thiết kế syntax của μE-LS.
 - [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như pycdscriptor.*, kconfigspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
-- [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
 
 <!-- NOTE - Expectation b4 BST task
 Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ được hoàn thiện với khả năng tự động hóa việc phân giải logic từ các cấu hình YAML sang các hàm thực thi trong lõi μEDP.
@@ -293,7 +295,7 @@ Ngoài ra, các tính năng nâng cao như lọc tin nhắn theo topic, QoS (Qua
 //  SECTION - v1.1.7 & v1.1.8
 
 - [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8.
-- [ ] Bổ sung khả năng phân giải pplp vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
+- [ ] Bổ sung khả năng phân giải PPLP vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 - [ ] Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 - [ ] Thêm trường priority vào trong syntax của task để hỗ trợ việc phân giải mức độ ưu tiên của task trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 
@@ -532,13 +534,28 @@ Sang đã review tài liệu thiết kế và approved.
 - [x] Cập nhật config file sample để hỗ trợ BST trên uutobj F103.
 - [x] Sửa đổi lại pregen/hwapi mục help.
 - [x] Cập nhật bảng FCR với bổ sung entry khi `pal_sys_fatal` được gọi.
+- [ ] Bổ sung task cho Khánh + Minh.
+- [ ] Bổ sung comment cho tài liệu `reviews/smoltcp.md` để Minh phản biện. //NOTE - Bổ sung phần cảnh báo về việc phải có lldriver cho WiFi/Ethernet khi sử dụng smoltcp.
+- [ ] Triển khai thiết kế bổ sung mini-RAG với dự trù sLM Qwen3-0.6B + EM all-miniLM-L6-v2.
+
+<!-- STATUS
+Hiện tại đã triển khai hoàn chỉnh với chiến lược chunking + retrieval nhưng kết quả vẫn chưa đạt được như mong đợi.
+Đang bổ sung dự trù chuyển sang sLM Qwen2.5-0.5B-Instruct (llama.cpp IE + GGUF-compatible) + EM BAAI/bga-base-en-1.5 để cải thiện khả năng truy xuất thông tin đơn giản từ tài liệu.
+Tuy nhiên, dự án này cần được dự trù lâu dài để thực thi và cần phân bổ đánh giá lại thời gian và nguồn lực để đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+-->
+
 - [ ] Thực hiện bổ sung C-type API cho archobj STM32F103 (abbr F103), archobj STM32H723 (abbr H723) và archobj ESP32S3 (abbr S3N16) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- SECTION
 
-//NOTE - Do trước đó việc bổ sung đã quên mất kiểm tra nội dung nên cần phải raise lại
+# NOTE - Do trước đó việc bổ sung đã quên mất kiểm tra nội dung nên cần phải raise lại
 
-//STATUS - Đã bổ sung đa số API với sự bổ sung BSP của uutobj F103 nhưng chưa hoàn thiện, vẫn cần tiếp tục hoàn thiện cho F103.
+# STATUS - Đã bổ sung đa số API với sự bổ sung BSP của uutobj F103 nhưng chưa hoàn thiện, vẫn cần tiếp tục hoàn thiện cho F103.
+
+# STATUS 
+
+  - Cần bổ sung nhanh chóng do sự chậm trễ từ task mini-RAG.
+  - Ngoài ra, cần review triển khai với thầy để đảm bảo về mặt thiết kế phần cứng.
 
 //!SECTION
 -->
