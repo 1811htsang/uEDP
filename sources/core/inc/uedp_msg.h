@@ -10,8 +10,7 @@
 	#define __UEDP_MSG_H__
 
 
-	/**
-	 * @brief Khai báo các thư viện sử dụng
+	/** ANCHOR - Khai báo các thư viện sử dụng
 	 */
 	#include <stdint.h>
 	#include <stdlib.h>
@@ -20,20 +19,17 @@
 	#include "uedp_core.h"
 	#include "uedp_task.h"
 
-	/**
-	 * @brief Forward declaration for task id
+	/** ANCHOR - Forward declaration for task id
 	 */
 
 	typedef ui16	task_id_t; 	// ID của tác vụ
 
-	/**
-	 * @brief Forward declaration for memory pool info
+	/** ANCHOR - Forward declaration for memory pool info
 	 */
 
 	typedef struct pal_memrp_info_t pal_memrp_info_t;
 
-	/**
-	 * @brief Định nghĩa các loại Pool tin nhắn (Nội bộ Core sử dụng)
+	/** ANCHOR - Định nghĩa các loại Pool tin nhắn (Nội bộ Core sử dụng)
 	 */
 	typedef enum uedp_msg_type_t {
 		UEDP_MSG_TYPE_BLANK = 0,    /* Không data */
@@ -43,8 +39,7 @@
 		UEDP_MSG_TYPE_ISR   			/* Tin nhắn từ ngữ cảnh ISR */
 	} uedp_msg_type_t;
 
-	/**
-	 * @brief Cấu trúc quản lý tin nhắn trong hệ thống UEDP
+	/** ANCHOR - Cấu trúc quản lý tin nhắn trong hệ thống UEDP
 	 * @param next: Con trỏ đến tin nhắn tiếp theo trong danh sách liên kết
 	 * @param src_task_id: ID của tác vụ nguồn gửi tin nhắn
 	 * @param des_task_id: ID của tác vụ đích nhận tin nhắn
@@ -82,8 +77,7 @@
 		#endif
 	} uedp_msg_t;
 
-	/**
-	 * @brief Cấu trúc quản lý tin nhắn từ ngữ cảnh ISR
+	/** ANCHOR - Cấu trúc quản lý tin nhắn từ ngữ cảnh ISR
 	 * @param des_task_id: ID của tác vụ đích nhận tin nhắn từ ISR
 	 * @param sig: Tín hiệu của tin nhắn từ ISR
 	 */
@@ -92,8 +86,7 @@
 		ui16 sig; 					
 	} uedp_msg_isr_t;
 
-	/**
-	 * @brief Định nghĩa các macro tiện ích để thao tác với dữ liệu của tin nhắn
+	/** ANCHOR - Định nghĩa các macro tiện ích để thao tác với dữ liệu của tin nhắn
 	 * @param msg: Con trỏ đến tin nhắn cần thao tác
 	 * @param val: Giá trị cần gán vào dữ liệu của tin nhắn
 	 * @param type: Kiểu dữ liệu của giá trị cần gán, giúp đảm bảo việc gán dữ liệu đúng cách và an toàn
@@ -105,8 +98,7 @@
 		} \
 	} while(0)
 
-	/**
-	 * @brief Định nghĩa macro tiện ích để gán tham chiếu vào dữ liệu của tin nhắn
+	/** ANCHOR - Định nghĩa macro tiện ích để gán tham chiếu vào dữ liệu của tin nhắn
 	 * @param msg: Con trỏ đến tin nhắn cần thao tác
 	 * @param ref: Tham chiếu cần gán vào dữ liệu của tin nhắn
 	 */
@@ -117,13 +109,11 @@
 		} \
 	} while(0)
 
-	/**
-	 * @brief Hàm khởi tạo Queue tin nhắn
+	/** ANCHOR - Hàm khởi tạo Queue tin nhắn
 	 */
 	void uedp_msg_pool_init();
 
-	/**
-	 * @brief Hàm cấp phát tin nhắn duy nhất (UMI)
+	/** ANCHOR - Hàm cấp phát tin nhắn duy nhất (UMI)
 	 * @param des_task_id: ID của tác vụ đích nhận tin nhắn
 	 * @param sig: Tín hiệu của tin nhắn
 	 * @param size: Kích thước dữ liệu yêu cầu (0 nếu là tin nhắn thuần túy)
@@ -131,26 +121,22 @@
 	 */
 	uedp_msg_t* uedp_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size);
 
-	/**
-	 * @brief Hàm giải phóng tin nhắn
+	/** ANCHOR - Hàm giải phóng tin nhắn
 	 * @param msg chứa mục tiêu cần giải phóng
 	 */
 	void uedp_msg_free(uedp_msg_t* msg);
 
-	/**
-	 * @brief Tăng số lượng tham chiếu (Dùng khi 1 tin nhắn gửi cho nhiều Task)
+	/** ANCHOR - Tăng số lượng tham chiếu (Dùng khi 1 tin nhắn gửi cho nhiều Task)
 	 * @param msg: Tin nhắn cần tăng số lượng tham chiếu
 	 */
 	void uedp_msg_ref_inc(uedp_msg_t* msg);
 
-	/**
-	 * @brief Giảm số lượng tham chiếu (Dùng khi 1 tin nhắn gửi cho nhiều Task)
+	/** ANCHOR - Giảm số lượng tham chiếu (Dùng khi 1 tin nhắn gửi cho nhiều Task)
 	 * @param msg: Tin nhắn cần giảm số lượng tham chiếu
 	 */
 	void uedp_msg_ref_dec(uedp_msg_t* msg);
 
-	/**
-	 * @brief Hàm nội bộ để khởi tạo Pool tin nhắn
+	/** ANCHOR - Hàm nội bộ để khởi tạo Pool tin nhắn
 	 * 
 	 * @param tid ID của tác vụ đích nhận tin nhắn từ ISR
 	 * @param sig Tín hiệu nhận vào
@@ -159,14 +145,12 @@
 	 */
 	RETR_STAT internal_uedp_msg_enqueue_isr_sig(task_id_t tid, ui16 sig);
 
-	/**
-	 * @brief Xả hàng đợi tin nhắn trong ngữ cảnh ISR để giải phóng các tin nhắn đang bị giữ trong hàng đợi ISR
+	/** ANCHOR - Xả hàng đợi tin nhắn trong ngữ cảnh ISR để giải phóng các tin nhắn đang bị giữ trong hàng đợi ISR
 	 * 
 	 */
 	void uedp_msg_drain_isr_pool(void);
 
-	/**
-	 * @brief Lấy thông tin bộ nhớ của một Pool tin nhắn cụ thể để báo cáo cho PAL Memory Reporter
+	/** ANCHOR - Lấy thông tin bộ nhớ của một Pool tin nhắn cụ thể để báo cáo cho PAL Memory Reporter
 	 * @param pool_id ID của Pool tin nhắn cần lấy thông tin, có thể là UEDP_MSG_TYPE_BLANK, UEDP_MSG_TYPE_ALLOC hoặc UEDP_MSG_TYPE_EXTAL
 	 * @param info Con trỏ đến cấu trúc pal_memrp_info_t để lưu trữ thông tin bộ nhớ của Pool tin nhắn, bao gồm target, used, max_used và total
 	 * @attention Hàm này được thiết kế tách biệt dành cho việc báo cáo thông tin bộ nhớ của các Pool tin nhắn cho PAL Memory Reporter, 
@@ -176,15 +160,13 @@
 	 */
 	void internal_uedp_msg_pool_get_info(uedp_msg_type_t pool_id, pal_memrp_info_t* info);
 
-	/**
-	 * @brief Thiết lập ID của tác vụ nguồn gửi tin nhắn
+	/** ANCHOR - Thiết lập ID của tác vụ nguồn gửi tin nhắn
 	 * @param msg: Con trỏ đến tin nhắn cần thiết lập ID nguồn
 	 * @param src_task_id: ID của tác vụ nguồn gửi tin nhắn
 	 */
 	void uedp_msg_set_src_task_id(uedp_msg_t* msg, task_id_t src_task_id);
 
-	/**
-	 * @brief Thiết lập ID của tác vụ đích nhận tin nhắn
+	/** ANCHOR - Thiết lập ID của tác vụ đích nhận tin nhắn
 	 * @param msg: Con trỏ đến tin nhắn cần thiết lập ID đích
 	 * @param des_task_id: ID của tác vụ đích nhận tin nhắn
 	 */
@@ -200,8 +182,7 @@
 	 * GDP chỉ "gán vị trí an toàn" (đăng ký tên <-> con trỏ), không quản lý vòng đời.
 	 * ============================================================================ */
 
-	/**
-	 * @brief Số lượng slot dữ liệu toàn cục tối đa GDP có thể quản lý cùng lúc
+	/** ANCHOR - Số lượng slot dữ liệu toàn cục tối đa GDP có thể quản lý cùng lúc
 	 * @attention Hiện để default trực tiếp tại đây (giống pattern LOGDP_MAX_OUTPUT_FN) - có thể
 	 *            đưa vào Kconfig/PLTF codegen sau này giống các Pool khác (BLANK/ALLOC/EXTAL/ISR) nếu cần.
 	 */
@@ -209,8 +190,7 @@
 		#define UEDP_GDP_MAX_SLOTS (16u)
 	#endif
 
-	/**
-	 * @brief Khai báo 1 slot dữ liệu toàn cục trong GDP
+	/** ANCHOR - Khai báo 1 slot dữ liệu toàn cục trong GDP
 	 * @param name Tên định danh biến (tương ứng `name` trong khối `glbda:` của μE-LS), dùng để tra cứu
 	 * @param data Con trỏ tới vùng nhớ thật chứa dữ liệu
 	 * @param size Kích thước dữ liệu tính bằng byte
@@ -227,13 +207,11 @@
 		bool        in_use;
 	} uedp_gdp_slot_t;
 
-	/**
-	 * @brief Khởi tạo bảng GDP - cần gọi trước khi dùng bất kỳ API GDP nào khác
+	/** ANCHOR - Khởi tạo bảng GDP - cần gọi trước khi dùng bất kỳ API GDP nào khác
 	 */
 	void uedp_gdp_init(void);
 
-	/**
-	 * @brief Đăng ký 1 biến toàn cục vào GDP
+	/** ANCHOR - Đăng ký 1 biến toàn cục vào GDP
 	 * @param name Tên định danh, dùng để tra cứu lại sau này - không được trùng với tên đã đăng ký
 	 * @param data_ptr Con trỏ tới vùng nhớ thật của biến (static/global - KHÔNG phải biến cục bộ,
 	 *                 vì GDP không sở hữu/copy vùng nhớ này, chỉ lưu con trỏ trỏ tới nó)
@@ -242,16 +220,14 @@
 	 */
 	RETR_STAT uedp_gdp_register(const char* name, void* data_ptr, ui16 size);
 
-	/**
-	 * @brief Huỷ đăng ký 1 biến toàn cục khỏi GDP
+	/** ANCHOR - Huỷ đăng ký 1 biến toàn cục khỏi GDP
 	 * @param name Tên định danh cần huỷ đăng ký
 	 * @return RETR_STAT STAT_OK nếu thành công, STAT_ERROR nếu không tìm thấy
 	 * @attention KHÔNG giải phóng vùng nhớ `data` - GDP chưa bao giờ sở hữu nó, chỉ gỡ bỏ liên kết tra cứu.
 	 */
 	RETR_STAT uedp_gdp_unregister(const char* name);
 
-	/**
-	 * @brief Lấy con trỏ tham chiếu trực tiếp tới dữ liệu (dùng cho `ptype: REF` của μE-LS)
+	/** ANCHOR - Lấy con trỏ tham chiếu trực tiếp tới dữ liệu (dùng cho `ptype: REF` của μE-LS)
 	 * @param name Tên định danh cần lấy
 	 * @return void* Con trỏ tới dữ liệu, hoặc NULL nếu không tìm thấy (UEDP_FCR_GDP_NOT_FOUND đã được raise)
 	 * @attention Con trỏ trả về trỏ trực tiếp vào vùng nhớ thật - không bọc critical section, vì theo
@@ -261,17 +237,15 @@
 	 */
 	void* uedp_gdp_get_ref(const char* name);
 
-	/**
-	 * @brief Sao chép giá trị hiện tại của 1 biến GDP ra buffer đích (dùng cho `ptype: VAL` của μE-LS)
+	/** ANCHOR - Sao chép giá trị hiện tại của 1 biến GDP ra buffer đích (dùng cho `ptype: VAL` của μE-LS)
 	 * @param name Tên định danh cần đọc
 	 * @param out_buf Buffer đích để chứa dữ liệu sao chép ra
 	 * @param buf_size Kích thước buffer đích - phải >= kích thước đã đăng ký, nếu không sẽ raise FCR
 	 * @return RETR_STAT STAT_OK nếu thành công
 	 */
 	RETR_STAT uedp_gdp_get_val(const char* name, void* out_buf, ui16 buf_size);
-
-	/**
-	 * @brief Ghi đè giá trị mới vào 1 biến GDP đã đăng ký (dùng cho `ptype: VAL` của μE-LS)
+ 
+	/** ANCHOR - Ghi đè giá trị mới vào 1 biến GDP đã đăng ký (dùng cho `ptype: VAL` của μE-LS)
 	 * @param name Tên định danh cần ghi
 	 * @param in_buf Dữ liệu nguồn để sao chép vào
 	 * @param buf_size Kích thước dữ liệu nguồn - phải khớp đúng kích thước đã đăng ký, nếu không sẽ raise FCR
