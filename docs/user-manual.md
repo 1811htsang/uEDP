@@ -210,7 +210,7 @@ void task_b_check_status(void) {
 #### Điểm cần lưu ý khi sử dụng Dpool GDA
 
 - GDP không sở hữu vùng nhớ `data` - nếu đăng ký một biến cục bộ (local variable) thay vì `static`/`global`, con trỏ sẽ trỏ tới vùng nhớ không còn hợp lệ sau khi hàm khai báo kết thúc.
-- Số lượng slot tối đa GDP quản lý cùng lúc mặc định là `UEDP_GDP_MAX_SLOTS` (16), có thể override bằng macro trước khi include header nếu cần nhiều hơn.
+- Số lượng slot tối đa GDP quản lý cùng lúc mặc định là `UEDP_GDP_QUEUE_SIZE` (16), có thể override bằng macro trước khi include header nếu cần nhiều hơn.
 - `uedp_gdp_get_val()`/`uedp_gdp_set_val()` sẽ raise FCR nếu `buf_size` không khớp/không đủ so với kích thước đã đăng ký, thay vì âm thầm đọc/ghi sai vùng nhớ.
 - `uedp_gdp_get_ref()` trả về con trỏ trực tiếp vào vùng nhớ thật, không bọc critical section - phù hợp với scheduler single-core, non-preemptive hiện tại của μEDP; cần xem xét lại nếu chạy trên môi trường đa nhân.
 - Tên đăng ký (`name`) trong GDP nên khớp với `name` khai báo trong khối `glbda:` của μE-LS để giữ nhất quán giữa tài liệu thiết kế PLD/μE-LS và code thực thi.

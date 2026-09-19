@@ -72,7 +72,7 @@ Thống nhất
 API `uedp_gdp_*` đã được chèn thẳng vào `uedp_msg.h`/`uedp_msg.c` (không tách file riêng, cùng lý
 do đã bàn ở vòng review trước - GDP là phần mở rộng của DMP/D2MP, không phải module ngang hàng).
 
-- Struct `uedp_gdp_slot_t` (`name`/`data`/`size`/`in_use`) + bảng tĩnh `UEDP_GDP_MAX_SLOTS` (mặc
+- Struct `uedp_gdp_slot_t` (`name`/`data`/`size`/`in_use`) + bảng tĩnh `UEDP_GDP_QUEUE_SIZE` (mặc
   định 16, theo pattern `LOGDP_MAX_OUTPUT_FN`).
 - 5 hàm: `uedp_gdp_init()`, `uedp_gdp_register()`, `uedp_gdp_unregister()`, `uedp_gdp_get_ref()`
   (cho `ptype: REF`), `uedp_gdp_get_val()`/`uedp_gdp_set_val()` (cho `ptype: VAL`).
