@@ -1,13 +1,13 @@
 /**
- * @file stm32_h723_arch.h
+ * @file stm32h723.h
  * @author Shang Huang
  * @brief Header file for STM32 Architecture Abstraction Layer in UEDP
  * @version 0.1
  * @date 2026-04-20
  * @copyright MIT License
  */
-#ifndef __STM32_H723_ARCH_H__
-  #define __STM32_H723_ARCH_H__
+#ifndef __STM32_H723_H__
+  #define __STM32_H723_H__
 
   #include "pal_core.h"
 
@@ -38,4 +38,4 @@
    */
   void pal_stm32_h723_check_hardfault_reason(char* retr);
 
-#endif // __STM32_H723_ARCH_H__
+#endif // __STM32_H723_H__

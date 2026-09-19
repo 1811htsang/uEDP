@@ -34,8 +34,6 @@ from .resrc import (
 )
 
 from .misc import (
-  C_isr_obj,
-  C_isr_list_obj,
   C_outexec_obj,
   C_outexec_list_obj
 )

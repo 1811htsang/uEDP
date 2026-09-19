@@ -333,7 +333,7 @@ Ngoài ra, các tính năng nâng cao như lọc tin nhắn theo topic, QoS (Qua
 - [x] Bổ sung triển khai thiết kế lstaxer.lukupmodel để đưa các cấu hình post-validated vào pydantic model để chuẩn hóa toàn bộ logic triển khai trước khi translate thành mã C, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 - [x] Đưa cân nhắc triển khai hoạt động của attribarse hoặc kconfigspec vào post-validation của lstaxer.vlid để phối hợp lstaxer.kre8 generate các cấu hình logic của μE-LS từ các mô tả logic trong PLD, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
 
-<!-- REVIEW
+<!-- DEPRECATED - Old REVIEW
 1. Bổ sung cân nhắc phân tách PLD/μE-LS thành SA (semi-automation) và FA (full-automation) trên 2 phiên bản 1.1.7, 1.1.8 hay 1.1.8, 1.1.9.
 
 # STATUS - PLD/μE-LS đã hoàn thiện triển khai FA nên không cần phân tách SA/FA nữa.
@@ -508,12 +508,18 @@ Loại bỏ task bên trên do tính năng file inclusion là tính năng specif
 -->
 
 - [x] Thực hiện rewrite giới thiệu về cú pháp YAML của μE-LS để làm rõ cách thức hoạt động tương ứng trên mã nguồn thiết kế. //DEPRECATED - Không cần rewrite do đã đủ generic introduction.
-- [ ] Remove ISR support trong syntax including pydantic_model, example, pycdscriptor.
+- [x] Remove ISR support trong syntax including pydantic_model, example, pycdscriptor.
+- [x] Review lại thiết kế PLD (Parse-able Logic Descriptor) với các triển khai hiện có để đánh giá tính khả thi và hiệu quả của việc sử dụng PLD trong việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, đồng thời hỗ trợ việc tự động sinh mã nguồn C từ các mô tả logic này. //DEPRECATED - Không cần review lại thiết kế PLD do đã hoàn thiện triển khai FA.
+- [x] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table - pycdscriptor.ustab) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
+
+<!-- STATUS
+Sang đã review tài liệu thiết kế và approved.
+-->
+
+- [ ] Remove dead code liên quan đến `sys.path` của `uedp.py`
+- [ ] Bổ sung khả năng tham số `--it` và `--n-it` để hỗ trợ khả năng trực tiếp sinh code từ .config không cần thông qua menuconfig.
+- [ ] Thực hiện bổ sung C-type API cho palobj STM32H723 (abbr H723) và ESP32S3 (abbr S3N16) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD. //NOTE - Do trước đó việc bổ sung đã quên mất kiểm tra nội dung nên cần phải raise lại
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
-- [ ] Bổ sung tài liệu triển khai thiết kế UST (Unified Symbol Table - pycdscriptor.ustab) để hỗ trợ việc đối chiếu và quản lý các ký hiệu, hằng số và định danh trong lõi μEDP và μE-LS một cách hiệu quả và nhất quán, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các tính năng của lõi μEDP.
-- [ ] Review lại thiết kế PLD (Parse-able Logic Descriptor) với các triển khai hiện có để đánh giá tính khả thi và hiệu quả của việc sử dụng PLD trong việc mô tả logic của các tính năng và dịch vụ trong lõi μEDP một cách dễ đọc và dễ hiểu, đồng thời hỗ trợ việc tự động sinh mã nguồn C từ các mô tả logic này.
-- [ ] Mở rộng PLD với TSD (Test Scenario Descriptor) để hỗ trợ việc mô tả các kịch bản kiểm thử một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả kịch bản kiểm thử này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các kịch bản kiểm thử cho lõi μEDP.
-- [ ] Hoàn thiện thiết kế TLC (Test Level Coverager) để cho phép chỉ định mức kiểm tra từ ut (unit), ct (component), st (system) và it (integration) nhằm đảm bảo rằng các tính năng của lõi μEDP được kiểm thử đầy đủ và hiệu quả trên các mức độ khác nhau của hệ thống.
 
 <!-- NOTE - Expectation for PLTF.TSD/TLC
 Đưa 3 task bên trên sang phiên bản 1.2.1 để tránh quá tải cho phiên bản 1.2.0 và đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
@@ -538,6 +544,12 @@ Cần cân nhắc tách phần bổ sung tài liệu này sang phiên bản 1.2.
 
 //NOTE - Cân nhắc rebase các task từ v1.2.0 sang v1.2.1 theo lộ trình và đề xuất dự kiến
 
+<!-- NOTE - Cân nhắc rebase các task từ v1.2.0 sang v1.2.1 theo lộ trình và đề xuất dự kiến
+#STATUS - Đã rebase.
+-->
+
+- [ ] Mở rộng PLD với TSD (Test Scenario Descriptor) để hỗ trợ việc mô tả các kịch bản kiểm thử một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả kịch bản kiểm thử này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các kịch bản kiểm thử cho lõi μEDP.
+- [ ] Hoàn thiện thiết kế TLC (Test Level Coverager) để cho phép chỉ định mức kiểm tra từ ut (unit), ct (component), st (system) và it (integration) nhằm đảm bảo rằng các tính năng của lõi μEDP được kiểm thử đầy đủ và hiệu quả trên các mức độ khác nhau của hệ thống.
 - [ ] Bổ sung tài liệu chi tiết cho thiết kế Safe Input Filter nhằm đảm bảo các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, nhằm đảm bảo tính ổn định và an toàn của hệ thống khi xử lý các tín hiệu từ bên ngoài.
 - [ ] Refine tính năng SOCI với OCE để đảm bảo rằng các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, đồng thời đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
 - [ ] Hoàn thiện thiết kế Safe Input Filter.

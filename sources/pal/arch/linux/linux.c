@@ -1,5 +1,5 @@
 /**
- * @file linux_arch.c
+ * @file linux.c
  * @author Shang Huang
  * @brief Implementation of Linux Architecture Abstraction Layer for UEDP
  * @version 0.1

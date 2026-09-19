@@ -2,12 +2,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "{{arch_name}}_arch.h"
+#include "{{arch_name}}.h"
 #include "uedp_core.h"
 #include "uedp_task.h"
 #include "uedp_msg.h"
 #include "uedp_timer.h"
 #include "uedp_itnlog.h"
+
+//ANCHOR - {{arch_name}} BSP include
+#include "..."
 
 //CRITICAL - Đảm bảo phải có ủy quyền timer_tick để gắn vào timer phần cứng
 
@@ -15,7 +18,7 @@ extern void uedp_timer_tick(void);
 
 //ANCHOR - Implementation cho uedp_core.h
 
-sta int is_inited = 0x0u;
+sta ui8 is_inited = 0x0u;
 
 void uedp_core_init(void) {
   pal_core_init();

@@ -1,5 +1,5 @@
 /**
- * @file linux_arch.h
+ * @file linux.h
  * @author Shang Huang
  * @brief Header file for Linux Architecture Abstraction Layer in UEDP
  * @version 0.1
@@ -7,8 +7,8 @@
  * @copyright MIT License
  */
 
-#ifndef __LINUX_ARCH_H__
-  #define __LINUX_ARCH_H__
+#ifndef __LINUX_H__
+  #define __LINUX_H__
 
   /**
    * @brief Khai báo thư viện sử dụng

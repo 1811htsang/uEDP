@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdtprojectproperties>
+  <section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.IncludePaths">
+    <language id="org.eclipse.cdt.core.assembly" name="s,S"/>
+    <language id="org.eclipse.cdt.core.gcc" name="C Source File">
+      <includepath>Core/Inc</includepath>
+      <includepath>Drivers/STM32F1xx_HAL_Driver/Inc</includepath>
+      <includepath>Drivers/STM32F1xx_HAL_Driver/Inc/Legacy</includepath>
+      <includepath>Drivers/CMSIS/Device/ST/STM32F1xx/Include</includepath>
+      <includepath>Drivers/CMSIS/Include</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/common/container/fifo</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/common/container/ring_buffer</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/common/container/llist</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/common/xprintf</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/core/inc</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/core/src</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/pal</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/pal/service/logdp</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/pal/service/memrp</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/pal/service/rprintf</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/pal/arch/stm32f103</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/app/config</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/app/declaration</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/app</includepath>
+    </language>
+    <language name="Object File"/>
+  </section>
+  <section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.Macros">
+    <language id="org.eclipse.cdt.core.assembly" name="s,S">
+      <macro>
+        <name>DEBUG</name>
+        <value/>
+      </macro>
+    </language>
+    <language id="org.eclipse.cdt.core.gcc" name="C Source File">
+      <macro>
+        <name>DEBUG</name>
+        <value/>
+      </macro>
+      <macro>
+        <name>USE_HAL_DRIVER</name>
+        <value/>
+      </macro>
+      <macro>
+        <name>STM32F103xB</name>
+        <value/>
+      </macro>
+    </language>
+    <language name="Object File"/>
+  </section>
+</cdtprojectproperties>
