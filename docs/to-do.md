@@ -216,8 +216,7 @@ Kiểm tra trong `usrinp` để nắm rõ thông tin của task và thực hiệ
 - [x] Kiểm tra lại `README.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
 - [x] Kiểm tra lại `dmp-gda.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
 - [x] Bổ sung tài liệu tìm hiểu về smoltcp để hiểu về kiến trúc, tính năng hỗ trợ, cách smoltcp triển khai logic xử lý mạng hướng sự kiện.
-- [ ] Sửa đổi README.md để trình bày về những thay đổi trong việc bổ sung các testobj và các thay đổi trong thiết kế syntax của μE-LS.
-- [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu.
+- [x] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu.
 
 <!-- NOTE - Lưu ý cho task bên trên
 Theo dõi ở uedp_core.h nhánh feat để nắm rõ các tag ANCHOR được comment theo format kết hợp cùng doxygen-type.
@@ -229,6 +228,8 @@ Khánh đã hoàn thành ở `sources/core/src`
 
 - [x] Bổ sung tài liệu tìm hiểu về smoltcp để hiểu về kiến trúc, tính năng hỗ trợ, cách smoltcp triển khai logic xử lý mạng hướng sự kiện.
 - [ ] Sửa đổi README.md để trình bày về những thay đổi trong việc bổ sung các testobj và các thay đổi trong thiết kế syntax của μE-LS.
+- [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu. //NOTE - lần này thực hiện ở file `pal_core.h`
+- [ ] Loại bỏ toàn bộ `Định nghĩa các hằng số boolean và trạng thái cơ bản cho hệ thống UEDP` trong file `pal_core.h` do không còn sử dụng.
 - [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như pycdscriptor.*, kconfigspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
 
 <!-- NOTE - Expectation b4 BST task
@@ -247,19 +248,19 @@ Theo lộ trình hiện tại đã hoàn tất các task liên quan đến PLD/�
 Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST-v1.1.5 để bảo vệ các tính năng đã phát triển để chuẩn bị rebase sub-tasklist từ v1.2.0 lên v1.1.6. 
 -->
 
-- [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
+- [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử. // NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6.
 - [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
 - [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
 
 <!-- SECTION - PSE
 
-#TASK - Minh nên bổ sung thêm 1 tài liệu review về ý tưởng cho PSE tại docs/review/pse.md để thống nhất các ý tưởng và đề xuất cải tiến cho Pub/Sub engine của μEDP.
+# TASK - Minh nên bổ sung thêm 1 tài liệu review về ý tưởng cho PSE tại docs/review/pse.md để thống nhất các ý tưởng và đề xuất cải tiến cho Pub/Sub engine của μEDP.
 
-#DEPRECATED - Old TASK - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+# DEPRECATED - Old TASK - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 
-#CRITICAL - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
+# CRITICAL - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
 
-#NOTE - Idea cho PSE, có thể sửa đổi hoặc bổ sung thêm sau đó
+# NOTE - Idea cho PSE, có thể sửa đổi hoặc bổ sung thêm sau đó
 Hiện tại trong API C-type thì 1 msg sẽ có 2 trường liên quan đến địa chỉ của task là `src_task_id` và `des_task_id`, do đó có thể đề xuất hướng nâng cấp như sau:
 
 - Đưa `des_task_id` thành một danh sách các task ID để hỗ trợ việc gửi tin nhắn tới nhiều task đã đăng ký, với số lượng task ID có trong danh sách thì tương ứng ref_count sẽ phải có giá trị tương đương để quản lý việc giải phóng bộ nhớ của tin nhắn một cách chính xác và hiệu quả.
@@ -277,7 +278,7 @@ Do đó, mỗi khi 1 task gửi tin nhắn có số lượng ref_count > 1 thì 
 
 Việc sử dụng truyền tham chiếu tin nhắn thay vì copy tin nhắn sẽ giúp giảm thiểu việc sử dụng bộ nhớ và tăng hiệu suất của hệ thống, đồng thời đảm bảo rằng các task nhận được cùng 1 thông tin từ tin nhắn mà không cần phải tạo ra nhiều bản sao của tin nhắn.
 
-#REVIEW - Giới hạn hỗ trợ của PSE
+# REVIEW - Giới hạn hỗ trợ của PSE
 
 Ở thời điểm hiện tại, đề xuất PSE sẽ chỉ hỗ trợ việc gửi tin nhắn tới nhiều task đã đăng ký, nhưng không hỗ trợ việc gửi tin nhắn tới các task chưa đăng ký. Điều này có nghĩa là các task cần phải đăng ký trước khi nhận được tin nhắn từ Pub/Sub engine, nhằm đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
 
