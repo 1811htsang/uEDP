@@ -83,7 +83,7 @@
   #define UEDP_FCR_PAL_FATAL_API_CALLED   UEDP_FCR_CODE(UEDP_FCR_MOD_PAL, 0x00)
   #define UEDP_FCR_PAL_LOGDP_TABLE_FULL   UEDP_FCR_CODE(UEDP_FCR_MOD_PAL, 0x01) // Bảng đăng ký callback của logdp đã đầy
 
-  #define UEDP_FCR_GDP_TABLE_FULL         UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x00) // Không còn slot trống trong GDP để đăng ký thêm biến toàn cục (UEDP_GDP_MAX_SLOTS)
+  #define UEDP_FCR_GDP_TABLE_FULL         UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x00) // Không còn slot trống trong GDP để đăng ký thêm biến toàn cục (UEDP_GDP_QUEUE_SIZE)
   #define UEDP_FCR_GDP_NOT_FOUND          UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x01) // Không tìm thấy tên biến đã đăng ký trong GDP (get_ref/get_val/set_val/unregister)
   #define UEDP_FCR_GDP_INVALID_PARAM      UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x02) // Tham số không hợp lệ (name/data_ptr NULL, size=0) hoặc buffer đích quá nhỏ/sai kích thước
   #define UEDP_FCR_GDP_DUPLICATE_NAME     UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x03) // Đăng ký trùng tên biến đã tồn tại trong GDP

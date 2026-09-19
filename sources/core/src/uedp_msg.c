@@ -483,9 +483,8 @@ void internal_uedp_msg_pool_get_info(uedp_msg_type_t pool_id, pal_memrp_info_t* 
  * Xem docs/review/dmp-gda.md để biết đầy đủ bối cảnh & 2 vòng review đã chốt.
  * ============================================================================ */
 
-// ANCHOR - Bảng slot tĩnh của GDP - kích thước cố định UEDP_GDP_MAX_SLOTS, không cấp phát động
-
-sta uedp_gdp_slot_t g_gdp_table[UEDP_GDP_MAX_SLOTS] = {0};
+// ANCHOR - Bảng slot tĩnh của GDP - kích thước cố định UEDP_GDP_QUEUE_SIZE, không cấp phát động
+sta uedp_gdp_slot_t g_gdp_table[UEDP_GDP_QUEUE_SIZE] = {0};
 
 void uedp_gdp_init(void) {
 	memset(g_gdp_table, 0, sizeof(g_gdp_table));
@@ -502,7 +501,7 @@ RETR_STAT uedp_gdp_register(const char* name, void* data_ptr, ui16 size) {
 		return STAT_ERROR;
 	}
 
-	for (ui16 i = 0; i < UEDP_GDP_MAX_SLOTS; i++) {
+	for (ui16 i = 0; i < UEDP_GDP_QUEUE_SIZE; i++) {
 		if (!g_gdp_table[i].in_use) {
 			g_gdp_table[i].name = name;
 			g_gdp_table[i].data = data_ptr;
@@ -512,7 +511,7 @@ RETR_STAT uedp_gdp_register(const char* name, void* data_ptr, ui16 size) {
 		}
 	}
 
-	UEDP_FCR_RAISE(UEDP_FCR_GDP_TABLE_FULL); // Không còn slot trống trong UEDP_GDP_MAX_SLOTS
+	UEDP_FCR_RAISE(UEDP_FCR_GDP_TABLE_FULL); // Không còn slot trống trong UEDP_GDP_QUEUE_SIZE
 	return STAT_ERROR;
 }
 
@@ -589,7 +588,7 @@ RETR_STAT uedp_gdp_set_val(const char* name, const void* in_buf, ui16 buf_size) 
 sta uedp_gdp_slot_t* internal_uedp_gdp_find(const char* name) {
 	if (!name) return NULL;
 
-	for (ui16 i = 0; i < UEDP_GDP_MAX_SLOTS; i++) {
+	for (ui16 i = 0; i < UEDP_GDP_QUEUE_SIZE; i++) {
 		if (g_gdp_table[i].in_use && g_gdp_table[i].name != NULL && strcmp(g_gdp_table[i].name, name) == 0) {
 			return &g_gdp_table[i];
 		}

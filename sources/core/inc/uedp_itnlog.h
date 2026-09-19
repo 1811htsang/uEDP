@@ -9,9 +9,7 @@
 #ifndef __UEDP_ITNLOG_H__
   #define __UEDP_ITNLOG_H__
 
-  /** ANCHOR - Khai báo thư viện sử dụng
-   */
-
+  // ANCHOR - Khai báo thư viện sử dụng
   #include "uedp_core.h"
   #include "uedp_fsm.h"
   #include "uedp_tsm.h"
@@ -32,8 +30,7 @@
     ITNLOG_LEVEL_FATAL
   } uedp_itnlog_level_t;
 
-  /** ANCHOR - Định nghĩa các thẻ log mặc định cho các module của UEDP
-   */
+  // ANCHOR - Định nghĩa các thẻ log mặc định cho các module của UEDP
   #define ITNLOG_TAG_TSK  "TSK"
   #define ITNLOG_TAG_MSG  "MSG"
   #define ITNLOG_TAG_FSM  "FSM"
@@ -94,8 +91,7 @@
    * 1 ham set log output (dung cho phien ban 1.0.2 sap toi)
    */
 
-  /** ANCHOR - Khởi tạo internal logger
-   */
+  // ANCHOR - Khởi tạo internal logger
   void uedp_itnlog_init(void);
 
   /** ANCHOR - Ghi một log entry vào internal logger

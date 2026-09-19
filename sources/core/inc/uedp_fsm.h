@@ -9,8 +9,7 @@
 #ifndef __UEDP_FSM_H__
 	#define __UEDP_FSM_H__
 
-	/** ANCHOR - Khai báo thư viện sử dụng
-	 */
+	// ANCHOR - Khai báo thư viện sử dụng
 	#include <stdint.h>
 	#include "uedp_core.h"
 	#include "uedp_fcr.h"
@@ -21,8 +20,7 @@
 	 */
 	typedef struct uedp_msg_t uedp_msg_t;
 
-	/** ANCHOR - Số lượng trạng thái tối đa trong lịch sử của FSM
-	 */
+	// ANCHOR - Số lượng trạng thái tối đa trong lịch sử của FSM
 	#define UEDP_FSM_HIS_MAX 			(4u) 
  
 	/** ANCHOR - Định nghĩa kiểu hàm xử lý trạng thái trong FSM
@@ -44,8 +42,7 @@
 		ui8 history_count; // Số lượng trạng thái đã lưu trong lịch sử, giúp quản lý và kiểm soát việc lưu trữ lịch sử trạng thái của FSM
 	} uedp_fsm_t;
 
-	/** ANCHOR - Khởi tạo FSM và thực hiện hành động INIT đầu tiên
-	 */
+	// ANCHOR - Khởi tạo FSM và thực hiện hành động INIT đầu tiên
 	#define uedp_fsm_init(me, init_func) \
 	do { \
 		(me)->state = (state_handler)(init_func); \

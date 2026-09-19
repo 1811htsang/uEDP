@@ -10,8 +10,7 @@
 	#define __UEDP_MSG_H__
 
 
-	/** ANCHOR - Khai báo các thư viện sử dụng
-	 */
+	// ANCHOR - Khai báo các thư viện sử dụng
 	#include <stdint.h>
 	#include <stdlib.h>
 	#include <stdio.h>
@@ -19,18 +18,13 @@
 	#include "uedp_core.h"
 	#include "uedp_task.h"
 
-	/** ANCHOR - Forward declaration for task id
-	 */
-
+	// ANCHOR - Forward declaration for task id
 	typedef ui16	task_id_t; 	// ID của tác vụ
 
-	/** ANCHOR - Forward declaration for memory pool info
-	 */
-
+	// ANCHOR - Forward declaration for memory pool info
 	typedef struct pal_memrp_info_t pal_memrp_info_t;
 
-	/** ANCHOR - Định nghĩa các loại Pool tin nhắn (Nội bộ Core sử dụng)
-	 */
+	// ANCHOR - Định nghĩa các loại Pool tin nhắn (Nội bộ Core sử dụng)
 	typedef enum uedp_msg_type_t {
 		UEDP_MSG_TYPE_BLANK = 0,    /* Không data */
 		UEDP_MSG_TYPE_NORM,      		/* Data kích thước cố định (Pool) */
@@ -109,8 +103,7 @@
 		} \
 	} while(0)
 
-	/** ANCHOR - Hàm khởi tạo Queue tin nhắn
-	 */
+	// ANCHOR - Hàm khởi tạo Queue tin nhắn
 	void uedp_msg_pool_init();
 
 	/** ANCHOR - Hàm cấp phát tin nhắn duy nhất (UMI)
@@ -145,9 +138,7 @@
 	 */
 	RETR_STAT internal_uedp_msg_enqueue_isr_sig(task_id_t tid, ui16 sig);
 
-	/** ANCHOR - Xả hàng đợi tin nhắn trong ngữ cảnh ISR để giải phóng các tin nhắn đang bị giữ trong hàng đợi ISR
-	 * 
-	 */
+	// ANCHOR - Xả hàng đợi tin nhắn trong ngữ cảnh ISR để giải phóng các tin nhắn đang bị giữ trong hàng đợi ISR
 	void uedp_msg_drain_isr_pool(void);
 
 	/** ANCHOR - Lấy thông tin bộ nhớ của một Pool tin nhắn cụ thể để báo cáo cho PAL Memory Reporter
@@ -172,24 +163,6 @@
 	 */
 	void uedp_msg_set_des_task_id(uedp_msg_t* msg, task_id_t des_task_id);
 
-	/* ============================================================================
-	 * [GDP] Global Data Pool — dpool riêng cho biến toàn cục (định danh nội bộ GAXES),
-	 * phục vụ D2MP khi truyền `ptype: REF`/`ptype: VAL` từ khối `glbda:` của PLD/μE-LS.
-	 *
-	 * Theo kết luận cuối cùng trong docs/review/dmp-gda.md: GDP KHÔNG dùng lại ALLOC
-	 * pool, vì biến toàn cục không có khái niệm "free" (sống suốt vòng đời chương
-	 * trình) - trong khi ALLOC gắn chặt với vòng đời uedp_msg_alloc()/uedp_msg_free().
-	 * GDP chỉ "gán vị trí an toàn" (đăng ký tên <-> con trỏ), không quản lý vòng đời.
-	 * ============================================================================ */
-
-	/** ANCHOR - Số lượng slot dữ liệu toàn cục tối đa GDP có thể quản lý cùng lúc
-	 * @attention Hiện để default trực tiếp tại đây (giống pattern LOGDP_MAX_OUTPUT_FN) - có thể
-	 *            đưa vào Kconfig/PLTF codegen sau này giống các Pool khác (BLANK/ALLOC/EXTAL/ISR) nếu cần.
-	 */
-	#ifndef UEDP_GDP_MAX_SLOTS
-		#define UEDP_GDP_MAX_SLOTS (16u)
-	#endif
-
 	/** ANCHOR - Khai báo 1 slot dữ liệu toàn cục trong GDP
 	 * @param name Tên định danh biến (tương ứng `name` trong khối `glbda:` của μE-LS), dùng để tra cứu
 	 * @param data Con trỏ tới vùng nhớ thật chứa dữ liệu
@@ -207,8 +180,7 @@
 		bool        in_use;
 	} uedp_gdp_slot_t;
 
-	/** ANCHOR - Khởi tạo bảng GDP - cần gọi trước khi dùng bất kỳ API GDP nào khác
-	 */
+	// ANCHOR - Khởi tạo bảng GDP - cần gọi trước khi dùng bất kỳ API GDP nào khác
 	void uedp_gdp_init(void);
 
 	/** ANCHOR - Đăng ký 1 biến toàn cục vào GDP
