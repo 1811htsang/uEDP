@@ -385,7 +385,7 @@ def strucjec_calib(yaml_sample):
     # DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
     strucjec_debug_outexec(errors_outexec)
     strucjec_debug_action_syntax(errors_action_syntax)
-  if errors_tlist or errors_glbda or errors_isr or errors_outexec:
+  if errors_tlist or errors_glbda or errors_outexec:
     print("[INFO] Structure validation completed with errors.")
     print("[INFO] Please check the above errors and fix them in the YAML file.")
     print("[INFO] Exiting with error.")
