@@ -11,6 +11,7 @@
 #include "uedp_fcr.h"
 
 //ANCHOR - STM32F103 BSP include
+#include "stm32f103xb.h"
 #include "core_cm3.h"
 #include "stm32f1xx.h"
 #include "stm32f1xx_hal.h"
@@ -39,9 +40,10 @@ void uedp_core_init(void) {
 sta ui32 primask_gvi = 0x0u;
 
 void pal_core_init(void) {
-  stm32f103_init_env();
+  stm32f103_config_exti_swisr();
 }
 
+//NOTE - not an optimal solution, but currently usable
 void pal_enter_critical(void) {
   __disable_irq();
   primask_gvi = __get_PRIMASK();
@@ -77,11 +79,14 @@ void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
   * theo nhu cầu của người dùng
   */
 
-void stm32f103_init_env(void) {
-  stm32f103_nvic_config();
+//NOTE - sleep mode will exit after wake-up source finish
+void stm32f103_sleep_exit(void) {
+  HAL_SuspendTick();
+  HAL_PWR_EnableSleepOnExit();
 }
 
-void stm32f103_sleep(void) {
+//NOTE - sleep mode will resume after wake-up source finish
+void stm32f103_sleep_resume(void) {
   HAL_SuspendTick();
   HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
 }
@@ -90,24 +95,54 @@ void stm32f103_wakeup(void) {
   HAL_ResumeTick();
 }
 
-void stm32f103_nvic_config(void) {
-	NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
+//NOTE - using custom interrupt source would be nice instead of binding to specific functional interrupt
+
+void exti_line_0_swi_callback(void) {
+  stm32f103_wakeup();
 }
 
-void stm32f103_exti_init(ui32 IRQnum) {
+EXTI_HandleTypeDef EXTI_L0_handler = {
+  EXTI_LINE_0,
+  &exti_line_0_swi_callback
+};
 
+EXTI_ConfigTypeDef EXTI_L0_config = {
+  EXTI_LINE_0,
+  EXTI_MODE_INTERRUPT,
+  EXTI_TRIGGER_RISING,
+  EXTI_GPIO //NOTE - This is mandatory but not in use
+};
+
+void stm32f103_config_exti_swisr(void) {
+  HAL_EXTI_SetConfigLine(&EXTI_L0_handler, &EXTI_L0_config);
+}
+
+void stm32f103_trigger_swisr(ui32 IRQnum) {
+  HAL_EXTI_GenerateSWI(&EXTI_L0_handler);
 }
 
 void stm32f103_check_hardfault_reason(char* retr) {
-
+  /** NOTE
+   * The result has aleady been logged in internal_hardfault_decoder, so just return a simple message
+   * However, the itnlog is not bene implemented to be persisted 
+   * so the user can implement their own persistent log mechanism to store the hardfault reason for later analysis
+   */
 }
 
 void SysTick_Handler(void) {
-  
+  HAL_IncTick();
+  uedp_timer_tick();
 }
 
 __attribute__((naked)) void HardFault_Handler(void) {
-
+  __asm volatile (
+    " tst lr, #4                                 \n" // Kiểm tra bit 2 của LR (EXC_RETURN)
+    " ite eq                                     \n"
+    " mrseq r0, msp                              \n" // Bit 2 = 0: Dùng Main Stack (MSP)
+    " mrsne r0, psp                              \n" // Bit 2 = 1: Dùng Process Stack (PSP)
+    " ldr r1, =internal_hardfault_decoder        \n"
+    " bx r1                                      \n"
+  );
 }
 
 //ANCHOR - Implementation cho internal API handling
@@ -134,5 +169,37 @@ extern ui32 _end;              /* Start of Heap (thường sau bss) 	        */
  */
 
 UEDP_ATTR_UNUSED void internal_hardfault_decoder(uint32_t *stack) {
-	
+  // NOTE - Lấy thông tin các thanh ghi CPU trước khi xảy ra fault
+  // NOTE - Bổ sung atttribute để tránh warning từ compiler
+  UEDP_ATTR_UNUSED uint32_t r0  = stack[0];
+  UEDP_ATTR_UNUSED uint32_t r1  = stack[1];
+  UEDP_ATTR_UNUSED uint32_t r2  = stack[2];
+  UEDP_ATTR_UNUSED uint32_t r3  = stack[3];
+  UEDP_ATTR_UNUSED uint32_t r12 = stack[4];
+  UEDP_ATTR_UNUSED uint32_t lr  = stack[5]; // Link Register (Địa chỉ trả về trước khi gọi hàm bị lỗi)
+  UEDP_ATTR_UNUSED uint32_t pc  = stack[6]; // Program Counter (Địa chỉ chính xác của lệnh gây ra lỗi)
+  UEDP_ATTR_UNUSED uint32_t psr = stack[7]; // Program Status Register
+
+  // NOTE - Đọc các thanh ghi cấu hình/chẩn đoán System Control Block (SCB)
+  volatile uint32_t cfsr = SCB->CFSR; // Configurable Fault Status Register ( gom MemManage, BusFault, UsageFault)
+  volatile uint32_t hfsr = SCB->HFSR; // HardFault Status Register
+  volatile uint32_t dfsr = SCB->DFSR; // Debug Fault Status Register
+  volatile uint32_t afsr = SCB->AFSR; // Auxiliary Fault Status Register
+
+  // NOTE - Lấy địa chỉ bộ nhớ gây lỗi (nếu có)
+  volatile uint32_t mmfar = SCB->MMFAR; // MemManage Fault Address
+  volatile uint32_t bfar  = SCB->BFAR;  // BusFault Address
+
+  // NOTE - Giữ chân CPU tại đây để quan sát qua Debugger hoặc log ra UART
+  (void)r0; (void)r1; (void)r2; (void)r3; (void)r12; (void)psr;
+  (void)cfsr; (void)hfsr; (void)dfsr; (void)afsr; (void)mmfar; (void)bfar;
+
+  // STUB - add itnlog here
+  uedp_itnlog_log(HAL_GetTick(), ITNLOG_LEVEL_FATAL, ITNLOG_TAG_FCR, (const char*)hfsr);
+
+  // STUB - add persistent log here with Backup Data Registers or external flash memory
+
+  __asm volatile ("bkpt #0"); // Dừng chương trình nếu đang cắm Debugger
+  while (1);
 }
+
