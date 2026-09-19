@@ -535,17 +535,21 @@ Sang đã review tài liệu thiết kế và approved.
 - [x] Cập nhật config file sample để hỗ trợ BST trên uutobj F103.
 - [x] Sửa đổi lại pregen/hwapi mục help.
 - [x] Cập nhật bảng FCR với bổ sung entry khi `pal_sys_fatal` được gọi.
-- [ ] Bổ sung task cho Khánh + Minh.
-- [ ] Bổ sung comment cho tài liệu `reviews/smoltcp.md` để Minh phản biện. //NOTE - Bổ sung phần cảnh báo về việc phải có lldriver cho WiFi/Ethernet khi sử dụng smoltcp.
-- [ ] Triển khai thiết kế bổ sung mini-RAG với dự trù sLM Qwen3-0.6B + EM all-miniLM-L6-v2.
+- [x] Bổ sung task cho Khánh + Minh + Đạt.
+- [x] Bổ sung comment cho tài liệu `reviews/smoltcp.md` để Minh phản biện. //NOTE - Bổ sung phần cảnh báo về việc phải có lldriver cho WiFi/Ethernet khi sử dụng smoltcp. Đã có nên không cần bổ sung thêm.
+- [x] Triển khai thiết kế bổ sung mini-RAG với dự trù sLM Qwen3-0.6B + EM all-miniLM-L6-v2.
 
 <!-- STATUS
 Hiện tại đã triển khai hoàn chỉnh với chiến lược chunking + retrieval nhưng kết quả vẫn chưa đạt được như mong đợi.
 Đang bổ sung dự trù chuyển sang sLM Qwen2.5-0.5B-Instruct (llama.cpp IE + GGUF-compatible) + EM BAAI/bga-base-en-1.5 để cải thiện khả năng truy xuất thông tin đơn giản từ tài liệu.
 Tuy nhiên, dự án này cần được dự trù lâu dài để thực thi và cần phân bổ đánh giá lại thời gian và nguồn lực để đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+
+Sau khi chuyển sang Qwen2.5-0.5B-Instruct (llama.cpp IE + GGUF-compatible) + EM BAAI/bge-m3 thì kết quả đã cải thiện đáng kể, tuy nhiên vẫn cần tiếp tục refine để đạt được hiệu suất tối ưu.
+
+Hiện tại do phần cứng chưa đủ mạnh nên tạm gác lại việc triển khai mini-RAG và sẽ tiếp tục refine khi có phần cứng mạnh hơn để đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 -->
 
-- [ ] Thực hiện bổ sung C-type API cho archobj STM32F103 (abbr F103), archobj STM32H723 (abbr H723) và archobj ESP32S3 (abbr S3N16) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Thực hiện bổ sung C-type API cho archobj STM32F103 (abbr F103), archobj STM32H723 (abbr H723) và archobj ESP32S3 (abbr S3N16) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- SECTION
 
@@ -555,8 +559,14 @@ Tuy nhiên, dự án này cần được dự trù lâu dài để thực thi v�
 
 # STATUS 
 
-  - Cần bổ sung nhanh chóng do sự chậm trễ từ task mini-RAG.
-  - Ngoài ra, cần review triển khai với thầy để đảm bảo về mặt thiết kế phần cứng.
+- Cần bổ sung nhanh chóng do sự chậm trễ từ task mini-RAG.
+- Ngoài ra, cần review triển khai với thầy để đảm bảo về mặt thiết kế phần cứng.
+
+Đã bổ sung triển khai cho F103
+
+Với H723 có nền tảng tương tự F103 nên có thể tái sử dụng các API đã triển khai cho F103 để bổ sung cho H723.
+
+Với S3M16 cần bổ sung lại, cân nhắc cho Minh và Đạt để bổ sung các API cho S3M16.
 
 //!SECTION
 -->
