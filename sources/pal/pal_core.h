@@ -22,15 +22,6 @@
   #endif
 
   /**
-   * @brief Định nghĩa các bit cờ debug cho hệ thống UEDP
-   * 
-   */
-
-  #define DBG_MSG_TIMESTAMP_BIT          (0x01u)
-  #define DBG_TASK_FLOW_BIT              (0x02u)
-  #define DBG_POOL_USAGE_BIT             (0x04u)
-
-  /**
    * @brief Định nghĩa các kiểu dữ liệu cơ bản cho hệ thống UEDP
    */
 
