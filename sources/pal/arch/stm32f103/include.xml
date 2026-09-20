@@ -11,6 +11,7 @@
       <includepath workspace_path="true">/${ProjName}/uedp/sources/common/container/fifo</includepath>
       <includepath workspace_path="true">/${ProjName}/uedp/sources/common/container/ring_buffer</includepath>
       <includepath workspace_path="true">/${ProjName}/uedp/sources/common/container/llist</includepath>
+      <includepath workspace_path="true">/${ProjName}/uedp/sources/common/encryp/libcrc8</includepath>
       <includepath workspace_path="true">/${ProjName}/uedp/sources/common/xprintf</includepath>
       <includepath workspace_path="true">/${ProjName}/uedp/sources/core/inc</includepath>
       <includepath workspace_path="true">/${ProjName}/uedp/sources/core/src</includepath>
