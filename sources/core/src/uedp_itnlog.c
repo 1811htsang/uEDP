@@ -124,9 +124,9 @@ void uedp_itnlog_dump(void) {
           formatted_entry,
           sizeof(formatted_entry),
           "[ITNLOG] %u 0x%02X 0x%02X %s\n",
-          (unsigned int)entry.tmstmp,
-          (unsigned int)entry.task_id,
-          (unsigned int)entry.msg_sig,
+          (ui16)entry.tmstmp,
+          (ui16)entry.task_id,
+          (ui16)entry.msg_sig,
           (entry.msg != NULL) ? entry.msg : ""
         );
         itnlog_output_func(formatted_entry);
