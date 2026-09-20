@@ -227,7 +227,7 @@ Khánh đã hoàn thành ở `sources/core/src`
 -->
 
 - [x] Bổ sung tài liệu tìm hiểu về smoltcp để hiểu về kiến trúc, tính năng hỗ trợ, cách smoltcp triển khai logic xử lý mạng hướng sự kiện.
-- [ ] Sửa đổi README.md để trình bày về những thay đổi trong việc bổ sung các testobj và các thay đổi trong thiết kế syntax của μE-LS.
+- [x] Sửa đổi README.md để trình bày về những thay đổi trong việc bổ sung các testobj và các thay đổi trong thiết kế syntax của μE-LS.
 - [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu. //NOTE - lần này thực hiện ở file `pal_core.h`
 - [ ] Loại bỏ toàn bộ `Định nghĩa các hằng số boolean và trạng thái cơ bản cho hệ thống UEDP` trong file `pal_core.h` do không còn sử dụng.
 - [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như pycdscriptor.*, kconfigspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
