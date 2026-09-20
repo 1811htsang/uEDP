@@ -45,5 +45,6 @@ void pal_logdp_dispatch(uedp_itnlog_entry_t* entry) {
     if (logdp_output_fns[i] != NULL) {
       logdp_output_fns[i](entry); // Gọi hàm callback để xuất dữ liệu log
     }
+    //REVIEW - Cân nhắc bổ sung 1 đoạn logic để raise lỗi nếu không có hàm callback nào được đăng ký, raise qua FCR để ghi log + xử lý theo bảng hành động (SYS_PANIC)
   }
 }
