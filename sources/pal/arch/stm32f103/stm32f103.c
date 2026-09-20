@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include "stm32f103.h"
 #include "uedp_core.h"
 #include "uedp_task.h"
@@ -9,6 +10,14 @@
 #include "uedp_timer.h"
 #include "uedp_itnlog.h"
 #include "uedp_fcr.h"
+
+//ANCHOR - Khai báo thư viện encrypt
+#include "libcrc8.h"
+
+//ANCHOR - Khai báo thư viện hệ thống
+#include "pal_logdp.h"
+#include "pal_memrp.h"
+#include "pal_rprintf.h"
 
 //ANCHOR - STM32F103 BSP include
 #include "stm32f103xb.h"
@@ -203,3 +212,65 @@ UEDP_ATTR_UNUSED void internal_hardfault_decoder(uint32_t *stack) {
   while (1);
 }
 
+ui32 stm32f103_get_tick(void) {
+  return HAL_GetTick();
+}
+
+/** NOTE
+ * Khai báo entry mặc định cho toàn bộ tính năng PPLP
+ */
+
+const uedp_itnlog_entry_t default_entry = {
+  UEDP_TASK_NORM_IDLE_ID, // NOTE - IDLE task id
+  0x0, // NOTE - No message sig
+  0x0,
+  0x0,
+  (const char*)"0",
+  ITNLOG_TAG_PAL,
+  ITNLOG_LEVEL_INFO
+};
+
+/** NOTE
+ * entry của pal_log_dispatch được set global
+ * vì 1 số tham số có thể được thay đổi trong quá trình runtime,
+ * do đó chỉ cần set entry 1 lần duy nhất
+ */
+
+uedp_itnlog_entry_t logdp_entry = default_entry;
+
+void stm32f103_log_alloc(const char* param) {
+  logdp_entry.msg = param;
+  logdp_entry.tmstmp = stm32f103_get_tick();
+  logdp_entry.hash = crc8((uint8_t*)param, strlen(param), 0xB4);
+  pal_logdp_dispatch(&logdp_entry);
+}
+
+RETR_STAT uart_init(void) {
+  return STAT_OK;
+}
+
+//TASK - Add detail implementation for UART output functions
+
+void uart_putc(unsigned char c) {
+  // HAL_UART_Transmit_IT(huart, pData, Size);
+}
+
+void uart_write(const uint8_t* data, ui16 len) {
+  // HAL_UART_Transmit_IT(huart, pData, Size);
+}
+
+bool uart_isready() {
+  // HAL_UART_GetState(huart)
+  return true;
+}
+
+const uedp_itnlog_entry_t rprintf_entry = default_entry;
+
+pal_rprintf_service_t svc = {
+  "uart",
+  rprintf_entry,
+  &uart_init,
+  &uart_putc,
+  &uart_write,
+  &uart_isready
+};

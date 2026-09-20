@@ -21,4 +21,8 @@
 
   void stm32f103_check_hardfault_reason(char* retr);
 
+  ui32 stm32f103_get_tick(void);
+
+  void stm32f103_log_alloc(const char* param);
+
 #endif // __STM32F103_H__
