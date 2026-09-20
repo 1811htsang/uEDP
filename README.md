@@ -142,6 +142,8 @@ Please also note that the documentation is currently supporting Vietnamese, and 
 
 This project is developed by **Shang Huang (Huynh Thanh Sang)**. Contributions for bug reports or feature proposals are welcome via GitHub Issues.
 
+From v1.1.5, **Minminie06 (Nguyen Hoang Hai Minh)** has joined the project as a contributor, focusing on the development, refactor and documentation for any leftover features and improvements. Contributions from the community are always welcome, and we encourage you to submit pull requests for any enhancements or bug fixes.
+
 **License:** MIT.
 
 ---
