@@ -217,7 +217,7 @@ tlist:
                   kind: c_call
                   function: printf
                   args: ['"[B][IDLE] RECV SIG_0X12. >> SEND SIG_0X34 + GDA_SYSTEM_STATUS.\n"']
-              - actv: uedp_task_norm_post_msg
+              - actv: uedp_task_norm_post_msg # TASK - Due to removal of actv-obj-post, we need to use uedp_task_norm_post_msg directly using c_call or c_stmt
                 to: TASK_NORM_A
                 sig: *sig3-ank
                 data: *gda_status # Ghi log nội dung từ biến toàn cục
@@ -227,7 +227,7 @@ tlist:
                   kind: c_call
                   function: printf
                   args: ['"[B][IDLE] SEND SIG_0XFF.\n"']
-              - actv: uedp_task_norm_post_msg
+              - actv: uedp_task_norm_post_msg # TASK - Due to removal of actv-obj-post, we need to use uedp_task_norm_post_msg directly using c_call or c_stmt
                 to: TASK_NORM_A
                 sig: *sig4-ank
                 data: NULL 
@@ -236,7 +236,7 @@ tlist:
                   kind: c_call
                   function: printf
                   args: ['"[B][IDLE] SEND SIG_0XAA -> SELF. >> BUSY.\n"']
-              - actv: uedp_task_norm_post_msg
+              - actv: uedp_task_norm_post_msg # TASK - Due to removal of actv-obj-post, we need to use uedp_task_norm_post_msg directly using c_call or c_stmt
                 to: TASK_NORM_B
                 sig: *sig6-ank
                 data: NULL 
@@ -266,7 +266,7 @@ tlist:
     <<: *tpoll2-ank
 # ANCHOR - Interrupt Service Routine (ISR) - Xử lý ngắt
 
-isr:
+isr: # TASK - Due to removal of actv-obj-post and ISR, remove support for isr
   - id: ISR_HARD_STOP
     to: TASK_NORM_A # Validator check: kiểm tra lỗi từ lstaxer.strucjec
     sig: *sig7-ank
