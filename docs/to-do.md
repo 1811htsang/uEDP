@@ -223,7 +223,8 @@ Theo dõi ở uedp_core.h nhánh feat để nắm rõ các tag ANCHOR được c
 Minh sẽ hỗ trợ Khánh và Đạt thực thi task này
 
 Khánh đã hoàn thành ở `sources/core/src`
-Đạt chưa hoàn thành ở `sources/core/inc`
+Đạt chưa hoàn thành ở `sources/core/inc` -> Đạt đã hoàn thành.
+# STATUS - DONE
 -->
 
 - [x] Bổ sung tài liệu tìm hiểu về smoltcp để hiểu về kiến trúc, tính năng hỗ trợ, cách smoltcp triển khai logic xử lý mạng hướng sự kiện.
@@ -233,6 +234,8 @@ Khánh đã hoàn thành ở `sources/core/src`
 - [ ] Bổ sung nội dung hướng dẫn người sử dụng truy cập và sử dụng các testobj trong `docs/uels-syntax.md` để hỗ trợ việc kiểm thử và phát triển các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn.
 - [ ] Bổ sung comment dạng cross-style của Anchor-type và Doxygen-type cho `encryp/libcrc8` (cả `.h` và `.c`).
 - [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như pycdscriptor.*, kconfigspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
+- [ ] Bổ sung nội dung để người dùng triển khai `pal_sys_reset` và `pal_sys_fatal` đúng cách.
+- [ ] Bổ sung nội dung để trình bày về vấn đề vị trí đặt và sử dụng BSP (Board Support Package) trong dự án μEDP, nhằm giúp người dùng hiểu rõ hơn về cách thức triển khai và sử dụng BSP một cách hiệu quả và đúng cách trong việc phát triển ứng dụng trên nền tảng μEDP.
 
 <!-- NOTE - Expectation b4 BST task
 Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ được hoàn thiện với khả năng tự động hóa việc phân giải logic từ các cấu hình YAML sang các hàm thực thi trong lõi μEDP.
@@ -301,6 +304,7 @@ Ngoài ra, các tính năng nâng cao như lọc tin nhắn theo topic, QoS (Qua
 - [ ] Bổ sung khả năng phân giải PPLP vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 - [ ] Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 - [ ] Thêm trường priority vào trong syntax của task để hỗ trợ việc phân giải mức độ ưu tiên của task trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
+- [ ] Đề xuất cơ chế quản lý chẩn đoán DEM (Diagnostic Event Management) với ECS (Enable Condition Stage), DBS (Debouncing Stage) và pzsto (persistence store) kết hợp FCR trong quản lý lỗi.
 
 //  !SECTION
 
