@@ -2,14 +2,14 @@ cmake_minimum_required(VERSION 3.10)
 project(uedp C)
 
 # ANCHOR - Định nghĩa Biến Nền tảng
-set(PLAT "TEST" CACHE STRING "Target: TEST, LINUX, STM32, ESP32")
+set(PLAT "TEST" CACHE STRING "Target: TEST, LINUX, STM32F103, STM32H723, ESP32S3")
 
 # ANCHOR - Thu thập file nguồn chung
-file(GLOB_RECURSE CORE_SRCS "sources/core/src/*.c")
-file(GLOB COMMON_CONTAINER_SRCS 
+file(GLOB_RECURSE CORE_SRCS "sources/core/src/*.c"
   "sources/common/container/fifo/*.c"
   "sources/common/container/llist/*.c"
   "sources/common/container/ring_buffer/*.c"
+  "sources/common/encryp/libcrc8/*.c"
 )
 file(GLOB COMMON_XPRINTF_SRCS "sources/common/xprintf/*.c")
 file(GLOB APP_SRCS "sources/app/app.c")
@@ -30,12 +30,17 @@ elseif(PLAT STREQUAL "LINUX")
   set(PAL_PLATFORM_SRCS "sources/pal/arch/linux/linux.c")
   set(PLATFORM_LIBS pthread m) # Thêm m (math) nếu cần
   add_definitions(-DLINUX_PLATFORM)
-elseif(PLAT STREQUAL "STM32")
-  message(STATUS "[INFO]: Configuring for STM32 Build...")
+elseif(PLAT STREQUAL "STM32F103")
+  # TASK - Add CMakeList.txt for BSP of STM32
+  message(STATUS "[INFO]: Configuring for STM32F103 Build...")
+  set(PAL_PLATFORM_SRCS "sources/pal/arch/stm32f103/stm32f103.c")
+  add_definitions(-DSTM32F103_PLATFORM)
+elseif(PLAT STREQUAL "STM32H723")
+  message(STATUS "[INFO]: Configuring for STM32H723 Build...")
   set(PAL_PLATFORM_SRCS "sources/pal/arch/stm32h723/stm32h723.c")
   add_definitions(-DSTM32_PLATFORM)
-elseif(PLAT STREQUAL "ESP32")
-  message(STATUS "[INFO]: Configuring for ESP32 Build...")
+elseif(PLAT STREQUAL "ESP32S3")
+  message(STATUS "[INFO]: Configuring for ESP32S3 Build...")
   set(PAL_PLATFORM_SRCS "sources/pal/arch/esp32s3/esp32s3.c")
   add_definitions(-DESP32_PLATFORM)
 else()
@@ -61,6 +66,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
   "sources/common/container/fifo/"
   "sources/common/container/llist/"
   "sources/common/container/ring_buffer/"
+  "sources/common/encryp/libcrc8/"
 
   "sources/common/xprintf/"
   
@@ -68,6 +74,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
   "sources/pal/"
   "sources/pal/arch/linux/"
+  "sources/pal/arch/stm32f103/"
   "sources/pal/arch/stm32h723/"
   "sources/pal/arch/esp32s3/"
   "sources/pal/service/memrp/"
@@ -131,3 +138,5 @@ elseif (PLAT STREQUAL "ESP32")
   # NOTE - Định nghĩa Macro toàn cục để Code biết đang chạy trên ESP32
   target_compile_definitions(${COMPONENT_LIB} PUBLIC UEDP)
 endif()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
