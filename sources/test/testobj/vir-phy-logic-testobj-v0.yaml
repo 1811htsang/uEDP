@@ -31,7 +31,8 @@ tlist:
             goto: UEDP_TSM_STATE_STAY
         on_ntry:
           # NOTE - tsm_init and tsm_trans
-          # TASK - Need more detail documentation on how-to use tsm and fsm correctly
+          # DEPRECATED - Old TASK - Need more detail documentation on how-to use tsm and fsm correctly
+          # STATUS - DONE
           steps:
             - actv: 
                 kind: c_stmt # NOTE - ot_ntry (one time entry)
