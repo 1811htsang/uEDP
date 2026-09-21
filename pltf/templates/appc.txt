@@ -151,7 +151,7 @@ void {{ item.handler }}(void) {
   /* OUTEXEC {{ item.name }}, context: {{ item.context or 'NULL' }}, state: {{ item.state }}. */
 }
 {% endfor %}
-int main(void) {
+int app_main(void) {
   uedp_core_init();
   uedp_msg_pool_init();
   logic_init();

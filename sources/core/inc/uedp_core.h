@@ -202,6 +202,24 @@
     #define UEDP_ITNLOG_FLUSH_THRESHOLD  (28u) // units, ngưỡng để tự động flush log entry ra đích đến khi số lượng log entry trong ring buffer đạt đến ngưỡng này
   #endif
 
+  /* ============================================================================
+	 * [GDP] Global Data Pool — dpool riêng cho biến toàn cục (định danh nội bộ GAXES),
+	 * phục vụ D2MP khi truyền `ptype: REF`/`ptype: VAL` từ khối `glbda:` của PLD/μE-LS.
+	 *
+	 * Theo kết luận cuối cùng trong docs/review/dmp-gda.md: GDP KHÔNG dùng lại ALLOC
+	 * pool, vì biến toàn cục không có khái niệm "free" (sống suốt vòng đời chương
+	 * trình) - trong khi ALLOC gắn chặt với vòng đời uedp_msg_alloc()/uedp_msg_free().
+	 * GDP chỉ "gán vị trí an toàn" (đăng ký tên <-> con trỏ), không quản lý vòng đời.
+	 * ============================================================================ */
+
+	/** ANCHOR - Số lượng slot dữ liệu toàn cục tối đa GDP có thể quản lý cùng lúc
+	 * @attention Hiện để default trực tiếp tại đây (giống pattern LOGDP_MAX_OUTPUT_FN) - có thể
+	 *            đưa vào Kconfig/PLTF codegen sau này giống các Pool khác (BLANK/ALLOC/EXTAL/ISR) nếu cần.
+	 */
+	#ifndef UEDP_GDP_QUEUE_SIZE
+		#define UEDP_GDP_QUEUE_SIZE (16u)
+	#endif
+
   /** ANCHOR - Define constants for flush log entry threshold
    * @brief Khởi tạo toàn bộ lõi UEDP (Pools, Timers, Task Manager)
    */
