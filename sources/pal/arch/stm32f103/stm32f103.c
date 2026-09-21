@@ -266,6 +266,11 @@ bool uart_isready() {
 
 const uedp_itnlog_entry_t rprintf_entry = default_entry;
 
+/** NOTE
+ * rprintf_entry có thể thay đổi runtime nên cho phép const pointer ở khai báo trước,
+ * sau đó gán giá trị mới cho các trường trong struct khi cần thiết
+ */
+
 pal_rprintf_service_t svc = {
   "uart",
   rprintf_entry,
