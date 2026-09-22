@@ -579,6 +579,10 @@ Với S3M16 cần bổ sung lại, cân nhắc cho Minh và Đạt để bổ su
 
 - [ ] Remove các deprecated declaration của actv-obj-post và ISR trong `vir-phy-logic-testobj-v0`.
 - [ ] Bổ sung detail implementation của UART backend logging trên uutobj F103.
+- [ ] Bổ sung requirement.txt cho các thư viện cần có của python.
+- [ ] Sửa đổi lại `PLAT=TEST` để generate library thay thế executable thiếu `main()` function.
+- [ ] Bổ sung junction cho sử dụng ESP-IDF ở docker.
+- [ ] Bổ sung tài liệu review thiết kế TSD/TLC
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj H723 và S3N16 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- NOTE - Expectation for PLTF.TSD/TLC
