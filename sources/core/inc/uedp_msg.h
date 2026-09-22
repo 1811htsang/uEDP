@@ -48,21 +48,24 @@
 
 		/* Thông tin điều hướng */
 		ui16 src_task_id; 		/* ID Nguồn */
-		ui16 des_task_id;	 	/* ID Đích */
+		ui16 des_task_id;	 		/* ID Đích */
 		ui16 sig; 						/* Tín hiệu của tin nhắn */
 		
 		/* Quản lý bộ nhớ & Pool */
-		ui16  type;          /* uedp_msg_type_t */
-		ui16  ref_count;     /* Số lượng tham chiếu (dùng cho broadcast) */
+		ui16  type;          	/* uedp_msg_type_t */
+		ui16  ref_count;     	/* Số lượng tham chiếu (dùng cho broadcast) */
 
 		/* Payload dữ liệu */
-		ui32* data;          /* Con trỏ đến vùng dữ liệu */
+		ui32* data;          	/* Con trỏ đến vùng dữ liệu */
 
 		/* Metadata hỗ trợ interface */
-		struct {
-			ui16 if_src_type;
-			ui16 if_sig;
-		} interface;
+		// struct {
+		// 	ui16 if_src_type;
+		// 	ui16 if_sig;
+		// } interface;
+		/** NOTE
+		 * Tạm thời không sử dụng nên comment lại để tránh tăng kích thước struct
+		 */
 
 		/* Tùy chọn debug */
 		#if defined(UEDP_DEBUG_FLAG) && (UEDP_DEBUG_FLAG & 0x01u)

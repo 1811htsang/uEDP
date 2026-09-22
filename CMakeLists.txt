@@ -58,8 +58,12 @@ set(SOURCES
   # STUB - If later have main.c for test, can add here
 )
 
-# ANCHOR - Tạo mục tiêu thực thi
-add_executable(${PROJECT_NAME} ${SOURCES})
+# ANCHOR - Tạo mục tiêu build (OBJECT library cho TEST vì chưa có main, executable cho các nền tảng còn lại)
+if (PLAT STREQUAL "TEST")
+  add_library(${PROJECT_NAME} OBJECT ${SOURCES})
+else()
+  add_executable(${PROJECT_NAME} ${SOURCES})
+endif()
 
 # ANCHOR - Cấu hình Include Directories
 target_include_directories(${PROJECT_NAME} PRIVATE
