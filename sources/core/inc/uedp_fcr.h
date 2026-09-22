@@ -25,6 +25,7 @@
    * @attention Dải `0x9x` được chọn vì các dải `0xAx` -> `0xFx` đã được
    *            sử dụng cho TASK_NORM/TASK_POLL/TASK_PRI/FSM_SIG/TSM_SIG/TSM_STATE
    *            (xem uedp_core.h), tránh xung đột định danh trong toàn hệ thống.
+   * @note MOD = ITC (Internal Trouble Code)
    */
   #define UEDP_FCR_MOD_MSG      (0x90u) // Module quản lý tin nhắn (uedp_msg)
   #define UEDP_FCR_MOD_TASK     (0x91u) // Module quản lý tác vụ (uedp_task)
@@ -47,6 +48,7 @@
    * @attention Đây KHÔNG phải danh sách đầy đủ - người dùng có thể bổ sung thêm
    *            mã lỗi riêng cho tầng ứng dụng bằng cách dùng UEDP_FCR_CODE(UEDP_FCR_MOD_APP, x)
    *            và tự đăng ký entry tương ứng nếu cần (xem uedp_fcr_raise()).
+   * @note FCR = DTC (Diagnostic Trouble Code) - Mã lỗi chẩn đoán nghiêm trọng, dùng để báo cáo lỗi
    */
 
   // NOTE - [MSG] - 0x90xx
@@ -80,7 +82,7 @@
   #define UEDP_FCR_OCE_NOT_INIT           UEDP_FCR_CODE(UEDP_FCR_MOD_OCE, 0x03) // ocesvc_scheduler() được gọi trước khi ocesvc_ctrl_init() chạy (danh sách liên kết chưa có sentinel head)
 
   // [PAL] - 0x96xx
-  #define UEDP_FCR_PAL_FATAL_API_CALLED   UEDP_FCR_CODE(UEDP_FCR_MOD_PAL, 0x00)
+  #define UEDP_FCR_PAL_FATAL_API_CALLED   UEDP_FCR_CODE(UEDP_FCR_MOD_PAL, 0x00) // pal_sys_fatal() has been called
   #define UEDP_FCR_PAL_LOGDP_TABLE_FULL   UEDP_FCR_CODE(UEDP_FCR_MOD_PAL, 0x01) // Bảng đăng ký callback của logdp đã đầy
 
   #define UEDP_FCR_GDP_TABLE_FULL         UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x00) // Không còn slot trống trong GDP để đăng ký thêm biến toàn cục (UEDP_GDP_QUEUE_SIZE)

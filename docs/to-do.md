@@ -212,17 +212,30 @@ Kiểm tra trong `usrinp` để nắm rõ thông tin của task và thực hiệ
 - [x] Bổ sung phiên bản tiếng anh của `user-manual` để hỗ trợ cộng đồng global trong việc tiếp cận và phát triển dự án μEDP, bao gồm các thông tin về kiến trúc hệ thống, các module chính, các giao diện lập trình ứng dụng (API) và các hướng dẫn phát triển chi tiết.
 - [x] Bổ sung sửa đổi tài liệu thiết kế PLTF bản EN và VN. //NOTE - Ở task này là kiểm tra sửa đổi tài liệu thiết kế PLTF bản EN và VN theo các thay đổi về module name và thiết kế logic của các module.
 - [x] Kiểm tra lại các thay đổi mới trong tài liệu cú pháp sau hiệu chỉnh của bên nhánh chore để đảm bảo documentation và source code được đồng bộ và nhất quán. //NOTE - Follow theo commit số `bab87c3dece35ccfcb71888f1086b1c45fa0b4f7` của nhánh chore.
-- [ ] Hỗ trợ newcomer trong việc nắm bắt các thay đổi mới trong tài liệu cú pháp và source code của dự án μEDP, bao gồm việc giải thích các thay đổi về module name, thiết kế logic của các module và các hướng dẫn phát triển chi tiết để giúp newcomer hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng mới trong việc phát triển ứng dụng trên nền tảng μEDP. //NOTE - Minh sẽ thực hiện hướng dẫn.
-- [ ] Kiểm tra lại `README.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
-- [ ] Kiểm tra lại `dmp-gda.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
-- [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu.
+- [x] Hỗ trợ newcomer trong việc nắm bắt các thay đổi mới trong tài liệu cú pháp và source code của dự án μEDP, bao gồm việc giải thích các thay đổi về module name, thiết kế logic của các module và các hướng dẫn phát triển chi tiết để giúp newcomer hiểu rõ hơn về cách thức hoạt động và cách sử dụng của các tính năng mới trong việc phát triển ứng dụng trên nền tảng μEDP. //NOTE - Minh sẽ thực hiện hướng dẫn.
+- [x] Kiểm tra lại `README.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
+- [x] Kiểm tra lại `dmp-gda.md` có bị thay đổi sau hiệu chỉnh của bên nhánh chore không.
+- [x] Bổ sung tài liệu tìm hiểu về smoltcp để hiểu về kiến trúc, tính năng hỗ trợ, cách smoltcp triển khai logic xử lý mạng hướng sự kiện.
+- [x] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu.
 
 <!-- NOTE - Lưu ý cho task bên trên
 Theo dõi ở uedp_core.h nhánh feat để nắm rõ các tag ANCHOR được comment theo format kết hợp cùng doxygen-type.
+Minh sẽ hỗ trợ Khánh và Đạt thực thi task này
+
+Khánh đã hoàn thành ở `sources/core/src`
+Đạt chưa hoàn thành ở `sources/core/inc` -> Đạt đã hoàn thành.
+# STATUS - DONE
 -->
 
+- [x] Bổ sung tài liệu tìm hiểu về smoltcp để hiểu về kiến trúc, tính năng hỗ trợ, cách smoltcp triển khai logic xử lý mạng hướng sự kiện.
+- [x] Sửa đổi README.md để trình bày về những thay đổi trong việc bổ sung các testobj và các thay đổi trong thiết kế syntax của μE-LS.
+- [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu. //NOTE - lần này thực hiện ở file `pal_core.h`
+- [ ] Loại bỏ toàn bộ `Định nghĩa các hằng số boolean và trạng thái cơ bản cho hệ thống UEDP` trong file `pal_core.h` do không còn sử dụng.
+- [ ] Bổ sung nội dung hướng dẫn người sử dụng truy cập và sử dụng các testobj trong `docs/uels-syntax.md` để hỗ trợ việc kiểm thử và phát triển các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn.
+- [ ] Bổ sung comment dạng cross-style của Anchor-type và Doxygen-type cho `encryp/libcrc8` (cả `.h` và `.c`).
 - [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như pycdscriptor.*, kconfigspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
-- [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
+- [ ] Bổ sung nội dung để người dùng triển khai `pal_sys_reset` và `pal_sys_fatal` đúng cách.
+- [ ] Bổ sung nội dung để trình bày về vấn đề vị trí đặt và sử dụng BSP (Board Support Package) trong dự án μEDP, nhằm giúp người dùng hiểu rõ hơn về cách thức triển khai và sử dụng BSP một cách hiệu quả và đúng cách trong việc phát triển ứng dụng trên nền tảng μEDP.
 
 <!-- NOTE - Expectation b4 BST task
 Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ được hoàn thiện với khả năng tự động hóa việc phân giải logic từ các cấu hình YAML sang các hàm thực thi trong lõi μEDP.
@@ -240,19 +253,19 @@ Theo lộ trình hiện tại đã hoàn tất các task liên quan đến PLD/�
 Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST-v1.1.5 để bảo vệ các tính năng đã phát triển để chuẩn bị rebase sub-tasklist từ v1.2.0 lên v1.1.6. 
 -->
 
-- [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
+- [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử. // NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6.
 - [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
 - [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
 
 <!-- SECTION - PSE
 
-#TASK - Minh nên bổ sung thêm 1 tài liệu review về ý tưởng cho PSE tại docs/review/pse.md để thống nhất các ý tưởng và đề xuất cải tiến cho Pub/Sub engine của μEDP.
+# TASK - Minh nên bổ sung thêm 1 tài liệu review về ý tưởng cho PSE tại docs/review/pse.md để thống nhất các ý tưởng và đề xuất cải tiến cho Pub/Sub engine của μEDP.
 
-#DEPRECATED - Old TASK - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+# DEPRECATED - Old TASK - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 
-#CRITICAL - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
+# CRITICAL - Nhưng cũng cần lưu ý rằng, các thiết kế cần được đánh giá dưới góc nhìn ứng dụng cho hệ thống nhúng, không nên áp dụng trực tiếp các thiết kế từ các hệ thống lớn hơn mà không cân nhắc đến các hạn chế về tài nguyên và hiệu suất của hệ thống nhúng.
 
-#NOTE - Idea cho PSE, có thể sửa đổi hoặc bổ sung thêm sau đó
+# NOTE - Idea cho PSE, có thể sửa đổi hoặc bổ sung thêm sau đó
 Hiện tại trong API C-type thì 1 msg sẽ có 2 trường liên quan đến địa chỉ của task là `src_task_id` và `des_task_id`, do đó có thể đề xuất hướng nâng cấp như sau:
 
 - Đưa `des_task_id` thành một danh sách các task ID để hỗ trợ việc gửi tin nhắn tới nhiều task đã đăng ký, với số lượng task ID có trong danh sách thì tương ứng ref_count sẽ phải có giá trị tương đương để quản lý việc giải phóng bộ nhớ của tin nhắn một cách chính xác và hiệu quả.
@@ -270,7 +283,7 @@ Do đó, mỗi khi 1 task gửi tin nhắn có số lượng ref_count > 1 thì 
 
 Việc sử dụng truyền tham chiếu tin nhắn thay vì copy tin nhắn sẽ giúp giảm thiểu việc sử dụng bộ nhớ và tăng hiệu suất của hệ thống, đồng thời đảm bảo rằng các task nhận được cùng 1 thông tin từ tin nhắn mà không cần phải tạo ra nhiều bản sao của tin nhắn.
 
-#REVIEW - Giới hạn hỗ trợ của PSE
+# REVIEW - Giới hạn hỗ trợ của PSE
 
 Ở thời điểm hiện tại, đề xuất PSE sẽ chỉ hỗ trợ việc gửi tin nhắn tới nhiều task đã đăng ký, nhưng không hỗ trợ việc gửi tin nhắn tới các task chưa đăng ký. Điều này có nghĩa là các task cần phải đăng ký trước khi nhận được tin nhắn từ Pub/Sub engine, nhằm đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
 
@@ -288,9 +301,10 @@ Ngoài ra, các tính năng nâng cao như lọc tin nhắn theo topic, QoS (Qua
 //  SECTION - v1.1.7 & v1.1.8
 
 - [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8.
-- [ ] Bổ sung khả năng phân giải pplp vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
+- [ ] Bổ sung khả năng phân giải PPLP vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 - [ ] Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 - [ ] Thêm trường priority vào trong syntax của task để hỗ trợ việc phân giải mức độ ưu tiên của task trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
+- [ ] Đề xuất cơ chế quản lý chẩn đoán DEM (Diagnostic Event Management) với ECS (Enable Condition Stage), DBS (Debouncing Stage) và pzsto (persistence store) kết hợp FCR trong quản lý lỗi.
 
 //  !SECTION
 
@@ -516,16 +530,62 @@ Loại bỏ task bên trên do tính năng file inclusion là tính năng specif
 Sang đã review tài liệu thiết kế và approved.
 -->
 
-- [ ] Remove dead code liên quan đến `sys.path` của `uedp.py`
-- [ ] Bổ sung khả năng tham số `--it` và `--n-it` để hỗ trợ khả năng trực tiếp sinh code từ .config không cần thông qua menuconfig.
-- [ ] Thực hiện bổ sung C-type API cho palobj STM32H723 (abbr H723) và ESP32S3 (abbr S3N16) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD. //NOTE - Do trước đó việc bổ sung đã quên mất kiểm tra nội dung nên cần phải raise lại
-- [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj STM32H723 và ESP32S3 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Remove dead code liên quan đến `sys.path` của `uedp.py`
+- [x] Bổ sung khả năng tham số `--it` và `--n-it` để hỗ trợ khả năng trực tiếp sinh code từ .config không cần thông qua menuconfig.
+- [x] Import include configuration cho nền tảng STM32CubeIDE.
+- [x] Bổ sung template C-type API cho archobj STM32F103 (abbr F103) để hỗ trợ task BST.
+- [x] Sửa đổi đường dẫn tại line số 17 của `dmp-gda.md` để trỏ đến đúng vị trí của `pltf.pycdscriptor.jnerators`.
+- [x] Bổ sung status cho đề xuất số 1 để xác nhận các thay đổi đã triển khai.
+- [x] Modify template của C-type API cho archobj STM32F103 (abbr F103) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Sửa đổi entrypoint.sh để hỗ trợ việc Docker mode và Interact mode riêng biệt.
+- [x] Cập nhật config file sample để hỗ trợ BST trên uutobj F103.
+- [x] Sửa đổi lại pregen/hwapi mục help.
+- [x] Cập nhật bảng FCR với bổ sung entry khi `pal_sys_fatal` được gọi.
+- [x] Bổ sung task cho Khánh + Minh + Đạt.
+- [x] Bổ sung comment cho tài liệu `reviews/smoltcp.md` để Minh phản biện. //NOTE - Bổ sung phần cảnh báo về việc phải có lldriver cho WiFi/Ethernet khi sử dụng smoltcp. Đã có nên không cần bổ sung thêm.
+- [x] Triển khai thiết kế bổ sung mini-RAG với dự trù sLM Qwen3-0.6B + EM all-miniLM-L6-v2.
+
+<!-- STATUS
+Hiện tại đã triển khai hoàn chỉnh với chiến lược chunking + retrieval nhưng kết quả vẫn chưa đạt được như mong đợi.
+Đang bổ sung dự trù chuyển sang sLM Qwen2.5-0.5B-Instruct (llama.cpp IE + GGUF-compatible) + EM BAAI/bga-base-en-1.5 để cải thiện khả năng truy xuất thông tin đơn giản từ tài liệu.
+Tuy nhiên, dự án này cần được dự trù lâu dài để thực thi và cần phân bổ đánh giá lại thời gian và nguồn lực để đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+
+Sau khi chuyển sang Qwen2.5-0.5B-Instruct (llama.cpp IE + GGUF-compatible) + EM BAAI/bge-m3 thì kết quả đã cải thiện đáng kể, tuy nhiên vẫn cần tiếp tục refine để đạt được hiệu suất tối ưu.
+
+Hiện tại do phần cứng chưa đủ mạnh nên tạm gác lại việc triển khai mini-RAG và sẽ tiếp tục refine khi có phần cứng mạnh hơn để đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+-->
+
+- [x] Thực hiện bổ sung C-type API cho archobj STM32F103 (abbr F103), archobj STM32H723 (abbr H723) và archobj ESP32S3 (abbr S3N16) để hỗ trợ việc kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+
+<!-- SECTION
+
+# NOTE - Do trước đó việc bổ sung đã quên mất kiểm tra nội dung nên cần phải raise lại
+
+# STATUS - Đã bổ sung đa số API với sự bổ sung BSP của uutobj F103 nhưng chưa hoàn thiện, vẫn cần tiếp tục hoàn thiện cho F103.
+
+# STATUS 
+
+- Cần bổ sung nhanh chóng do sự chậm trễ từ task mini-RAG.
+- Ngoài ra, cần review triển khai với thầy để đảm bảo về mặt thiết kế phần cứng.
+
+Đã bổ sung triển khai cho F103
+
+Với H723 có nền tảng tương tự F103 nên có thể tái sử dụng các API đã triển khai cho F103 để bổ sung cho H723.
+
+Với S3M16 cần bổ sung lại, cân nhắc cho Minh và Đạt để bổ sung các API cho S3M16.
+
+//!SECTION
+-->
+
+- [ ] Remove các deprecated declaration của actv-obj-post và ISR trong `vir-phy-logic-testobj-v0`.
+- [ ] Bổ sung detail implementation của UART backend logging trên uutobj F103.
+- [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj H723 và S3N16 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- NOTE - Expectation for PLTF.TSD/TLC
 Đưa 3 task bên trên sang phiên bản 1.2.1 để tránh quá tải cho phiên bản 1.2.0 và đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 -->
 
-- [ ] Thêm tài liệu thiết kế đưa smoltcp vào μEDP để bổ sung khả năng xử lý mạng tương thích hướng sự kiện, giúp mở rộng khả năng của lõi μEDP trong việc xử lý các ứng dụng mạng và giao tiếp với các thiết bị khác trong hệ thống.
+- [ ] Thêm tài liệu thiết kế đưa smoltcp vào μEDP để bổ sung khả năng sử dụng cho các ứng dụng mạng.
 - [ ] Thêm tài liệu thiết kế chi tiết bootloader - μDB (Device Bootloader) để hỗ trợ việc khởi động và quản lý các thiết bị trong hệ thống một cách hiệu quả và linh hoạt hơn, giúp đảm bảo rằng các thiết bị được khởi động và quản lý một cách an toàn và hiệu quả.
 - [ ] Bổ sung các hạng mục bổ sung tài liệu thiết kế từ μEDP (μEDP) sang μE-OS với nâng cấp thiết kế bộ điều phối sử dụng phần cứng như NVIC - các bộ quản lý ngắt để tối ưu hiệu suất và giảm độ trễ trong việc xử lý các sự kiện thời gian thực.
 - [ ] Hoàn thiện thiết kế chi tiết cho logic sử dụng của bộ điều phối phần cứng như NVIC và xử lý vấn đề về ISR nesting & preemption để đảm bảo hệ thống hoạt động ổn định và hiệu quả khi xử lý các sự kiện thời gian thực.
