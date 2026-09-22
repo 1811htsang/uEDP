@@ -245,22 +245,77 @@ void stm32f103_log_alloc(const char* param) {
   pal_logdp_dispatch(&logdp_entry);
 }
 
-RETR_STAT uart_init(void) {
+//ANCHOR - Add instance for STM32F103 peripheral handles
+
+I2C_HandleTypeDef i_hi2c1;
+SPI_HandleTypeDef i_hspi1;
+UART_HandleTypeDef i_huart1;
+DMA_HandleTypeDef i_hdma_usart1_tx;
+DMA_HandleTypeDef i_hdma_usart1_rx;
+
+//ANCHOR - Add functions to get peripheral instances
+
+void stm32f103_get_uart_inst(UART_HandleTypeDef* instance) {
+  i_huart1.Instance = (USART_TypeDef*)instance;
+}
+
+void stm32f103_get_i2c_inst(I2C_HandleTypeDef* instance) {
+  i_hi2c1.Instance = (I2C_TypeDef*)instance;
+}
+
+void stm32f103_get_spi_inst(SPI_HandleTypeDef* instance) {
+  i_hspi1.Instance = (SPI_TypeDef*)instance;
+}
+
+//TASK - Need checking for pointer type casting
+
+void stm32f103_get_dma_usart1_tx_inst(DMA_HandleTypeDef* instance) {
+  i_hdma_usart1_tx = *instance;
+}
+
+void stm32f103_get_dma_usart1_rx_inst(DMA_HandleTypeDef* instance) {
+  i_hdma_usart1_rx = *instance;
+}
+
+//ANCHOR - Define buffer size for UART TX/RX
+
+#define RX_BUF_SIZE 32
+#define TX_BUF_SIZE 32
+
+//ANCHOR - Define length size in UART TX/RX communication
+
+sta int temporal_len = 0;
+
+//ANCHOR - Define buffer for UART TX/RX communication
+
+sta ui8 rx_buf[RX_BUF_SIZE];
+sta ui8 tx_buf[TX_BUF_SIZE];
+
+RETR_STAT stm32f103_uart_init(void) {
+  HAL_UARTEx_ReceiveToIdle_DMA(&i_huart1, rx_buf, RX_BUF_SIZE);
+  __HAL_DMA_DISABLE_IT(&i_hdma_usart1_tx, DMA_IT_HT);
+  __HAL_DMA_DISABLE_IT(&i_hdma_usart1_rx, DMA_IT_HT);
+  //TASK - Change this to adding handler for handler callback
   return STAT_OK;
 }
 
-//TASK - Add detail implementation for UART output functions
+//TASK - Add detail implementation for UART output TX functions for rprintf service
 
-void uart_putc(unsigned char c) {
+void stm32f103_uart_putc(unsigned char c) {
   // HAL_UART_Transmit_IT(huart, pData, Size);
+  // HAL_UART_Transmit_DMA(huart, pData, Size);
 }
 
-void uart_write(const uint8_t* data, ui16 len) {
+void stm32f103_uart_write(const uint8_t* data, ui16 len) {
   // HAL_UART_Transmit_IT(huart, pData, Size);
+  // HAL_UART_Transmit_DMA(huart, pData, Size)
 }
 
-bool uart_isready() {
-  // HAL_UART_GetState(huart)
+bool stm32f103_uart_isready() {
+  HAL_UART_StateTypeDef status = HAL_UART_GetState(&i_huart1);
+  if (status != HAL_UART_STATE_READY) {
+    return false;
+  }
   return true;
 }
 
@@ -274,8 +329,8 @@ const uedp_itnlog_entry_t rprintf_entry = default_entry;
 pal_rprintf_service_t svc = {
   "uart",
   rprintf_entry,
-  &uart_init,
-  &uart_putc,
-  &uart_write,
-  &uart_isready
+  &stm32f103_uart_init,
+  &stm32f103_uart_putc,
+  &stm32f103_uart_write,
+  &stm32f103_uart_isready
 };
