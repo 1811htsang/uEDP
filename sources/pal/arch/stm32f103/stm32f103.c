@@ -300,6 +300,7 @@ RETR_STAT stm32f103_uart_init(void) {
 }
 
 //TASK - Add detail implementation for UART output TX functions for rprintf service
+//TASK - cmake build to remove errors on C/C++ Intellisense
 
 void stm32f103_uart_putc(unsigned char c) {
   // HAL_UART_Transmit_IT(huart, pData, Size);
