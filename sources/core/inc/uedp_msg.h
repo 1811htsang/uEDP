@@ -26,11 +26,10 @@
 
 	// ANCHOR - Định nghĩa các loại Pool tin nhắn (Nội bộ Core sử dụng)
 	typedef enum uedp_msg_type_t {
-		UEDP_MSG_TYPE_BLANK = 0,    /* Không data */
-		UEDP_MSG_TYPE_NORM,      		/* Data kích thước cố định (Pool) */
-		UEDP_MSG_TYPE_ALLOC,     		/* Data lớn (Heap/Large Pool) */
+		UEDP_MSG_TYPE_BLANK = 0,    	/* Không data */
+		UEDP_MSG_TYPE_ALLOC,     			/* Data lớn (Heap/Large Pool) */
 		UEDP_MSG_TYPE_EXTAL,    			/* Tin nhắn từ interface */
-		UEDP_MSG_TYPE_ISR   			/* Tin nhắn từ ngữ cảnh ISR */
+		UEDP_MSG_TYPE_ISR   					/* Tin nhắn từ ngữ cảnh ISR */
 	} uedp_msg_type_t;
 
 	/** ANCHOR - Cấu trúc quản lý tin nhắn trong hệ thống UEDP
