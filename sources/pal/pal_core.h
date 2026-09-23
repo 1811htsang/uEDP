@@ -19,12 +19,6 @@
     #define UEDP_DEBUG_FLAG				(0x00u) // Tắt chế độ debug theo mặc định
   #endif
 
-  // ANCHOR - Định nghĩa các bit cờ debug cho hệ thống UEDP
-
-  #define DBG_MSG_TIMESTAMP_BIT          (0x01u)
-  #define DBG_TASK_FLOW_BIT              (0x02u)
-  #define DBG_POOL_USAGE_BIT             (0x04u)
-
   // ANCHOR - Định nghĩa các kiểu dữ liệu cơ bản cho hệ thống UEDP
 
   #define u unsigned
