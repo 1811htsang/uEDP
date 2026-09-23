@@ -156,7 +156,7 @@ __attribute__((naked)) void HardFault_Handler(void) {
 
 //ANCHOR - Implementation cho internal API handling
 
-static void internal_hardfault_decoder(uint32_t *stack);
+__attribute__((used)) static void internal_hardfault_decoder(uint32_t *stack);
 
 /**
  * @brief Định nghĩa các biểu tượng linker script để quản lý bộ nhớ
