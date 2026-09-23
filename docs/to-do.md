@@ -583,6 +583,8 @@ Với S3M16 cần bổ sung lại, cân nhắc cho Minh và Đạt để bổ su
 - [x] Sửa đổi lại `PLAT=TEST` để generate library thay thế executable thiếu `main()` function.
 - [x] Bổ sung tài liệu review thiết kế TSD/TLC
 - [x] Bổ sung junction cho sử dụng ESP-IDF ở docker.
+- [x] Bổ sung tài liệu review cho PLTF.TSD/TLC, smoltcp-ffi/api, libmg, ccbpf.
+- [ ] Bổ sung compile command cho C/C++ Intellisense  trong VS Code.
 - [ ] Bổ sung detail implementation của UART backend logging trên uutobj F103.
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj H723 và S3N16 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
@@ -590,6 +592,7 @@ Với S3M16 cần bổ sung lại, cân nhắc cho Minh và Đạt để bổ su
 Cần cân nhắc tách phần bổ sung tài liệu này sang phiên bản 1.2.2 hoặc phiên bản 1.1.6, 1.1.7 để tránh quá tải cho phiên bản 1.2.0 và đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 -->
 
+- [ ] Bổ sung detail implementation cho uutobj Linux.
 - [ ] Ra mắt phiên bản 1.2.0 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
 
 //  !SECTION
