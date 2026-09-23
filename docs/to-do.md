@@ -229,8 +229,8 @@ Khánh đã hoàn thành ở `sources/core/src`
 
 - [x] Bổ sung tài liệu tìm hiểu về smoltcp để hiểu về kiến trúc, tính năng hỗ trợ, cách smoltcp triển khai logic xử lý mạng hướng sự kiện.
 - [x] Sửa đổi README.md để trình bày về những thay đổi trong việc bổ sung các testobj và các thay đổi trong thiết kế syntax của μE-LS.
-- [ ] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu. //NOTE - lần này thực hiện ở file `pal_core.h`
-- [ ] Loại bỏ toàn bộ `Định nghĩa các hằng số boolean và trạng thái cơ bản cho hệ thống UEDP` trong file `pal_core.h` do không còn sử dụng.
+- [x] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu. //NOTE - lần này thực hiện ở file `pal_core.h`
+- [x] Loại bỏ toàn bộ `Định nghĩa các hằng số boolean và trạng thái cơ bản cho hệ thống UEDP` trong file `pal_core.h` do không còn sử dụng.
 - [ ] Bổ sung nội dung hướng dẫn người sử dụng truy cập và sử dụng các testobj trong `docs/uels-syntax.md` để hỗ trợ việc kiểm thử và phát triển các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn.
 - [ ] Bổ sung comment dạng cross-style của Anchor-type và Doxygen-type cho `encryp/libcrc8` (cả `.h` và `.c`).
 - [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như pycdscriptor.*, kconfigspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
@@ -584,8 +584,8 @@ Với S3M16 cần bổ sung lại, cân nhắc cho Minh và Đạt để bổ su
 - [x] Bổ sung tài liệu review thiết kế TSD/TLC
 - [x] Bổ sung junction cho sử dụng ESP-IDF ở docker.
 - [x] Bổ sung tài liệu review cho PLTF.TSD/TLC, smoltcp-ffi/api, libmg, ccbpf.
-- [ ] Bổ sung compile command cho C/C++ Intellisense  trong VS Code.
-- [ ] Bổ sung detail implementation của UART backend logging trên uutobj F103.
+- [x] Bổ sung compile command cho C/C++ Intellisense  trong VS Code.
+- [x] Bổ sung detail implementation của UART backend logging trên uutobj F103.
 - [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj H723 và S3N16 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
 
 <!-- NOTE - Expectation for μE-OS Documentation
