@@ -130,14 +130,6 @@ void stm32f103_trigger_swisr(ui32 IRQnum) {
   HAL_EXTI_GenerateSWI(&EXTI_L0_handler);
 }
 
-void stm32f103_check_hardfault_reason(char* retr) {
-  /** NOTE
-   * The result has aleady been logged in internal_hardfault_decoder, so just return a simple message
-   * However, the itnlog is not bene implemented to be persisted 
-   * so the user can implement their own persistent log mechanism to store the hardfault reason for later analysis
-   */
-}
-
 void SysTick_Handler(void) {
   HAL_IncTick();
   uedp_timer_tick();
@@ -156,7 +148,7 @@ __attribute__((naked)) void HardFault_Handler(void) {
 
 //ANCHOR - Implementation cho internal API handling
 
-__attribute__((used)) static void internal_hardfault_decoder(uint32_t *stack);
+static void internal_hardfault_decoder(uint32_t *stack);
 
 /**
  * @brief Định nghĩa các biểu tượng linker script để quản lý bộ nhớ
@@ -267,7 +259,8 @@ void stm32f103_get_spi_inst(SPI_HandleTypeDef* instance) {
   i_hspi1.Instance = (SPI_TypeDef*)instance;
 }
 
-//TASK - Need checking for pointer type casting
+//DEPRECATED - Old TASK - Need checking for pointer type casting
+//STATUS - correct due to i_hdma_usart1_tx reciev resolved data
 
 void stm32f103_get_dma_usart1_tx_inst(DMA_HandleTypeDef* instance) {
   i_hdma_usart1_tx = *instance;
@@ -279,12 +272,8 @@ void stm32f103_get_dma_usart1_rx_inst(DMA_HandleTypeDef* instance) {
 
 //ANCHOR - Define buffer size for UART TX/RX
 
-#define RX_BUF_SIZE 32
-#define TX_BUF_SIZE 32
-
-//ANCHOR - Define length size in UART TX/RX communication
-
-sta int temporal_len = 0;
+#define RX_BUF_SIZE (ui16)32u
+#define TX_BUF_SIZE (ui16)32u
 
 //ANCHOR - Define buffer for UART TX/RX communication
 
@@ -293,23 +282,33 @@ sta ui8 tx_buf[TX_BUF_SIZE];
 
 RETR_STAT stm32f103_uart_init(void) {
   HAL_UARTEx_ReceiveToIdle_DMA(&i_huart1, rx_buf, RX_BUF_SIZE);
-  __HAL_DMA_DISABLE_IT(&i_hdma_usart1_tx, DMA_IT_HT);
-  __HAL_DMA_DISABLE_IT(&i_hdma_usart1_rx, DMA_IT_HT);
-  //TASK - Change this to adding handler for handler callback
+  // __HAL_DMA_DISABLE_IT(&i_hdma_usart1_tx, DMA_IT_HT);
+  // __HAL_DMA_DISABLE_IT(&i_hdma_usart1_rx, DMA_IT_HT);
+  //DEPRECATED - Old TASK - Change this to adding handler for handler callback
   return STAT_OK;
+}
+
+void internal_uart_tx_dma(ui8 *data, ui16 size) {
+  memcpy(tx_buf, data, size);
+  HAL_UART_Transmit_DMA(&i_huart1, tx_buf, size);
+}
+
+void internal_uart_rx_dma(void) {
+  // Start DMA reception in normal mode
+  HAL_UART_Receive_DMA(&i_huart1, rx_buf, sizeof(rx_buf));
 }
 
 //TASK - Add detail implementation for UART output TX functions for rprintf service
 //TASK - cmake build to remove errors on C/C++ Intellisense
 
 void stm32f103_uart_putc(unsigned char c) {
-  // HAL_UART_Transmit_IT(huart, pData, Size);
-  // HAL_UART_Transmit_DMA(huart, pData, Size);
+  // Transmit the character using DMA
+  internal_uart_tx_dma(&c, 1);
 }
 
 void stm32f103_uart_write(const uint8_t* data, ui16 len) {
-  // HAL_UART_Transmit_IT(huart, pData, Size);
-  // HAL_UART_Transmit_DMA(huart, pData, Size)
+  // Transmit the data using DMA
+  internal_uart_tx_dma((uint8_t*)data, len);
 }
 
 bool stm32f103_uart_isready() {
@@ -335,3 +334,13 @@ pal_rprintf_service_t svc = {
   &stm32f103_uart_write,
   &stm32f103_uart_isready
 };
+
+// STUB - In stm32f1xx_it.c has implement IRQ for DMA so no need to reinvent
+
+void stm32f103_check_hardfault_reason(char* retr) {
+  /** NOTE
+   * The result has aleady been logged in internal_hardfault_decoder, so just return a simple message
+   * However, the itnlog is not bene implemented to be persisted
+   * so the user can implement their own persistent log mechanism to store the hardfault reason for later analysis
+   */
+}
