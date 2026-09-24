@@ -586,13 +586,24 @@ Với S3M16 cần bổ sung lại, cân nhắc cho Minh và Đạt để bổ su
 - [x] Bổ sung tài liệu review cho PLTF.TSD/TLC, smoltcp-ffi/api, libmg, ccbpf.
 - [x] Bổ sung compile command cho C/C++ Intellisense  trong VS Code.
 - [x] Bổ sung detail implementation của UART backend logging trên uutobj F103.
-- [ ] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj H723 và S3N16 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+- [x] Bổ sung BST trên phần cứng thật để kiểm tra tiếp tục trên uutobj H723 và S3N16 để kiểm tra khả năng sinh code và thực thi các cấu hình logic của μE-LS từ các mô tả logic trong PLD.
+
+<!-- STATUS
+After running with uutobj, the value of system_action_count tracked is 29
+However, lack of time to verify the exact sequence of actions and messages,
+so need to check the logic and ensure that all expected actions are accounted for.
+
+But in general, the system is running as expected.
+Next step is to verify the exact sequence of actions and messages to ensure that all expected actions are accounted for.
+-->
 
 <!-- NOTE - Expectation for μE-OS Documentation
 Cần cân nhắc tách phần bổ sung tài liệu này sang phiên bản 1.2.2 hoặc phiên bản 1.1.6, 1.1.7 để tránh quá tải cho phiên bản 1.2.0 và đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+
 -->
 
-- [ ] Bổ sung detail implementation cho uutobj Linux.
+- [x] Bổ sung detail implementation cho uutobj Linux.
+- [ ] Bổ sung debugging trên STM32CubeIDE với uutobj F103 để thống nhất kết quả sau cùng.
 - [ ] Ra mắt phiên bản 1.2.0 của lõi μEDP với đầy đủ tài liệu thiết kế chi tiết cho bộ điều phối phần cứng và xử lý ISR nesting & preemption, chuẩn bị cho việc chuyển đổi sang μE-OS.
 
 //  !SECTION
