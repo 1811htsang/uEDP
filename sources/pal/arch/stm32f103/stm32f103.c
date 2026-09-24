@@ -132,7 +132,9 @@ void stm32f103_trigger_swisr(ui32 IRQnum) {
 
 void SysTick_Handler(void) {
   HAL_IncTick();
-  uedp_timer_tick();
+  if (is_inited) {
+    uedp_timer_tick();
+  }
 }
 
 __attribute__((naked)) void HardFault_Handler(void) {
@@ -150,9 +152,7 @@ __attribute__((naked)) void HardFault_Handler(void) {
 
 static void internal_hardfault_decoder(uint32_t *stack);
 
-/**
- * @brief Định nghĩa các biểu tượng linker script để quản lý bộ nhớ
- */
+//ANCHOR -  Định nghĩa các biểu tượng linker script để quản lý bộ nhớ
 
 extern ui32 _etext;            /* End của code section (.text) 				    */
 extern ui32 _sidata;           /* Start của initialized data trong FLASH 	*/
