@@ -1,7 +1,6 @@
-/**
-  * @file uedp_fcr.c
+/** ANCHOR - Implementation of Fatal Code Return (FCR) in UEDP
+ * @file uedp_fcr.c
  * @author Hai Minh
- * @brief Implementation of Fatal Code Return (FCR)
  * @version 0.1
  * @date 2026-08-01
  * @copyright MIT License
@@ -12,8 +11,7 @@
 #include "uedp_itnlog.h"
 #include "pal_core.h"
 
-/**
- * @brief Bảng mã lỗi nghiêm trọng của lõi UEDP
+/** ANCHOR - Bảng mã lỗi nghiêm trọng của lõi UEDP
  * @attention Đây là bảng "tĩnh" (static const), không cần khởi tạo runtime.
  *            Mỗi module trong lõi UEDP chỉ nên có tối đa 256 mã lỗi con (0x00 -> 0xFF),
  *            xem UEDP_FCR_MOD_* trong uedp_fcr.h để biết dải mã module tương ứng.
@@ -52,7 +50,13 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
   { UEDP_FCR_OCE_NOT_INIT,         "OCE scheduler called pre-init",   UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
 
   // [PAL]
+  { UEDP_FCR_PAL_FATAL_API_CALLED, "PAL fatal API called",            UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
   { UEDP_FCR_PAL_LOGDP_TABLE_FULL, "PAL logdp output table full",     UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
+
+  { UEDP_FCR_GDP_TABLE_FULL,       "GDP table full",                  UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_GDP_NOT_FOUND,        "GDP name not found",              UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_GDP_INVALID_PARAM,    "GDP invalid param",               UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_GDP_DUPLICATE_NAME,   "GDP duplicate name",              UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
 
   // Fallback - LUÔN đặt cuối cùng
   { UEDP_FCR_UNKNOWN,              "Unknown FCR code",                UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  }
@@ -71,9 +75,8 @@ const uedp_fcr_entry_t* uedp_fcr_lookup(uedp_fcr_code_t code) {
   return &g_fcr_table[UEDP_FCR_TABLE_SIZE - 1];
 }
 
-/**
- * @brief Chuyển đổi mức độ nghiêm trọng FCR sang mức độ log tương ứng của itnlog
- */
+// ANCHOR - Chuyển đổi mức độ nghiêm trọng FCR sang mức độ log tương ứng của itnlog
+
 sta uedp_itnlog_level_t internal_uedp_fcr_sev_to_level(uedp_fcr_severity_t severity) {
   switch (severity) {
     case UEDP_FCR_SEV_WARN:  return ITNLOG_LEVEL_WARN;
@@ -98,13 +101,17 @@ void uedp_fcr_raise(uedp_fcr_code_t code, const char* file, ui32 line, const cha
   // 2. Thực hiện hành động xử lý tương ứng với entry tra được trong bảng
   switch (entry->action) {
     case UEDP_FCR_ACT_LOG_ONLY:
-      // Không can thiệp thêm, chỉ ghi log ở bước 1
+      // NOTE - Không can thiệp thêm, chỉ ghi log ở bước 1
+      // REVIEW - Bổ sung itnlog ở đây
       break;
 
     case UEDP_FCR_ACT_RESET_TASK:
-      // Bản 0.1: chưa tự động khôi phục tác vụ (cần cơ chế reset TSM/FSM về IDLE
-      // an toàn từ bên ngoài ngữ cảnh của chính tác vụ đó). Hiện tại chỉ ghi log
-      // ở mức ERROR để tầng trên (task giám sát / OCE) tự quyết định xử lý tiếp.
+      /** NOTE
+       * Bản 0.1: chưa tự động khôi phục tác vụ (cần cơ chế reset TSM/FSM về IDLE
+       * an toàn từ bên ngoài ngữ cảnh của chính tác vụ đó). Hiện tại chỉ ghi log
+       * ở mức ERROR để tầng trên (task giám sát / OCE) tự quyết định xử lý tiếp.
+       */
+      // REVIEW - Bổ sung cơ chế như gửi cho task tín hiệu trước đó để task tự reset TSM/FSM về IDLE
       break;
 
     case UEDP_FCR_ACT_SYS_RESET:
