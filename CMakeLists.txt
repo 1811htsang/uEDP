@@ -47,7 +47,6 @@ if (PLAT STREQUAL "TEST")
 elseif(PLAT STREQUAL "LINUX")
   message(STATUS "[INFO]: Configuring for Linux Simulation...")
   set(PAL_PLATFORM_SRCS "sources/pal/arch/linux/linux.c")
-  set(PLATFORM_LIBS pthread m)
   add_compile_definitions(LINUX_PLATFORM)
 elseif(PLAT STREQUAL "STM32F103")
   set(MCU_FLAGS "-mcpu=cortex-m3 -mthumb -Os -ffunction-sections -fdata-sections")
@@ -137,14 +136,14 @@ set(SOURCES
 )
 
 # ANCHOR - Tạo mục tiêu build
-if (PLAT STREQUAL "TEST")
+if (PLAT STREQUAL "TEST" OR PLAT STREQUAL "LINUX")
   add_library(${PROJECT_NAME} OBJECT ${SOURCES})
 else()
   add_executable(${PROJECT_NAME} ${SOURCES})
 endif()
 
 # ANCHOR - Cấu hình Include Directories chung & riêng
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(${PROJECT_NAME} PUBLIC
   "sources/common/container/fifo/"
   "sources/common/container/llist/"
   "sources/common/container/ring_buffer/"
