@@ -130,17 +130,11 @@ void stm32f103_trigger_swisr(ui32 IRQnum) {
   HAL_EXTI_GenerateSWI(&EXTI_L0_handler);
 }
 
-void stm32f103_check_hardfault_reason(char* retr) {
-  /** NOTE
-   * The result has aleady been logged in internal_hardfault_decoder, so just return a simple message
-   * However, the itnlog is not bene implemented to be persisted 
-   * so the user can implement their own persistent log mechanism to store the hardfault reason for later analysis
-   */
-}
-
 void SysTick_Handler(void) {
   HAL_IncTick();
-  uedp_timer_tick();
+  if (is_inited) {
+    uedp_timer_tick();
+  }
 }
 
 __attribute__((naked)) void HardFault_Handler(void) {
@@ -158,9 +152,7 @@ __attribute__((naked)) void HardFault_Handler(void) {
 
 static void internal_hardfault_decoder(uint32_t *stack);
 
-/**
- * @brief Định nghĩa các biểu tượng linker script để quản lý bộ nhớ
- */
+//ANCHOR -  Định nghĩa các biểu tượng linker script để quản lý bộ nhớ
 
 extern ui32 _etext;            /* End của code section (.text) 				    */
 extern ui32 _sidata;           /* Start của initialized data trong FLASH 	*/
@@ -245,32 +237,110 @@ void stm32f103_log_alloc(const char* param) {
   pal_logdp_dispatch(&logdp_entry);
 }
 
-RETR_STAT uart_init(void) {
+//ANCHOR - Add instance for STM32F103 peripheral handles
+
+I2C_HandleTypeDef i_hi2c1;
+SPI_HandleTypeDef i_hspi1;
+UART_HandleTypeDef i_huart1;
+DMA_HandleTypeDef i_hdma_usart1_tx;
+DMA_HandleTypeDef i_hdma_usart1_rx;
+
+//ANCHOR - Add functions to get peripheral instances
+
+void stm32f103_get_uart_inst(UART_HandleTypeDef* instance) {
+  i_huart1.Instance = (USART_TypeDef*)instance;
+}
+
+void stm32f103_get_i2c_inst(I2C_HandleTypeDef* instance) {
+  i_hi2c1.Instance = (I2C_TypeDef*)instance;
+}
+
+void stm32f103_get_spi_inst(SPI_HandleTypeDef* instance) {
+  i_hspi1.Instance = (SPI_TypeDef*)instance;
+}
+
+//DEPRECATED - Old TASK - Need checking for pointer type casting
+//STATUS - correct due to i_hdma_usart1_tx reciev resolved data
+
+void stm32f103_get_dma_usart1_tx_inst(DMA_HandleTypeDef* instance) {
+  i_hdma_usart1_tx = *instance;
+}
+
+void stm32f103_get_dma_usart1_rx_inst(DMA_HandleTypeDef* instance) {
+  i_hdma_usart1_rx = *instance;
+}
+
+//ANCHOR - Define buffer size for UART TX/RX
+
+#define RX_BUF_SIZE (ui16)32u
+#define TX_BUF_SIZE (ui16)32u
+
+//ANCHOR - Define buffer for UART TX/RX communication
+
+sta ui8 rx_buf[RX_BUF_SIZE];
+sta ui8 tx_buf[TX_BUF_SIZE];
+
+RETR_STAT stm32f103_uart_init(void) {
+  HAL_UARTEx_ReceiveToIdle_DMA(&i_huart1, rx_buf, RX_BUF_SIZE);
+  // __HAL_DMA_DISABLE_IT(&i_hdma_usart1_tx, DMA_IT_HT);
+  // __HAL_DMA_DISABLE_IT(&i_hdma_usart1_rx, DMA_IT_HT);
+  //DEPRECATED - Old TASK - Change this to adding handler for handler callback
   return STAT_OK;
 }
 
-//TASK - Add detail implementation for UART output functions
-
-void uart_putc(unsigned char c) {
-  // HAL_UART_Transmit_IT(huart, pData, Size);
+void internal_uart_tx_dma(ui8 *data, ui16 size) {
+  memcpy(tx_buf, data, size);
+  HAL_UART_Transmit_DMA(&i_huart1, tx_buf, size);
 }
 
-void uart_write(const uint8_t* data, ui16 len) {
-  // HAL_UART_Transmit_IT(huart, pData, Size);
+void internal_uart_rx_dma(void) {
+  // Start DMA reception in normal mode
+  HAL_UART_Receive_DMA(&i_huart1, rx_buf, sizeof(rx_buf));
 }
 
-bool uart_isready() {
-  // HAL_UART_GetState(huart)
+//TASK - Add detail implementation for UART output TX functions for rprintf service
+//TASK - cmake build to remove errors on C/C++ Intellisense
+
+void stm32f103_uart_putc(unsigned char c) {
+  // Transmit the character using DMA
+  internal_uart_tx_dma(&c, 1);
+}
+
+void stm32f103_uart_write(const uint8_t* data, ui16 len) {
+  // Transmit the data using DMA
+  internal_uart_tx_dma((uint8_t*)data, len);
+}
+
+bool stm32f103_uart_isready() {
+  HAL_UART_StateTypeDef status = HAL_UART_GetState(&i_huart1);
+  if (status != HAL_UART_STATE_READY) {
+    return false;
+  }
   return true;
 }
 
 const uedp_itnlog_entry_t rprintf_entry = default_entry;
 
+/** NOTE
+ * rprintf_entry có thể thay đổi runtime nên cho phép const pointer ở khai báo trước,
+ * sau đó gán giá trị mới cho các trường trong struct khi cần thiết
+ */
+
 pal_rprintf_service_t svc = {
   "uart",
   rprintf_entry,
-  &uart_init,
-  &uart_putc,
-  &uart_write,
-  &uart_isready
+  &stm32f103_uart_init,
+  &stm32f103_uart_putc,
+  &stm32f103_uart_write,
+  &stm32f103_uart_isready
 };
+
+// STUB - In stm32f1xx_it.c has implement IRQ for DMA so no need to reinvent
+
+void stm32f103_check_hardfault_reason(char* retr) {
+  /** NOTE
+   * The result has aleady been logged in internal_hardfault_decoder, so just return a simple message
+   * However, the itnlog is not bene implemented to be persisted
+   * so the user can implement their own persistent log mechanism to store the hardfault reason for later analysis
+   */
+}

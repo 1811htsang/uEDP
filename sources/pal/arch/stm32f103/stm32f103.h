@@ -4,6 +4,7 @@
 
   //ANCHOR - Khai báo các thư viện cần thiết cho ứng dụng
   #include "pal_core.h"
+  #include "stm32f1xx_hal.h"
 
   /** ANCHOR - Khai báo custom API
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
@@ -24,5 +25,15 @@
   ui32 stm32f103_get_tick(void);
 
   void stm32f103_log_alloc(const char* param);
+
+  void stm32f103_get_uart_inst(UART_HandleTypeDef* instance);
+
+  void stm32f103_get_i2c_inst(I2C_HandleTypeDef* instance);
+
+  void stm32f103_get_spi_inst(SPI_HandleTypeDef* instance);
+
+  void stm32f103_get_dma_usart1_tx_inst(DMA_HandleTypeDef* instance);
+
+  void stm32f103_get_dma_usart1_rx_inst(DMA_HandleTypeDef* instance);
 
 #endif // __STM32F103_H__

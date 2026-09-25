@@ -14,8 +14,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && apt-get clean && rm -rf /var/lib/apt/lists/*
 # Install ESP-IDF dependencies
 ENV IDF_PATH=/opt/esp-idf
-RUN git clone --recursive -b v5.1 https://github.com/espressif/esp-idf.git $IDF_PATH \
-  && $IDF_PATH/install.sh all
+# Add condition to check if user want to install ESP-IDF or not
+ARG INSTALL_ESP_IDF
+RUN if [ "$INSTALL_ESP_IDF" = "true" ]; then \
+  git clone --recursive -b v5.1 https://github.com/espressif/esp-idf.git $IDF_PATH && \
+  $IDF_PATH/install.sh all; \
+  fi
 # Install Python dependencies
 RUN pip install --no-cache-dir \
   kconfiglib \
