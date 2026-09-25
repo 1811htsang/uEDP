@@ -39,6 +39,12 @@ sta pthread_mutex_t uedp_mutex;
 sta pthread_mutexattr_t mutex_attr;
 sta ui32 start_tick_ms = 0;
 
+void internal_create_tick_thread(void);
+
+//ANCHOR - Implementation for system action count for debug purposes
+
+sta uint32_t i_sac = 0x0u;
+
 //ANCHOR - Implementation cho uedp_core.h
 
 void uedp_core_init(void) {
@@ -46,6 +52,7 @@ void uedp_core_init(void) {
   uedp_msg_pool_init();
   uedp_timer_init();
   uedp_itnlog_init();
+  internal_create_tick_thread();
 }
 
 //ANCHOR - Implementation cho pal_core.h
@@ -96,7 +103,7 @@ void linux_init_env(void) {
   pthread_mutexattr_init(&mutex_attr);
   pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
   pthread_mutex_init(&uedp_mutex, &mutex_attr);
-  signal(SIGINT, pal_signal_handler);
+  signal(SIGINT, linux_signal_handler);
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   start_tick_ms = (ui32)(ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
@@ -125,7 +132,7 @@ void linux_cleanup(void) {
   pthread_mutexattr_destroy(&mutex_attr);
 }
 
-void pal_signal_handler(int signum) {
+void linux_signal_handler(int signum) {
   if (signum == SIGINT) {
     printf("\n[System] Caught SIGINT (Ctrl+C), exiting gracefully...\n");
     linux_cleanup();
@@ -138,3 +145,14 @@ void pal_signal_handler(int signum) {
  * or implemented as a no-op. The following functions are placeholders 
  * for PPLP functionality.
  */
+
+void internal_create_tick_thread(void) {
+  pthread_t tick_thread;
+  pthread_create(&tick_thread, NULL, linux_simulate_tick_thread, NULL);
+  pthread_detach(tick_thread);
+}
+
+void linux_get_sac_count(uint32_t count) {
+  i_sac = count;
+  printf("[System] Total system actions performed: %u\n", i_sac);
+}

@@ -18,6 +18,8 @@
 
   void linux_cleanup(void);
 
-  void pal_signal_handler(int signum);
+  void linux_signal_handler(int signum);
+
+  void linux_get_sac_count(uint32_t count);
 
 #endif
