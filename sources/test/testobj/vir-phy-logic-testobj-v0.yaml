@@ -1,3 +1,4 @@
+
 pject: "logic-testobj"
 versh: "pre-v1.2.0"
 
@@ -30,7 +31,8 @@ tlist:
             goto: UEDP_TSM_STATE_STAY
         on_ntry:
           # NOTE - tsm_init and tsm_trans
-          # TASK - Need more detail documentation on how-to use tsm and fsm correctly
+          # DEPRECATED - Old TASK - Need more detail documentation on how-to use tsm and fsm correctly
+          # STATUS - DONE
           steps:
             - actv: 
                 kind: c_stmt # NOTE - ot_ntry (one time entry)
@@ -216,30 +218,35 @@ tlist:
                   kind: c_call
                   function: printf
                   args: ['"[B][IDLE] RECV SIG_0X12. >> SEND SIG_0X34 + GDA_SYSTEM_STATUS.\n"']
-              - actv: uedp_task_norm_post_msg
-                to: TASK_NORM_A
-                sig: *sig3-ank
-                data: *gda_status # Ghi log nội dung từ biến toàn cục
-                ptype: VAL # Validator check: Copy nội dung (memcpy)
-                # TASK - Remove support for actv-obj-post due to overlap with c_call and c_stmt and add extra overhead in code generation
+              # DEPRECATED - Old TASK - Due to removal of actv-obj-post, we need to use uedp_task_norm_post_msg directly using c_call or c_stmt
+              - actv:
+                  kind: c_stmt
+                  code: |
+                    uedp_msg_t* alloc_msg_1 = uedp_msg_alloc(TASK_NORM_A, SIG_0X34, sizeof(typeof(GDA_SYSTEM_STATUS)));
+                    if (alloc_msg_1) {
+                      uedp_msg_set_data_ref(alloc_msg_1, (const char*)GDA_SYSTEM_STATUS);
+                    }
+                    uedp_task_norm_post_msg(TASK_NORM_A, alloc_msg_1);
               - actv: 
                   kind: c_call
                   function: printf
                   args: ['"[B][IDLE] SEND SIG_0XFF.\n"']
-              - actv: uedp_task_norm_post_msg
-                to: TASK_NORM_A
-                sig: *sig4-ank
-                data: NULL 
-                ptype: NULL 
+              # DEPRECATED - Old TASK - Due to removal of actv-obj-post, we need to use uedp_task_norm_post_msg directly using c_call or c_stmt
+              - actv: 
+                  kind: c_stmt
+                  code: |
+                    uedp_msg_t* alloc_msg_2 = uedp_msg_alloc(TASK_NORM_A, SIG_0XFF, UEDP_MSG_TYPE_BLANK);
+                    uedp_task_norm_post_msg(TASK_NORM_A, alloc_msg_2);
               - actv: 
                   kind: c_call
                   function: printf
                   args: ['"[B][IDLE] SEND SIG_0XAA -> SELF. >> BUSY.\n"']
-              - actv: uedp_task_norm_post_msg
-                to: TASK_NORM_B
-                sig: *sig6-ank
-                data: NULL 
-                ptype: NULL
+              # DEPRECATED - Old TASK - Due to removal of actv-obj-post, we need to use uedp_task_norm_post_msg directly using c_call or c_stmt
+              - actv:
+                  kind: c_stmt
+                  code: |
+                    uedp_msg_t* alloc_msg_3 = uedp_msg_alloc(TASK_NORM_B, SIG_0XAA, UEDP_MSG_TYPE_BLANK);
+                    uedp_task_norm_post_msg(TASK_NORM_B, alloc_msg_3);
           - sig: *sig6-ank
             goto: fsm_task_b_state_idle # NOTE - wont reach due to prio(A) > prio(B), just stub for validation
             steps:
@@ -263,12 +270,6 @@ tlist:
   - tpoll: TASK_POLL_BLINK
     exec: NULL
     <<: *tpoll2-ank
-# ANCHOR - Interrupt Service Routine (ISR) - Xử lý ngắt
-
-isr:
-  - id: ISR_HARD_STOP
-    to: TASK_NORM_A # Validator check: kiểm tra lỗi từ lstaxer.strucjec
-    sig: *sig7-ank
 
 # ANCHOR - Out-Context Execution (OUTEXEC) - Thực thi ngoài ngữ cảnh
 

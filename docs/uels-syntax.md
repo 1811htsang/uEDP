@@ -350,8 +350,10 @@ Hiện tại `pycdscriptor` chưa hỗ trợ sinh cấu hình PPLP, nhưng core 
 Trong thiết kế thì PPLP có cấu hình riêng biệt với process-syntax nên có thể tích hợp module riêng để sinh code PPLP từ YAML.
 -->
 
-<!-- TASK
+<!-- DEPRECATED - Old TASK
 Cân nhắc đưa lộ trình hỗ trợ PPLP vào roadmap của μE-LS ở phiên bản 1.1.7/1.1.8 cùng với APE.
+
+# STATUS - Đã chính thức đưa PPLP vào roadmap của μE-LS ở phiên bản 1.1.7/1.1.8, còn đối với APE thì có thể loại bỏ do c_call và c_stmt đã có thể gọi trực tiếp các hàm vượt quyền tạm thời trong core API.
 -->
 
 PPLP khai báo chính sách logging cho Core và backend xuất log. Trong runtime, `itnlog` chỉ giữ filter và callback output; việc flush ra console, UART hoặc file nên đi qua OCE hoặc callback đã đăng ký.
@@ -419,6 +421,8 @@ pplp:
     write: write_func
     is_ready: true
   - contract: ...
+
+# STATUS - Task này sẽ đưa vào lộ trình phát triển μE-LS ở phiên bản 1.1.7/1.1.8, nên không cần DEPRECATED task này.
 ```
 
 -->
@@ -446,8 +450,10 @@ Do đó, cần review lại tính cần thiết của syntax này với use-case
 2. Cho phép APE trong actv-obj của logic `tsm`, `fsm` và `exec`, nghĩa là người dùng có thể sử dụng với `c_call` và `c_stmt` để gọi APE cho chính mình hoặc cho các tnorm khác, miễn là không bị báo lỗi.
 -->
 
-<!-- TASK
+<!-- DEPRECATED - Old TASK
 Cân nhắc đưa lộ trình hỗ trợ APE vào roadmap của μE-LS ở phiên bản 1.1.7/1.1.8.
+
+# STATUS - Đã loại bỏ APE khỏi roadmap của μE-LS ở phiên bản 1.1.7/1.1.8, do c_call và c_stmt đã có thể gọi trực tiếp các hàm vượt quyền tạm thời trong core API.
 -->
 
 APE hay S-LnF APE là cơ chế được triển khai ở phiên bản 1.1.0 và 1.1.1 để hỗ trợ tnorm có thể gọi các hàm vượt quyền tạm thời (Privilege Escalation) trong môi trường μE(DP)/-OS. Trong μE-LS, APE là khai báo cục bộ theo từng tnorm: mỗi task có thể tự định nghĩa trigger APE cho chính nó, và Core chỉ cung cấp cơ chế thực thi tương ứng qua `uedp_task_norm_post_urgent()` và `uedp_task_norm_set_urgent()`.
@@ -585,11 +591,13 @@ Theo các tài liệu review về ocesvc.mexecjn trước đó, tính năng ch�
 
 ### Template tham chiếu tổng hợp
 
-<!-- TASK
+<!-- DEPRECATED - Old TASK
 Merge nhánh feat để đưa logic-testobj làm ví dụ tổng hợp cho template tham chiếu nhanh.
+
+# STATUS - DONE
 -->
 
-<!-- STUB
+<!-- TASK - Old STUB
 Sẽ thêm nội dung để hướng dẫn người dùng truy cập các logic-testobj do lộ trình bổ sung 1 folder riêng biệt của testobj cho project.
 -->
 

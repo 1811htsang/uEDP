@@ -1,6 +1,6 @@
 //ANCHOR - Architecture-specific header for {{arch_name}}
-#ifndef __{{arch_name_upperc}}_ARCH_H__
-  #define __{{arch_name_upperc}}_ARCH_H__
+#ifndef __{{arch_name_upperc}}_H__
+  #define __{{arch_name_upperc}}_H__
 
   //ANCHOR - Khai báo các thư viện cần thiết cho ứng dụng
 
@@ -12,4 +12,4 @@
 
   {% for api in arch_apis %}<return_type> {{arch_name}}_{{api}} (<parameters>);
   {% endfor %}
-#endif // __{{arch_name_upperc}}_ARCH_H__
+#endif // __{{arch_name_upperc}}_H__

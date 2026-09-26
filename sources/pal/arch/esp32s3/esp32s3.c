@@ -1,5 +1,5 @@
 /**
- * @file esp32_s3_arch.c
+ * @file esp32s3.c
  * @author Shang Huang
  * @brief Implementation of ESP32-S3 Architecture Abstraction Layer for UEDP
  * @version 0.1

@@ -1,7 +1,6 @@
-/**
+/** ANCHOR - Implementation of task management for UEDP system
  * @file uedp_task.c
  * @author Shang Huang
- * @brief Implementation of task management for UEDP system
  * @version 0.1
  * @date 2026-08-04
  * @copyright MIT License
@@ -13,9 +12,7 @@
 #include "fifo.h"
 #include "uedp_fcr.h"
 
-/**
- * @brief Khai báo các biến toàn cục quản lý thông tin của các tác vụ trong hệ thống UEDP
- */
+// ANCHOR - Khai báo các biến toàn cục quản lý thông tin của các tác vụ trong hệ thống UEDP
 
 sta task_norm_t g_current_task_norm = {0};                      // Cấu trúc quản lý thông tin của tác vụ hiện tại đang được thực thi
 sta task_id_t g_active_task_norm_id = UEDP_TASK_NORM_IDLE_ID; // ID của tác vụ hiện tại đang được thực thi
@@ -26,9 +23,7 @@ sta task_poll_t* g_task_poll_table = NULL;                      // Bảng thông
 sta ui8 g_task_norm_count = 0;                                  // Số lượng tác vụ bình thường được đăng ký trong hệ thống
 sta ui8 g_task_poll_count = 0;                                  // Số lượng tác vụ poll được đăng ký trong hệ thống
 
-/**
- * @brief Khai báo các hàm quản lý nội bộ của hệ thống tác vụ UEDP
- */
+// ANCHOR - Khai báo các hàm quản lý nội bộ của hệ thống tác vụ UEDP
 
 sta void          internal_uedp_task_norm_put_to_queue            (task_id_t tid, uedp_msg_t* msg);
 sta uedp_msg_t*   internal_uedp_task_norm_get_from_queue          (task_id_t tid);
@@ -106,8 +101,8 @@ RETR_STAT uedp_task_scheduler() {
         // Nếu lấy được tin nhắn từ hàng đợi của tác vụ, thực thi tác vụ với tin nhắn đó
         if (msg) {
           internal_uedp_task_norm_dispatch(&g_task_norm_table[i], msg);
-          /**
-           * @brief Sau khi thực thi tác vụ
+          /** NOTE - 
+           * Sau khi thực thi tác vụ
            * Nếu tác vụ thực thi có mức ưu tiên từ 16-23 thì 
            * reset trạng thái khẩn cấp của tác vụ đó về false 
            * để tránh bị lặp lại liên tục nhưng mức ưu tiên gốc không bị xóa ready
@@ -192,9 +187,7 @@ void uedp_task_poll_set_ability(task_id_t tid, ui8 ability) {
   }
 }
 
-/**
- * @brief Hàm nội bộ để đưa một tin nhắn vào hàng đợi của một tác vụ cụ thể
- * 
+/** ANCHOR - Hàm nội bộ để đưa một tin nhắn vào hàng đợi của một tác vụ cụ thể
  * @param tid ID của tác vụ mà tin nhắn sẽ được đưa vào hàng đợi
  * @param msg Con trỏ đến tin nhắn cần đưa vào hàng đợi
  * @attention Khi gọi hàm này, hãy đảm bảo rằng message queue của tác vụ đã được init trước đó để tránh lỗi
@@ -225,9 +218,7 @@ void internal_uedp_task_norm_put_to_queue(task_id_t tid, uedp_msg_t* msg) {
   pal_exit_critical();
 }
 
-/**
- * @brief Hàm nội bộ để lấy một tin nhắn từ hàng đợi của một tác vụ cụ thể
- * 
+/** ANCHOR - Hàm nội bộ để đưa một tin nhắn vào đầu hàng đợi của một tác vụ cụ thể
  * @param tid ID của tác vụ mà tin nhắn sẽ được lấy từ hàng đợi
  * @attention Khi gọi hàm này, hãy đảm bảo rằng message queue của tác vụ đã được init trước đó để tránh lỗi
  *            Kết quả trả về của hàm là blank message, nếu muốn thực hiện nạp data vào msg thì gọi hàm uedp_msg_set_data
@@ -249,9 +240,7 @@ uedp_msg_t* internal_uedp_task_norm_get_from_queue(task_id_t tid) {
   return NULL;
 }
 
-/**
- * @brief Hàm nội bộ để thiết lập trạng thái sẵn sàng cho một tác vụ dựa trên mức độ ưu tiên của nó
- * 
+/** ANCHOR - Hàm nội bộ để thiết lập trạng thái sẵn sàng cho một tác vụ dựa trên mức độ ưu tiên của nó
  * @param pri Mức độ ưu tiên của tác vụ cần thiết lập trạng thái sẵn sàng
  */
 void internal_uedp_task_norm_set_ready(task_pri_t pri) {
@@ -271,9 +260,7 @@ void internal_uedp_task_norm_set_ready(task_pri_t pri) {
   pal_exit_critical();
 }
 
-/**
- * @brief Hàm nội bộ để xóa trạng thái sẵn sàng của một tác vụ dựa trên mức độ ưu tiên của nó
- * 
+/** ANCHOR - Hàm nội bộ để xóa trạng thái sẵn sàng của một tác vụ dựa trên mức độ ưu tiên của nó
  * @param pri Mức độ ưu tiên của tác vụ cần xóa trạng thái sẵn sàng
  */
 void internal_uedp_task_norm_clear_ready(task_pri_t pri) {
@@ -293,9 +280,7 @@ void internal_uedp_task_norm_clear_ready(task_pri_t pri) {
   pal_exit_critical();
 }
 
-/**
- * @brief Hàm nội bộ để tìm mức độ ưu tiên cao nhất của các tác vụ đang ở trạng thái sẵn sàng
- * 
+/** ANCHOR - Hàm nội bộ để tìm mức độ ưu tiên cao nhất của các tác vụ đang ở trạng thái sẵn sàng
  * @return task_pri_t Mức độ ưu tiên cao nhất của các tác vụ đang ở trạng thái sẵn sàng, hoặc 0 nếu không có tác vụ nào sẵn sàng
  */
 task_pri_t internal_uedp_task_norm_find_highest_priority(void) {
@@ -308,9 +293,7 @@ task_pri_t internal_uedp_task_norm_find_highest_priority(void) {
   return (task_pri_t)(pal_math_get_highest_bit32(g_task_norm_ready) + UEDP_TASK_PRI_LEVEL_0);
 }
 
-/**
- * @brief Hàm nội bộ để điều phối việc thực thi của một tác vụ cụ thể với một tin nhắn cụ thể
- * 
+/** ANCHOR - Hàm nội bộ để điều phối việc thực thi của một tác vụ cụ thể với một tin nhắn cụ thể
  * @param task Con trỏ đến cấu trúc thông tin của tác vụ cần điều phối
  * @param msg Con trỏ đến tin nhắn cần được xử lý bởi tác vụ
  * @attention Việc kiểm tra priority để xác định tác vụ có được dispatch hay không
@@ -340,9 +323,8 @@ void internal_uedp_task_norm_dispatch(task_norm_t* task, uedp_msg_t* msg) {
   g_current_task_norm = (task_norm_t){0}; // Đặt thông tin của tác vụ hiện tại về giá trị mặc định
 }
 
-/**
- * @brief Hàm nội bộ để thực thi các tác vụ poll có khả năng được bật
- */
+// ANCHOR - Hàm nội bộ để thực thi các tác vụ poll có khả năng được bật
+
 void internal_uedp_task_poll_exec(void) {
   // Duyệt qua bảng tác vụ poll để tìm các tác vụ có khả năng được bật
   for (ui8 i = 0; i < g_task_poll_count; i++) {
@@ -356,9 +338,7 @@ void internal_uedp_task_poll_exec(void) {
   }
 }
 
-/**
- * @brief Hàm nội bộ để tìm một tác vụ trong bảng tác vụ dựa trên ID của nó
- * 
+/** ANCHOR - Hàm nội bộ để tìm một tác vụ trong bảng tác vụ dựa trên ID của nó
  * @param tid ID của tác vụ cần tìm kiếm
  * @return task_norm_t* Con trỏ đến cấu trúc thông tin của tác vụ nếu tìm thấy, hoặc NULL nếu không tìm thấy
  */
@@ -475,8 +455,7 @@ void internal_uedp_task_norm_put_head_to_queue(task_id_t tid, uedp_msg_t* msg) {
   pal_exit_critical();
 }
 
-/**
- * @brief Lấy con trỏ đến máy trạng thái toàn cục (TSM) hiện đang gắn với một tác vụ message-driven
+/** ANCHOR - Lấy con trỏ đến máy trạng thái toàn cục (TSM) hiện đang gắn với một tác vụ message-driven
  * @param tid ID của tác vụ cần lấy TSM
  * @return uedp_tsm_t* Con trỏ đến TSM của tác vụ, hoặc NULL nếu tác vụ không tồn tại hoặc chưa gán TSM
  */
@@ -490,8 +469,7 @@ uedp_tsm_t* uedp_task_norm_get_tsm(task_id_t tid) {
   return NULL;
 }
 
-/**
- * @brief Gán một máy trạng thái toàn cục (TSM) cho một tác vụ message-driven
+/** ANCHOR - Gán một máy trạng thái toàn cục (TSM) cho một tác vụ message-driven
  * @param tid ID của tác vụ cần gán TSM
  * @param tsm Con trỏ đến TSM cần gán cho tác vụ
  */
@@ -502,8 +480,7 @@ void uedp_task_norm_set_tsm(task_id_t tid, uedp_tsm_t* tsm) {
   }
 }
 
-/**
- * @brief Lấy con trỏ đến máy trạng thái cục bộ (FSM) hiện đang gắn với một tác vụ message-driven
+/** ANCHOR - Lấy con trỏ đến máy trạng thái cục bộ (FSM) hiện đang gắn với một tác vụ message-driven
  * @param tid ID của tác vụ cần lấy FSM
  * @return uedp_fsm_t* Con trỏ đến FSM của tác vụ, hoặc NULL nếu tác vụ không tồn tại hoặc chưa gán FSM
  */
@@ -515,8 +492,7 @@ uedp_fsm_t* uedp_task_norm_get_fsm(task_id_t tid) {
   return NULL;
 }
 
-/**
- * @brief Gán một máy trạng thái cục bộ (FSM) cho một tác vụ message-driven
+/** ANCHOR - Gán một máy trạng thái cục bộ (FSM) cho một tác vụ message-driven
  * @param tid ID của tác vụ cần gán FSM
  * @param fsm Con trỏ đến FSM cần gán cho tác vụ
  */

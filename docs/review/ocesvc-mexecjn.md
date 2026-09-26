@@ -37,7 +37,7 @@ Thiết kế OCE hiện tại là **FCFS thuần theo thứ tự đăng ký** (`
 1. Việc loại bỏ ID và thay đổi ý nghĩa của ID sang priority có thể gây ra breaking change và không nằm trong dự trù ban đầu của OCE. Tuy nhiên các thiết kế hiện tại của OCE không có cross-module dependency, chỉ có syntax-dependency theo lộ trình phát triển μE-LS, do đó việc thay đổi ý nghĩa của ID có thể được chấp nhận nếu được kiểm tra kỹ lưỡng. Nhưng điều này cũng dẫn việc phải suy xét bổ sung cả SCB-full theo dự trù của AOCE lẫn thay đổi thiết kế syntax của μE-LS, escalate các tính năng dự kiến của AOCE vào OCE, vì nếu không có SCB-full + μE-LS + AOCE-escalate thì việc thay đổi ý nghĩa của ID sẽ gây ra sự không đồng nhất trong cách xử lý các service.
 2. Việc bổ sung hỗ trợ thay đổi chuỗi thực thi (mexecjn) có đảm bảo không gây ra sự phức tạp trong việc quản lý các service, đặc biệt là khi có nhiều service đăng ký với cùng một priority không? Ngoài ra, bản thân tính năng này có thật sự cần thiết trong lộ trình đưa OCE lên AOCE hay không, hay chỉ là một tính năng phụ trợ cho OCE? Bởi vì nếu không có AOCE, việc thay đổi thứ tự thực thi sẽ không có ý nghĩa nhiều, vì OCE chỉ chạy khi hệ thống rảnh, và các service được thiết kế để chạy trong thời gian ngắn. Còn ở AOCE, việc thay đổi thứ tự thực thi sẽ được quản lý bởi scheduler của AOCE, do đó việc bổ sung mexecjn trong OCE có thể là thừa.
 
-<!-- TODO
+<!-- DEPRECATED - Old TODO
 Minh đọc phần review này để bổ sung tiếp tục các đánh giá chi tiết hơn. Dự trù ở tính năng mexecjn và decision ID-remove sẽ chỉ có 1 vòng review này để thống nhất release v1.1.5, đồng thời làm căn cứ để xác định mexecjn có được đưa vào lộ trình thiết kế v1.1.6/7/8 hay không.
 -->
 

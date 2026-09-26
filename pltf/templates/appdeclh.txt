@@ -100,7 +100,8 @@
 
   {% for fsmio in fsmio_lists %}void {{fsmio}}_onst(uedp_msg_t* msg);
   {% endfor %}
-  /** ANCHOR - Khai báo khác (nếu có)
-   */
+  // ANCHOR - Khai báo khác (nếu có)
+
+  int app_main(void);
 
 #endif //__APP_DECL_H__

@@ -282,95 +282,8 @@ def strucjec_debug_glbda(errors):
   
   print("\n")
 
-# TASK - Remove ISR support in syntax and generator.
-def strucjec_target_isr(yaml_text):
-  events = yaml.parse(yaml_text)
-  
-  path_stack = []
-  current_item = None
-  errors = []
-  
-  in_isr = False
-  waiting_for_id_val = False 
-  is_key_turn = True         
-
-  for event in events:
-    if isinstance(event, yaml.SequenceStartEvent):
-      path_stack.append("SEQ")
-    elif isinstance(event, yaml.MappingStartEvent):
-      path_stack.append("MAP")
-        
-      if in_isr and len(path_stack) == 3:
-        current_item = {
-          'isr_id': "Unknown ISR",
-          'found_keys': set(),
-          'line': event.start_mark.line + 1
-        }
-        is_key_turn = True
-    
-    elif isinstance(event, yaml.MappingEndEvent):
-      if in_isr and len(path_stack) == 3 and current_item:
-        strucjec_target_isr_item(current_item, errors)
-      path_stack.pop()
-      
-    elif isinstance(event, yaml.SequenceEndEvent):
-      path_stack.pop()
-      if in_isr and len(path_stack) == 1:
-        in_isr = False
-
-    elif isinstance(event, yaml.ScalarEvent):
-      if len(path_stack) == 1 and event.value == 'isr':
-        in_isr = True
-        continue
-
-      if in_isr and len(path_stack) == 3:
-        if is_key_turn:
-          key_name = event.value
-          current_item['found_keys'].add(key_name)
-          
-          if key_name == 'id':
-            waiting_for_id_val = True
-          
-          is_key_turn = False
-        else:
-          if waiting_for_id_val:
-            current_item['isr_id'] = event.value
-            waiting_for_id_val = False
-          
-          is_key_turn = True
-
-    elif isinstance(event, yaml.AliasEvent):
-      if in_isr and len(path_stack) == 3:
-        is_key_turn = True
-
-  return errors
-
-def strucjec_target_isr_item(item, errors):
-  keys = item['found_keys']
-  isr_label = f"ISR: {item['isr_id']} (L:{item['line']})"
-  
-  required_fields = ['id', 'to', 'sig']
-  
-  for field in required_fields:
-    if field not in keys:
-      errors.append({
-        'loc': isr_label,
-        'msg': f"Missing required field: '{field}'"
-      })
-
-# TASK - Remove ISR support in syntax and generator.
-def strucjec_debug_isr(errors):
-  print(f"{'-'*30} strucjec `isr` param  {'-'*32}\n")
-  print(f"{'TYPE':<10} | {'LOCATION':<30} | {'MESSAGE'}")
-  print("-" * 85)
-  
-  if not errors:
-    print(f"{'SUCCESS':<10} | {'ISR Configuration':<30} | All ISR items are valid.")
-  else:
-    for err in errors:
-      print(f"ERROR      | {err['loc']:<30} | {err['msg']}")
-
-  print("\n")
+# DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
+# STATUS - DONE
 
 def strucjec_target_outexec(yaml_text):
   events = yaml.parse(yaml_text)
@@ -463,16 +376,16 @@ def strucjec_debug_outexec(errors):
 def strucjec_calib(yaml_sample):
   errors_tlist = strucjec_target_tlist(yaml_sample)
   errors_glbda = strucjec_target_glbda(yaml_sample)
-  errors_isr = strucjec_target_isr(yaml_sample) # TASK - Remove ISR support in syntax and generator.
+  # DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
   errors_outexec = strucjec_target_outexec(yaml_sample)
   errors_action_syntax = strucjec_validate_action_syntax(yaml_sample)
   if DEBUG_FLAG:
     strucjec_debug_glbda(errors_glbda)
     strucjec_debug_tlist(errors_tlist)
-    strucjec_debug_isr(errors_isr) # TASK - Remove ISR support in syntax and generator.
+    # DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
     strucjec_debug_outexec(errors_outexec)
     strucjec_debug_action_syntax(errors_action_syntax)
-  if errors_tlist or errors_glbda or errors_isr or errors_outexec:
+  if errors_tlist or errors_glbda or errors_outexec:
     print("[INFO] Structure validation completed with errors.")
     print("[INFO] Please check the above errors and fix them in the YAML file.")
     print("[INFO] Exiting with error.")

@@ -5,7 +5,6 @@ import pprint
 
 from .lukupmodel import (
 	lukupmodel_glbda_logic,
-	lukupmodel_isr_logic,
 	lukupmodel_outexec_logic,
 	lukupmodel_sig_resrc,
 	lukupmodel_tnorm_logic,
@@ -22,7 +21,6 @@ class Kre8Project:
 	tnorm_logic: list[Any]
 	tpoll_logic: list[Any]
 	gda: list[Any]
-	isr: list[Any]
 	outexec: list[Any]
 
 	def to_generator_context(self) -> dict[str, Any]:
@@ -33,7 +31,6 @@ class Kre8Project:
 			'tnorm_logic': [_model_to_dict(item) for item in self.tnorm_logic],
 			'tpoll_logic': [_model_to_dict(item) for item in self.tpoll_logic],
 			'glbda_defs': [_model_to_dict(item) for item in self.gda],
-			'isr': [_model_to_dict(item) for item in self.isr],
 			'outexec': [_model_to_dict(item) for item in self.outexec],
 		}
 
@@ -52,7 +49,6 @@ def build_project_ir(yaml_text: str) -> Kre8Project:
 		tnorm_logic=lukupmodel_tnorm_logic(yaml_text),
 		tpoll_logic=lukupmodel_tpoll_logic(yaml_text),
 		gda=lukupmodel_glbda_logic(yaml_text),
-		isr=lukupmodel_isr_logic(yaml_text),
 		outexec=lukupmodel_outexec_logic(yaml_text),
 	)
 

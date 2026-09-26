@@ -44,7 +44,7 @@
     uedp_itnlog_entry_t entry;
     RETR_STAT (*init)(void);    
     void (*putc)(unsigned char c);    
-    void (*write)(const uint8_t* data, uint16_t len);    
+    void (*write)(const uint8_t* data, ui16 len);
     bool (*is_ready)();
   } pal_rprintf_service_t;
 

@@ -2,9 +2,13 @@
 
 Tác giả: Shang Huang - Huỳnh Thanh Sang
 
+Đồng tác giả:
+
+- Nguyễn Hoàng Hải Minh
+
 ## I. Giới thiệu chung
 
-μEDP - micro-EDP là một module lõi được thiết kế để hỗ trợ mô hình lập trình hướng sự kiện (event-driven programming) trên các nền tảng nhúng. Mục tiêu của μEDP là cung cấp một giải pháp linh hoạt, dễ sử dụng và có khả năng mở rộng cho việc phát triển ứng dụng nhúng mà không phụ thuộc vào phần cứng cụ thể.
+μEDP - micro-EDP là một module lõi được thiết kế để hỗ trợ mô hình lập trình hướng sự kiện (Event-Driven Programming) trên các nền tảng nhúng. Mục tiêu của μEDP là cung cấp một giải pháp linh hoạt, dễ sử dụng và có khả năng mở rộng cho việc phát triển ứng dụng nhúng mà không phụ thuộc vào phần cứng cụ thể.
 
 ## II. Cấu trúc thư mục
 
@@ -62,6 +66,11 @@ python uedp.py menuconfig
 
 - Sử dụng môi trường Linux (Có thể sử dụng docker để mapping thư mục dự án vào môi trường Linux và cài đặt các công cụ cần thiết).
 - Cài đặt Python 3.x trên hệ thống.
+- Đã cài đặt các gói cần thiết cho Kconfig, bao gồm `kconfiglib`. Có thể cài đặt bằng pip:
+
+```bash
+pip install kconfiglib
+```
 
 #### Các cấu hình được hỗ trợ bởi μEDP
 
@@ -82,14 +91,14 @@ python uedp.py menuconfig
 
 #### Cấu hình hỗ trợ tự động sinh code từ Kconfig
 
-- Giá trị tín hiệu cho từng tác vụ poll. (Xuất phát từ 0xE6u)
-- Mức ưu tiên cho từng tác vụ norm. (Xuất phát từ mức 0)
-- Giá trị tín hiệu cho từng tín hiệu. (Xuất phát từ 0x01u)
+- Giá trị tín hiệu cho từng tác vụ poll. (Xuất phát từ `0xE6u`)
+- Mức ưu tiên cho từng tác vụ norm. (Xuất phát từ mức `0`)
+- Giá trị tín hiệu cho từng tín hiệu. (Xuất phát từ `0x01u`)
 - Tên handler cho từng TSM và FSM. (Dựa trên tên trạng thái và tên object quản lý)
 
 #### Lưu ý khi sử dụng Kconfig
 
-Kconfig chỉ hỗ trợ sinh code cho các giá trị định nghĩa, tên handler và tên trạng thái. Các logic xử lý trong handler, logic chuyển trạng thái trong TSM và FSM vẫn cần được người dùng tự triển khai trong phần implementation của ứng dụng ở `app.c`.
+Kconfig chỉ hỗ trợ sinh code cho các giá trị định nghĩa, tên handler và tên trạng thái. Các logic xử lý trong handler, logic chuyển trạng thái trong TSM và FSM vẫn cần được người dùng tự triển khai trong phần implementation của ứng dụng ở `app.c` và `lstaxizer.yaml`.
 
 Kể từ phiên bản 1.1.6, khi chạy `menuconfig`, với mỗi tác vụ norm đã khai báo (`Số lượng tác vụ norm sử dụng trong ứng dụng`), công cụ sẽ hỏi lần lượt: "Task #i có dùng TSM không?", nếu có thì hỏi tiếp số lượng state; rồi "Task #i có dùng FSM không?", nếu có thì hỏi số lượng state tương ứng. Một tác vụ hoàn toàn có thể dùng cả TSM lẫn FSM cùng lúc, chỉ một trong hai, hoặc không dùng cái nào, và số lượng state của mỗi tác vụ không bị ràng buộc phải giống nhau. Đây là điểm khác biệt so với các phiên bản trước 1.1.6, khi công cụ chỉ hỏi 1 lần cho toàn bộ ứng dụng và áp dụng cùng 1 số lượng state cho mọi tác vụ norm dùng TSM/FSM.
 
@@ -221,7 +230,7 @@ Task trong μEDP có hai kiểu: message-driven và poll-driven.
 
 #### Task message-driven
 
-Task message-driven được khai báo bằng `task_norm_t` với 5 thành phần:
+Task message-driven được khai báo bằng `task_norm_t` với 7 thành phần:
 
 - `id`: ID task.
 - `base_pri`: mức ưu tiên gốc.
@@ -295,6 +304,10 @@ Timer Service của μEDP dùng pool cố định `UEDP_TIMER_MAX_NODES` node, k
 
 Timer có thể được sử dụng như 1 công cụ để tạo ra delay hoặc timeout trong các task. Ví dụ, trong 1 task nào đó cần sử dụng blocking API như UART, I2C hay các giao thức truyền thông, ta có thể dùng timer để tạo ra timeout cho các API này, tránh việc task bị treo vô thời hạn nếu có sự cố xảy ra. Ngoài ra, timer cũng có thể được dùng để tạo ra các sự kiện định kỳ, ví dụ như đọc cảm biến mỗi 1 khoảng thời gian nhất định hoặc gửi heartbeat để báo rằng hệ thống vẫn đang hoạt động.
 
+#### Nguyên tắc bắt buộc
+
+Dù có sử dụng các API của timer hay không, `uedp_timer_tick()` luôn phải được binding vào system tick của nền tảng để Core có thể quản lý thời gian và phát sinh tín hiệu đúng lúc. Nếu không có tick, các timer sẽ không hoạt động và các task cần timeout sẽ bị treo.
+
 ### Itnlog
 
 Itnlog là cơ chế logging nội bộ của μEDP, được dùng để thay thế cho kiểu debug bằng `printf` rải rác trong luồng xử lý. Cách này giúp Core không phụ thuộc trực tiếp vào stdio, đồng thời cho phép đổi đích xuất log theo từng nền tảng mà không phải sửa logic xử lý. Khi cần xuất cùng một entry ra nhiều backend, nên ghép thêm `logdp` và `rprintf` thay vì chỉ dùng một callback chuỗi đơn.
@@ -333,7 +346,11 @@ int main(void) {
 
 Khi viết code ứng dụng, thay vì chèn `printf` trực tiếp trong handler, nên gọi `uedp_itnlog_log()` với một tag phù hợp như `TSK`, `MSG`, `FSM`, `TSM` hoặc `TIM`. Sau đó dùng `uedp_itnlog_dump()` ở thời điểm muốn xuất toàn bộ buffer log ra đích đã cấu hình.
 
-Lưu ý quan trọng: `uedp_itnlog_set_output()` nhận một hàm có chữ ký `void (*)(const char*)`. Vì vậy không nên truyền trực tiếp `printf` vào API này, mà nên bọc `printf` hoặc `fputs` trong một wrapper như ví dụ trên.
+Lưu ý quan trọng:
+
+> `uedp_itnlog_set_output()` nhận một hàm có chữ ký `void (*)(const char*)`. Vì vậy không nên truyền trực tiếp `printf` vào API này, mà nên bọc `printf` hoặc `fputs` trong một wrapper như ví dụ trên.
+>
+> Hiện tại, đội ngũ phát triển đã đưa trở lại các cấu hình mặc định cho các uutobj (unit under test object) F103 trong `pal/arch` để làm tham khảo chính xác cách triển khai itnlog trên nền tảng STM32F103. Người dùng có thể tham khảo và chỉnh sửa lại cho phù hợp với nền tảng của mình.
 
 #### Định dạng dòng log
 
@@ -353,7 +370,7 @@ Trong đó `task_id` và `msg_id` được xuất ở dạng hex để dễ map 
 
 Nếu cần lọc log theo module, dùng `uedp_itnlog_set_tag("TSK")`, `uedp_itnlog_set_tag("MSG")`, `uedp_itnlog_set_tag("FSM")`, `uedp_itnlog_set_tag("TSM")`, hoặc `uedp_itnlog_set_tag("TIM")`.
 
-Lưu ý:
+Lưu ý khi sử dụng lọc:
 
 - `NULL` có nghĩa là không lọc theo tag.
 - Khi xuất ra terminal, nên dùng một wrapper riêng thay vì truyền trực tiếp `printf` làm callback để tránh lỗi do khác kiểu chữ ký hàm và để chủ động flush `stdout`.
@@ -362,7 +379,7 @@ Lưu ý:
 #### Lưu ý khi debug
 
 - Nếu log chưa hiện ngay trên terminal, kiểm tra callback output có flush `stdout` hay không.
-- Nếu muốn in log theo thời điểm nhất định, có thể gọi `uedp_itnlog_dump()` trong polling task hoặc ngay trước khi kết thúc testcase.
+- Nếu muốn in log theo thời điểm nhất định, có thể gọi `uedp_itnlog_dump()` trong polling task, OCE service hoặc ngay trước khi kết thúc testcase.
 - `uedp_itnlog_log()` chỉ ghi vào bộ đệm nội bộ, còn việc hiển thị phụ thuộc vào callback output và thời điểm dump.
 - Nếu buffer log đầy, `uedp_itnlog_log()` sẽ làm logger tự dump trước khi ghi tiếp theo thiết kế hiện tại trong source.
 
@@ -434,6 +451,10 @@ int main(void) {
 - `xprintf` thường không cần gọi trực tiếp trong ứng dụng khi đã dùng `rprintf`, vì `rprintf` đã dùng `xfprintf()` để format chuỗi đầu ra.
 - `pal_rprintf_service_t` cho phép `init = NULL` nếu backend đã được BSP hoặc application khởi tạo sẵn.
 
+Lưu ý khi ghép tầng:
+
+- Các ví dụ trong user manual chỉ là ví dụ đơn giản và chưa tối ưu hóa, trong thực tế có thể chứa các triển khai cụ thể hơn để quản lý post-scheduling và xử lý đăng ký cho `uedp_itnlog_dump`.
+
 #### Đặt tên cho backend rprintf
 
 Kể từ phiên bản 1.1.5, `pal_rprintf_service_t` có thêm trường `name` (chuỗi, ví dụ `"UART"`, `"FILE"`, `"CONSOLE"`) để đặt nhãn logic cho backend. Trường này không ảnh hưởng tới logic dispatch của Core - nó chỉ phục vụ mục đích debug trace và ánh xạ 1-1 với trường `contract` trong khối `pplp.rprintf[]` của cú pháp μE-LS, giúp tài liệu thiết kế PLD/μE-LS và code thực thi khớp tên với nhau:
@@ -451,6 +472,8 @@ static pal_rprintf_service_t linux_rprintf = {
 
 Nếu ứng dụng có nhiều backend rprintf, nên đặt `name` khác nhau và khớp với `contract` tương ứng đã khai báo trong μE-LS để dễ tra cứu khi debug.
 
+Hiện tại, PLD/μE-LS và kconfigspec/pycdscriptor chưa hỗ trợ các triển khai cho `pal/arch`, do đó tạm thời trước v1.1.8 dự kiến thì việc triển khai backend rprintf vẫn cần người dùng tự viết code trong `pal/arch` và tự đăng ký callback vào `logdp` trong `app.c`.
+
 ### Khai báo các giá trị TASK_NORM, TASK_POLL, SIG và STATE
 
 Dựa theo dải tín hiệu, chúng ta thực hiện tham khảo trong testcase như sau:
@@ -459,30 +482,9 @@ Dựa theo dải tín hiệu, chúng ta thực hiện tham khảo trong testcase
 - TASK_POLL thì khai báo từ `0xD4` đến `0xDE` (tránh dùng `0xDF` vì đã được định nghĩa là EOT).
 - SIG thì khai báo từ `0x01` đến `0xFF` (tránh dùng các giá trị đã được định nghĩa sẵn trong các dải tín hiệu đặc biệt như FSM_SIG, TSM_SIG, TSM_STATE).
 
-### Khai báo các message queue, buffer toàn cục, FSM và TSM
+Trong phiên bản 1.1.6, các giá trị TASK_NORM, TASK_POLL, SIG và STATE được sinh tự động từ Kconfig dựa trên các thông số cấu hình của người dùng, giúp giảm thiểu lỗi do trùng lặp hoặc sai sót khi khai báo thủ công.
 
-Người dùng nên khai báo các message queue và buffer toàn cục cho từng tác vụ trong implementation của từng test case để đảm bảo tính độc lập và dễ quản lý.
-
-Ví dụ:
-
-```c
-static uedp_msg_t* usr_q_mem[8];
-static uedp_msg_t* a_q_mem[8];
-static uedp_msg_t* b_q_mem[8];
-
-static const char* data_a_to_b = "Hello from Task A!";
-static const char* data_b_to_a = "Hello from Task B!";
-
-static uedp_tsm_t blinker_tsm;
-
-static uedp_fsm_t fsm_usr;
-static uedp_fsm_t fsm_a;
-static uedp_fsm_t fsm_b;
-```
-
-Lưu ý rằng các buffer toàn cục này dùng cho việc chứa các message có kích thước quá lớn so với kích thước đã khai báo của pool, khi đó người dùng sẽ sử dụng cơ chế truyền tham chiếu để truyền địa chỉ của dữ liệu vào payload của message, do đó cần đảm bảo rằng các buffer này có phạm vi toàn cục để tránh lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi.
-
-Ngoài ra, nên tuân thủ theo thứ tự khai báo là message queue, buffer toàn cục, TSM và FSM để đảm bảo tính nhất quán và dễ quản lý trong quá trình phát triển ứng dụng.
+<!-- DEPRECATED - Khai báo các message queue, buffer toàn cục, FSM và TSM -->
 
 ### Khai báo các handler cho Task, TSM và FSM
 
@@ -512,11 +514,23 @@ static void task_a_handler(uedp_msg_t* msg);
 static void task_b_handler(uedp_msg_t* msg);
 ```
 
-Lưu ý, nên tuân thủ theo thứ tự khai báo là handler cho TSM, handler cho FSM và cuối cùng là handler cho Task để đảm bảo tính nhất quán và dễ quản lý trong quá trình phát triển ứng dụng.
+Trong phiên bản 1.1.6, các handler này được sinh tự động từ Kconfig dựa trên các thông số cấu hình của người dùng, giúp giảm thiểu lỗi do trùng lặp hoặc sai sót khi khai báo thủ công.
 
-### Khởi tạo TSM
+### Khởi tạo Task table
 
-#### Khởi tạo TSM table
+<!-- TASK
+Sửa đổi cập nhật tài liệu theo các thay đổi mới trong code và sự hỗ trợ của PLD/μE-LS.
+-->
+
+Mỗi một tác vụ sẽ được định nghĩa trong bảng tác vụ với các thông tin tương ứng trong khai báo định nghĩa `task_norm_t` hoặc `task_poll_t`. Khi khởi tạo bảng tác vụ với `uedp_task_norm_create()` hoặc `uedp_task_poll_create()`, Core sẽ tự động khởi tạo FIFO nội bộ cho từng tác vụ dựa trên khai báo.
+
+Lưu ý rằng mỗi một tác vụ nên có mức độ ưu tiên khác nhau để đảm bảo rằng Core có thể xử lý tín hiệu một cách chính xác, nếu tất cả các tác vụ đều có cùng mức độ ưu tiên thì Core sẽ gặp lỗi xử lý tín hiệu, do đó cần lưu ý việc phân bổ mức độ ưu tiên cho các tác vụ trong hệ thống.
+
+Ngoài ra `UEDP_TASK_NORM_USR_ID` chính là tác vụ mặc định mà người dùng sử dụng để truyền tín hiệu bắt đầu cho Core. Do đó nếu người dùng muốn sử dụng một tác vụ khác để truyền tín hiệu bắt đầu cho Core thì cần phải thay đổi lại ID của tác vụ này thành `UEDP_TASK_NORM_USR_ID` để đảm bảo rằng Core có thể nhận được tín hiệu bắt đầu và có mức ưu tiên cao nhất để được xử lý trước các tác vụ khác trong hệ thống.
+
+Trong phiên bản 1.1.6, các task này được sinh tự động từ kconfigspec và pycdscriptor dựa trên các thông số cấu hình của người dùng, giúp giảm thiểu lỗi do trùng lặp hoặc sai sót khi khai báo thủ công. Tuy nhiên, mức ưu tiên của các task được thiết lập mặc định theo mức ưu tiên từ cao xuống thấp, do đó người dùng cần phải kiểm tra lại mức độ ưu tiên của các task trong hệ thống để đảm bảo rằng Core có thể xử lý tín hiệu một cách chính xác.
+
+### Khởi tạo TSM table
 
 Trong TSM, mỗi một state sẽ có 1 bảng mô tả chuyển trạng thái là `tsm_trans_t` để định nghĩa
 
@@ -552,45 +566,13 @@ const tsm_state_desc_t blinker_tsm_table[] = {
 
 Lưu ý rằng mỗi một state không nhất thiết phải có hàm on_entry và on_exit, nếu không cần thiết thì có thể để là NULL. Tuy nhiên, bảng chuyển trạng thái và số lượng lượt chuyển trạng thái thì bắt buộc phải có để định nghĩa được logic chuyển trạng thái của TSM.
 
-#### Khởi tạo Task table
-
-Mỗi một tác vụ sẽ được định nghĩa trong bảng tác vụ `task_norm_t` với các thông tin như sau:
-
-- ID của tác vụ
-- Mức độ ưu tiên của tác vụ
-- Handler của tác vụ
-- Bộ nhớ dùng cho message queue của tác vụ
-
-Ví dụ:
-
-```c
-task_norm_t app_task_table[] = {
-  { UEDP_TASK_NORM_USR_ID,  UEDP_TASK_PRI_LEVEL_8, task_norm_usr_handler, {0}, usr_q_mem  },
-  { TASK_NORM_A_ID,           UEDP_TASK_PRI_LEVEL_7, task_norm_a_handler,   {0}, a_q_mem    },
-  { TASK_NORM_B_ID,           UEDP_TASK_PRI_LEVEL_6, task_norm_b_handler,   {0}, b_q_mem    },
-  { UEDP_TASK_NORM_EOT_ID,  UEDP_TASK_PRI_LEVEL_0, NULL,                  {0}, NULL       }
-};
-```
-
-Trong đó, tham số thứ 4 là FIFO nội bộ của task mà Core sẽ tự động khởi tạo dựa vào tham số thứ 5. Do đó ở đây tham số thứ 4 sẽ để là {0} để Core tự động khởi tạo FIFO dựa vào bộ nhớ đã khai báo ở tham số thứ 5.
-
-Lưu ý rằng mỗi một tác vụ nên có mức độ ưu tiên khác nhau để đảm bảo rằng Core có thể xử lý tín hiệu một cách chính xác, nếu tất cả các tác vụ đều có cùng mức độ ưu tiên thì Core sẽ gặp lỗi xử lý tín hiệu, do đó cần lưu ý việc phân bổ mức độ ưu tiên cho các tác vụ trong hệ thống.
-
-Ngoài ra `UEDP_TASK_NORM_USR_ID` chính là tác vụ mặc định mà người dùng sử dụng để truyền tín hiệu bắt đầu cho Core. Do đó nếu người dùng muốn sử dụng một tác vụ khác để truyền tín hiệu bắt đầu cho Core thì cần phải thay đổi lại ID của tác vụ này thành `UEDP_TASK_NORM_USR_ID` để đảm bảo rằng Core có thể nhận được tín hiệu bắt đầu và có mức ưu tiên cao nhất để được xử lý trước các tác vụ khác trong hệ thống.
+Phần khai báo này được sinh tự động từ Kconfig và pycdscriptor dựa trên các thông số cấu hình của người dùng nên chỉ mang tính chất tham khảo, người dùng có thể tự khai báo lại các bảng chuyển trạng thái và bảng mô tả trạng thái để phù hợp với logic của ứng dụng.
 
 ### Khởi tạo FSM
 
 FSM được khởi tạo tương tự như TSM, trong đó mỗi một trạng thái sẽ là 1 hàm handler để xử lý logic của trạng thái đó. Khi FSM nhận được tín hiệu và được task handler dispatch FSM, Core sẽ gọi hàm handler tương ứng với trạng thái hiện tại của FSM để xử lý logic và quyết định trạng thái tiếp theo dựa trên tín hiệu nhận được.
 
-### Khởi tạo Tick handler
-
-Khởi tạo này phụ thuộc vào nền tảng và cách triển khai.
-
-Ví dụ:
-
-- Ở Linux thì sử dụng một thread riêng để thực hiện việc tick với độ trễ cố định, trong đó thread này sẽ gọi API `uedp_timer_tick()` của Core để cập nhật thời gian và xử lý các bộ định thời phần mềm.
-- Ở STM32 thì gọi trực tiếp vào `SysTick_Handler()` để thực hiện việc tick, trong đó hàm này sẽ gọi API `uedp_timer_tick()` của Core để cập nhật thời gian và xử lý các bộ định thời phần mềm.
-- Ở các nền tảng khác thì có thể sử dụng một bộ định thời phần cứng để tạo ra ngắt định kỳ, trong đó trong hàm xử lý ngắt này sẽ gọi API `uedp_timer_tick()` của Core để cập nhật thời gian và xử lý các bộ định thời phần mềm.
+<!-- DEPRECATED - Khởi tạo Tick handler -->
 
 ### Khởi tạo ứng dụng
 
@@ -599,29 +581,74 @@ Sau khi đã hoàn thành việc khai báo các handler, khởi tạo TSM table 
 - Khởi tạo môi trường với `uedp_core_init()`, trong đó sẽ thực hiện cấu hình môi trường tùy thuộc theo nền tảng.
 - Khởi tạo message pool với `uedp_msg_pool_init()`, trong đó sẽ thực hiện khởi tạo các pool bộ nhớ tĩnh dựa trên cấu hình đã khai báo trong PAL.
 - Khởi tạo timer với `uedp_timer_init()`, trong đó sẽ thực hiện khởi tạo các bộ định thời phần mềm và thiết lập tick handler tùy thuộc theo nền tảng.
-- Khởi tạo bảng tác vụ với `uedp_task_norm_create()`, trong đó sẽ thực hiện khởi tạo các tác vụ dựa trên bảng tác vụ đã khai báo, đồng thời thiết lập FIFO nội bộ cho từng tác vụ dựa trên bộ nhớ đã khai báo.
+- Khởi tạo logger với `uedp_itnlog_init()`, trong đó sẽ thực hiện khởi tạo các bộ đệm log nội bộ và thiết lập callback xuất log tùy thuộc theo nền tảng.
+- Khởi tạo Dpool GDA với `uedp_gdp_init()`, trong đó sẽ thực hiện khởi tạo các slot quản lý biến toàn cục và thiết lập các con trỏ tham chiếu tới các biến toàn cục đã khai báo.
+- Khởi tạo bảng tác vụ với `uedp_task_norm_create()` và `uedp_task_poll_create()`, trong đó sẽ thực hiện khởi tạo các tác vụ dựa trên bảng tác vụ đã khai báo, đồng thời thiết lập FIFO nội bộ cho từng tác vụ dựa trên bộ nhớ đã khai báo.
 - Khởi tạo TSM và FSM với `uedp_tsm_init()` và `uedp_fsm_init()`, trong đó sẽ thực hiện khởi tạo các TSM và FSM dựa trên bảng mô tả trạng thái đã khai báo, đồng thời thiết lập trạng thái ban đầu cho từng TSM và FSM.
 - Truyền tín hiệu khởi đầu vào `UEDP_TASK_NORM_USR_ID` với `uedp_post_msg()`, trong đó sẽ thực hiện truyền tín hiệu bắt đầu vào tác vụ mặc định của người dùng để kích hoạt hệ thống và bắt đầu xử lý các tín hiệu tiếp theo.
 - Vòng lặp chính sẽ thực thi `uedp_task_scheduler()` để bắt đầu vòng lặp xử lý tín hiệu của hệ thống, trong đó Core sẽ liên tục kiểm tra và xử lý các tín hiệu từ các tác vụ dựa trên mức độ ưu tiên đã thiết lập, đồng thời quản lý các bộ định thời phần mềm và thực thi logic của TSM và FSM khi có tín hiệu tương ứng.
 - Sau vòng lặp chính, ocesvc sẽ thực hiện việc dọn dẹp và giải phóng tài nguyên, trong đó sẽ gọi các API tương ứng để giải phóng bộ nhớ, hủy các tác vụ và TSM/FSM, đồng thời đảm bảo rằng tất cả các tín hiệu đã được xử lý trước khi kết thúc chương trình. Thiết kế này được xử lý ở các phiên bản sau của Core, trong đó sẽ cung cấp các API để dọn dẹp và giải phóng tài nguyên một cách an toàn và hiệu quả.
 
-### Trình tự khởi tạo khuyến nghị
+Ngoài ra, người dùng cần lưu ý rằng việc khởi tạo ứng dụng cần được thực hiện theo đúng trình tự để đảm bảo rằng tất cả các thành phần của hệ thống được khởi tạo một cách chính xác và đầy đủ trước khi bắt đầu vòng lặp xử lý tín hiệu. Nếu trình tự khởi tạo không đúng, có thể dẫn đến lỗi trong quá trình xử lý tín hiệu hoặc các vấn đề về quản lý bộ nhớ và tài nguyên.
 
-Để phù hợp với source hiện tại, thứ tự khởi tạo nên là:
+Lưu ý rằng toàn bộ quy trình triển khai đều được xử lý với bảo vệ của FCR và bộ sinh code tự động từ Kconfig và pycdscriptor nên người dùng không cần phải tự viết code khởi tạo thủ công, mà chỉ cần khai báo các thông số cấu hình trong Kconfig và pycdscriptor để Core tự động sinh ra các hàm khởi tạo và bảng mô tả trạng thái tương ứng.
 
-1. `uedp_core_init()`
-2. `uedp_msg_pool_init()`
-3. `uedp_gdp_init()` nếu có dùng biến toàn cục qua GDP (Dpool GDA)
-4. `uedp_timer_init()`
-5. `uedp_tsm_init()` và `uedp_fsm_init()` nếu có TSM và FSM
-6. `uedp_itnlog_init()` nếu dùng logger.
-7. Khởi tạo backend xuất log nếu dùng `rprintf`.
-8. Đăng ký callback vào `pal_logdp_register()` nếu muốn fan-out log ra nhiều đích.
-9. `uedp_itnlog_set_output()` và các API cấu hình log khác nếu dùng đường xuất log dạng chuỗi.
-10. `uedp_task_norm_create()`
-11. `uedp_task_poll_create()` nếu có poll task
-12. Gửi message khởi đầu vào `UEDP_TASK_NORM_USR_ID`
-13. Vòng lặp `uedp_task_scheduler()`
+<!-- DEPRECATED - Trình tự khởi tạo khuyến nghị -->
+
+### Sinh tự động từ Kconfig và pycdscriptor
+
+Quy trình sinh tự động từ Kconfig và pycdscriptor giúp giảm thiểu lỗi do trùng lặp hoặc sai sót khi khai báo thủ công, đồng thời đảm bảo rằng các thành phần của hệ thống được khởi tạo một cách chính xác và đầy đủ. Người dùng chỉ cần khai báo các thông số cấu hình trong Kconfig và pycdscriptor, Core sẽ tự động sinh ra các hàm khởi tạo và bảng mô tả trạng thái tương ứng.
+
+Cụ thể hơn:
+
+```bash
+# pwd return at root of project
+# Nếu ở interact mode
+./entrypoint.sh --it
+## Viết mô tả logic vào app/lstaxizer.yaml
+# Validate và sinh code
+./jainerator.sh
+
+# Nếu ở non-interact mode
+./entrypoint.sh --n-it
+cd sources/test
+./insert.sh vir-phy-logic-testobj-v0
+cd ..
+./jainerator.sh
+```
+
+Ở chế độ không tương tác, người dùng có thể sử dụng script để insert các testobj (test object) làm mô tả logic vào file `app/lstaxizer.yaml`, sau đó chạy `jainerator.sh` để validate và sinh code tự động. Quy trình này giúp đảm bảo rằng các thông số cấu hình được khai báo một cách chính xác và đầy đủ, đồng thời giảm thiểu lỗi do trùng lặp hoặc sai sót khi khai báo thủ công.
+
+Sau khi sinh code tự động, tùy thuộc vào nền tảng sử dụng như STMCubeIDE, ESP-IDF hay Linux, người dùng có thể add các headers và source files vào project để biên dịch và chạy ứng dụng.
+
+Ở uutobj F103 đã có sẵn một file `include.xml` mẫu để hỗ trợ việc add các headers và source files vào project STMCubeIDE, người dùng có thể tham khảo và chỉnh sửa lại cho phù hợp với nền tảng của mình.
+
+Ngoài ra, nhà phát triển cũng cung cấp sự hỗ trợ cho CMake với các file `CMakeLists.txt` mẫu để người dùng có thể sử dụng kiểm tra và biên dịch ứng dụng trên nền tảng Linux với cú pháp như sau:
+
+```bash
+# pwd return at root of project LINUX
+rm -rf build && cmake -B build -DPLAT=LINUX -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+make -C build
+./build/uedp-linux
+```
+
+Lưu ý rằng, bộ lệnh trên áp dụng cho prjecobj (project object) riêng biệt đã clone vào 1 folder `uEDP` riêng biệt theo cấu trúc thư mục như sau:
+
+```structure
+uedp-prjecobj-linux/
+├── build/
+├── main/
+├── uEDP/
+└── CMakeLists.txt
+```
+
+Nếu người dùng muốn biên dịch thư viện trực tiếp từ repo gốc, ta có thể dùng như sau:
+
+```bash
+# pwd return at root of uEDP
+rm -rf build && cmake -B build -DPLAT=TEST -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+make -C build
+```
 
 ## IV. Các lưu ý quan trọng
 

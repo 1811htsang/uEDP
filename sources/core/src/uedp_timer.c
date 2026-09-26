@@ -1,7 +1,6 @@
-/**
+/** ANCHOR - Implementation of timer management for UEDP system
  * @file uedp_timer.c
  * @author Shang Huang
- * @brief Implementation of timer management for UEDP system
  * @version 0.1
  * @date 2026-04-18
  * @copyright MIT License
@@ -15,8 +14,7 @@
 #include "uedp_task.h"
 #include "uedp_fcr.h"
 
-/**
- * @brief Cấu trúc quản lý toàn bộ hệ thống Timer
+/** ANCHOR - Cấu trúc quản lý toàn bộ hệ thống Timer
  * @param head: Con trỏ đến đầu danh sách liên kết các timer đang chạy
  * @param free_list: Con trỏ đến danh sách các nút timer đang rảnh trong Pool
  * @param active_count: Số lượng timer đang chạy, dùng để quản lý và giới hạn số lượng timer hoạt động cùng lúc
@@ -27,15 +25,12 @@ typedef struct {
 	ui8             active_count;   /* Số lượng timer đang chạy */
 } uedp_timer_ctrl_t;
 
-/**
- * @brief Khai báo tick hệ thống độc lập, không phụ thuộc vào
- * 				task.
- */
+// ANCHOR - Khai báo tick hệ thống độc lập, không phụ thuộc vào task.
+
 sta ui32 sys_tick = 0x0u;
 
-/**
- * @brief Khai báo Pool timer
- */
+// ANCHOR - Khai báo Pool timer
+
 sta uedp_timer_t timer_pool[UEDP_TIMER_MAX_NODES] = {0};
 sta uedp_timer_ctrl_t timer_ctrl = {0};
 

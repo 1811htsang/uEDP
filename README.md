@@ -28,6 +28,7 @@ Feel free to star the projetct and contribute to its development. Your support i
 - **[DMP]** Deterministic Memory Pooling: Minimizing fragmentation and ensuring deterministic behavior for real-time systems with automatic atomic void size scaling of memory pools.
 - **[D2MP]** Data-to-Message Passing : Support for passing values and references (zero-copy), automatically adapting to 32/64-bit pointer sizes.
 - **[HSMC]** Hybrid State Machine Control: Integration of mode management (TSM) and micrologic (FSM) for clear system organization.
+- **[PLD]** Parse-able Logical Descriptor: A YAML-based declarative syntax (μE-LS) for describing Task/TSM/FSM logic, parsed and validated by the PLTF pipeline to automatically generate application implementation code (`app.c`).
 - **[PPLP]** Plug-N-Play Logging Pipeline: Three-layer logging system `itnlog` → `logdp` → `rprintf/xprintf` supporting safe log collection and forwarding from Core to backend.
 - **[MPS]** Modular Porting Support: Abstracted hardware access and services in the PAL, enabling easy porting to new platforms with predefined interfaces and configurations.
 - **[OCE]** Out-Context Execution Service: Support for executing tasks in an out-of-context manner, allowing for flexible task management and execution.
@@ -97,13 +98,24 @@ graph LR
 ├── common/                      # Các tiện ích và cấu trúc dữ liệu chung được sử dụng trong toàn bộ dự án
 │   ├── container/               # Các cấu trúc dữ liệu như FIFO, Ring Buffer, Linked List được triển khai thuần C
 │   ├── kconfiglib/              # Chứa cấu hình thực thi Kconfig terminal
-│   ├── kconfigspec/                  # Cấu hình python để sinh code từ Kconfig terminal
+│   ├── kconfigspec/             # Cấu hình python để sinh code từ Kconfig terminal
 │   └── xprintf/                 # Thư viện xprintf sử dụng cho việc format chuỗi log và xuất ra nhiều backend khác nhau
-└── test/                        # Các test case mẫu để kiểm tra các tính năng của μEDP
-    ├── test01/                  # Test cơ bản với các tác vụ ISR và TSM 
-    ├── test02/                  # Test với các tính năng như message pooling và memrp
-    ├── test03/                  # Test với các tính năng như message pooling và memrp
-    └── test04/                  # Test với tính năng itnlog
+└── test/                        # Các test case và testobj (mô tả PLD/μE-LS) để kiểm tra các tính năng của μEDP
+    ├── testobj/                 # Testobj tuân thủ test framework (`vir-`/`phy-`/`logic-` prefix + versioning), xem sources/test/README.md
+    ├── test04/                  # Test với tính năng itnlog
+    ├── insert.sh                # Script chèn nhanh nội dung 1 testobj vào sources/app/lstaxizer.yaml để chạy BST
+    └── deprecated/              # test01-03 cũ, chỉ giữ lại để tham khảo, không còn dùng cho test mới
+
+pltf/                            # Pipeline sinh code từ Kconfig + cú pháp PLD/μE-LS, xem docs/pltf-design.md
+├── kconfigspec/                 # Sinh decl.kconfig (usrinp, tnorm, tpoll, sig, hwapi)
+├── templates/                   # Jinja2 template, sinh file mới thay vì vá chuỗi
+└── pycdscriptor/
+    ├── attribarse/               # Đọc .config thành context có cấu trúc (dotcfg, glbda)
+    ├── lstaxer/                  # Parse + validate YAML μE-LS (symresolv, strucjec, lukupmodel, vlid, kre8)
+    ├── ustab/                    # Unified Symbol Table (gnnerate, cvert, xportstax, custab)
+    └── jnerator/
+        ├── pregen/                # Sinh khai báo Kconfig-based (7 generator + fpregen orchestrator)
+        └── postgen/               # Sinh logic implementation (app.c) từ YAML μE-LS đã validate
 ```
 
 ---
@@ -116,6 +128,10 @@ A comparison analysis between the event-driven model (μEDP/CIEDPC) and RTOS is 
 
 A detailed analysis between the μEDP/CIEDPC and the QP/C framework is available in [μEDP vs QP/C](./docs/uedp-vs-qpc.md).
 
+The PLD/μE-LS declarative syntax (Task/TSM/FSM description via YAML) is documented in [uels-syntax.md](./docs/uels-syntax.md); the syntax has reached a concluded, stable design ready for the codegen implementation phase. The pipeline that turns this YAML into generated Kconfig declarations and application code (`app.c`) is documented in [pltf-design.md](./docs/pltf-design.md) ([English version](./docs/pltf-design-en.md)).
+
+Testobj-based BST (Basic Software Test) validation for the PLD/μE-LS pipeline follows a dedicated naming convention and versioning scheme, documented in [sources/test/README.md](./sources/test/README.md).
+
 If you want to see the documentation in progress, switch to the `docs` branch to view the documents that are currently being drafted and updated.
 
 Please also note that the documentation is currently supporting Vietnamese, and English documentation will be added in the future as the project progresses or with contributions from the community.
@@ -125,6 +141,8 @@ Please also note that the documentation is currently supporting Vietnamese, and 
 ## 🤝 Contributing
 
 This project is developed by **Shang Huang (Huynh Thanh Sang)**. Contributions for bug reports or feature proposals are welcome via GitHub Issues.
+
+From v1.1.5, **Minminie06 (Nguyen Hoang Hai Minh)** has joined the project as a contributor, focusing on the development, refactor and documentation for any leftover features and improvements. Contributions from the community are always welcome, and we encourage you to submit pull requests for any enhancements or bug fixes.
 
 **License:** MIT.
 

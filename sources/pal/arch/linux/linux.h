@@ -1,49 +1,25 @@
-/**
- * @file linux_arch.h
- * @author Shang Huang
- * @brief Header file for Linux Architecture Abstraction Layer in UEDP
- * @version 0.1
- * @date 2026-04-20
- * @copyright MIT License
- */
+//ANCHOR - Architecture-specific header for Linux
+#ifndef __LINUX_H__
+  #define __LINUX_H__
 
-#ifndef __LINUX_ARCH_H__
-  #define __LINUX_ARCH_H__
-
-  /**
-   * @brief Khai báo thư viện sử dụng
-   * @note Việc định nghĩa _POSIX_C_SOURCE phải được thực hiện trước khi bao gồm bất kỳ header nào để đảm bảo các hàm 
-   *       và kiểu dữ liệu cần thiết được khai báo đúng cách
-   */
+  //ANCHOR - Khai báo thư viện sử dụng
 
   #include "pal_core.h"
 
-  /**
-   * @brief Khởi tạo môi trường mô phỏng trên Linux
-   * Bao gồm: Khởi tạo Mutex, tạo luồng Tick, bắt tín hiệu SIGINT
+  /** ANCHOR - Khai báo custom API
+   * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
    */
-  void pal_linux_init_env(void);
 
-  /**
-   * @brief Giả lập một ngắt phần cứng (Ví dụ: phím nhấn từ Terminal)
-   * Để gọi uedp_task_norm_post_isr từ ngoài vào Core
-   */
-  void pal_linux_simulate_interrupt(ui8 task_id, ui8 signal);
+  void linux_init_env(void);
 
-  /**
-   * @brief Giả lập tick hệ thống trên Linux (Ví dụ: sử dụng timer hoặc luồng riêng)
-   * Để gọi uedp_timer_tick() định kỳ
-   */
-  void pal_linux_simulate_tick(void);
+  void linux_simulate_interrupt(ui8 task_id, ui8 signal);
 
-  /**
-   * @brief Dọn dẹp tài nguyên khi kết thúc chương trình (Ví dụ: hủy luồng, giải phóng mutex)
-   */
-  void pal_linux_cleanup(void);
+  void linux_simulate_tick(void);
 
-  /**
-   * @brief Xử lý tín hiệu từ hệ thống (Ví dụ: SIGINT để dọn dẹp và thoát)
-   */
-  void pal_signal_handler(int signum);
+  void linux_cleanup(void);
+
+  void linux_signal_handler(int signum);
+
+  void linux_get_sac_count(uint32_t count);
 
 #endif

@@ -1,5 +1,5 @@
 /**
- * @file stm32_h723_arch.c
+ * @file stm32h723.c
  * @author Shang Huang
  * @brief Implementation of STM32 Architecture Abstraction Layer for UEDP
  * @version 0.1

@@ -1,5 +1,5 @@
 /**
- * @file esp32_s3_arch.h
+ * @file esp32s3.h
  * @author Shang Huang
  * @brief Header file for ESP32-S3 Architecture Abstraction Layer in UEDP
  * @version 0.1
@@ -7,8 +7,8 @@
  * @copyright MIT License
  */
 
-#ifndef __ESP32_S3_ARCH_H__
-  #define __ESP32_S3_ARCH_H__
+#ifndef __ESP32_S3_H__
+  #define __ESP32_S3_H__
 
   /**
    * @brief Khai báo thư viện sử dụng
@@ -34,4 +34,4 @@
 
   // Điền các khai báo tại đây
 
-#endif // __ESP32_S3_ARCH_H__
+#endif // __ESP32_S3_H__

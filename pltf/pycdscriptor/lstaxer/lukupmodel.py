@@ -368,23 +368,7 @@ def lukupmodel_tpoll_logic(yaml_text):
 
   return out
 
-def lukupmodel_isr_logic(yaml_text):
-  payload = yaml.safe_load(yaml_text) or {}
-  entries = payload.get('isr', [])
-  if not isinstance(entries, list):
-    return []
-
-  out = []
-  for item in entries:
-    if not isinstance(item, dict):
-      continue
-    out.append(C_isr_obj(
-      id=str(item.get('id', '')),
-      to=_normalize_alias_value(item.get('to')) or '',
-      sig=_normalize_alias_value(item.get('sig'), 'id_symbol') or '',
-    ))
-
-  return out
+# DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
 
 def lukupmodel_outexec_logic(yaml_text):
   payload = yaml.safe_load(yaml_text) or {}
@@ -476,7 +460,7 @@ if __name__ == '__main__':
 
   tnorm_logic_items = lukupmodel_tnorm_logic(yaml_sample)
   tpoll_logic_items = lukupmodel_tpoll_logic(yaml_sample)
-  isr_logic_items = lukupmodel_isr_logic(yaml_sample)
+  # DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
   outexec_logic_items = lukupmodel_outexec_logic(yaml_sample)
   glbda_logic_items = lukupmodel_glbda_logic(yaml_sample)
 
@@ -521,12 +505,7 @@ if __name__ == '__main__':
       print('  action =', act.actv, act.to, act.sig, act.data, act.ptype)
     print('\n')
 
-  print('isr_logic_count=', len(isr_logic_items))
-  for item in isr_logic_items:
-    print('isr_id =', item.id)
-    print('isr_to =', item.to)
-    print('isr_sig =', item.sig)
-    print('\n')
+  # DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
 
   print('outexec_logic_count=', len(outexec_logic_items))
   for item in outexec_logic_items:

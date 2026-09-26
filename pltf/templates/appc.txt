@@ -151,12 +151,14 @@ void {{ item.handler }}(void) {
   /* OUTEXEC {{ item.name }}, context: {{ item.context or 'NULL' }}, state: {{ item.state }}. */
 }
 {% endfor %}
-int main(void) {
+int app_main(void) {
   uedp_core_init();
-  uedp_msg_pool_init();
   logic_init();
   while (1) {
-    uedp_task_scheduler();
+    RETR_STAT retr =  uedp_task_scheduler();
+    if (retr == STAT_NRDY) {
+      break; 
+    }
   }
-  return 0;
+  return system_action_count;
 }

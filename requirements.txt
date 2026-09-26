@@ -1,0 +1,7 @@
+kconfiglib
+jinja2
+pytest
+pyserial
+pyyaml
+pyyaml-include
+pydantic
