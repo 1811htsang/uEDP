@@ -298,8 +298,8 @@ void internal_uart_rx_dma(void) {
   HAL_UART_Receive_DMA(&i_huart1, rx_buf, sizeof(rx_buf));
 }
 
-//TASK - Add detail implementation for UART output TX functions for rprintf service
-//TASK - cmake build to remove errors on C/C++ Intellisense
+//DEPRECATED - Old TASK - Add detail implementation for UART output TX functions for rprintf service
+//DEPRECATED - Old TASK - cmake build to remove errors on C/C++ Intellisense
 
 void stm32f103_uart_putc(unsigned char c) {
   // Transmit the character using DMA
