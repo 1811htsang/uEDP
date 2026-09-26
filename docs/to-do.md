@@ -556,9 +556,9 @@ Khánh đã hoàn thành ở `sources/core/src`
 -->
 
 - [x] Bổ sung nội dung để trình bày về vấn đề vị trí đặt và sử dụng BSP (Board Support Package) trong dự án μEDP, nhằm giúp người dùng hiểu rõ hơn về cách thức triển khai và sử dụng BSP một cách hiệu quả và đúng cách trong việc phát triển ứng dụng trên nền tảng μEDP.
-- [ ] Bổ sung tài liệu đánh giá μEDP theo ISO 42010:2022 để đảm bảo rằng kiến trúc của dự án μEDP được thiết kế và triển khai theo các tiêu chuẩn quốc tế về kiến trúc phần mềm, giúp tăng tính khả dụng, khả năng mở rộng và khả năng bảo trì của hệ thống.  
-- [ ] Bổ sung init của GDP trong template code của testobj.
-- [ ] Bổ sung comment dạng cross-style của Anchor-type và Doxygen-type cho `encryp/libcrc8` (cả `.h` và `.c`).
+- [x] Bổ sung init của GDP trong template code của testobj.
+- [x] Bổ sung comment dạng cross-style của Anchor-type và Doxygen-type cho `encryp/libcrc8` (cả `.h` và `.c`).
+- [ ] Bổ sung tài liệu đánh giá μEDP theo ISO 42010:2022 để đảm bảo rằng kiến trúc của dự án μEDP được thiết kế và triển khai theo các tiêu chuẩn quốc tế về kiến trúc phần mềm, giúp tăng tính khả dụng, khả năng mở rộng và khả năng bảo trì của hệ thống.
 
 <!-- NOTE - Expectation b4 BST task
 Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ được hoàn thiện với khả năng tự động hóa việc phân giải logic từ các cấu hình YAML sang các hàm thực thi trong lõi μEDP.
@@ -576,6 +576,8 @@ Theo lộ trình hiện tại đã hoàn tất các task liên quan đến PLD/�
 Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST-v1.1.5 để bảo vệ các tính năng đã phát triển để chuẩn bị rebase sub-tasklist từ v1.2.0 lên v1.1.6. 
 -->
 
+- [ ] Bổ sung testobj-v1 để chuẩn bị cho BST task.
+- [ ] Cân nhắc repotize 2 prjecobj-linux và projectobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
 - [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử. // NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6.
 - [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
 - [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
