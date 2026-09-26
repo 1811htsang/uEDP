@@ -122,6 +122,13 @@ Lưu ý khi tích hợp:
 - `pal_rprintf_flush_entry()` chỉ thực sự xuất dữ liệu khi `is_ready()` trả về `true`.
 - Định dạng mặc định của `rprintf` là một dòng có timestamp, task ID, signal ID và message, được tạo bằng `xfprintf()` thay vì ghép chuỗi thủ công.
 
+#### Nguyên tắc thiết kế và sử dụng PAL
+
+Khi kết nối Core với phần cứng cụ thể, BSP (Board Support Package) và các PAL service cần tuân thủ các nguyên tắc sau:
+
+- Các hàm PAL nên được thiết kế để Core không cần biết chi tiết phần cứng, chỉ cần gọi các hàm trừu tượng như `pal_enter_critical()` hoặc `pal_get_highest_priority()`. Do đó, người dùng nên ưu tiên triển khai các API PAL để làm wrapper cho BSP API cụ thể, thay vì gọi trực tiếp các hàm phần cứng trong Core.
+- Các triển khai trong service của PAL nên được triển khai ở pal/arch thay vì trực tiếp triển khai ở `app.c`, một số tính năng như PPLP và OCE có thể cần truy cập trực tiếp vào các thanh ghi phần cứng, nhưng Core không nên biết chi tiết này. Do đó, các hàm PAL nên được triển khai ở pal/arch để tách biệt rõ ràng giữa Core và phần cứng.
+
 ## Logic thiết kế chi tiết
 
 ### [DMP] Deterministic Memory Pooling - Quản lý bộ nhớ tin nhắn với cấp phát tĩnh độc lập vào kiến trúc
