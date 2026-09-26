@@ -37,8 +37,10 @@ sta ui8 is_inited = 0x0u;
 void uedp_core_init(void) {
   pal_core_init();
   uedp_msg_pool_init();
+  uedp_gdp_init();
   uedp_timer_init();
   uedp_itnlog_init();
+  uedp_itnlog_set_output(&stm32f103_log_alloc);
   is_inited = 0x1u;
 }
 
