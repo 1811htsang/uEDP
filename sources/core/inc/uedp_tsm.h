@@ -9,19 +9,16 @@
 #ifndef __UEDP_TSM_H__
 	#define __UEDP_TSM_H__
 
-	/**
-	 * @brief Khai báo các thư viện sử dụng
+	/** ANCHOR - Khai báo các thư viện sử dụng
 	 */
 	#include <stdint.h>
 	#include "uedp_core.h"
 
-	/**
-	 * @brief Định nghĩa kiểu dữ liệu để quản lý trạng thái trong máy trạng thái chuyển tiếp (TSM)
+	/** ANCHOR - Định nghĩa kiểu dữ liệu để quản lý trạng thái trong máy trạng thái chuyển tiếp (TSM)
 	 */
 	typedef ui16 tsm_state_id_t;
 
-	/**
-	 * @brief Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống UEDP
+	/** ANCHOR - Khai báo kiểu dữ liệu để quản lý tin nhắn trong hệ thống UEDP
 	 * @attention `uedp_msg_t` được gọi ở đây để thực thi forward declaration, 
 	 * 						cho phép sử dụng con trỏ đến `uedp_msg_t` trong các khai báo sau này 
 	 * 						mà không cần phải định nghĩa chi tiết của `uedp_msg_t` tại thời điểm này, 
@@ -29,14 +26,13 @@
 	 */
 	typedef struct uedp_msg_t uedp_msg_t;
 
-	/**
-	 * @brief Khai báo con trỏ hàm để quản lý handler và callback
+	/** ANCHOR Khai báo con trỏ hàm để quản lý handler và callback
+
 	 */
 	typedef void (*tsm_func_f)(uedp_msg_t*); // Hàm xử lý trạng thái
 	typedef void (*tsm_on_state_f)(tsm_state_id_t); // Hàm callback khi trạng thái thay đổi
 
-	/**
-	 * @brief Cấu trúc cơ bản định nghĩa một transition trong TSM
+	/** ANCHOR - Cấu trúc cơ bản định nghĩa một transition trong TSM
 	 * @param sig: Tín hiệu của transition
 	 * @param next_state: Trạng thái tiếp theo sau khi xử lý tín hiệu
 	 * @param tsm_func: Hàm xử lý khi transition kích hoạt
@@ -47,8 +43,7 @@
 		tsm_func_f tsm_func;			
 	} tsm_trans_t;
 
-	/**
-	 * @brief Cấu trúc mô tả thông tin của một state trong TSM
+	/** ANCHOR - Cấu trúc mô tả thông tin của một state trong TSM
 	 * @param state_id: ID của trạng thái, nên tuân thủ tương ứng index theo thứ tự khi khởi tạo state table
 	 * @param on_entry: Hàm được gọi khi vào trạng thái
 	 * @param on_exit: Hàm được gọi khi thoát trạng thái
@@ -56,15 +51,14 @@
 	 * @param tran_count: Số lượng transition trong mảng transitions
 	 */
 	typedef struct tsm_state_desc_t {
-		tsm_state_id_t 			state_id;     
-		tsm_func_f  				on_entry;     
-		tsm_func_f  				on_exit;      
-		const tsm_trans_t* 	transitions; 
-		ui8      						trans_count;  
+		tsm_state_id_t state_id;     
+		tsm_func_f on_entry;     
+		tsm_func_f on_exit;      
+		const tsm_trans_t* transitions; 
+		ui8 trans_count;  
 	} tsm_state_desc_t;
 
-	/**
-	 * @brief Cấu trúc quản lý thông tin của máy trạng thái chuyển tiếp (TSM)
+	/** ANCHOR - Cấu trúc quản lý thông tin của máy trạng thái chuyển tiếp (TSM)
 	 * @param cur_state: Trạng thái hiện tại của TSM, sử dụng state_id từ tsm_state_desc_t
 	 * @param prev_state: Trạng thái trước đó của TSM, sử dụng state_id từ tsm_state_desc_t
 	 * @param state_table: Bảng chứa các mô tả trạng thái, mỗi phần tử trong bảng là một tsm_state_desc_t
@@ -72,15 +66,14 @@
 	 * @param on_state_changed: Hàm callback sẽ được gọi khi trạng thái thay đổi, nhận vào ID của trạng thái mới
 	 */
 	typedef struct tsm_trans_tbl_t {
-		tsm_state_id_t  cur_state;    
-		tsm_state_id_t  prev_state;   
+		tsm_state_id_t cur_state;    
+		tsm_state_id_t prev_state;   
 		const tsm_state_desc_t* state_table;
-		ui8      state_count;
+		ui8 state_count;
 		tsm_on_state_f on_state_changed;
 	} uedp_tsm_t;
 
-	/**
-	 * @brief Hàm khởi tạo TSM
+	/** ANCHOR - Hàm khởi tạo TSM
 	 * @param tsm_table Bảng chứa thông tin về các trạng thái và transition của TSM
 	 * @param state_des_table Bảng chứa mô tả chi tiết về các trạng thái của TSM, mỗi phần tử là một tsm_state_desc_t
 	 * @param state_count Số lượng trạng thái trong bảng state_des_table
@@ -94,16 +87,14 @@
 		tsm_on_state_f on_state_changed
 	);
 
-	/**
-	 * @brief Hàm để thực hiện chuyển đổi trạng thái trong TSM dựa trên tín hiệu nhận được
+	/** ANCHOR - Hàm để thực hiện chuyển đổi trạng thái trong TSM dựa trên tín hiệu nhận được
 	 * 
 	 * @param tsm_table Bảng chứa thông tin về các trạng thái và transition của TSM
 	 * @param state_id ID của trạng thái mục tiêu mà TSM sẽ chuyển đến
 	 */
 	void uedp_tsm_trans(uedp_tsm_t* tsm_table, tsm_state_id_t state_id);
 
-	/**
-	 * @brief Hàm để xử lý tín hiệu và điều hướng trạng thái trong TSM
+	/** ANCHOR - Hàm để xử lý tín hiệu và điều hướng trạng thái trong TSM
 	 * 
 	 * @param tsm_table Bảng chứa thông tin về các trạng thái và transition của TSM
 	 * @param msg Con trỏ đến tin nhắn chứa tín hiệu cần xử lý để điều hướng trạng thái trong TSM

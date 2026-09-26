@@ -28,6 +28,7 @@ Feel free to star the projetct and contribute to its development. Your support i
 - **[DMP]** Deterministic Memory Pooling: Minimizing fragmentation and ensuring deterministic behavior for real-time systems with automatic atomic void size scaling of memory pools.
 - **[D2MP]** Data-to-Message Passing : Support for passing values and references (zero-copy), automatically adapting to 32/64-bit pointer sizes.
 - **[HSMC]** Hybrid State Machine Control: Integration of mode management (TSM) and micrologic (FSM) for clear system organization.
+- **[PLD]** Parse-able Logical Descriptor: A YAML-based declarative syntax (μE-LS) for describing Task/TSM/FSM logic, parsed and validated by the PLTF pipeline to automatically generate application implementation code (`app.c`).
 - **[PPLP]** Plug-N-Play Logging Pipeline: Three-layer logging system `itnlog` → `logdp` → `rprintf/xprintf` supporting safe log collection and forwarding from Core to backend.
 - **[MPS]** Modular Porting Support: Abstracted hardware access and services in the PAL, enabling easy porting to new platforms with predefined interfaces and configurations.
 - **[OCE]** Out-Context Execution Service: Support for executing tasks in an out-of-context manner, allowing for flexible task management and execution.
@@ -36,18 +37,90 @@ Feel free to star the projetct and contribute to its development. Your support i
 - **[PSE]** Pub/Sub Engine: A publish-subscribe mechanism for decoupled communication between tasks, allowing for flexible and scalable event handling.
 - **[SIF]** Safe Input Filter: A mechanism for safely filtering and validating input data, ensuring that only valid and expected data is processed by the system.
 - **[IOMS]** I/O Mapping Shell: A shell for mapping certain operations to I/O hardware, enabling command-based control and interaction with hardware components.
+- **[PSE]** Pub/Sub Engine: A publish-subscribe mechanism for decoupled communication between tasks, allowing for flexible and scalable event handling.
+- **[SOCI]** Safe Out-Core Interaction: Ensuring safe and efficient interaction between the Core infrastructure and the external data flow, preventing issues such as data corruption and ensuring Core stability.
 
 ---
 
-## From Framework to Kernel: The μE-OS Transition
+## 🏗 System Architecture
 
-Currently, μEDP is evolving into the kernel of μE-OS (micro Event-Driven Operating System). Version 1.2.0 will mark a major milestone: The Infrastructure Preparation. We are moving away from manual coding toward Model-Driven Development (MDD) using the μE-LS (Logical Syntax-izer).
+```mermaid
+graph LR
+    subgraph App[Application Layer]
+        Config[App Config app_cfg.h]
+        Declaration[App Logic declaration/]
+        Logic[Main App Logic app.c]
+    end
 
-μEDP will include the PLTF (Portable Local Test Framework), a robust infrastructure for testing and validating application logic with:
+    subgraph Core[μEDP Core]
+        Task[Task Scheduler & Task Objects]
+        Msg[Message Pools & Manager]
+        Timer[Timer Service]
+        SM[TSM/FSM Engine]
+        Itnlog[Event Logger itnlog]
+    end
 
-- μE-LS (Logical Syntax-izer): A YAML-based syntax to define Task behavior, Hybrid State Machines (TSM/FSM), and Global Data Areas (GDA).
-- TLC (Test Level Coverager): Automated verification ranging from Unit (UT) and Component (CT) to System (ST) and Integration (IT) testing.
-- UST (Unified Symbol Table): A centralized context engine that ensures consistency between Kconfig resources and Logic descriptors.
+    subgraph PAL[Platform Abstraction Layer]
+        Arch[Architecture-Specific HAL]
+        Logdp[Log Dispatcher logdp]
+        Rprintf[redirectable printf]
+        Memrp[Memory Profiler memrp]
+    end
+
+    PAL -->|Hardware Access| Core
+    Core -->|Event-Driven API| App
+    App -->|Configuration| Core
+    App -->|Configuration| PAL
+    App -->|Logging| PAL
+    Core -->|Logging| PAL
+```
+
+---
+
+## 📂 Directory Structure
+
+```text
+μEDP/
+├── core/                        # Định nghĩa và triển khai logic chính của μEDP
+│   ├── inc/                     # uedp_msg.h, uedp_task.h, uedp_timer.h, uedp_fsm.h, uedp_tsm.h
+│   │   └── uedp_core.h          # Định nghĩa các tín hiệu, hằng số và cấu trúc dữ liệu cốt lõi của μEDP
+│   └── src/                     # Triển khai logic scheduler, timer engine, message manager
+├── pal/                         # BACKEND (Lớp trừu tượng)
+│   ├── pal_core.h               # Khai báo thống nhất chung cho toàn bộ PAL và các dịch vụ hệ thống
+│   ├── services/                # Hardware Services (Mapping phần cứng)
+│   │   ├── logdp/               # pal_logdp.h chứa các khai báo API log để triển khai bộ dispatch log ra nhiều backend
+│   │   ├── memrp/               # pal_memrp.h chứa các khai báo API memory profiling để triển khai trên từng nền tảng
+│   │   └── rprintf/             # pal_rprintf.h chứa các khai báo API rprintf để triển khai trên từng nền tảng
+│   └── arch/                    # Implementation (Mã nguồn chi tiết từng chip)
+│       └── .../                 # Mỗi nền tảng sẽ có một thư mục riêng để triển khai
+├── app/                         # Định nghĩa logic ứng dụng, bao gồm các tác vụ và FSM do người dùng tạo ra
+│   ├── config/                  # Chứa cấu hình ứng dụng, Core và PAL
+│   ├── declaration/             # Khai báo các thiết kế cho logic nghiệp vụ
+│   ├── interface/               # Chứa các triển khai cho truyền tín hiệu từ ngoài vào Core
+│   ├── kconfig/                 # Chứa các cấu hình cho ứng dụng bằng Kconfig
+│   └── app.c                    # Implementation chính của logic hoạt động của ứng dụng người dùng
+├── common/                      # Các tiện ích và cấu trúc dữ liệu chung được sử dụng trong toàn bộ dự án
+│   ├── container/               # Các cấu trúc dữ liệu như FIFO, Ring Buffer, Linked List được triển khai thuần C
+│   ├── kconfiglib/              # Chứa cấu hình thực thi Kconfig terminal
+│   ├── kconfigspec/             # Cấu hình python để sinh code từ Kconfig terminal
+│   └── xprintf/                 # Thư viện xprintf sử dụng cho việc format chuỗi log và xuất ra nhiều backend khác nhau
+└── test/                        # Các test case và testobj (mô tả PLD/μE-LS) để kiểm tra các tính năng của μEDP
+    ├── testobj/                 # Testobj tuân thủ test framework (`vir-`/`phy-`/`logic-` prefix + versioning), xem sources/test/README.md
+    ├── test04/                  # Test với tính năng itnlog
+    ├── insert.sh                # Script chèn nhanh nội dung 1 testobj vào sources/app/lstaxizer.yaml để chạy BST
+    └── deprecated/              # test01-03 cũ, chỉ giữ lại để tham khảo, không còn dùng cho test mới
+
+pltf/                            # Pipeline sinh code từ Kconfig + cú pháp PLD/μE-LS, xem docs/pltf-design.md
+├── kconfigspec/                 # Sinh decl.kconfig (usrinp, tnorm, tpoll, sig, hwapi)
+├── templates/                   # Jinja2 template, sinh file mới thay vì vá chuỗi
+└── pycdscriptor/
+    ├── attribarse/               # Đọc .config thành context có cấu trúc (dotcfg, glbda)
+    ├── lstaxer/                  # Parse + validate YAML μE-LS (symresolv, strucjec, lukupmodel, vlid, kre8)
+    ├── ustab/                    # Unified Symbol Table (gnnerate, cvert, xportstax, custab)
+    └── jnerator/
+        ├── pregen/                # Sinh khai báo Kconfig-based (7 generator + fpregen orchestrator)
+        └── postgen/               # Sinh logic implementation (app.c) từ YAML μE-LS đã validate
+```
 
 ---
 
@@ -58,6 +131,10 @@ Information about the API, memory pool planning, and porting guides to other MCU
 A comparison analysis between the event-driven model (μEDP/CIEDPC) and RTOS is available in [μEDP vs FreeRTOS](./docs/uedp-vs-freertos.md).
 
 A detailed analysis between the μEDP/CIEDPC and the QP/C framework is available in [μEDP vs QP/C](./docs/uedp-vs-qpc.md).
+
+The PLD/μE-LS declarative syntax (Task/TSM/FSM description via YAML) is documented in [uels-syntax.md](./docs/uels-syntax.md); the syntax has reached a concluded, stable design ready for the codegen implementation phase. The pipeline that turns this YAML into generated Kconfig declarations and application code (`app.c`) is documented in [pltf-design.md](./docs/pltf-design.md) ([English version](./docs/pltf-design-en.md)).
+
+Testobj-based BST (Basic Software Test) validation for the PLD/μE-LS pipeline follows a dedicated naming convention and versioning scheme, documented in [sources/test/README.md](./sources/test/README.md).
 
 If you want to see the documentation in progress, switch to the `docs` branch to view the documents that are currently being drafted and updated.
 

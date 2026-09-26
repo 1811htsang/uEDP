@@ -1,0 +1,280 @@
+
+pject: "logic-testobj"
+versh: "pre-v1.2.0"
+
+# ANCHOR - Global Data Area (GDA) - Biến toàn cục
+
+glbda:
+  - &gda_status
+      name: GDA_SYSTEM_STATUS # Validator check: kiểm tra lỗi từ lstaxer.strucjec
+      type: "const char*"
+      initial_value: "STATUS: INITIALIZING"
+  - &gda_counter
+      name: GDA_COUNTER
+      type: "int"
+      initial_value: 0
+  - &gda_flag
+      name: GDA_FLAG
+      type: "bool"
+      initial_value: false
+
+# ANCHOR - Task List (TLIST)
+
+tlist:
+  - tnorm: TASK_NORM_USR
+    tsm:
+      - id: tsm_task_usr_state_idle
+        trans:
+          - sig: *sig1-ank
+            goto: tsm_task_usr_state_running
+          - sig: *sig2-ank
+            goto: UEDP_TSM_STATE_STAY
+        on_ntry:
+          # NOTE - tsm_init and tsm_trans
+          # DEPRECATED - Old TASK - Need more detail documentation on how-to use tsm and fsm correctly
+          # STATUS - DONE
+          steps:
+            - actv: 
+                kind: c_stmt # NOTE - ot_ntry (one time entry)
+                code: |
+                  if (msg == NULL) {
+                    printf("[USR][IDLE][NTRY] LOGIC SEQ STRT.\n");
+                  }
+        on_actv:
+          # NOTE - tsm_dispatch
+          steps:
+            - actv: 
+                kind: c_stmt
+                code: |
+                  if (msg->sig == SIG_USR_START) {
+                    printf("[USR][IDLE][ACTV] RECV SIG_USR_START. POST USR_START -> A. >> WAITING.\n");
+                  }
+            - actv:
+                kind: c_stmt
+                code: |
+                  if (msg->sig == SIG_USR_START) {
+                    uedp_msg_t* alloc_msg = uedp_msg_alloc(TASK_NORM_A, SIG_USR_START, sizeof(void*));
+                    uedp_task_norm_post_msg(TASK_NORM_A, alloc_msg);
+                  }
+        on_exit:
+          # NOTE - tsm_trans
+          actv: 
+            kind: c_call
+            function: printf
+            args: ['"[USR][IDLE][EXIT] INIT SEQ END.\n"']
+      - id: tsm_task_usr_state_running
+        trans:
+          - sig: *sig2-ank
+            goto: tsm_task_usr_state_idle
+          - sig: *sig1-ank
+            goto: UEDP_TSM_STATE_STAY
+        on_ntry:
+          actv: 
+            kind: c_call
+            function: printf
+            args: ['"[USR][RUNNING][NTRY] LOGIC SEQ STRT.\n"']
+        on_actv:
+          steps:
+            - actv: 
+                kind: c_stmt
+                code: |
+                  for (int i = 0; i < 3; i++) {
+                    printf("[USR][RUNNING][ACTV] Loop iteration %d.\n", i);
+                  }
+            - actv: 
+                kind: c_stmt 
+                code: |
+                  if (msg->sig == SIG_USR_STOP) { 
+                    printf("[USR][RUNNING][ACTV] RECV SIG_USR_STOP. USR IDLE, END SEQ.\n");
+                  }
+        on_exit:
+          steps:
+            - actv: 
+                kind: c_call
+                function: printf
+                args: ['"[USR][RUNNING][EXIT] LOGIC SEQ END.\n"']
+    <<: *tnorm1-ank
+  - tnorm: TASK_NORM_A
+    tsm:
+      - id: tsm_task_a_state_idle
+        trans:
+          - sig: *sig1-ank
+            goto: tsm_task_a_state_waiting
+        on_ntry: 
+          steps:
+            - actv: 
+                kind: c_stmt # NOTE - ot_ntry (one time entry)
+                code: |
+                  if (msg->sig == UEDP_TSM_SIG_ENTRY) {
+                    printf("[A][IDLE][NTRY] RECV UEDP_TSM_SIG_ENTRY. LOGIC SEQ STRT.\n");
+                  }
+            - actv: 
+                kind: c_stmt # NOTE - il-ntry (in-loop entry)
+                code: |
+                  if (msg->sig == SIG_0XFF) {
+                    printf("[A][IDLE][NTRY] RECV SIG_0XFF. A IDLE, END SEQ.\n");
+                  }
+        on_actv:
+          steps:
+            - actv: 
+                kind: c_stmt
+                code: |
+                  if (msg->sig == SIG_USR_START) {
+                    printf("[USR][IDLE][ACTV] RECV USR_START.\n");
+                    printf("[USR][IDLE][ACTV] POST 0X12 -> B. >> WAITING.\n");
+                  }
+            - actv:
+                kind: c_stmt
+                code: |
+                  if (msg->sig == SIG_USR_START) {
+                    uedp_msg_t* alloc_msg = uedp_msg_alloc(TASK_NORM_B, SIG_0X12, sizeof(void*));
+                    if (alloc_msg) {
+                      uedp_task_norm_post_msg(TASK_NORM_B, alloc_msg);
+                    }
+                  }
+        on_exit:
+          steps:
+            - actv: 
+                kind: c_call
+                function: printf
+                args: ['"[A][IDLE][EXIT] LOGIC SEQ END.\n"']
+      - id: tsm_task_a_state_waiting
+        trans:
+          - sig: *sig1-ank
+            goto: UEDP_TSM_STATE_STAY
+          - sig: *sig3-ank
+            goto: UEDP_TSM_STATE_STAY
+          - sig: *sig4-ank
+            goto: tsm_task_a_state_idle
+        on_ntry:
+          steps:
+            - actv: 
+                kind: c_stmt
+                code: |
+                  if (msg->sig == SIG_USR_START) {
+                    printf("[A][WAITING][NTRY] RECV SIG_USR_START.\n");
+                  }
+            - actv: 
+                kind: c_stmt # NOTE - il-ntry (in-loop entry)
+                code: |
+                  //STUB - temporary code for later implementation if any signal is received triggered tsm_trans
+        on_actv:
+          steps:
+            - actv: 
+                kind: c_stmt
+                code: |
+                  if (msg->sig == SIG_0X34) {
+                    printf("[A][WAITING][NTRY] RECV SIG_0X34. CHECK DATA\n");
+                  }
+            - actv: 
+                kind: c_stmt
+                code: |
+                  if (msg->sig == SIG_0X34) {
+                    printf("[A][WAITING][NTRY] RECV SIG_0X34. CHECK DATA\n");
+                    char* data = (char*)(msg->data);
+                    if (data && strcmp(data, GDA_SYSTEM_STATUS) == 0) {
+                      printf("[A][WAITING][NTRY] RECV SIG_0X34. DATA MATCHED: %s\n", data);
+                    } else {
+                      printf("[A][WAITING][NTRY] RECV SIG_0X34. DATA MISMATCHED. EXPECTED: %s, RECEIVED: %s\n", GDA_SYSTEM_STATUS, data ? data : "NULL");
+                    }
+                  }
+            - actv: 
+                kind: c_stmt
+                code: |
+                  if (msg->sig == SIG_0XFF) {
+                    printf("[A][WAITING][NTRY] RECV SIG_0XFF.\n");
+                    printf("[A][WAITING][NTRY] POST SIG_USR_STOP -> USR. >> IDLE.\n");
+                  }
+            - actv: 
+                kind: c_stmt
+                code: |
+                  if (msg->sig == SIG_0XFF) {
+                    uedp_msg_t* alloc_msg = uedp_msg_alloc(TASK_NORM_USR, SIG_USR_STOP, sizeof(void*));
+                    if (alloc_msg) {
+                      uedp_task_norm_post_msg(TASK_NORM_USR, alloc_msg);
+                    }
+                  }
+        on_exit:
+          steps:
+            - actv: 
+                kind: c_call
+                function: printf
+                args: ['"[A][WAITING][EXIT] LOGIC SEQ END.\n"']
+    escal:
+      # Cấu hình APE để xử lý khẩn cấp (nếu có)
+      mode: slnf
+      trigger:
+        - on_sig: *sig7-ank
+          post_urgent: NULL # Chạy tiếp queue hiện tại với ưu tiên cao
+    <<: *tnorm2-ank
+  - tnorm: TASK_NORM_B
+    fsm:
+      - id: fsm_task_b_state_idle
+        on_recv:
+          - sig: *sig5-ank
+            goto: fsm_task_b_state_busy
+            steps:
+              - actv: 
+                  kind: c_call
+                  function: printf
+                  args: ['"[B][IDLE] RECV SIG_0X12. >> SEND SIG_0X34 + GDA_SYSTEM_STATUS.\n"']
+              # DEPRECATED - Old TASK - Due to removal of actv-obj-post, we need to use uedp_task_norm_post_msg directly using c_call or c_stmt
+              - actv:
+                  kind: c_stmt
+                  code: |
+                    uedp_msg_t* alloc_msg_1 = uedp_msg_alloc(TASK_NORM_A, SIG_0X34, sizeof(typeof(GDA_SYSTEM_STATUS)));
+                    if (alloc_msg_1) {
+                      uedp_msg_set_data_ref(alloc_msg_1, (const char*)GDA_SYSTEM_STATUS);
+                    }
+                    uedp_task_norm_post_msg(TASK_NORM_A, alloc_msg_1);
+              - actv: 
+                  kind: c_call
+                  function: printf
+                  args: ['"[B][IDLE] SEND SIG_0XFF.\n"']
+              # DEPRECATED - Old TASK - Due to removal of actv-obj-post, we need to use uedp_task_norm_post_msg directly using c_call or c_stmt
+              - actv: 
+                  kind: c_stmt
+                  code: |
+                    uedp_msg_t* alloc_msg_2 = uedp_msg_alloc(TASK_NORM_A, SIG_0XFF, UEDP_MSG_TYPE_BLANK);
+                    uedp_task_norm_post_msg(TASK_NORM_A, alloc_msg_2);
+              - actv: 
+                  kind: c_call
+                  function: printf
+                  args: ['"[B][IDLE] SEND SIG_0XAA -> SELF. >> BUSY.\n"']
+              # DEPRECATED - Old TASK - Due to removal of actv-obj-post, we need to use uedp_task_norm_post_msg directly using c_call or c_stmt
+              - actv:
+                  kind: c_stmt
+                  code: |
+                    uedp_msg_t* alloc_msg_3 = uedp_msg_alloc(TASK_NORM_B, SIG_0XAA, UEDP_MSG_TYPE_BLANK);
+                    uedp_task_norm_post_msg(TASK_NORM_B, alloc_msg_3);
+          - sig: *sig6-ank
+            goto: fsm_task_b_state_idle # NOTE - wont reach due to prio(A) > prio(B), just stub for validation
+            steps:
+              - actv:
+                  kind: c_call
+                  function: printf
+                  args: ['"[B][IDLE] RECV SIG_0XAA. STOP\n"']
+      - id: fsm_task_b_state_busy
+        on_recv: 
+          - sig: *sig6-ank
+            goto: fsm_task_b_state_idle
+            steps:
+              - actv:
+                  kind: c_call
+                  function: printf
+                  args: ['"[B][BUSY] RECV SIG_0XAA. RETR IDLE\n"']
+    <<: *tnorm3-ank # Validator check: Không hợp lệ, không thể dùng anchor trong sig
+  - tpoll: TASK_POLL_MEMRP
+    exec: NULL
+    <<: *tpoll1-ank # Validator check: Không hợp lệ, thiếu anchor
+  - tpoll: TASK_POLL_BLINK
+    exec: NULL
+    <<: *tpoll2-ank
+
+# ANCHOR - Out-Context Execution (OUTEXEC) - Thực thi ngoài ngữ cảnh
+
+outexec:
+  - name: OCE_ITNLOG_DUMP
+    handler: itnlog_dump_handler # Validator check: kiểm tra lỗi từ lstaxer.strucjec
+    context: NULL
+    state: READY

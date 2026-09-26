@@ -142,6 +142,8 @@ Trong đó, Core được thiết kế với 4 loại pool sau:
 - `EXTAL`: Kích thước mặc định là 16 đơn vị, mỗi đơn vị có kích thước phụ thuộc vào `sizeof(void*) * 4u`, dùng để cấp phát các message từ bên ngoài core, cho phép cô lập tài nguyên để Core xử lý trước khi truyền vào hệ thống và các tác vụ được đăng ký để nhận các message này.
 - `ISR`: Kích thước mặc định là 16 đơn vị, mỗi đơn vị có kích thước phụ thuộc vào `sizeof(uedp_msg_isr_t)`, dùng để ISR truyền tín hiệu vào hệ thống trên FIFO, giúp cô lập tín hiệu từ ISR và đảm bảo an toàn khi truyền vào hệ thống.
 
+Ngoài 4 loại pool trên (đều cấp phát/giải phóng vùng nhớ gắn liền với vòng đời của message), Core còn cung cấp thêm **[GDP] Global Data Pool** (định danh nội bộ `GAXES`) - một cơ chế khác hẳn về bản chất, không cấp phát vùng nhớ mà chỉ đăng ký tra cứu tên ↔ con trỏ cho các biến toàn cục (static/global storage duration) đã tồn tại sẵn. GDP ra đời để phục vụ khối `glbda:` của PLD/μE-LS khi truyền `ptype: REF`/`ptype: VAL`, và được mô tả chi tiết trong [D2MP] bên dưới.
+
 ### [SII] Safe ISR Injection - Cơ chế an toàn để truyền tín hiệu từ ISR vào hệ thống
 
 Để đảm bảo an toàn khi truyền tín hiệu từ ISR vào hệ thống, μEDP bổ sung một FIFO nội bộ bên trong Core để lưu trữ các tín hiệu từ ISR. Khi có ngắt (ví dụ: UART, Timer), PAL sẽ đẩy tín hiệu vào FIFO này. Core sẽ "drain" (rút dữ liệu) từ FIFO này vào các Task Queue ở đầu mỗi chu kỳ Scheduler. Cơ chế này giúp loại bỏ hoàn toàn việc Core phải biết về ISR, đồng thời đảm bảo an toàn và hiệu quả khi truyền tín hiệu từ ISR vào hệ thống.
@@ -156,7 +158,15 @@ Dựa theo thiết kế bộ nhớ quản lý tin nhắn, nhằm đảm bảo vi
 
 Trong đó, nếu kích thước của dữ liệu nhỏ hơn kích thước đã khai báo của pool, Core cung cấp API là `uedp_msg_set_data_val` để truyền dữ liệu trực tiếp vào payload của message. Nếu kích thước của dữ liệu lớn hơn kích thước đã khai báo của pool, người dùng có thể sử dụng API `uedp_msg_set_data_ref` để truyền địa chỉ của dữ liệu vào payload của message.
 
-Do đó cần lưu ý rằng đối với việc truyền tham chiếu thì nên bổ sung 1 FIFO toàn cục để lưu trữ các tham chiếu này nhằm tránh việc truyền trực tiếp địa chỉ của biến cục bộ vào payload của message, điều này có thể dẫn đến lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi.
+Do đó cần lưu ý rằng đối với việc truyền tham chiếu tới **biến cục bộ** (local variable, thời gian sống giới hạn trong 1 lần gọi hàm), người dùng phải tự đảm bảo vùng nhớ đó còn hợp lệ tại thời điểm message được xử lý (thường là khai báo `static`), tránh lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi (dangling pointer).
+
+Riêng với trường hợp truyền tham chiếu tới **biến toàn cục thật sự** (static/global storage duration, phục vụ khối `glbda:` của PLD/μE-LS), Core cung cấp thêm cơ chế **[GDP] Global Data Pool** để quản lý việc này một cách tường minh, thay vì để người dùng tự quản lý con trỏ thô như trên. GDP là một bảng đăng ký tĩnh (`uedp_gdp_slot_t`, mặc định `UEDP_GDP_MAX_SLOTS = 16` slot) ánh xạ tên ↔ con trỏ, với 5 API: `uedp_gdp_init()` (khởi tạo bảng), `uedp_gdp_register()`/`uedp_gdp_unregister()` (đăng ký/huỷ đăng ký 1 biến toàn cục theo tên), `uedp_gdp_get_ref()` (lấy con trỏ tham chiếu trực tiếp, dùng cho `ptype: REF`), và `uedp_gdp_get_val()`/`uedp_gdp_set_val()` (sao chép giá trị ra/vào buffer, dùng cho `ptype: VAL`).
+
+Điểm khác biệt cốt lõi so với 4 pool `BLANK`/`ALLOC`/`EXTAL`/`ISR`: GDP **không cấp phát** vùng nhớ `data` (chỉ lưu con trỏ trỏ tới vùng nhớ đã tồn tại sẵn, do người dùng hoặc PLTF khai báo) và **không có khái niệm giải phóng/vòng đời** - biến toàn cục sống suốt vòng đời chương trình nên không có thao tác "free" một slot đã đăng ký. Điều này khác hẳn `ALLOC`, vốn gắn chặt với vòng đời `uedp_msg_alloc()`/`uedp_msg_free()` và không phù hợp để tái sử dụng cho mục đích lưu trữ biến toàn cục (sẽ phải tự chế thêm cơ chế "never-free" đè lên trên).
+
+`uedp_gdp_get_ref()` hiện **không** bọc `pal_enter_critical()`/`pal_exit_critical()`: do scheduler hiện tại là single-core, non-preemptive (mỗi vòng lập lịch chỉ dispatch đúng 1 task) và ISR không được phép gọi `actv`/`act`, nên không tồn tại đường tranh chấp thật sự ở bản hiện tại. Cần xem xét lại việc bọc critical section nếu μEDP phát triển tới môi trường đa nhân (AMP/SMP/HELF) trong tương lai. Toàn bộ quá trình cân nhắc và các phương án đã loại bỏ (ví dụ tái dùng `ALLOC`, hoặc bổ sung 1 FIFO tham chiếu toàn cục riêng) được ghi lại chi tiết tại `docs/review/dmp-gda.md`.
+
+Việc sinh vùng nhớ tĩnh thật cho khối `glbda:` (gọi `uedp_gdp_register()`) là trách nhiệm của một generator PLTF riêng (dự kiến `gda_tsgen.py`, thuộc phạm vi PLD/μE-LS) - core chỉ cung cấp API quản lý, không tự sinh code khai báo biến.
 
 Khi thực hiện lấy dữ liệu từ truyền tham chiếu thì người dùng có thể tham khảo cách khai báo trong `test02` như sau:
 
@@ -171,10 +181,6 @@ Trong đó `uintptr_t` cho phép lấy địa chỉ không cần xét đến ki�
 Ở đây, tài liệu lấy ví dụ về việc truyền tham chiếu một chuỗi ký tự từ Task A sang Task B thông qua message. Do bản thân `data_a_to_b` là con trỏ cấp 2 nên nếu chỉ sử dụng `char* received_str = *(char**)(msg->data)` thì chỉ lấy được thông tin địa chỉ con trỏ `data_a_to_b` mà không lấy được nội dung của chuỗi ký tự.
 
 Do đó, cần phải sử dụng thêm một bước để lấy được nội dung thực sự của chuỗi ký tự thông qua việc giải tham chiếu hai lần như trong ví dụ trên. Trong thực tế sử dụng thì người dùng sẽ tùy thuộc vào kiểu dữ liệu cụ thể mà có cách giải tham chiếu phù hợp để lấy được nội dung thực sự từ payload của message khi sử dụng cơ chế truyền tham chiếu này.
-
-<!-- LINK docs/uels-syntax.md:745
-Dựa trên TODO, cân nhắc bổ sung thêm 1 dpool GDA kèm tài liệu giữa DMP và D2MP để quản lý truyền tham chiêu tương ứng khi sử dụng liên kết với tính năng PLD/μE-LS.
--->
 
 ### [HSMC] Hybrid State Machine Control - Cơ chế quản lý máy trạng thái kết hợp giữa TSM và FSM
 
@@ -197,13 +203,42 @@ TSM tách biệt hoàn toàn giữa Dữ liệu cấu hình (nằm trong Flash) 
 
 ##### Cơ chế hoạt động
 
-- Tự động hóa Entry/Exit: Khi thực hiện `tsm_trans`, Core tự động gọi hàm thoát của trạng thái cũ và hàm vào của trạng thái mới. Điều này đảm bảo tài nguyên (như Timer) luôn được dọn dẹp sạch sẽ.
-- Cơ chế "Stay" & "Back":
-  - STAY: Thực thi logic nhưng không đổi trạng thái (tránh lặp lại Entry/Exit vô ích).
-  - BACK: Tự động quay lại trạng thái trước đó nhờ biến prev_state, giải quyết bài toán "State Explosion".
-- Tra cứu O(1): Sử dụng 16-bit ID giúp tốc độ chuyển trạng thái đạt mức tối đa của phần cứng.
+TSM hoạt động quanh 3 API chính bao gồm:
 
-Có thể tham khảo thiết kế chương trình mẫu trong `test01` để thấy rõ cách sử dụng TSM trong μEDP, nơi TSM được sử dụng để quản lý các chế độ vận hành của Task một cách hiệu quả và linh hoạt.
+- `tsm_init()`: Khởi tạo TSM với trạng thái mặc định, tác động đến one-time on_entry (`ot_on_ntry`).
+- `tsm_dispatch()`: Thực hiện phân phối tin nhắn và thực thi tác vụ, tác động đến `on_active`.
+- `tsm_trans()`: Thực hiện chuyển trạng thái, tác động đến in-loop on_entry (`il_on_ntry`) và `on_exit`.
+
+Khi bắt đầu, `tsm_init()` được gọi để thiết lập trạng thái mặc định và thực hiện one-time on_entry (`ot_on_ntry`) của trạng thái đó.
+
+Để TSM hoạt động thì `tsm_dispatch()` phải được gọi trong handler của task để task scheduler (tskeduler) phân phối tín hiệu đến TSM. Khi nhận được tín hiệu, TSM sẽ thực thi hàm `fn_on_active` của trạng thái hiện tại. Sau khi hoàn thành, TSM sẽ thực thi `fn_on_exit` của trạng thái hiện tại và chuyển sang trạng thái mới thông qua `fn_on_entry` của trạng thái mới.
+
+Ở lớp hoạt động cao hơn, TSM có logic ràng buộc với scheduler của cõi. Nghĩa là, khi sử dụng TSM, phải suy nghĩ đến mức độ ưu tiên giữa các task và logic chuyển trạng thái. TSM không tự động quản lý ưu tiên giữa các task, mà chỉ quản lý trạng thái của một task cụ thể.
+
+Do đó, khi thiết kế hệ thống, cần đảm bảo rằng các task có mức độ ưu tiên phù hợp để tránh tình trạng loop hoặc sai logic.
+
+```asciidoc
+                    #all                   ║
+                    ┌──────────┐ [in]      ║ > tsm_init
+                    │  ot_ntry │           ║
+                    └────┼─────┘           ║
+          -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
+                  #cur ┌─┴──┐[out][on]     ║
+                ┌──────┼actv┼──────┐       ║ > tsm_dispatch
+                │      └────┘      │       ║
+          -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
+                │                  │  #nxt ║
+              ┌─┼──┐           ┌───┼───┐   ║
+         #cur │exit┼───────────┼il_ntry│   ║ > tsm_trans
+              └────┘           └───────┘   ║
+                [on]                 [in]  ║
+                                           ║
+```
+
+<!-- DEPRECATED - Old TASK
+Bổ sung mẹo sử dụng HSMC trong syntax của PLD/μE-LS.
+#STATUS - DONE
+-->
 
 #### FSM - Finite State Machine
 
@@ -220,47 +255,15 @@ FSM được thiết kế theo mô hình Pointer-Swapping (Tráo đổi con tr�
 - Dispatch trực tiếp: Scheduler gọi fsm_dispatch, Core sẽ thực thi ngay hàm mà con trỏ đang trỏ tới.
 - Phù hợp với Logic tạm thời: Dùng cho các chuỗi hành động ngắn hạn như giải mã giao thức (UART parsing) hoặc Menu giao diện.
 
-Có thể tham khảo thiết kế chương trình mẫu trong `test03` để thấy rõ cách sử dụng FSM trong μEDP, nơi FSM được sử dụng để quản lý logic giải mã giao thức UART một cách linh hoạt và hiệu quả.
+##### Cơ chế làm việc
 
-Trong `test03` FSM được thiết kế với mỗi hàm là state_handler là 1 trạng thái. Mỗi trạng thái đều có 3 tín hiệu là `UEDP_FSM_SIG_INIT`, `UEDP_FSM_SIG_ENTRY`, `UEDP_FSM_SIG_EXIT` để quản lý vòng đời của trạng thái, sau đó mới đến các tín hiệu nghiệp vụ khác. Khi có sự kiện chuyển trạng thái thì sẽ thực hiện theo thứ tự là `EXIT` -> `ENTRY` để đảm bảo rằng tài nguyên được dọn dẹp sạch sẽ trước khi vào trạng thái mới.
+FSM hoạt động với các API chính bao gồm:
 
-Lưu ý rằng trong thiết kế của `test03`, FSM của các tác vụ luôn được khởi tạo vào `state_idle`, chỉ có các `state_idle` mới chứa tín hiệu `UEDP_FSM_SIG_INIT` để thực hiện các thao tác khởi tạo FSM, sau đó phụ thuộc vào tín hiệu bắt đầu từ người dùng mà sẽ chuyển sang `state_active` để thực hiện các chức năng chính của bài test. Điều này giúp đảm bảo rằng FSM luôn được khởi tạo đúng cách và có thể hoạt động một cách hiệu quả ngay khi nhận được tín hiệu bắt đầu từ người dùng.
+- `fsm_init()`: Khởi tạo FSM với trạng thái mặc định.
+- `fsm_dispatch()`: Thực hiện phân phối tin nhắn và gọi hàm trạng thái hiện tại.
+- `fsm_go_next()/fsm_go_back()`: Thực hiện chuyển trạng thái bằng cách tráo đổi con trỏ hàm.
 
-Ngoài ra thì đối với trường hợp looping của một trạng thái thì có thể xử lý thông qua việc calling isolation - bỏ mặc trạng thái không gọi tới. Ví dụ trong `test03`:
-
-```c
-void usr_state_active(uedp_msg_t* msg) {
-  switch (msg->sig) {
-    case UEDP_FSM_SIG_EXIT:
-      printf("[USR] Exiting ACTIVE state...\n");
-      break;
-    case UEDP_FSM_SIG_ENTRY:
-      printf("[USR] Entering ACTIVE state. System is now active.\n");
-      // Thực hiện gửi SIG_USR_START tới task A để kích hoạt chuỗi hành động
-      uedp_msg_t* msg_to_a = uedp_msg_alloc(TASK_NORM_A_ID, SIG_USR_START, 0);
-      uedp_task_norm_post_msg(TASK_NORM_A_ID, msg_to_a);
-      printf("[USR] Sent START signal to Task A. Waiting for further signals...\n");
-      break;
-    case SIG_USR_STOP:
-      printf("[USR] Received STOP signal. Transitioning to IDLE state...\n");
-      uedp_fsm_go_next(&fsm_usr, usr_state_idle); 
-      /**
-       * @brief Có thể dùng uedp_fsm_go_back(&fsm_usr) để quay lại trạng thái trước đó, 
-       *        nhưng ở context này thì go_next sẽ trực quan hơn 
-       *        để thể hiện rõ ràng việc chuyển đổi trạng thái từ ACTIVE về IDLE 
-       *        khi nhận được tín hiệu STOP.
-       */
-      break;
-    default:
-      printf("[USR] Encountered unexpected signal in ACTIVE state: %x\n", msg->sig);
-      break;
-  }
-}
-```
-
-Khi ở `state_active` và truyền tín hiệu qua tác vụ A thì FSM của TASK_USR trở thành loop vì không gọi tới. Điều này cho phép FSM của TASK_USR vẫn duy trì trạng thái `state_active` và có thể tiếp tục nhận và xử lý các tín hiệu khác mà không bị gián đoạn bởi việc chuyển trạng thái, đồng thời đảm bảo rằng tài nguyên được quản lý một cách hiệu quả trong suốt quá trình hoạt động của trạng thái này.
-
-Một lưu ý khác cần để tâm trong `test03` khi tác vụ A nhận `SIG_TSK_B_TO_A` thì sẽ gọi `uedp_fsm_go_next(&fsm_a, task_a_state_idle)` để chuyển trạng thái của tác vụ A về `state_idle`. Ở đây người dùng hoàn toàn có thể sử dụng `uedp_fsm_go_back(&fsm_a)` để quay lại trạng thái trước đó. Tuy nhiên trong context này thì `go_next` sẽ trực quan hơn để thể hiện rõ ràng việc chuyển đổi trạng thái từ `state_active` về `state_idle` khi nhận được tín hiệu `SIG_TSK_B_TO_A`, điều này giúp cho code dễ đọc và dễ hiểu hơn, đồng thời vẫn đảm bảo rằng FSM của tác vụ A được quản lý một cách hiệu quả và có thể hoạt động một cách linh hoạt trong suốt quá trình xử lý tín hiệu.
+Các trạng thái (st8) được xem như các "hàm" và được gọi trực tiếp thông qua con trỏ hàm. Khi một tín hiệu đến, FSM sẽ gọi hàm trạng thái hiện tại, và nếu cần chuyển sang trạng thái khác, nó sẽ thay đổi con trỏ hàm để trỏ tới hàm trạng thái mới. Sau khi hoàn thành, các st8 được tùy chọn trạng thái kế tiếp hoặc quay lại trạng thái trước đó thông qua `fsm_go_next()` hoặc `fsm_go_back()`.
 
 #### Phối hợp giữa TSM và FSM
 
