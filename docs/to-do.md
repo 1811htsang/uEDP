@@ -556,6 +556,7 @@ Khánh đã hoàn thành ở `sources/core/src`
 -->
 
 - [x] Bổ sung nội dung để trình bày về vấn đề vị trí đặt và sử dụng BSP (Board Support Package) trong dự án μEDP, nhằm giúp người dùng hiểu rõ hơn về cách thức triển khai và sử dụng BSP một cách hiệu quả và đúng cách trong việc phát triển ứng dụng trên nền tảng μEDP.
+- [ ] Bổ sung tài liệu đánh giá μEDP theo ISO 42010:2022 để đảm bảo rằng kiến trúc của dự án μEDP được thiết kế và triển khai theo các tiêu chuẩn quốc tế về kiến trúc phần mềm, giúp tăng tính khả dụng, khả năng mở rộng và khả năng bảo trì của hệ thống.  
 - [ ] Bổ sung init của GDP trong template code của testobj.
 - [ ] Bổ sung comment dạng cross-style của Anchor-type và Doxygen-type cho `encryp/libcrc8` (cả `.h` và `.c`).
 
