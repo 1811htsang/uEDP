@@ -67,19 +67,19 @@ The CRC-8 routines are simple to use:
 
 - If you want to choose your own polynomial divisor,
 
-> **buildCRC8Table(poly)**
+> **libcrc8_build_table(poly)**
 
  where "poly" is a uint8_t byte in C and an integer in Python.
 
 - To find out what the current polynomial divisor is,
 
-> **getCRC8poly()**
+> **libcrc8_get_polyfactor()**
 
  returns that value (as a uint8_t in C and an integer in Python).
 
 - To see the current CRC-8 remainder table,
 
-> **dumpCRC8Table()**
+> **libcrc8_dump_table()**
 
  prints the 256-byte table to the standard output.
 

@@ -210,7 +210,7 @@ void task_b_check_status(void) {
 #### Points to note about Dpool GDA
 
 - GDP does not own the `data` memory - registering a local variable instead of a `static`/`global` one will cause the pointer to reference memory that is no longer valid after the declaring function returns.
-- The maximum number of slots GDP can manage at once defaults to `UEDP_GDP_MAX_SLOTS` (16); this can be overridden by defining the macro before including the header if more slots are needed.
+- The maximum number of slots GDP can manage at once defaults to `UEDP_GDP_QUEUE_SIZE` (16); this can be overridden by defining the macro before including the header if more slots are needed.
 - `uedp_gdp_get_val()`/`uedp_gdp_set_val()` will raise FCR if `buf_size` does not match/is insufficient compared to the registered size, instead of silently reading/writing to the wrong memory area.
 - `uedp_gdp_get_ref()` returns a pointer directly into the real memory area, with no critical section wrapper - this fits μEDP's current single-core, non-preemptive scheduler; it should be reconsidered if μEDP is ported to a multi-core environment.
 - The registered `name` in GDP should match the `name` declared in the `glbda:` block of μE-LS to keep the PLD/μE-LS design documentation consistent with the actual implementation.
