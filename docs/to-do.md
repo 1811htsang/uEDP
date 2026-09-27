@@ -576,6 +576,7 @@ Theo lộ trình hiện tại đã hoàn tất các task liên quan đến PLD/�
 Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST-v1.1.5 để bảo vệ các tính năng đã phát triển để chuẩn bị rebase sub-tasklist từ v1.2.0 lên v1.1.6. 
 -->
 
+- [ ] Bổ sung tài liệu để convert các naming convetion thường gặp của dự án.
 - [ ] Bổ sung testobj-v1 để chuẩn bị cho BST task.
 - [ ] Cân nhắc repotize 2 prjecobj-linux và projectobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
 - [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử. // NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6.
