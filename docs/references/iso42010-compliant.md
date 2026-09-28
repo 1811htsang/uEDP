@@ -21,3 +21,32 @@ Trong μEDP, ADL chính là PLD/μE-LS - (Parse-able Logic Descriptor/Micro Embe
 ADF là khung mô tả kiến trúc, cung cấp một cấu trúc và phương pháp để tổ chức và trình bày các mô tả kiến trúc. ADF giúp đảm bảo rằng các mô tả kiến trúc được tổ chức một cách logic và dễ hiểu để sử dụng ADL.
 
 Trong μEDP, PLTF (Portable Local Test Framework) chính là cung cấp một ADF cho phép tổ chức và trình bày các mô tả kiến trúc của μEDP. PLTF cung cấp một cấu trúc logic để mô tả các thành phần, mối quan hệ và cấu trúc của μEDP, giúp các nhà phát triển và kiến trúc sư phần mềm hiểu rõ hơn về cách mà các thành phần của μEDP tương tác với nhau sử dụng kconfiglib, jinja2, pyyaml, và các công cụ khác để tạo ra các mô tả kiến trúc có thể đọc được và có thể phân giải thành mã nguồn thực thi trên các thiết bị nhúng. PLTF cũng cung cấp các công cụ để kiểm tra và xác minh các mô tả kiến trúc, đảm bảo rằng chúng đáp ứng các yêu cầu kỹ thuật và chức năng của μEDP.
+
+### Model Kind (MK)
+
+MK là các loại mô hình dùng để giải quyết các khía cạnh khác nhau của kiến trúc phần mềm. MK giúp phân loại các mô hình kiến trúc dựa trên các khía cạnh mà chúng tập trung vào, chẳng hạn như cấu trúc, hành vi, hoặc các quan điểm khác nhau của hệ thống.
+
+Trong μEDP, MK chính là các khối được mô tả trong PLD/μE-LS, bao gồm các khối tsm, fsm, exec, poll, oce, pplp, isr.
+
+## Correspondence & Rules
+
+Mô tả mối quan hệ và sự nhất quán giữa các thành phần kiến trúc khác nhau, đảm bảo rằng các mô tả kiến trúc là nhất quán và có thể được phân tích một cách logic. UST chính là công cụ để kiểm tra sự nhất quán giữa các mô tả kiến trúc khác nhau trong μEDP, đảm bảo rằng các mô tả kiến trúc là chính xác và có thể được sử dụng để tạo ra mã nguồn thực thi trên các thiết bị nhúng.
+
+### Architecture Viewpoint
+
+Đây là một quan điểm hoặc góc nhìn cụ thể về kiến trúc phần mềm, tập trung vào một khía cạnh hoặc mối quan tâm cụ thể của hệ thống. Mỗi viewpoint cung cấp một cách tiếp cận khác nhau để hiểu và phân tích kiến trúc phần mềm. Ví dụ, với kconfiglib là vấn đề quan tâm về cấu hình và tài nguyên, PLD là góc nhìn về logic và hành vi, và PLTF là góc nhìn về tổ chức và trình bày các mô tả kiến trúc kiểm thử.
+
+## Triết lý thiết kế
+
+### Seperation of Concerns
+
+Với ISO 42010, mục 5.2.3, *Kiến trúc phải giải quyết được các Concerns (mối bận tâm) của Stakeholders (các bên liên quan). Nếu trộn lẫn mọi thứ, hệ thống sẽ thất bại.*
+
+Do đó, μEDP đã giải quyết
+
+1. Bận tâm về đồng bộ dữ liệu thì có GDA (Global Data Area)
+2. Bận tâm về logic điều khiển thì có PLD/μE-LS (Parse-able Logic Descriptor/Micro Embedded Logical Syntaxizer)
+3. Bận tâm về thời gian thực thi và tính khẩn cấp thì có S-LnF APE (Safe-LIFO nested FIFO Atomic Priority Escalation)
+4. Bận tâm về kiểm thử thì có PLTF (Portable Local Test Framework)
+
+Điều này phản ánh việc μEDP tuân thủ theo chuẩn ISO/IEC/IEEE 42010:2022 và đảm bảo có sự ràng buộc người dùng vào việc mô tả các mối quan tâm của họ một cách rõ ràng và có cấu trúc, từ đó giúp cải thiện khả năng đọc hiểu và bảo trì mã nguồn.
