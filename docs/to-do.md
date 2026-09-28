@@ -578,6 +578,7 @@ Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST
 -->
 
 - [x] @! TID DOCS002 <+ Bổ sung tài liệu để convert các naming convetion thường gặp của dự án.
+- [ ] @! TID DOCS004 <+ Bổ sung EPIC vào tài liệu để làm rõ các mối quan hệ giữa các task, sub-task và các tính năng của dự án μEDP.
 - [ ] @! TID TEST001 <+ Bổ sung testobj-v1 để chuẩn bị cho BST task.
 - [ ] @! TID REPO001 <+ Cân nhắc repotize 2 prjecobj-linux và projecobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
 - [ ] @! TID TEST002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
