@@ -37,3 +37,5 @@ Trong tài liệu này, chúng tôi sẽ trình bày các quy tắc và hướng
 | archobj       | Architecture Object                               |
 | dpool         | Data Pool                                         |
 | prjecobj      | Project Object                                    |
+| repotize      | Turn in to a repository                           |
+| uutobj        | Unit Under Test Object                            |
