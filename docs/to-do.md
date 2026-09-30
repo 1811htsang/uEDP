@@ -559,7 +559,7 @@ Khánh đã hoàn thành ở `sources/core/src`
 - [x] Bổ sung init của GDP trong template code của testobj.
 - [x] Bổ sung comment dạng cross-style của Anchor-type và Doxygen-type cho `encryp/libcrc8` (cả `.h` và `.c`).
 - [X] Bổ sung tài liệu đánh giá μEDP theo ISO 42010:2022 để đảm bảo rằng kiến trúc của dự án μEDP được thiết kế và triển khai theo các tiêu chuẩn quốc tế về kiến trúc phần mềm, giúp tăng tính khả dụng, khả năng mở rộng và khả năng bảo trì của hệ thống.
-- [x] @! TID DOCS001 <+ Bổ sung tài liệu bổ sung về triển khai tID cho các task item.
+- [x] @! TID DOCS-001 <+ Bổ sung tài liệu bổ sung về triển khai tID cho các task item.
 
 <!-- NOTE - Expectation b4 BST task
 Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ được hoàn thiện với khả năng tự động hóa việc phân giải logic từ các cấu hình YAML sang các hàm thực thi trong lõi μEDP.
@@ -577,18 +577,18 @@ Theo lộ trình hiện tại đã hoàn tất các task liên quan đến PLD/�
 Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST-v1.1.5 để bảo vệ các tính năng đã phát triển để chuẩn bị rebase sub-tasklist từ v1.2.0 lên v1.1.6. 
 -->
 
-- [x] @! TID DOCS002 <+ Bổ sung tài liệu để convert các naming convetion thường gặp của dự án.
-- [ ] @! TID CORE002 <+ Merge feat to release due to missing inclusion in HSMC feature.
-- [ ] @! TID REPO002 <+ Bổ sung task list cho release bug-fix v1.1.6-bf1
-- [ ] @! TID DOCS004 <+ Bổ sung EPIC vào tài liệu để làm rõ các mối quan hệ giữa các task, sub-task và các tính năng của dự án μEDP.
-- [ ] @! TID TEST001 <+ Bổ sung testobj-v1 để chuẩn bị cho BST task.
-- [ ] @! TID REPO001 <+ Cân nhắc repotize 2 prjecobj-linux và projecobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
-- [ ] @! TID TEST002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
+- [x] @! TID DOCS-002 <+ Bổ sung tài liệu để convert các naming convetion thường gặp của dự án.
+- [x] @! TID REPO-002 <+ Bổ sung task list cho release bug-fix v1.1.6-bf1, có thể thiếu 1 số change point nhưng sẽ được bổ sung vào ngày mai.
+- [ ] @! TID CORE-002 <+ Merge feat to release due to missing inclusion in HSMC feature.
+- [ ] @! TID DOCS-004 <+ Bổ sung EPIC vào tài liệu để làm rõ các mối quan hệ giữa các task, sub-task và các tính năng của dự án μEDP.
+- [ ] @! TID TEST-001 <+ Bổ sung testobj-v1 để chuẩn bị cho BST task.
+- [ ] @! TID REPO-001 <+ Cân nhắc repotize 2 prjecobj-linux và projecobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
+- [ ] @! TID TEST-002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
 
 // NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6.
 
-- [ ] @! TID CORE001 <+ Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
-- [ ] @! TID DOCS003 <+ Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
+- [ ] @! TID COR-001 <+ Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
+- [ ] @! TID DOC-003 <+ Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
 
 <!-- SECTION - PSE
 
