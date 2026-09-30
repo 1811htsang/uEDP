@@ -1,53 +1,54 @@
-/*  libcrc8.c
+/** NOTE - libcrc8.c
+ * Library of routines to compute CRC-8 checksum over
+ * an array of unsigned bytes. The crc8 function uses a
+ * table to process the array byte-by-byte rather than
+ * bit-by-bit.  The division polynomial and initial
+ * value may both be changed by the user via function calls.
+ * 
+ * Use:
+ *  uint8_t cs = crc8(msg,msg_len,init)
+ * returns the unsigned byte representing the CRC-8
+ * checksum of the message "msg" of length "msg_len" bytes
+ * using the initial remainder "init".
+ * 
+ * By default, the polynomial used in the CRC-8 calculation
+ * is 0x97, also known as "C2"..  
+ * See https://users.ece.cmu.edu/~koopman/roses/dsn04/koopman04_crc_poly_embedded.pdf
+ * To set the crc8 function to use a different polynomial, invoke
+ * the function
+ *  libcrc8_build_table(uint8_t poly)
+ * which recomputes the table used for the CRC8 calculation.
+ * 
+ * To retrieve the value of the polynomial currently being
+ * used in the crc8 function,
+ *  uint8_t poly = libcrc8_get_polyfactor()
+ * 
+ * To dump the table currently in use, 
+ *  libcrc8_dump_table()
+ * 
+ * HD Todd, February, 2022
+ * Adapted from a number of other sources and references,
+ * but particularly note William's paper from
+ * http://ross.net/crc/download/crc_v3.txt, Koopman's work (above), 
+ * and https://www.pololu.com/docs/0J44/6.7.6.
+ */
 
-    Library of routines to compute CRC-8 checksum over
-    an array of unsigned bytes. The crc8 function uses a
-    table to process the array byte-by-byte rather than
-    bit-by-bit.  The division polynomial and initial
-    value may both be changed by the user via function calls.
-
-    Use:
-       uint8_t cs = crc8(msg,LengthOfMsg,init)
-    returns the unsigned byte representing the CRC-8
-    checksum of the message "msg" of length "LengthOfMsg" bytes
-    using the initial remainder "init".
-
-    By default, the polynomial used in the CRC-8 calculation
-    is 0x97, also known as "C2"..  
-      See https://users.ece.cmu.edu/~koopman/roses/dsn04/koopman04_crc_poly_embedded.pdf
-    To set the crc8 function to use a different polynomial, invoke
-    the function
-       buildCRC8Table(uint8_t poly)
-    which recomputes the table used for the CRC8 calculation.
-
-    To retrieve the value of the polynomial currently being
-    used in the crc8 function,
-       uint8_t poly = getCRC8Poly()
-
-    To dump the table currently in use, 
-       dumpCRC8Table()
-
-    HD Todd, February, 2022
-    Adapted from a number of other sources and references,
-    but particularly note William's paper from
-    http://ross.net/crc/download/crc_v3.txt, Koopman's work (above), 
-    and https://www.pololu.com/docs/0J44/6.7.6.
-
-*/
+//ANCHOR - Khai báo thư viện sử dụng
 
 #include <stdio.h>
 #include <stdint.h>
 #include "libcrc8.h"
 
-/* Predefined table of CRC-8 lookup bytes computed using
-   the polynomial 0x97, also know as "C2". Per Koopman,
-   "arguably the best" for messages up to 119 bits long
+/** NOTE
+ * Predefined table of CRC-8 lookup bytes computed using
+ * the polynomial 0x97, also know as "C2". Per Koopman,
+ * "arguably the best" for messages up to 119 bits long
+ * This table can be recomputed for a different polynomial
+ * using libcrc8_build_table(uint8_t poly) below.
+ */
 
-   This table can be recomputed for a different polynomial
-   using buildCRC8Table(uint8_t poly) below.
-*/
-uint8_t CRC8POLY = 0x97;
-uint8_t CRC8Table[256] = {
+uint8_t poly_factor = 0x97;
+uint8_t crc_table[256] = {
 	0x00, 0x97, 0xb9, 0x2e, 0xe5, 0x72, 0x5c, 0xcb, 
 	0x5d, 0xca, 0xe4, 0x73, 0xb8, 0x2f, 0x01, 0x96, 
 	0xba, 0x2d, 0x03, 0x94, 0x5f, 0xc8, 0xe6, 0x71, 
@@ -82,36 +83,37 @@ uint8_t CRC8Table[256] = {
 	0xf7, 0x60, 0x4e, 0xd9, 0x12, 0x85, 0xab, 0x3c
 };
 
-/* Build an array with CRC values of all 256 possible bytes
-   using the polymomial provided
-*/
-void buildCRC8Table(uint8_t poly)
-{
+/** NOTE
+ * Build an array with CRC values of all 256 possible bytes
+ * using the polymomial provided
+ */
+
+void libcrc8_build_table(uint8_t poly) {
   uint8_t c;
   
-  CRC8POLY = poly;
+  poly_factor = poly;
   for (uint16_t i = 0; i < 256; i++) {
     c = i;
     for (uint8_t j = 0; j < 8; j++) c = ( (c & 0x80) == 0) ? c<<1 : (c<<1) ^ poly;
-    CRC8Table[i] = c;
+    crc_table[i] = c;
   }
 }
  
-uint8_t getCRC8Poly(void) {
-  return CRC8POLY;
+uint8_t libcrc8_get_polyfactor(void) {
+  return poly_factor;
 };
 
-void dumpCRC8Table(void) {
-  printf("Dump of CRC8 table for polynomial 0x%02x\n", getCRC8Poly());
+void libcrc8_dump_table(void) {
+  printf("Dump of CRC8 table for polynomial 0x%02x\n", libcrc8_get_polyfactor());
   for (uint8_t i=0; i<32; i++) {
     printf("\n\t");
-    for (uint8_t j=0; j<8; j++) printf("0x%02x, ", CRC8Table[i*8+j]);
+    for (uint8_t j=0; j<8; j++) printf("0x%02x, ", crc_table[i*8+j]);
   };
   printf("\n");
   return;
 };
 
-uint8_t crc8(uint8_t *msg, int lengthOfMsg, uint8_t init) {
-  while (lengthOfMsg-- > 0) init = CRC8Table[ (init ^ *msg++)];
+uint8_t crc8(uint8_t *msg, int msg_len, uint8_t init) {
+  while (msg_len-- > 0) init = crc_table[ (init ^ *msg++)];
   return init;
 };

@@ -153,7 +153,6 @@ void {{ item.handler }}(void) {
 {% endfor %}
 int app_main(void) {
   uedp_core_init();
-  uedp_msg_pool_init();
   logic_init();
   while (1) {
     RETR_STAT retr =  uedp_task_scheduler();

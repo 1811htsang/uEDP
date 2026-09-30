@@ -546,12 +546,20 @@ Khánh đã hoàn thành ở `sources/core/src`
 - [x] Sửa đổi README.md để trình bày về những thay đổi trong việc bổ sung các testobj và các thay đổi trong thiết kế syntax của μE-LS.
 - [x] Bổ sung các tag của Comment Anchor extension vào các comment doxygen-type cũ để hỗ trợ việc đánh dấu các vị trí quan trọng trong code và tài liệu. //NOTE - lần này thực hiện ở file `pal_core.h`
 - [x] Loại bỏ toàn bộ `Định nghĩa các hằng số boolean và trạng thái cơ bản cho hệ thống UEDP` trong file `pal_core.h` do không còn sử dụng.
-- [ ] Bổ sung user manual về cách triển khai mới cho framework với tính năng PLD/μE-LS.
-- [ ] Bổ sung nội dung hướng dẫn người sử dụng truy cập và sử dụng các testobj trong `docs/uels-syntax.md` để hỗ trợ việc kiểm thử và phát triển các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn.
-- [ ] Bổ sung comment dạng cross-style của Anchor-type và Doxygen-type cho `encryp/libcrc8` (cả `.h` và `.c`).
-- [ ] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như pycdscriptor.*, kconfigspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
-- [ ] Bổ sung nội dung để người dùng triển khai `pal_sys_reset` và `pal_sys_fatal` đúng cách.
-- [ ] Bổ sung nội dung để trình bày về vấn đề vị trí đặt và sử dụng BSP (Board Support Package) trong dự án μEDP, nhằm giúp người dùng hiểu rõ hơn về cách thức triển khai và sử dụng BSP một cách hiệu quả và đúng cách trong việc phát triển ứng dụng trên nền tảng μEDP.
+- [x] Bổ sung user manual về cách triển khai mới cho framework với tính năng PLD/μE-LS.
+- [x] Cân nhắc loại bỏ các mục khởi tạo mà trực tiếp trình bày hướng dẫn sử dụng của μE-LS trong `user-manual.md` để tránh sự trùng lặp và tăng tính nhất quán trong việc hướng dẫn người sử dụng.
+- [x] Bổ sung nội dung hướng dẫn người sử dụng truy cập và sử dụng các testobj trong `docs/uels-syntax.md` để hỗ trợ việc kiểm thử và phát triển các tính năng của lõi μEDP một cách dễ dàng và hiệu quả hơn.
+- [x] Thực hiện rebase các task đã hoàn thành liên quan đến thiết kế syntax PLD/μE-LS (phía nhánh docs) (trước khi triển khai source code phân giải logic như pycdscriptor.*, kconfigspec.*) theo đề xuất phân tách v1.2.0 thành các phiên bản 1.1.6, 1.1.7, 1.1.8.
+
+<!-- STATUS
+Đã đưa các task từ v1.2.0 (pre-2509) lên thành v1.1.6 và đưa các task từ v1.1.6 (pre-2509) lên thành v1.1.7 để tránh xung đột với các task của 1.2.0 (pre-2509).
+-->
+
+- [x] Bổ sung nội dung để trình bày về vấn đề vị trí đặt và sử dụng BSP (Board Support Package) trong dự án μEDP, nhằm giúp người dùng hiểu rõ hơn về cách thức triển khai và sử dụng BSP một cách hiệu quả và đúng cách trong việc phát triển ứng dụng trên nền tảng μEDP.
+- [x] Bổ sung init của GDP trong template code của testobj.
+- [x] Bổ sung comment dạng cross-style của Anchor-type và Doxygen-type cho `encryp/libcrc8` (cả `.h` và `.c`).
+- [X] Bổ sung tài liệu đánh giá μEDP theo ISO 42010:2022 để đảm bảo rằng kiến trúc của dự án μEDP được thiết kế và triển khai theo các tiêu chuẩn quốc tế về kiến trúc phần mềm, giúp tăng tính khả dụng, khả năng mở rộng và khả năng bảo trì của hệ thống.
+- [x] @! TID DOCS001 <+ Bổ sung tài liệu bổ sung về triển khai tID cho các task item.
 
 <!-- NOTE - Expectation b4 BST task
 Dự kiến trước khi task BSW bắt đầu thực thi thì PLD/μE-LS sẽ được hoàn thiện với khả năng tự động hóa việc phân giải logic từ các cấu hình YAML sang các hàm thực thi trong lõi μEDP.
@@ -569,9 +577,18 @@ Theo lộ trình hiện tại đã hoàn tất các task liên quan đến PLD/�
 Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST-v1.1.5 để bảo vệ các tính năng đã phát triển để chuẩn bị rebase sub-tasklist từ v1.2.0 lên v1.1.6. 
 -->
 
-- [ ] Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử. // NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6.
-- [ ] Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
-- [ ] Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
+- [x] @! TID DOCS002 <+ Bổ sung tài liệu để convert các naming convetion thường gặp của dự án.
+- [ ] @! TID CORE002 <+ Merge feat to release due to missing inclusion in HSMC feature.
+- [ ] @! TID REPO002 <+ Bổ sung task list cho release bug-fix v1.1.6-bf1
+- [ ] @! TID DOCS004 <+ Bổ sung EPIC vào tài liệu để làm rõ các mối quan hệ giữa các task, sub-task và các tính năng của dự án μEDP.
+- [ ] @! TID TEST001 <+ Bổ sung testobj-v1 để chuẩn bị cho BST task.
+- [ ] @! TID REPO001 <+ Cân nhắc repotize 2 prjecobj-linux và projecobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
+- [ ] @! TID TEST002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
+
+// NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6.
+
+- [ ] @! TID CORE001 <+ Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
+- [ ] @! TID DOCS003 <+ Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
 
 <!-- SECTION - PSE
 
