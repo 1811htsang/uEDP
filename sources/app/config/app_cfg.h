@@ -1,24 +1,13 @@
-/**
- * @file app_cfg.h
- * @author Shang Huang
- * @brief Application configuration header file
- * @version 0.1
- * @date 2026-09-02
- * @copyright MIT License
- */
+//ANCHOR - Application configuration header file
 #ifndef __APP_CFG_H__
   #define __APP_CFG_H__
 
-  /**
-   * @brief Khai báo thư viện sử dụng
-   */
+  //ANCHOR - Khai báo các thư viện cần thiết cho ứng dụng
 
    #include <uedp_core.h> 
    #include <uedp_task.h> 
   
-  /**
-   * @brief Bổ sung các forward declaration
-   */
+  //ANCHOR - Forward declaration các struct cần thiết cho ứng dụng
 
   typedef struct task_norm_t task_norm_t;
   typedef struct task_poll_t task_poll_t;
@@ -27,10 +16,9 @@
   typedef struct tsm_trans_tbl_t uedp_tsm_t;
   typedef struct uedp_fsm_t uedp_fsm_t;
 
-  /**
-   * @brief Khai báo danh sách tác vụ và tác vụ polling của ứng dụng
-   * @attention Với n tác vụ thì có n entry trong bảng tác vụ và tác vụ polling
-   * @attention Lưu ý rằng UEDP_TASK_NORM_USR_ID và UEDP_TASK_NORM_EOT_ID là 2 ID đặc biệt bắt buộc phải có
+  /** ANCHOR - Khai báo danh sách tác vụ và tác vụ polling của ứng dụng
+   * @note Với n tác vụ thì có n entry trong bảng tác vụ và tác vụ polling
+   * @note Lưu ý rằng UEDP_TASK_NORM_USR_ID và UEDP_TASK_NORM_EOT_ID là 2 ID đặc biệt bắt buộc phải có
    * @note Người dùng tự định nghĩa bảng tác vụ và tác vụ polling nhưng vẫn giữ nguyên
    *   khai báo tên bảng tác vụ và tác vụ polling. Phần implementation nội bộ
    *   do người dùng tự triển khai hoặc có thể giữ nguyên nếu không sử dụng tác vụ polling.
@@ -40,9 +28,11 @@
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
    */
 
-  /**
-   * @brief Định nghĩa bảng chuyển trạng thái cho state
-   * @attention Với n state thì có n bảng chuyển trạng thái
+  extern task_norm_t app_task_table[];
+  extern task_poll_t app_poll_table[];
+
+  /** ANCHOR - Định nghĩa bảng chuyển trạng thái cho state
+   * @note Với n state thì có n bảng chuyển trạng thái
    * @note Người dùng tự định nghĩa bảng, có thể xóa dòng 47 và thay thế bằng
    *   triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM
    * @example
@@ -51,10 +41,14 @@
    *   người dùng tự triển khai nội dung ở app.c
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
    */
-
-  /**
-   * @brief Định nghĩa bảng TSM cho task Blinker
-   * @attention Với n state thì có n entry trong bảng TSM
+  
+   extern tsm_trans_t tsm_task_usr_state_idle_trans[]; 
+   extern tsm_trans_t tsm_task_usr_state_running_trans[]; 
+   extern tsm_trans_t tsm_task_a_state_idle_trans[]; 
+   extern tsm_trans_t tsm_task_a_state_waiting_trans[]; 
+  
+  /** ANCHOR - Định nghĩa bảng TSM cho task
+   * @note Với n state thì có n entry trong bảng TSM
    * @note Người dùng tự định nghĩa bảng, có thể xóa dòng 61 và thay thế bằng
    *   triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM
    * @example
@@ -63,23 +57,29 @@
    *   người dùng tự triển khai nội dung ở app.c
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
    */
-
-  /**
-   * @brief Định nghĩa TSM cho tác vụ
-   * @attention Với n tác vụ sử dụng TSM thì có n định nghĩa TSM.
+  
+   extern tsm_state_desc_t tsm_task_usr_tbl[]; 
+   extern tsm_state_desc_t tsm_task_a_tbl[]; 
+  
+  /** ANCHOR - Định nghĩa TSM object cho tác vụ
+   * @note Với n tác vụ sử dụng TSM thì có n định nghĩa TSM.
    *   Tuy nhiên mỗi task không nhất thiết phải sử dụng TSM
    * @note Người dùng tự định nghĩa TSM, có thể xóa dòng 71 và thay thế bằng
    *   triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng TSM cho tác vụ
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
    */
-
-  /**
-   * @brief Định nghĩa FSM cho tác vụ
-   * @attention Với n tác vụ sử dụng FSM thì có n định nghĩa FSM.
+  
+   extern uedp_tsm_t tsm_task_usr; 
+   extern uedp_tsm_t tsm_task_a; 
+  
+  /** ANCHOR - Định nghĩa FSM object cho tác vụ
+   * @note Với n tác vụ sử dụng FSM thì có n định nghĩa FSM.
    *   Tuy nhiên mỗi task không nhất thiết phải sử dụng FSM
    * @note Người dùng tự định nghĩa FSM, có thể xóa dòng 81 và thay thế bằng
    *   triển khai của người dùng hoặc có thể giữ nguyên nếu không sử dụng FSM cho tác vụ
    * @attention Xin đừng sửa đổi, tự động sinh bởi Kconfiglib và Jinja2
    */
-
+  
+   extern uedp_fsm_t fsm_task_b; 
+  
 #endif //__APP_CFG_H__
