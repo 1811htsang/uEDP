@@ -26,6 +26,7 @@ bool 		ring_buffer_isinit(ring_buffer_t* ring_buffer) {
 
 uint32_t ring_buffer_availble(ring_buffer_t* ring_buffer) {
 	return ring_buffer->fill_size;
+	//AMBI - Theo như review trước đó thì cần bugfix ở đây để cover đúng logic, vì fill_size là số lượng phần tử đã điền vào vòng đệm, không phải số lượng phần tử còn trống.
 }
 
 bool ring_buffer_is_empty(ring_buffer_t* ring_buffer) {

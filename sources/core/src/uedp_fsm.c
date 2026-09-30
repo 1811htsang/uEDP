@@ -28,6 +28,7 @@ void uedp_fsm_go_next(uedp_fsm_t* me, state_handler target) {
   }
 
   // Lưu trạng thái hiện tại vào lịch sử trước khi chuyển đổi
+  // AMBI - Theo như review trước đó thì cần bugfix ở đây do go_back không check được history
   me->history[me->history_index] = me->state; // Lưu trạng thái hiện tại vào lịch sử
   me->history_index = (me->history_index + 1) % UEDP_FSM_HIS_MAX; // Cập nhật chỉ số lịch sử, đảm bảo không vượt quá giới hạn
 

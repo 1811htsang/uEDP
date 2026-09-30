@@ -179,6 +179,7 @@ void uedp_msg_free(uedp_msg_t* msg) {
 	pal_enter_critical(); // Đảm bảo an toàn khi truy cập Pool trong môi trường đa tác vụ hoặc ISR
 	internal_uedp_msg_pool_push(header, msg);
 	pal_exit_critical();
+	//AMBI - Theo như review trước đó thì cần bugfix ở đây do không có bổ sung xử lý cho double free và ref_dec
 }
 
 void uedp_msg_ref_inc(uedp_msg_t* msg) {
