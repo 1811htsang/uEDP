@@ -16,9 +16,11 @@
 
 static llist_node_t llist_node_pool[LLIST_MAX_NODES];
 static llist_node_t* llist_free_list = NULL;
+static bool llist_pool_ready = false;
 
 static void llist_pool_init(void) {
-  if (llist_free_list != NULL) {
+  //NOTE - enforce singleton pattern for pool initialization
+  if (llist_pool_ready) {
     return;
   }
 
@@ -28,6 +30,7 @@ static void llist_pool_init(void) {
 
   llist_node_pool[LLIST_MAX_NODES - 1U].next = NULL;
   llist_free_list = &llist_node_pool[0];
+  llist_pool_ready = true;
 }
 
 static llist_node_t* llist_alloc_node(void) {
