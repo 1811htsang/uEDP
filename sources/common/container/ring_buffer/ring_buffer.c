@@ -25,7 +25,8 @@ bool 		ring_buffer_isinit(ring_buffer_t* ring_buffer) {
 }
 
 uint32_t ring_buffer_availble(ring_buffer_t* ring_buffer) {
-	return ring_buffer->fill_size;
+	//NOTE - bug fix due to incorrect calculation of available space in ring buffer
+	return ring_buffer->buffer_size - ring_buffer->fill_size;
 }
 
 bool ring_buffer_is_empty(ring_buffer_t* ring_buffer) {
