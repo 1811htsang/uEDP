@@ -37,8 +37,10 @@ sta ui8 is_inited = 0x0u;
 void uedp_core_init(void) {
   pal_core_init();
   uedp_msg_pool_init();
+  uedp_gdp_init();
   uedp_timer_init();
   uedp_itnlog_init();
+  uedp_itnlog_set_output(&stm32f103_log_alloc);
   is_inited = 0x1u;
 }
 
@@ -150,7 +152,7 @@ __attribute__((naked)) void HardFault_Handler(void) {
 
 //ANCHOR - Implementation cho internal API handling
 
-static void internal_hardfault_decoder(uint32_t *stack);
+UEDP_ATTR_UNUSED void internal_hardfault_decoder(uint32_t *stack);
 
 //ANCHOR -  Định nghĩa các biểu tượng linker script để quản lý bộ nhớ
 
@@ -298,8 +300,8 @@ void internal_uart_rx_dma(void) {
   HAL_UART_Receive_DMA(&i_huart1, rx_buf, sizeof(rx_buf));
 }
 
-//TASK - Add detail implementation for UART output TX functions for rprintf service
-//TASK - cmake build to remove errors on C/C++ Intellisense
+//DEPRECATED - Old TASK - Add detail implementation for UART output TX functions for rprintf service
+//DEPRECATED - Old TASK - cmake build to remove errors on C/C++ Intellisense
 
 void stm32f103_uart_putc(unsigned char c) {
   // Transmit the character using DMA

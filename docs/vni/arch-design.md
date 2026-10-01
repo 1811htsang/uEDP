@@ -122,6 +122,13 @@ Lưu ý khi tích hợp:
 - `pal_rprintf_flush_entry()` chỉ thực sự xuất dữ liệu khi `is_ready()` trả về `true`.
 - Định dạng mặc định của `rprintf` là một dòng có timestamp, task ID, signal ID và message, được tạo bằng `xfprintf()` thay vì ghép chuỗi thủ công.
 
+#### Nguyên tắc thiết kế và sử dụng PAL
+
+Khi kết nối Core với phần cứng cụ thể, BSP (Board Support Package) và các PAL service cần tuân thủ các nguyên tắc sau:
+
+- Các hàm PAL nên được thiết kế để Core không cần biết chi tiết phần cứng, chỉ cần gọi các hàm trừu tượng như `pal_enter_critical()` hoặc `pal_get_highest_priority()`. Do đó, người dùng nên ưu tiên triển khai các API PAL để làm wrapper cho BSP API cụ thể, thay vì gọi trực tiếp các hàm phần cứng trong Core.
+- Các triển khai trong service của PAL nên được triển khai ở pal/arch thay vì trực tiếp triển khai ở `app.c`, một số tính năng như PPLP và OCE có thể cần truy cập trực tiếp vào các thanh ghi phần cứng, nhưng Core không nên biết chi tiết này. Do đó, các hàm PAL nên được triển khai ở pal/arch để tách biệt rõ ràng giữa Core và phần cứng.
+
 ## Logic thiết kế chi tiết
 
 ### [DMP] Deterministic Memory Pooling - Quản lý bộ nhớ tin nhắn với cấp phát tĩnh độc lập vào kiến trúc
@@ -160,7 +167,7 @@ Trong đó, nếu kích thước của dữ liệu nhỏ hơn kích thước đ�
 
 Do đó cần lưu ý rằng đối với việc truyền tham chiếu tới **biến cục bộ** (local variable, thời gian sống giới hạn trong 1 lần gọi hàm), người dùng phải tự đảm bảo vùng nhớ đó còn hợp lệ tại thời điểm message được xử lý (thường là khai báo `static`), tránh lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi (dangling pointer).
 
-Riêng với trường hợp truyền tham chiếu tới **biến toàn cục thật sự** (static/global storage duration, phục vụ khối `glbda:` của PLD/μE-LS), Core cung cấp thêm cơ chế **[GDP] Global Data Pool** để quản lý việc này một cách tường minh, thay vì để người dùng tự quản lý con trỏ thô như trên. GDP là một bảng đăng ký tĩnh (`uedp_gdp_slot_t`, mặc định `UEDP_GDP_MAX_SLOTS = 16` slot) ánh xạ tên ↔ con trỏ, với 5 API: `uedp_gdp_init()` (khởi tạo bảng), `uedp_gdp_register()`/`uedp_gdp_unregister()` (đăng ký/huỷ đăng ký 1 biến toàn cục theo tên), `uedp_gdp_get_ref()` (lấy con trỏ tham chiếu trực tiếp, dùng cho `ptype: REF`), và `uedp_gdp_get_val()`/`uedp_gdp_set_val()` (sao chép giá trị ra/vào buffer, dùng cho `ptype: VAL`).
+Riêng với trường hợp truyền tham chiếu tới **biến toàn cục thật sự** (static/global storage duration, phục vụ khối `glbda:` của PLD/μE-LS), Core cung cấp thêm cơ chế **[GDP] Global Data Pool** để quản lý việc này một cách tường minh, thay vì để người dùng tự quản lý con trỏ thô như trên. GDP là một bảng đăng ký tĩnh (`uedp_gdp_slot_t`, mặc định `UEDP_GDP_QUEUE_SIZE = 16` slot) ánh xạ tên ↔ con trỏ, với 5 API: `uedp_gdp_init()` (khởi tạo bảng), `uedp_gdp_register()`/`uedp_gdp_unregister()` (đăng ký/huỷ đăng ký 1 biến toàn cục theo tên), `uedp_gdp_get_ref()` (lấy con trỏ tham chiếu trực tiếp, dùng cho `ptype: REF`), và `uedp_gdp_get_val()`/`uedp_gdp_set_val()` (sao chép giá trị ra/vào buffer, dùng cho `ptype: VAL`).
 
 Điểm khác biệt cốt lõi so với 4 pool `BLANK`/`ALLOC`/`EXTAL`/`ISR`: GDP **không cấp phát** vùng nhớ `data` (chỉ lưu con trỏ trỏ tới vùng nhớ đã tồn tại sẵn, do người dùng hoặc PLTF khai báo) và **không có khái niệm giải phóng/vòng đời** - biến toàn cục sống suốt vòng đời chương trình nên không có thao tác "free" một slot đã đăng ký. Điều này khác hẳn `ALLOC`, vốn gắn chặt với vòng đời `uedp_msg_alloc()`/`uedp_msg_free()` và không phù hợp để tái sử dụng cho mục đích lưu trữ biến toàn cục (sẽ phải tự chế thêm cơ chế "never-free" đè lên trên).
 

@@ -9,8 +9,7 @@
 #ifndef __TASK_H__
 	#define __TASK_H__
 
-	/** ANCHOR - Khai báo các hằng số và macro cho hệ thống UEDP
-	 */
+	// ANCHOR - Khai báo các hằng số và macro cho hệ thống UEDP
 	#include <stdint.h>
 	#include <stdbool.h>
 	#include "uedp_core.h"
@@ -26,11 +25,9 @@
 	 */
 	typedef struct uedp_msg_t uedp_msg_t;
 
-	/** ANCHOR - Định nghĩa các kiểu dữ liệu để quản lý ID 
-	 * 				và mức độ ưu tiên của tác vụ trong hệ thống UEDP
-	 */
-	typedef ui32	task_pri_t; // Mức ưu tiên của tác vụ
-	typedef ui16	task_id_t; 	// ID của tác vụ
+	// ANCHOR - Định nghĩa các kiểu dữ liệu để quản lý ID và mức độ ưu tiên của tác vụ trong hệ thống UEDP
+	typedef ui32 task_pri_t; // Mức ưu tiên của tác vụ
+	typedef ui16 task_id_t; 	// ID của tác vụ
 
 	/** ANCHOR - Định nghĩa các kiểu dữ liệu để quản lý hàm thực thi của tác vụ
 	 * @attention `pf_task_poll` được sử dụng để quản lý các hàm thực thi của tác vụ theo cơ chế poll-driven, 
@@ -68,6 +65,9 @@
 	 * @attention `ability` được sử dụng để quản lý khả năng của tác vụ poll, 
 	 *            cho phép hệ thống UEDP xác định và điều phối việc thực thi của các tác vụ poll 
 	 * 						dựa trên khả năng của chúng.
+	 * @param id: ID của tác vụ poll-driven
+	 * @param ability: On/Off khả năng thực thi của tác vụ poll-driven
+	 * @param task_poll: Hàm thực thi của tác vụ poll-driven
 	 */
 	typedef struct task_poll_t {
 		task_id_t id;									// ID của tác vụ poll
@@ -117,7 +117,6 @@
 	uedp_msg_t* uedp_task_norm_get_current_msg();
 
 	/** ANCHOR - Hàm kiểm tra xem tác vụ có sẵn sàng để thực thi hay không
-	 * 
 	 * @param task_id ID của tác vụ cần kiểm tra
 	 * @return true nếu tác vụ sẵn sàng để thực thi
 	 * @return false nếu tác vụ không sẵn sàng để thực thi

@@ -15,6 +15,16 @@
 #include "fifo.h"
 
 void fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_t element_size) {
+	//NOTE - Apply defensive programming: Check for NULL pointers and invalid sizes
+	if (fifo == NULL) {
+		return;
+	}
+	if (buffer == NULL || buffer_size == 0 || element_size == 0) {
+		fifo->buffer = NULL;
+		fifo->buffer_size = 0;
+		fifo->fill_size = 0;
+		return;
+	}
 	fifo->tail_index = 0;
 	fifo->head_index = 0;
 	fifo->fill_size = 0;
@@ -41,6 +51,11 @@ bool fifo_is_full(fifo_t* fifo) {
 }
 
 uint32_t fifo_put(fifo_t* fifo, void* data) {
+	//NOTE - Apply defensive programming: Check for NULL pointers and invalid sizes
+	if (fifo == NULL || fifo->buffer == NULL || fifo->buffer_size == 0) {
+		return RET_FIFO_NG;
+	}
+
 	if (fifo->fill_size == fifo->buffer_size) {
 		return RET_FIFO_NG; // FIFO đã đầy, không thể thêm phần tử mới
 	}
@@ -90,6 +105,11 @@ uint32_t fifo_get(fifo_t* fifo, void* data) {
 }
 
 uint32_t 	fifo_put_head(fifo_t* fifo, void* data) {
+	//NOTE - Apply defensive programming: Check for NULL pointers and invalid sizes
+	if (fifo == NULL || fifo->buffer == NULL || fifo->buffer_size == 0) {
+		return RET_FIFO_NG;
+	}
+
 	if (fifo->fill_size == fifo->buffer_size) {
 		return RET_FIFO_NG; // FIFO đã đầy, không thể thêm phần tử mới
 	}
