@@ -581,6 +581,7 @@ Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST
 - [x] @! TID[epic=v1.1.6-bf1] REPO-002 <+ Bổ sung task list cho release bug-fix v1.1.6-bf1, có thể thiếu 1 số change point nhưng sẽ được bổ sung vào ngày mai.
 - [x] @! TID[epic=v1.1.6-bf1] CORE-002 <+ Merge feat to release due to missing inclusion in HSMC feature.
 - [x] @! TID DOCS-004 <+ Bổ sung EPIC vào tài liệu để làm rõ các mối quan hệ giữa các task, sub-task và các tính năng của dự án μEDP.
+- [ ] @! TID[epic=v1.1.7/arch] ARCH-001 <+ Bổ sung API cho uutobj H723.
 - [ ] @! TID[epic=v1.1.7/BST] TEST-001 <+ Bổ sung testobj-v1 để chuẩn bị cho BST task.
 - [ ] @! TID[epic=v1.1.7/BST] REPO-001 <+ Cân nhắc repotize 2 prjecobj-linux và projecobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
 - [ ] @! TID[epic=v1.1.7/BST] TEST-002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
