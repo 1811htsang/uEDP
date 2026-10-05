@@ -582,7 +582,7 @@ Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST
 - [x] @! TID[epic=v1.1.6-bf1] CORE-002 <+ Merge feat to release due to missing inclusion in HSMC feature.
 - [x] @! TID DOCS-004 <+ Bổ sung EPIC vào tài liệu để làm rõ các mối quan hệ giữa các task, sub-task và các tính năng của dự án μEDP.
 - [x] @! TID[epic=v1.1.6-bf2] PLTF-001 <+ Chuyển đổi `entrypoint.sh`, `jainerator.sh` và `insert.sh` sang Python để hỗ trợ khả năng đa nền tảng.
-- [ ] @! TID[epic=v1.1.6-bf2] ARCH-002 <+ Sửa đổi `include.xml` để loại bỏ các đường dẫn specific của nền tảng trong include.
+- [x] @! TID[epic=v1.1.6-bf2] ARCH-002 <+ Sửa đổi `include.xml` để loại bỏ các đường dẫn specific của nền tảng trong include.
 - [ ] @! TID[epic=v1.1.7/arch] ARCH-001 <+ Bổ sung API cho uutobj H723.
 - [ ] @! TID[epic=v1.1.7/BST] TEST-001 <+ Bổ sung testobj-v1 để chuẩn bị cho BST task.
 - [ ] @! TID[epic=v1.1.7/BST] REPO-001 <+ Cân nhắc repotize 2 prjecobj-linux và projecobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
