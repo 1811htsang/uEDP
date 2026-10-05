@@ -25,7 +25,7 @@ sta ui8 g_task_poll_count = 0;                                  // Số lượng
 
 // ANCHOR - Khai báo các hàm quản lý nội bộ của hệ thống tác vụ UEDP
 
-sta void          internal_uedp_task_norm_put_to_queue            (task_id_t tid, uedp_msg_t* msg);
+sta RETR_STAT     internal_uedp_task_norm_put_to_queue            (task_id_t tid, uedp_msg_t* msg);
 sta uedp_msg_t*   internal_uedp_task_norm_get_from_queue          (task_id_t tid);
 sta void          internal_uedp_task_norm_set_ready               (task_pri_t pri);
 sta void          internal_uedp_task_norm_clear_ready             (task_pri_t pri);
@@ -35,14 +35,20 @@ sta void          internal_uedp_task_poll_exec                    (void);
 sta task_norm_t*  internal_uedp_task_get_task_norm_by_id          (task_id_t tid);
 sta void          internal_uedp_task_norm_set_urgent              (task_id_t tid);
 sta void          internal_uedp_task_norm_reset_urgent            (task_id_t tid);
-sta void          internal_uedp_task_norm_put_head_to_queue       (task_id_t tid, uedp_msg_t* msg);
+sta RETR_STAT     internal_uedp_task_norm_put_head_to_queue       (task_id_t tid, uedp_msg_t* msg);
 
 void uedp_task_norm_create(task_norm_t* task_table) {
   if (task_table) {
     g_task_norm_table = task_table;
 
     // Đếm số lượng tác vụ trong bảng cho đến khi gặp ID kết thúc
+    g_task_norm_count = 0;
     while (task_table[g_task_norm_count].id != UEDP_TASK_NORM_EOT_ID) {
+      //NOTE - Add defensive check to avoid infinite loop if EOT is missing in the table
+      if (g_task_norm_count >= UEDP_TASK_NORM_MAX_SIZE) {
+        UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "task_norm_create: table has no EOT within max count");
+        break;
+      }
       g_task_norm_count++;
     }
 
@@ -63,7 +69,13 @@ void uedp_task_poll_create(task_poll_t* task_table) {
     g_task_poll_table = task_table;
 
     // Đếm số lượng tác vụ trong bảng cho đến khi gặp ID kết thúc
+    g_task_poll_count = 0;
     while (task_table[g_task_poll_count].id != UEDP_TASK_POLL_EOT_ID) {
+      //NOTE - Add defensive check to avoid infinite loop if EOT is missing in the table
+      if (g_task_poll_count >= UEDP_TASK_POLL_MAX_SIZE) {
+        UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "task_poll_create: table has no EOT within max count");
+        break;
+      }
       g_task_poll_count++;
     }
   }
@@ -78,8 +90,15 @@ RETR_STAT uedp_task_norm_post_msg(task_id_t dest_id, uedp_msg_t* msg) {
     UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "post_msg: null msg");
     return STAT_ERROR; // Trả về lỗi nếu msg là NULL
   }
-  internal_uedp_task_norm_put_to_queue(dest_id, msg);
-  internal_uedp_task_norm_set_ready(internal_uedp_task_get_task_norm_by_id(dest_id)->cur_pri); // Đặt trạng thái sẵn sàng cho tác vụ dựa trên mức độ ưu tiên của nó
+  //NOTE - Add defensive check to avoid posting message to a task that is not registered in the system
+  if (internal_uedp_task_norm_put_to_queue(dest_id, msg) != STAT_OK) {
+    return STAT_ERROR; // Không đưa được vào hàng đợi: không đặt ready, msg vẫn thuộc về caller
+  }
+  task_norm_t* dest = internal_uedp_task_get_task_norm_by_id(dest_id);
+  if (dest == NULL) {
+    return STAT_ERROR;
+  }
+  internal_uedp_task_norm_set_ready(dest->cur_pri); // Đặt trạng thái sẵn sàng cho tác vụ dựa trên mức độ ưu tiên của nó
   return STAT_OK;
 }
 
@@ -155,17 +174,22 @@ bool uedp_task_norm_is_ready(task_id_t task_id) {
     UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "is_ready: task_id out of range");
     return false; // Trả về false nếu task_id không hợp lệ
   }
-  task_pri_t pri = 0;
   for (ui8 i = 0; i < g_task_norm_count; i++) {
     if (g_task_norm_table[i].id == task_id) {
-      pri = g_task_norm_table[i].cur_pri;
-      break;
+      //NOTE - Add defensive check to avoid invalid priority values
+      task_pri_t pri = g_task_norm_table[i].cur_pri;
+      return (g_task_norm_ready & (1u << (pri - UEDP_TASK_PRI_LEVEL_0))) != 0; // Trả về true nếu tác vụ có mức độ ưu tiên tương ứng đang ở trạng thái sẵn sàng
     }
   }
-  return (g_task_norm_ready & (1 << (pri - UEDP_TASK_PRI_LEVEL_0))) != 0; // Trả về true nếu tác vụ có mức độ ưu tiên tương ứng đang ở trạng thái sẵn sàng
+  return false; // Không có task nào mang ID này trong bảng
 }
 
 void uedp_task_norm_get_queue_stats(task_id_t tid, ui8* used, ui8* max) {
+  if (!used || !max) {
+    //NOTE - Add defensive check to avoid dereferencing null pointers
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "get_queue_stats: null out param");
+    return;
+  }
   task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
   if (task) {
     *used = task->msg_queue.fill_size;
@@ -192,18 +216,20 @@ void uedp_task_poll_set_ability(task_id_t tid, ui8 ability) {
  * @param msg Con trỏ đến tin nhắn cần đưa vào hàng đợi
  * @attention Khi gọi hàm này, hãy đảm bảo rằng message queue của tác vụ đã được init trước đó để tránh lỗi
  */
-void internal_uedp_task_norm_put_to_queue(task_id_t tid, uedp_msg_t* msg) {
+RETR_STAT internal_uedp_task_norm_put_to_queue(task_id_t tid, uedp_msg_t* msg) {
+  RETR_STAT result = STAT_OK;
+
   // Kiểm tra xem tác vụ có tồn tại trong bảng tác vụ hay không
   task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
   if (task == NULL) {
     // task == NULL đã được raise sẵn bên trong get_task_norm_by_id() ở trên, không raise lại.
-    return;
+    return STAT_ERROR;
   }
 
   // Kiểm tra fifo của tác vụ đã được khởi tạo chưa
   if (!fifo_isinit(&task->msg_queue)) {
     UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "put_to_queue: msg_queue not init");
-    return;
+    return STAT_ERROR;
   }
 
   // Entry critical section
@@ -211,11 +237,17 @@ void internal_uedp_task_norm_put_to_queue(task_id_t tid, uedp_msg_t* msg) {
 
   // Đưa tin nhắn vào hàng đợi của tác vụ
   if (fifo_put(&task->msg_queue, (uedp_msg_t*)(&msg)) == RET_FIFO_NG) {
-    UEDP_FCR_RAISE(UEDP_FCR_TASK_QUEUE_FULL); // Hàng đợi tin nhắn của task đã đầy, msg bị mất
+    result = STAT_ERROR;
   }
 
   // Exit critical section
   pal_exit_critical();
+
+  if (result != STAT_OK) {
+    //NOTE - Add defensive check to avoid losing messages when the task's message queue is full
+    UEDP_FCR_RAISE(UEDP_FCR_TASK_QUEUE_FULL); // Hàng đợi tin nhắn của task đã đầy, msg bị mất
+  }
+  return result;
 }
 
 /** ANCHOR - Hàm nội bộ để đưa một tin nhắn vào đầu hàng đợi của một tác vụ cụ thể
@@ -254,7 +286,8 @@ void internal_uedp_task_norm_set_ready(task_pri_t pri) {
   pal_enter_critical();
 
   // Thiết lập trạng thái sẵn sàng cho tác vụ bằng cách đặt bit tương ứng với mức độ ưu tiên
-  g_task_norm_ready |= (1 << (pri - UEDP_TASK_PRI_LEVEL_0));
+  //NOTE - enforce unsigned shift to avoid undefined behavior when pri is 0
+  g_task_norm_ready |= (1u << (pri - UEDP_TASK_PRI_LEVEL_0));
 
   // Tắt entry critical section
   pal_exit_critical();
@@ -274,7 +307,8 @@ void internal_uedp_task_norm_clear_ready(task_pri_t pri) {
   pal_enter_critical();
 
   // Xóa trạng thái sẵn sàng cho tác vụ bằng cách xóa bit tương ứng với mức độ ưu tiên
-  g_task_norm_ready &= ~(1 << (pri - UEDP_TASK_PRI_LEVEL_0));
+  //NOTE - enforce unsigned shift to avoid undefined behavior when pri is 0
+  g_task_norm_ready &= ~(1u << (pri - UEDP_TASK_PRI_LEVEL_0));
 
   // Tắt entry critical section
   pal_exit_critical();
@@ -314,7 +348,12 @@ void internal_uedp_task_norm_dispatch(task_norm_t* task, uedp_msg_t* msg) {
   g_active_task_norm_id = task->id; // Cập nhật ID của tác vụ hiện tại đang được thực thi
 
   // Thực thi hàm xử lý của tác vụ với tin nhắn hiện tại
-  task->task_norm(msg); 
+  //NOTE - Add defensive check to avoid null pointer dereference when calling task_norm handler
+  if (task->task_norm != NULL) {
+    task->task_norm(msg);
+  } else {
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_SM_NULL_HANDLER, "dispatch: null task_norm handler");
+  }
 
   // Sau khi thực thi xong, có thể thực hiện các bước dọn dẹp hoặc cập nhật trạng thái nếu cần thiết
   uedp_msg_free(msg); // Giải phóng tin nhắn sau khi đã xử lý xong
@@ -331,7 +370,8 @@ void internal_uedp_task_poll_exec(void) {
     task_poll_t* task = &g_task_poll_table[i];
 
     // Kiểm tra nếu tác vụ có khả năng được bật
-    if (task->ability == true) {
+    //NOTE - Add defensive check to avoid null pointer dereference when calling task_poll handler
+    if (task->ability == true && task->task_poll != NULL) {
       // Thực thi hàm thực thi của tác vụ poll
       task->task_poll();
     }
@@ -375,7 +415,8 @@ void internal_uedp_task_norm_set_urgent(task_id_t tid) {
 
     // Loop để tìm bit 0 đầu tiên trong dãy 16-23
     for (ui8 p = 16; p <= 23; p++) {
-      if (!(g_task_norm_ready & (1 << p))) {
+      //NOTE - enforce unsigned
+      if (!(g_task_norm_ready & (1u << p))) {
         urgent_pri = (task_pri_t)p + UEDP_TASK_PRI_LEVEL_0; // Tính toán mức độ ưu tiên khẩn cấp dựa trên bit 0 đầu tiên tìm thấy
         break;
       }
@@ -421,24 +462,29 @@ RETR_STAT uedp_task_norm_post_urgent(task_id_t tid, uedp_msg_t* msg) {
     return STAT_ERROR; // Trả về lỗi nếu msg là NULL
   }
 
-  internal_uedp_task_norm_put_head_to_queue(tid, msg); // Đưa tin nhắn vào đầu hàng đợi của tác vụ đích
+  //NOTE - Add defensive check to avoid posting urgent message to a task that is not registered in the system
+  if (internal_uedp_task_norm_put_head_to_queue(tid, msg) != STAT_OK) {
+    return STAT_ERROR; // Không đưa được vào hàng đợi: không nâng ưu tiên, msg vẫn thuộc về caller
+  }
   internal_uedp_task_norm_set_urgent(tid); // Thiết lập mức độ ưu tiên khẩn cấp cho tác vụ đích
 
   return STAT_OK; // Trả về OK sau khi đã đăng ký tin nhắn khẩn cấp thành công
 }
 
-void internal_uedp_task_norm_put_head_to_queue(task_id_t tid, uedp_msg_t* msg) {
+RETR_STAT internal_uedp_task_norm_put_head_to_queue(task_id_t tid, uedp_msg_t* msg) {
+  RETR_STAT result = STAT_OK;
+
   // Kiểm tra xem tác vụ có tồn tại trong bảng tác vụ hay không
   task_norm_t* task = internal_uedp_task_get_task_norm_by_id(tid);
   if (task == NULL) {
     //NOTE - Minh: task == NULL đã được raise sẵn bên trong get_task_norm_by_id() ở trên.
-    return;
+    return STAT_ERROR;
   }
 
   // Kiểm tra fifo của tác vụ đã được khởi tạo chưa
   if (!fifo_isinit(&task->msg_queue)) {
     UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "put_head_to_queue: msg_queue not init");
-    return;
+    return STAT_ERROR;
   }
 
   // Entry critical section
@@ -448,11 +494,17 @@ void internal_uedp_task_norm_put_head_to_queue(task_id_t tid, uedp_msg_t* msg) {
   // Sửa bug: trước đây không kiểm tra return value của fifo_put_head(), khiến msg
   // bị mất âm thầm nếu queue đã đầy (cùng lớp bug đã fix ở put_to_queue()).
   if (fifo_put_head(&task->msg_queue, (uedp_msg_t*)(&msg)) == RET_FIFO_NG) {
-    UEDP_FCR_RAISE(UEDP_FCR_TASK_QUEUE_FULL);
+    result = STAT_ERROR;
   }
 
   // Exit critical section
   pal_exit_critical();
+
+  //NOTE - Add check to raise FCR if the task's message queue is full, to avoid losing messages silently
+  if (result != STAT_OK) {
+    UEDP_FCR_RAISE(UEDP_FCR_TASK_QUEUE_FULL);
+  }
+  return result;
 }
 
 /** ANCHOR - Lấy con trỏ đến máy trạng thái toàn cục (TSM) hiện đang gắn với một tác vụ message-driven

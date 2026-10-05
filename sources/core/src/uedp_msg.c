@@ -182,10 +182,26 @@ void uedp_msg_free(uedp_msg_t* msg) {
 }
 
 void uedp_msg_ref_inc(uedp_msg_t* msg) {
+	//NOTE - Add defensive check to avoid null pointer dereference and overflow of ref_count
+	if (msg == NULL) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "ref_inc: null msg");
+		return;
+	}
+	if (msg->ref_count == UINT16_MAX) {
+		return;
+	}
 	msg->ref_count++;
 }
 
 void uedp_msg_ref_dec(uedp_msg_t* msg) {
+	//NOTE - Add defensive check to avoid null pointer dereference and overflow of ref_count
+	if (msg == NULL) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "ref_dec: null msg");
+		return;
+	}
+	if (msg->ref_count == 0) {
+		return;
+	}
 	msg->ref_count--;
 	if (msg->ref_count == 0) {
 		uedp_msg_free(msg);
@@ -336,6 +352,15 @@ void internal_uedp_msg_pool_push(uedp_msg_pool_header_t* header, uedp_msg_t* msg
 		return;
 	}
 
+	//NOTE - Add defensive check to avoid double free and invalid pointer
+
+	for (uedp_msg_t* n = header->free_list; n != NULL; n = n->next) {
+		if (n == msg) {
+			UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "pool_push: double free");
+			return;
+		}
+	}
+
 	// Ngắt liên kết của tin nhắn với danh sách liên kết (nếu có)
 	msg->next = NULL;
 
@@ -379,7 +404,10 @@ void uedp_msg_drain_isr_pool(void) {
 		uedp_msg_t* msg = uedp_msg_alloc(msg_isr.des_task_id, msg_isr.sig, 0);
 
 		if (msg) {
-			uedp_task_norm_post_msg(msg->des_task_id, msg);
+			//NOTE - Add defensive check to ensure that the message is successfully allocated before posting it to the task
+			if (uedp_task_norm_post_msg(msg->des_task_id, msg) != STAT_OK) {
+				uedp_msg_free(msg);
+			}
 		} else {
 			// Cấp phát thất bại cho tin nhắn gốc từ ISR - uedp_msg_alloc() đã UEDP_FCR_RAISE()
 			// ngay bên trong rồi, không cần xử lý gì thêm ở đây.

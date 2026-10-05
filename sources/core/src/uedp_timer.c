@@ -7,8 +7,12 @@
  */
 #include <string.h>
 #include <stdint.h>
-#include <stdio.h>
-#include "unistd.h"
+
+//NOTE - lib only used for Linux platform, for debug purpose
+#ifdef UEDP_PLATFORM_LINUX
+	#include <stdio.h>
+#endif
+
 #include "uedp_core.h"
 #include "uedp_timer.h"
 #include "uedp_task.h"
@@ -34,7 +38,8 @@ sta ui32 sys_tick = 0x0u;
 sta uedp_timer_t timer_pool[UEDP_TIMER_MAX_NODES] = {0};
 sta uedp_timer_ctrl_t timer_ctrl = {0};
 
-sta uedp_timer_t* internal_uedp_timer_find(ui8 tid, ui8 sig) {
+//NOTE - mod from ui8 to ui16 to avoid overflow when UEDP_TIMER_MAX_NODES > 255
+sta uedp_timer_t* internal_uedp_timer_find(ui16 tid, ui8 sig) {
 	uedp_timer_t* curr = timer_ctrl.head;
 	while (curr) {
 		if (curr->des_task_id == tid && curr->sig == sig) return curr;
@@ -163,7 +168,10 @@ RETR_STAT uedp_timer_remove(ui16 tid, ui8 sig) {
 }
 
 /* Hàm này được gọi từ System Tick ISR (ví dụ mỗi 1ms) */
+//NOTE - Add critical section to protect the timer list from concurrent modification by set/remove functions
 void uedp_timer_tick(void) {
+	pal_enter_critical(); // Tick chạy ở ngữ cảnh ngắt, trong khi set/remove sửa cùng danh sách -> phải loại trừ lẫn nhau
+
 	sys_tick++;
 
 	uedp_timer_t* curr = timer_ctrl.head;
@@ -178,7 +186,6 @@ void uedp_timer_tick(void) {
 			if (curr->counter == 0) {
 				#ifdef UEDP_PLATFORM_LINUX
 					printf("[Timer] Timer expired: Task ID=%u, Signal=0x%02X\n", curr->des_task_id, curr->sig);
-					usleep(curr->period * 10); // Sleep for 3 * timer period to simulate processing delay and test timer accuracy under load
 				#endif
 
 				/* 1. Đã hết hạn -> Publish Event tới Task đích */
@@ -202,18 +209,31 @@ void uedp_timer_tick(void) {
 					expired->is_active = false;
 					expired->next = timer_ctrl.free_list;
 					timer_ctrl.free_list = expired;
-					timer_ctrl.active_count--;
+					//NOTE - Add defensive check to avoid underflow when decrementing active_count
+					if (timer_ctrl.active_count > 0) {
+						timer_ctrl.active_count--;
+					}
 					continue; // Bỏ qua việc gán prev
 				}
 			} else {
 				prev = curr;
 				curr = curr->next;
 			}
+		} else {
+			prev = curr;
+			curr = curr->next;
 		}
 	}
+
+	pal_exit_critical();
 }
 
 void uedp_timer_get_stats(ui8* active, ui8* max_capacity) {
+	if (!active || !max_capacity) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_TIMER_INVALID_PARAM, "get_stats: null out param");
+		return;
+	}
+	//NOTE - Add defensive check to avoid invalid param
 	*active = timer_ctrl.active_count;
 	*max_capacity = UEDP_TIMER_MAX_NODES;
 }

@@ -12,6 +12,7 @@
 #include "uedp_fsm.h"
 #include "uedp_tsm.h"
 #include "uedp_itnlog.h"
+#include "libcrc8.h"
 
 /** ANCHOR - Khai báo cấu trúc để lưu trữ thông tin về trạng thái của internal logger
  * @param total_captured Tổng số log entry đã được ghi lại trong internal logger
@@ -71,9 +72,40 @@ uedp_itnlog_entry_t internal_uedp_itnlog_remove_entry(void) {
 }
 
 void internal_uedp_itnlog_calc_hash(uedp_itnlog_entry_t* entry) {
-  ui8 divisor = 31; // Một số nguyên dương nhỏ để tính hash
-  ui8 dividend = entry->level + strlen(entry->tag) + entry->task_id + entry->msg_sig + strlen(entry->msg) + (entry->tmstmp % 1000);
-  entry->hash = (dividend * divisor) % 65536; // Tính hash và đảm bảo nó nằm trong phạm vi của ui16
+  uint8_t checksum = 0;
+  uint8_t byte;
+
+  if (entry == NULL) {
+    return;
+  }
+
+  byte = (uint8_t)entry->level;
+  checksum = crc8(&byte, 1, checksum);
+  byte = (uint8_t)(entry->task_id >> 8);
+  checksum = crc8(&byte, 1, checksum);
+  byte = (uint8_t)entry->task_id;
+  checksum = crc8(&byte, 1, checksum);
+  byte = (uint8_t)(entry->msg_sig >> 8);
+  checksum = crc8(&byte, 1, checksum);
+  byte = (uint8_t)entry->msg_sig;
+  checksum = crc8(&byte, 1, checksum);
+  byte = (uint8_t)(entry->tmstmp >> 8);
+  checksum = crc8(&byte, 1, checksum);
+  byte = (uint8_t)entry->tmstmp;
+  checksum = crc8(&byte, 1, checksum);
+
+  if (entry->tag != NULL) {
+    for (const uint8_t* cursor = (const uint8_t*)entry->tag; *cursor != '\0'; cursor++) {
+      checksum = crc8((uint8_t*)cursor, 1, checksum);
+    }
+  }
+  if (entry->msg != NULL) {
+    for (const uint8_t* cursor = (const uint8_t*)entry->msg; *cursor != '\0'; cursor++) {
+      checksum = crc8((uint8_t*)cursor, 1, checksum);
+    }
+  }
+
+  entry->hash = checksum;
 }
 
 void uedp_itnlog_init(void) {
@@ -115,7 +147,7 @@ void uedp_itnlog_dump(void) {
      */
     if (
       entry.level >= itnlog_filter_level && 
-      (itnlog_filter_tag == NULL || strcmp(entry.tag, itnlog_filter_tag) == 0)
+      (itnlog_filter_tag == NULL || (entry.tag != NULL && strcmp(entry.tag, itnlog_filter_tag) == 0))
     ) {
       // Logic để xuất log entry ra đích đến, có thể là console, file hoặc giao diện
       if (itnlog_output_func != NULL) {
@@ -163,8 +195,13 @@ void uedp_itnlog_set_filter(uedp_itnlog_level_t level, const char* tag) {
 }
 
 void uedp_itnlog_get_filter(uedp_itnlog_level_t* level, char* tag) {
-  *level = uedp_itnlog_get_level();
-  *tag = (char)(uintptr_t)uedp_itnlog_get_tag();
+  if (level != NULL) {
+    *level = uedp_itnlog_get_level();
+  }
+  if (tag != NULL) {
+    const char* cur_tag = uedp_itnlog_get_tag();
+    *tag = (cur_tag != NULL) ? cur_tag[0] : '\0';
+  }
 }
 
 void uedp_itnlog_set_output(void (*output_func)(const char*)) {
