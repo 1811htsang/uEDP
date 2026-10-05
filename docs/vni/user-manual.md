@@ -623,6 +623,10 @@ Sau khi sinh code tự động, tùy thuộc vào nền tảng sử dụng như 
 
 Ở uutobj F103 đã có sẵn một file `include.xml` mẫu để hỗ trợ việc add các headers và source files vào project STMCubeIDE, người dùng có thể tham khảo và chỉnh sửa lại cho phù hợp với nền tảng của mình.
 
+> Cập nhật mới trong phiên bản v1.1.6-bf2
+>
+> Trong phiên bản v1.1.6-bf2, file `include.xml` đã được loại bỏ các đường dẫn cụ thể của BSP nhằm tăng tính linh hoạt và khả năng tái sử dụng của file này. Người dùng có thể tự thêm các đường dẫn BSP phù hợp với nền tảng của mình vào file `include.xml` để đảm bảo rằng các headers và source files được add vào project một cách chính xác và đầy đủ.
+
 Ngoài ra, nhà phát triển cũng cung cấp sự hỗ trợ cho CMake với các file `CMakeLists.txt` mẫu để người dùng có thể sử dụng kiểm tra và biên dịch ứng dụng trên nền tảng Linux với cú pháp như sau:
 
 ```bash
@@ -649,6 +653,12 @@ Nếu người dùng muốn biên dịch thư viện trực tiếp từ repo g�
 rm -rf build && cmake -B build -DPLAT=TEST -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 make -C build
 ```
+
+> Cập nhật mới trong phiên bản v1.1.6-bf2
+>
+> Trong phiên bản v1.1.6-bf2, các module Bash-type được chuyển đổi hoàn toàn sang Python-type, do đó các script `entrypoint.sh`, `jainerator.sh` và `insert.sh` được thay thế bằng các script Python tương ứng. Điều này giúp cải thiện khả năng tương thích giữa các nền tảng và giảm thiểu lỗi do khác biệt về môi trường shell. Người dùng có thể sử dụng các script Python này để thực hiện các chức năng tương tự như trước đây, bao gồm việc insert testobj, validate và sinh code tự động từ Kconfig và pycdscriptor.
+>
+> Ngoài ra, Dockerfile giờ đây được xem như một công cụ hỗ trợ cho việc build và test, thay vì là một phần bắt buộc của quy trình phát triển. Người dùng có thể sử dụng Docker để tạo ra một môi trường phát triển nhất quán và dễ dàng quản lý các dependencies, nhưng cũng có thể lựa chọn sử dụng môi trường phát triển thủ công trực tiếp trên hệ thống của mình nếu muốn.
 
 ## IV. Các lưu ý quan trọng
 
