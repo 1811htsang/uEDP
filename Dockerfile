@@ -45,8 +45,5 @@ COPY . /uedp-libs
 RUN chmod -R 777 /uedp-libs
 # Add ESP-IDF environment variables to bashrc
 RUN echo "source $IDF_PATH/export.sh > /dev/null 2>&1" >> ~/.bashrc
-# Entry with entrypoint script
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-# Call entrypoint procedure
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+# Entry with ntrypont.py to setup user and run pipeline
+ENTRYPOINT ["python", "/uedp-libs/ntrypont.py", "--docker"]
