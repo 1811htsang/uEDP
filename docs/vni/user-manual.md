@@ -650,6 +650,12 @@ rm -rf build && cmake -B build -DPLAT=TEST -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 make -C build
 ```
 
+> Cập nhật mới trong phiên bản v1.1.6-bf2
+>
+> Trong phiên bản v1.1.6-bf2, các module Bash-type được chuyển đổi hoàn toàn sang Python-type, do đó các script `entrypoint.sh`, `jainerator.sh` và `insert.sh` được thay thế bằng các script Python tương ứng. Điều này giúp cải thiện khả năng tương thích giữa các nền tảng và giảm thiểu lỗi do khác biệt về môi trường shell. Người dùng có thể sử dụng các script Python này để thực hiện các chức năng tương tự như trước đây, bao gồm việc insert testobj, validate và sinh code tự động từ Kconfig và pycdscriptor.
+>
+> Ngoài ra, Dockerfile giờ đây được xem như một công cụ hỗ trợ cho việc build và test, thay vì là một phần bắt buộc của quy trình phát triển. Người dùng có thể sử dụng Docker để tạo ra một môi trường phát triển nhất quán và dễ dàng quản lý các dependencies, nhưng cũng có thể lựa chọn sử dụng môi trường phát triển thủ công trực tiếp trên hệ thống của mình nếu muốn.
+
 ## IV. Các lưu ý quan trọng
 
 - Việc phân bổ mức độ ưu tiên cho các tác vụ là rất quan trọng để đảm bảo rằng Core có thể xử lý tín hiệu một cách chính xác. Nếu tất cả các tác vụ đều có cùng mức độ ưu tiên thì Core sẽ gặp lỗi xử lý tín hiệu, do đó cần lưu ý việc phân bổ mức độ ưu tiên cho các tác vụ trong hệ thống.
