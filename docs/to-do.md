@@ -585,13 +585,7 @@ Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST
 - [x] @! TID[epic=v1.1.6-bf2] ARCH-002 <+ Sửa đổi `include.xml` để loại bỏ các đường dẫn specific của nền tảng trong include.
 - [x] @! TID[epic=v1.1.6-bf2] DOCS-005 <+ Sửa đổi user-manual.md để bổ sung các hướng dẫn sử dụng mới cho các tính năng được triển khai trong phiên bản 1.1.6-bf2.
 - [x] @! TID[epic=v1.1.6-bf2] DOCS-006 <+ Bổ sung các sửa đổi trong tài liệu thiết kế PLTF để phản ánh các thay đổi về module name và thiết kế logic của các module trong phiên bản 1.1.6-bf2.
-- [ ] @! TID[epic=v1.1.7/arch] ARCH-001 <+ Bổ sung API cho uutobj H723.
-- [ ] @! TID[epic=v1.1.7/BST] TEST-001 <+ Bổ sung testobj-v1 để chuẩn bị cho BST task.
-- [ ] @! TID[epic=v1.1.7/BST] REPO-001 <+ Cân nhắc repotize 2 prjecobj-linux và projecobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
-- [ ] @! TID[epic=v1.1.7/BST] TEST-002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
-
-<!-- NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6. -->
-
+- [x] @! TID[epic=v1.1.7/BST] REPO-001 <+ Cân nhắc repotize 2 prjecobj-linux và projecobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
 - [ ] @! TID[epic=PSE] COR-001 <+ Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
 - [ ] @! TID[epic=PSE] DOC-003 <+ Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
 
@@ -629,6 +623,12 @@ Ngoài ra, các tính năng nâng cao như lọc tin nhắn theo topic, QoS (Qua
 
 //  !SECTION
 -->
+
+- [ ] @! TID[epic=v1.1.7/arch] ARCH-001 <+ Bổ sung API cho uutobj H723.
+- [ ] @! TID[epic=v1.1.7/BST] TEST-001 <+ Bổ sung testobj-v1 để chuẩn bị cho BST task.
+- [ ] @! TID[epic=v1.1.7/BST] TEST-002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
+
+<!-- NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6. -->
 
 - [ ] Ra mắt phiên bản 1.1.6 của lõi μEDP với đầy đủ tính năng PLD/μE-LS, Pub/Sub engine và tài liệu hướng dẫn sử dụng.
 
