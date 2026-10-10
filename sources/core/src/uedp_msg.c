@@ -679,11 +679,15 @@ RETR_STAT uedp_msg_clear_topic(ui16 sig, task_norm_t task_list[]) {
 	return STAT_OK;
 }
 
+RETR_STAT internal_msg_pse_post_no_data(ui16 task_id, ui16 sig);
+RETR_STAT internal_msg_pse_post_data_out_range(ui16 task_id, ui16 sig, void* data);
+
 RETR_STAT uedp_msg_publish(ui16 sig, void* data) {
 	ui32 task_mask = g_tpm_matrix[sig];
 	for (ui16 task_id = 0; task_id < 32; task_id++) {
 		if (task_mask & (1u << task_id)) {
 			if (sizeof(data) > 0) {
+				// NOTE - data in range UEDP_MSG_ALLOC_DATA_MAX, send signal with payload
 				uedp_msg_t* msg = uedp_msg_alloc(task_id, sig, sizeof(data));
 				if (msg) {
 					uedp_msg_set_src_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi từ tất cả các task
@@ -696,40 +700,62 @@ RETR_STAT uedp_msg_publish(ui16 sig, void* data) {
 				} else {
 					// NOTE - trường hợp không thể cấp phát tin nhắn do sizeof(data) > UEDP_MSG_ALLOC_DATA_MAX sẽ thực hiện đăng ký GDP để lưu dữ liệu, 
 					// sau đó gửi tín hiệu kèm dữ liệu từ GDP. Nếu đăng ký GDP thất bại, sẽ raise lỗi và trả về STAT_ERROR.
-					RETR_STAT stat = uedp_gdp_register("publish", data, sizeof(data)); // Lưu dữ liệu vào GDP để các task có thể lấy sau
+					RETR_STAT stat = internal_msg_pse_post_data_out_range(task_id, sig, data);
 					if (stat != STAT_OK) {
-						return STAT_ERROR;
-						// NOTE - Các lỗi khi đăng ký GDP sẽ được raise trong uedp_gdp_register(), không cần xử lý gì thêm ở đây.
-					}
-
-					uedp_msg_t* msg = uedp_msg_alloc(task_id, sig, UEDP_MSG_ALLOC_DATA_MAX); // Gửi tín hiệu mà không có payload
-					if (msg) {
-						uedp_msg_set_src_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi từ tất cả các task
-						uedp_msg_set_des_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi đến tất cả các task đăng ký tín hiệu
-						uedp_gdp_get_val("publish", msg->data, UEDP_MSG_ALLOC_DATA_MAX); // Lấy dữ liệu từ GDP để gửi
-						if (uedp_task_norm_post_msg(task_id, msg) != STAT_OK) {
-							uedp_msg_free(msg);
-						}
-					} else {
-						UEDP_FCR_RAISE(UEDP_FCR_MSG_POOL_EXHAUSTED);
-						return STAT_ERROR; // Không thể cấp phát tin nhắn
+						return stat;
 					}
 				}
 			} else {
 				// NOTE - Nếu không có dữ liệu, chỉ gửi tín hiệu mà không cần payload
-				uedp_msg_t* msg = uedp_msg_alloc(task_id, sig, 0);
-				if (msg) {
-					uedp_msg_set_src_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi từ tất cả các task
-					uedp_msg_set_des_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi đến tất cả các task đăng ký tín hiệu
-					if (uedp_task_norm_post_msg(task_id, msg) != STAT_OK) {
-						uedp_msg_free(msg);
-					}
-				} else {
-					UEDP_FCR_RAISE(UEDP_FCR_MSG_POOL_EXHAUSTED);
-					return STAT_ERROR; // Không thể cấp phát tin nhắn
+				RETR_STAT stat = internal_msg_pse_post_no_data(task_id, sig);
+				if (stat != STAT_OK) {
+					return stat;
 				}
 			}
 		}
+	}
+	return STAT_OK;
+}
+
+RETR_STAT internal_msg_pse_post_no_data(ui16 task_id, ui16 sig) {
+	uedp_msg_t* msg = uedp_msg_alloc(task_id, sig, 0);
+	if (msg) {
+		uedp_msg_set_src_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi từ tất cả các task
+		uedp_msg_set_des_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi đến tất cả các task đăng ký tín hiệu
+		if (uedp_task_norm_post_msg(task_id, msg) != STAT_OK) {
+			uedp_msg_free(msg);
+			return STAT_ERROR; // Không thể gửi tin nhắn
+		}
+	} else {
+		UEDP_FCR_RAISE(UEDP_FCR_MSG_POOL_EXHAUSTED);
+		return STAT_ERROR; // Không thể cấp phát tin nhắn
+	}
+	return STAT_OK;
+}
+
+RETR_STAT internal_msg_pse_post_data_out_range(ui16 task_id, ui16 sig, void* data) {
+	if (!data) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PARAM, "post_data_out_range: null data");
+		return STAT_ERROR;
+	}
+
+	RETR_STAT stat = uedp_gdp_register("publish", data, sizeof(data)); // Lưu dữ liệu vào GDP để các task có thể lấy sau
+	if (stat != STAT_OK) {
+		return STAT_ERROR; // NOTE - Các lỗi khi đăng ký GDP sẽ được raise trong uedp_gdp_register(), không cần xử lý gì thêm ở đây.
+	}
+
+	uedp_msg_t* msg = uedp_msg_alloc(task_id, sig, UEDP_MSG_ALLOC_DATA_MAX); // Gửi tín hiệu mà không có payload
+	if (msg) {
+		uedp_msg_set_src_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi từ tất cả các task
+		uedp_msg_set_des_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi đến tất cả các task đăng ký tín hiệu
+		uedp_gdp_get_val("publish", msg->data, UEDP_MSG_ALLOC_DATA_MAX); // Lấy dữ liệu từ GDP để gửi
+		if (uedp_task_norm_post_msg(task_id, msg) != STAT_OK) {
+			uedp_msg_free(msg);
+			return STAT_ERROR; // Không thể gửi tin nhắn
+		}
+	} else {
+		UEDP_FCR_RAISE(UEDP_FCR_MSG_POOL_EXHAUSTED);
+		return STAT_ERROR; // Không thể cấp phát tin nhắn
 	}
 	return STAT_OK;
 }
