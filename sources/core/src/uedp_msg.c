@@ -30,7 +30,7 @@ typedef struct uedp_msg_pool_header_t {
  * 						nên khi khởi tạo pool cần đảm bảo tính toán đúng offset để tránh tràn bộ nhớ hoặc ghi đè dữ liệu
  */
 
- // ANCHOR - Blank pool với kích thước là 8 32-bits units
+// ANCHOR - Blank pool với kích thước là 8 32-bits units
 
 sta uedp_msg_t blank_pool[UEDP_MSG_BLANK_QUEUE_SIZE] = {0};
 uedp_msg_pool_header_t g_blank_pool_ctrl = {0};
@@ -83,8 +83,9 @@ sta void internal_uedp_msg_pool_init(
 sta uedp_msg_t* internal_uedp_msg_pool_pop(uedp_msg_pool_header_t* header);
 sta void internal_uedp_msg_pool_push(uedp_msg_pool_header_t* header, uedp_msg_t* msg);
 sta uedp_msg_pool_header_t* internal_uedp_msg_find_best_pool(ui16 size);
-sta bool uedp_msg_is_valid_ptr(uedp_msg_t* msg);
+sta bool internal_uedp_msg_is_valid_ptr(uedp_msg_t* msg);
 sta uedp_gdp_slot_t* internal_uedp_gdp_find(const char* name);
+sta void internal_msg_release(uedp_msg_t* msg);
 
 void uedp_msg_pool_init() {
 	// Khởi tạo BLANK Pool
@@ -152,7 +153,7 @@ uedp_msg_t* uedp_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 }
 
 void uedp_msg_free(uedp_msg_t* msg) {
-	if (!msg || !uedp_msg_is_valid_ptr(msg)) {
+	if (!msg || !internal_uedp_msg_is_valid_ptr(msg)) {
 		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "free: null or invalid ptr");
 		return;
 	}
@@ -422,7 +423,7 @@ void uedp_msg_drain_isr_pool(void) {
  * @return true nếu con trỏ tin nhắn hợp lệ (được cấp phát từ một trong các Pool tin nhắn)
  * @return false nếu con trỏ tin nhắn không hợp lệ (không được cấp phát từ bất kỳ Pool tin nhắn nào)
  */
-bool uedp_msg_is_valid_ptr(uedp_msg_t* msg) {
+bool internal_uedp_msg_is_valid_ptr(uedp_msg_t* msg) {
 	if (!msg) {
 		return false; // Con trỏ NULL không hợp lệ - caller (uedp_msg_free) sẽ raise MSG_INVALID_PTR
 	}
@@ -623,4 +624,112 @@ sta uedp_gdp_slot_t* internal_uedp_gdp_find(const char* name) {
 	}
 
 	return NULL;
+}
+
+/** ANCHOR - Bảng ma trận TPM (Task-Priority Matrix) - dùng để xác định thông tin các task đăng ký tín hiệu
+ * @note 1 item trong ma trận TPM là 1 ui32, mỗi bit trong ui32 đại diện cho 1 task (tối đa 32 task), 
+ * 			 1 item sẽ có index tương ứng với 1 tín hiệu (signal)
+ * @example ví dụ: g_tpm_matrix[0] là ma trận cho tín hiệu 0, g_tpm_matrix[1] là ma trận cho tín hiệu 1, ...
+ * @attention Ma trận TPM này chỉ được sử dụng trong ngữ cảnh core, không được truy cập trực tiếp từ ISR hoặc các task khác,
+ * 						để tránh Race Condition và đảm bảo tính nhất quán của dữ liệu.
+ * @attention Do thiết kế gốc ràng buộc task norm bắt đầu từ 0xE4, cần đảm bảo có offset phù hợp khi truy cập ma trận TPM, tránh ghi đè sai dữ liệu.
+ */
+ui32 g_tpm_matrix[UEDP_TBM_MAX_SIZE] = {0};
+
+void internal_msg_release(uedp_msg_t* msg) {
+	pal_enter_critical(); // Bắt buộc phải khóa ngắt để tránh Race Condition
+	
+	if (msg->ref_count > 0) {
+		msg->ref_count--;
+	}
+	
+	// Chỉ khi tất cả các Task đã xử lý xong thì mới thực sự trả về Pool
+	if (msg->ref_count == 0) {
+		uedp_msg_free(msg);
+	}
+	
+	pal_exit_critical();
+}
+
+RETR_STAT uedp_msg_register_topic(ui16 sig, task_norm_t task_list[]) {
+	ui32 task_mask = 0;
+	for (int i = 0; task_list[i].id >= UEDP_TASK_NORM_MIN_ID && task_list[i].id < UEDP_TASK_NORM_MAX_ID; i++) {
+		if (task_list[i].id < 32) { // Giới hạn số lượng task tối đa là 32, vì mỗi bit trong ui32 đại diện cho 1 task
+			task_mask |= (1u << task_list[i].id);
+		} else {
+			UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PARAM, "register_topic: task_id out of range");
+			return STAT_ERROR; // Task ID vượt quá giới hạn, không hợp lệ
+		}
+	}
+	g_tpm_matrix[sig] = task_mask;
+	return STAT_OK;
+}
+
+RETR_STAT uedp_msg_clear_topic(ui16 sig, task_norm_t task_list[]) {
+	ui32 task_mask = 0;
+	for (int i = 0; task_list[i].id >= UEDP_TASK_NORM_MIN_ID && task_list[i].id < UEDP_TASK_NORM_MAX_ID; i++) {
+		if (task_list[i].id < 32) { // Giới hạn số lượng task tối đa là 32, vì mỗi bit trong ui32 đại diện cho 1 task
+			task_mask |= (1u << task_list[i].id);
+		} else {
+			UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PARAM, "clear_topic: task_id out of range");
+			return STAT_ERROR; // Task ID vượt quá giới hạn, không hợp lệ
+		}
+	}
+	g_tpm_matrix[sig] &= ~task_mask; // Xóa các bit tương ứng với các task trong danh sách
+	return STAT_OK;
+}
+
+RETR_STAT uedp_msg_publish(ui16 sig, void* data) {
+	ui32 task_mask = g_tpm_matrix[sig];
+	for (ui16 task_id = 0; task_id < 32; task_id++) {
+		if (task_mask & (1u << task_id)) {
+			if (sizeof(data) > 0) {
+				uedp_msg_t* msg = uedp_msg_alloc(task_id, sig, sizeof(data));
+				if (msg) {
+					uedp_msg_set_src_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi từ tất cả các task
+					uedp_msg_set_des_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi đến tất cả các task đăng ký tín hiệu
+					memcpy(msg->data, data, sizeof(data));
+					if (uedp_task_norm_post_msg(task_id, msg) != STAT_OK) {
+						uedp_msg_free(msg);
+						// NOTE - Các lỗi khi gửi tin nhắn sẽ được raise trong uedp_task_norm_post_msg(), không cần xử lý gì thêm ở đây.
+					}
+				} else {
+					// NOTE - trường hợp không thể cấp phát tin nhắn do sizeof(data) > UEDP_MSG_ALLOC_DATA_MAX sẽ thực hiện đăng ký GDP để lưu dữ liệu, 
+					// sau đó gửi tín hiệu kèm dữ liệu từ GDP. Nếu đăng ký GDP thất bại, sẽ raise lỗi và trả về STAT_ERROR.
+					RETR_STAT stat = uedp_gdp_register("publish", data, sizeof(data)); // Lưu dữ liệu vào GDP để các task có thể lấy sau
+					if (stat != STAT_OK) {
+						return STAT_ERROR;
+						// NOTE - Các lỗi khi đăng ký GDP sẽ được raise trong uedp_gdp_register(), không cần xử lý gì thêm ở đây.
+					}
+
+					uedp_msg_t* msg = uedp_msg_alloc(task_id, sig, UEDP_MSG_ALLOC_DATA_MAX); // Gửi tín hiệu mà không có payload
+					if (msg) {
+						uedp_msg_set_src_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi từ tất cả các task
+						uedp_msg_set_des_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi đến tất cả các task đăng ký tín hiệu
+						uedp_gdp_get_val("publish", msg->data, UEDP_MSG_ALLOC_DATA_MAX); // Lấy dữ liệu từ GDP để gửi
+						if (uedp_task_norm_post_msg(task_id, msg) != STAT_OK) {
+							uedp_msg_free(msg);
+						}
+					} else {
+						UEDP_FCR_RAISE(UEDP_FCR_MSG_POOL_EXHAUSTED);
+						return STAT_ERROR; // Không thể cấp phát tin nhắn
+					}
+				}
+			} else {
+				// NOTE - Nếu không có dữ liệu, chỉ gửi tín hiệu mà không cần payload
+				uedp_msg_t* msg = uedp_msg_alloc(task_id, sig, 0);
+				if (msg) {
+					uedp_msg_set_src_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi từ tất cả các task
+					uedp_msg_set_des_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST); // Gửi đến tất cả các task đăng ký tín hiệu
+					if (uedp_task_norm_post_msg(task_id, msg) != STAT_OK) {
+						uedp_msg_free(msg);
+					}
+				} else {
+					UEDP_FCR_RAISE(UEDP_FCR_MSG_POOL_EXHAUSTED);
+					return STAT_ERROR; // Không thể cấp phát tin nhắn
+				}
+			}
+		}
+	}
+	return STAT_OK;
 }
