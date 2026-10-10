@@ -35,6 +35,7 @@
   #define UEDP_FCR_MOD_OCE      (0x95u) // Module Out-Context Execution (uedp_ocesvc)
   #define UEDP_FCR_MOD_PAL      (0x96u) // Module PAL / dịch vụ phần cứng (logdp, rprintf, memrp, arch...)
   #define UEDP_FCR_MOD_GDP      (0x97u) // Module Global Data Pool (dpool GDP trong uedp_msg.c, định danh nội bộ GAXES)
+  #define UEDP_FCR_MOD_LIB      (0x98u) // Module thư viện bên ngoài tại sources/common
   #define UEDP_FCR_MOD_APP      (0x9Eu) // Dành riêng cho tầng ứng dụng tự khai báo mã lỗi
   #define UEDP_FCR_MOD_UNK      (0x9Fu) // Module không xác định / fallback
 
@@ -82,14 +83,18 @@
   #define UEDP_FCR_OCE_APPEND_FAILED      UEDP_FCR_CODE(UEDP_FCR_MOD_OCE, 0x02) // llist_append() thất bại khi đăng ký service (lỗi nội bộ linked-list)
   #define UEDP_FCR_OCE_NOT_INIT           UEDP_FCR_CODE(UEDP_FCR_MOD_OCE, 0x03) // ocesvc_scheduler() được gọi trước khi ocesvc_ctrl_init() chạy (danh sách liên kết chưa có sentinel head)
 
-  // NOT - [PAL] - 0x96xx
+  // NOTE - [PAL] - 0x96xx
   #define UEDP_FCR_PAL_FATAL_API_CALLED   UEDP_FCR_CODE(UEDP_FCR_MOD_PAL, 0x00) // pal_sys_fatal() has been called
   #define UEDP_FCR_PAL_LOGDP_TABLE_FULL   UEDP_FCR_CODE(UEDP_FCR_MOD_PAL, 0x01) // Bảng đăng ký callback của logdp đã đầy
 
+  // NOTE - [GDP] - 0x97xx
   #define UEDP_FCR_GDP_TABLE_FULL         UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x00) // Không còn slot trống trong GDP để đăng ký thêm biến toàn cục (UEDP_GDP_QUEUE_SIZE)
   #define UEDP_FCR_GDP_NOT_FOUND          UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x01) // Không tìm thấy tên biến đã đăng ký trong GDP (get_ref/get_val/set_val/unregister)
   #define UEDP_FCR_GDP_INVALID_PARAM      UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x02) // Tham số không hợp lệ (name/data_ptr NULL, size=0) hoặc buffer đích quá nhỏ/sai kích thước
   #define UEDP_FCR_GDP_DUPLICATE_NAME     UEDP_FCR_CODE(UEDP_FCR_MOD_GDP, 0x03) // Đăng ký trùng tên biến đã tồn tại trong GDP
+
+  // NOTE - [LIB] - 0x98xx
+  #define UEDP_FCR_LIB_COLLAPSE           UEDP_FCR_CODE(UEDP_FCR_MOD_LIB, 0x00) // Thư viện tại sources/common đã bị sụp đổ (các hàm không thể hoạt động bình thường)
 
   // Fallback
   #define UEDP_FCR_UNKNOWN                UEDP_FCR_CODE(UEDP_FCR_MOD_UNK, 0xFF) // Mã lỗi không tra được trong bảng (không có entry tương ứng)
