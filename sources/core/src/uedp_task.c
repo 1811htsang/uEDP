@@ -92,6 +92,7 @@ RETR_STAT uedp_task_norm_post_msg(task_id_t dest_id, uedp_msg_t* msg) {
   }
   //NOTE - Add defensive check to avoid posting message to a task that is not registered in the system
   if (internal_uedp_task_norm_put_to_queue(dest_id, msg) != STAT_OK) {
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_PUT_FAILED, "post_msg: unable to enqueue msg to task queue");
     return STAT_ERROR; // Không đưa được vào hàng đợi: không đặt ready, msg vẫn thuộc về caller
   }
   task_norm_t* dest = internal_uedp_task_get_task_norm_by_id(dest_id);
