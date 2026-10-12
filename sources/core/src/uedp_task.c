@@ -182,6 +182,7 @@ bool uedp_task_norm_is_ready(task_id_t task_id) {
       return (g_task_norm_ready & (1u << (pri - UEDP_TASK_PRI_LEVEL_0))) != 0; // Trả về true nếu tác vụ có mức độ ưu tiên tương ứng đang ở trạng thái sẵn sàng
     }
   }
+  UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "is_ready: task_id not found in table");
   return false; // Không có task nào mang ID này trong bảng
 }
 
@@ -467,6 +468,7 @@ RETR_STAT uedp_task_norm_post_urgent(task_id_t tid, uedp_msg_t* msg) {
   //NOTE - Add defensive check to avoid posting urgent message to a task that is not registered in the system
   if (internal_uedp_task_norm_put_head_to_queue(tid, msg) != STAT_OK) {
     return STAT_ERROR; // Không đưa được vào hàng đợi: không nâng ưu tiên, msg vẫn thuộc về caller
+    // NOTE - Đã được raise UEDP_FCR_TASK_QUEUE_FULL bên trong internal_uedp_task_norm_put_head_to_queue() nên không cần raise thêm ở đây
   }
   internal_uedp_task_norm_set_urgent(tid); // Thiết lập mức độ ưu tiên khẩn cấp cho tác vụ đích
 
