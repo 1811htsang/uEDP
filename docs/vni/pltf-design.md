@@ -207,6 +207,10 @@ So với bản KwDI gốc (chỉ `python:3.13-slim` + `kconfiglib`), Dockerfile 
 - Cài `gosu` để hạ quyền từ `root` xuống user thường trước khi vào shell tương tác.
 - `ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]` thay vì `CMD` gọi thẳng `python uedp.py menuconfig` như bản gốc.
 
+> Cập nhật mới trong phiên bản v1.1.6-bf2
+>
+> Trong phiên bản v1.1.6-bf2, docker đã trở thành một lựa chọn thay vì bắt buộc. Người dùng có thể chạy trực tiếp trên host nếu đã cài Python 3.13, Jinja2, pytest, pyserial, kconfiglib và ESP-IDF v5.1. Tuy nhiên, để đảm bảo tính nhất quán giữa các máy phát triển khác nhau, vẫn khuyến nghị sử dụng Docker.
+
 ### 4.2 `entrypoint.sh`
 
 ```bash
@@ -243,6 +247,10 @@ Bốn điểm thiết kế đáng chú ý:
 - 4 giai đoạn nối tiếp trong cùng một lần chạy container: `menuconfig` (KwDI, giữ nguyên) → `fpregen` (pre-logicdef, sinh khai báo Kconfig-based, mục 3.4) → `cgen` (post-logicdef, sinh `app.c` từ YAML μE-LS đã validate, mục 3.5) → `ustab.custab` (đối chiếu, xuất bảng ký hiệu). Với người dùng, trải nghiệm vẫn là "một lệnh, một lần chạy", nhưng bên trong là 4 pipeline tách biệt, có thể gọi lại độc lập bằng `python -m pltf.pycdscriptor....`.
 - So với bản PLTF ban đầu (chỉ có 2 ENTRY: menuconfig + 1 script sinh code duy nhất), việc tách thêm ENTRY 3/4 phản ánh đúng việc pipeline μE-LS (mục 3.5) đã được tích hợp thật vào orchestration, không còn là script debug độc lập.
 - `exec gosu uedp_user bash` ở cuối: sau khi sinh code xong, container không thoát ngay mà rơi vào shell với quyền user thường, cho phép làm việc tiếp (`cd /uedp-test` để phát triển PLTF, hoặc `exit` để chỉ lấy code vừa sinh).
+
+> Cập nhật mới trong phiên bản v1.1.6-bf2
+>
+> Trong phiên bản v1.1.6-bf2, các module Bash-type được chuyển đổi hoàn toàn sang Python-type, do đó các script `entrypoint.sh`, `jainerator.sh` và `insert.sh` được thay thế bằng các script Python tương ứng nhưng vẫn giữ nguyên chức năng.
 
 ### 4.3 `docker-compose.yaml`
 
@@ -299,13 +307,17 @@ Giữ nguyên từ KwDI, không đổi — vẫn loại `docs/` (chứa PDF tham
 - `lstaxer.nullremov` đang bị đánh dấu có thể dư thừa: `docs/to-do.md` ghi nhận cân nhắc loại bỏ module này khỏi pipeline chung vì có thể làm phức tạp thêm việc parse mà không mang lại lợi ích tương xứng - cần theo dõi quyết định cuối cùng để cập nhật lại mục 3.5 nếu module bị loại bỏ.
 - Chưa có BST (Basic Software Test) trên phần cứng thật cho pipeline PLD/μE-LS: mới dừng ở mức sinh code + review thiết kế, chưa có vòng kiểm thử thực tế xác nhận `app.c` sinh ra từ μE-LS chạy đúng trên hardware.
 
-<!-- STATUS
+<!-- NOTE
 1. Add task to remove dead code in `uedp.py` related to `sys.path` manipulation.
 2. The position of `ustab.custab` in `entrypoint.sh` is aleady fit for the design, therefore no change is needed.
 3. Approved, can be split as a parameterized option to skip `menuconfig` for CI/CD usage.
 4. Not approved, `/pltf` test suite has already meant to be CI/CD until now, therfore, the task is not needed and leaving non-unit test is intentional for bug fixing as a training session for newcomers.
 5. Approved, `lstaxer.nullremov` has completely been removed from the pipeline, therefore the task is not needed.
 6. Approved, BST on real hardware is not in the scope of this document, therefore the task has already appeaered in `docs/to-do.md` and is not needed to be repeated here.
+-->
+
+<!-- STATUS
+Trong bản v1.1.6, các task đã được hoàn thành hoặc được đánh dấu là không cần thiết, do đó các mục trong danh sách việc còn thiếu đã được cập nhật và không còn tồn tại các vấn đề chưa giải quyết.
 -->
 
 ## 7. Kết luận

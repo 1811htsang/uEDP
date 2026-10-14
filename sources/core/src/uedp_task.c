@@ -92,6 +92,7 @@ RETR_STAT uedp_task_norm_post_msg(task_id_t dest_id, uedp_msg_t* msg) {
   }
   //NOTE - Add defensive check to avoid posting message to a task that is not registered in the system
   if (internal_uedp_task_norm_put_to_queue(dest_id, msg) != STAT_OK) {
+    // NOTE - Đã được raise UEDP_FCR_TASK_PUT_FAILED bên trong internal_uedp_task_norm_put_to_queue() nên không cần raise thêm ở đây
     return STAT_ERROR; // Không đưa được vào hàng đợi: không đặt ready, msg vẫn thuộc về caller
   }
   task_norm_t* dest = internal_uedp_task_get_task_norm_by_id(dest_id);
@@ -181,6 +182,7 @@ bool uedp_task_norm_is_ready(task_id_t task_id) {
       return (g_task_norm_ready & (1u << (pri - UEDP_TASK_PRI_LEVEL_0))) != 0; // Trả về true nếu tác vụ có mức độ ưu tiên tương ứng đang ở trạng thái sẵn sàng
     }
   }
+  UEDP_FCR_RAISE_MSG(UEDP_FCR_TASK_INVALID_ID, "is_ready: task_id not found in table");
   return false; // Không có task nào mang ID này trong bảng
 }
 
@@ -237,6 +239,7 @@ RETR_STAT internal_uedp_task_norm_put_to_queue(task_id_t tid, uedp_msg_t* msg) {
 
   // Đưa tin nhắn vào hàng đợi của tác vụ
   if (fifo_put(&task->msg_queue, (uedp_msg_t*)(&msg)) == RET_FIFO_NG) {
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_LIB_COLLAPSE, "put_to_queue: fifo_put failed");
     result = STAT_ERROR;
   }
 
@@ -465,6 +468,7 @@ RETR_STAT uedp_task_norm_post_urgent(task_id_t tid, uedp_msg_t* msg) {
   //NOTE - Add defensive check to avoid posting urgent message to a task that is not registered in the system
   if (internal_uedp_task_norm_put_head_to_queue(tid, msg) != STAT_OK) {
     return STAT_ERROR; // Không đưa được vào hàng đợi: không nâng ưu tiên, msg vẫn thuộc về caller
+    // NOTE - Đã được raise UEDP_FCR_TASK_QUEUE_FULL bên trong internal_uedp_task_norm_put_head_to_queue() nên không cần raise thêm ở đây
   }
   internal_uedp_task_norm_set_urgent(tid); // Thiết lập mức độ ưu tiên khẩn cấp cho tác vụ đích
 

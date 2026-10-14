@@ -53,12 +53,12 @@
 		
 		/* Quản lý bộ nhớ & Pool */
 		ui16  type;          	/* uedp_msg_type_t */
-		ui16  ref_count;     	/* Số lượng tham chiếu (dùng cho broadcast) */
+		ui8  ref_count;     	/* Số lượng tham chiếu (dùng cho broadcast) */
 
 		/* Payload dữ liệu */
 		ui32* data;          	/* Con trỏ đến vùng dữ liệu */
 
-		/* Metadata hỗ trợ interface */
+		/* Metadata hỗ trợ interface cho các ngoại vi như UART, SPI, I2C... */
 		// struct {
 		// 	ui16 if_src_type;
 		// 	ui16 if_sig;
@@ -226,5 +226,11 @@
 	 * @return RETR_STAT STAT_OK nếu thành công
 	 */
 	RETR_STAT uedp_gdp_set_val(const char* name, const void* in_buf, ui16 buf_size);
+
+	RETR_STAT uedp_msg_register_topic(ui16 sig, task_norm_t task_list[]);
+
+	RETR_STAT uedp_msg_clear_topic(ui16 sig, task_norm_t task_list[]);
+
+	RETR_STAT uedp_msg_publish(ui16 sig, void* data);
 
 #endif //__UEDP_MSG_H__

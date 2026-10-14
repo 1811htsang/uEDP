@@ -27,6 +27,7 @@ Chỉ số (INDEX) là một số nguyên duy nhất để phân biệt các Tas
 4. `[TEST - XXX]` dành cho các tác vụ liên quan đến kiểm thử, bao gồm các tác vụ như kiểm thử đơn vị, kiểm thử tích hợp, và các tác vụ khác liên quan đến kiểm thử.
 5. `[NETW - XXX]` dành cho các tác vụ liên quan đến mạng, bao gồm các tác vụ như cấu hình mạng, kiểm tra kết nối, và các tác vụ khác liên quan đến mạng.
 6. `[REPO - XXX]` dành cho các tác vụ liên quan đến kho lưu trữ mã nguồn, bao gồm các tác vụ như quản lý nhánh, hợp nhất mã nguồn, và các tác vụ khác liên quan đến kho lưu trữ.
+7. `[ARCH - XXX]` dành cho các tác vụ liên quan đến bổ sung support cho PAL.
 
 ## Directive cho Comment Anchors
 
