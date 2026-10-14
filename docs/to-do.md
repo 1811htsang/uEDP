@@ -586,12 +586,16 @@ Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST
 - [x] @! TID[epic=v1.1.6-bf2] DOCS-005 <+ Sửa đổi user-manual.md để bổ sung các hướng dẫn sử dụng mới cho các tính năng được triển khai trong phiên bản 1.1.6-bf2.
 - [x] @! TID[epic=v1.1.6-bf2] DOCS-006 <+ Bổ sung các sửa đổi trong tài liệu thiết kế PLTF để phản ánh các thay đổi về module name và thiết kế logic của các module trong phiên bản 1.1.6-bf2.
 - [x] @! TID[epic=v1.1.7/BST] REPO-001 <+ Cân nhắc repotize 2 prjecobj-linux và projecobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
-- [ ] @! TID[epic=PSE] CORE-001 <+ Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
-- [ ] @! TID[epic=PSE] DOCS-003 <+ Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
+- [x] @! TID[epic=v1.1.7/PSE] CORE-001 <+ Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
+- [x] @! TID[epic=v1.1.6-bf3/bf2-fcr-missing] CORE-003 <+ Rà soát lại các sửa đổi của phiên bản 1.1.6-bf2 để bổ sung các FCR raise bị thiếu.
+- [x] @! TID[epic=v1.1.6-bf3/common] CORE-004 <+ Rà soát lại các lib để bổ sung các FCR raise bị thiếu hoặc cần cover.
+- [x] @! TID[epic=v1.1.6-bf3/common] DOCS-007 <+ Bổ sung tài liệu quy chuẩn thiết kế code.
+- [ ] @! TID[epic=v1.1.7/PSE] CORE-005 <+ Review lại implementation của PSE để xử lý các vấn đề liên quan đến việc gửi tin nhắn tới nhiều task đã đăng ký, đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
+- [ ] @! TID[epic=v1.1.7/PSE] DOCS-003 <+ Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
 
 <!-- SECTION - PSE
 
-# TASK - Minh nên bổ sung thêm 1 tài liệu review về ý tưởng cho PSE tại docs/review/pse.md để thống nhất các ý tưởng và đề xuất cải tiến cho Pub/Sub engine của μEDP.
+# DEPRECATED - Old TASK - Minh nên bổ sung thêm 1 tài liệu review về ý tưởng cho PSE tại docs/review/pse.md để thống nhất các ý tưởng và đề xuất cải tiến cho Pub/Sub engine của μEDP.
 
 # DEPRECATED - Old TASK - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và lổn định.
 
