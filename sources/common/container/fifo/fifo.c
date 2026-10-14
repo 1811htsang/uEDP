@@ -16,15 +16,14 @@
 
 void fifo_init(fifo_t* fifo, void* buffer, uint32_t buffer_size, uint32_t element_size) {
 	//NOTE - Apply defensive programming: Check for NULL pointers and invalid sizes
-	if (fifo == NULL) {
-		return;
-	}
+	if (fifo == NULL) return;
 	if (buffer == NULL || buffer_size == 0 || element_size == 0) {
 		fifo->buffer = NULL;
 		fifo->buffer_size = 0;
 		fifo->fill_size = 0;
 		return;
 	}
+
 	fifo->tail_index = 0;
 	fifo->head_index = 0;
 	fifo->fill_size = 0;
@@ -52,29 +51,24 @@ bool fifo_is_full(fifo_t* fifo) {
 
 uint32_t fifo_put(fifo_t* fifo, void* data) {
 	//NOTE - Apply defensive programming: Check for NULL pointers and invalid sizes
-	if (fifo == NULL || fifo->buffer == NULL || fifo->buffer_size == 0) {
-		return RET_FIFO_NG;
-	}
+	bool is_fifo_null = (fifo == NULL);
+	bool is_data_null = (data == NULL);
+	bool is_buffer_null = (fifo != NULL && fifo->buffer == NULL);
+	if (is_fifo_null || is_data_null || is_buffer_null) return RET_FIFO_NG;
 
-	if (fifo->fill_size == fifo->buffer_size) {
-		return RET_FIFO_NG; // FIFO đã đầy, không thể thêm phần tử mới
-	}
+	if (fifo->fill_size == fifo->buffer_size) return RET_FIFO_NG; // FIFO đã đầy, không thể thêm phần tử mới
 
 	if (data != NULL) {
-		/* 1. Tính toán địa chỉ đích bằng Byte Pointer Math */
-		// fifo->buffer là uint8_t*, cộng với offset tính bằng byte
+		// NOTE - Tính toán địa chỉ đích bằng Byte Pointer Math
 		uint8_t* p_dest = (uint8_t*)fifo->buffer + (fifo->tail_index * fifo->element_size);
 
-		/* 2. Thực hiện copy chính xác element_size bytes */
-		// Tuyệt đối KHÔNG ép kiểu (uint32_t*) cho 'data' và 'p_dest'
-		// memcpy sẽ tự động copy đúng số byte đã định nghĩa lúc fifo_init
+		// NOTE - Thực hiện copy chính xác element_size bytes
 		memcpy(p_dest, data, fifo->element_size);
 
-		/* 3. Cập nhật quản lý FIFO */
+		// NOTE - Cập nhật quản lý FIFO
 		fifo->fill_size++;
 		fifo->tail_index = (fifo->tail_index + 1) % fifo->buffer_size;
-	}
-	else {
+	} else {
 		return RET_FIFO_NG;
 	}
 
@@ -82,22 +76,21 @@ uint32_t fifo_put(fifo_t* fifo, void* data) {
 }
 
 uint32_t fifo_get(fifo_t* fifo, void* data) {
-	if ((fifo == NULL) || (data == NULL) || (fifo->buffer == NULL)) {
-		return RET_FIFO_NG;
-	}
+	bool is_fifo_null = (fifo == NULL);
+	bool is_data_null = (data == NULL);
+	bool is_buffer_null = (fifo != NULL && fifo->buffer == NULL);
+	if (is_fifo_null || is_data_null || is_buffer_null) return RET_FIFO_NG;
 
-	if (fifo_is_empty(fifo)) {
-		return RET_FIFO_NG;
-	}
+	if (fifo_is_empty(fifo)) return RET_FIFO_NG;
 
-	/* 1. Lấy dữ liệu ở vị trí head hiện tại */
+	// NOTE - Lấy dữ liệu ở vị trí head hiện tại
 	uint8_t* p_src = (uint8_t*)fifo->buffer + (fifo->head_index * fifo->element_size);
 	memcpy(data, p_src, fifo->element_size);
 
-	/* 2. Xóa hoàn toàn dữ liệu vừa lấy khỏi FIFO */
+	// NOTE - Xóa hoàn toàn dữ liệu vừa lấy khỏi FIFO
 	memset(p_src, 0, fifo->element_size);
 
-	/* 3. Cập nhật trạng thái FIFO */
+	// NOTE - Cập nhật trạng thái FIFO
 	fifo->head_index = (fifo->head_index + 1) % fifo->buffer_size;
 	fifo->fill_size--;
 
@@ -106,27 +99,26 @@ uint32_t fifo_get(fifo_t* fifo, void* data) {
 
 uint32_t 	fifo_put_head(fifo_t* fifo, void* data) {
 	//NOTE - Apply defensive programming: Check for NULL pointers and invalid sizes
-	if (fifo == NULL || fifo->buffer == NULL || fifo->buffer_size == 0) {
-		return RET_FIFO_NG;
-	}
+	bool is_fifo_null = (fifo == NULL);
+	bool is_data_null = (data == NULL);
+	bool is_buffer_null = (fifo != NULL && fifo->buffer == NULL);
+	if (is_fifo_null || is_data_null || is_buffer_null) return RET_FIFO_NG;
 
-	if (fifo->fill_size == fifo->buffer_size) {
-		return RET_FIFO_NG; // FIFO đã đầy, không thể thêm phần tử mới
-	}
+	if (fifo->fill_size == fifo->buffer_size) return RET_FIFO_NG; // FIFO đã đầy, không thể thêm phần tử mới
 
 	if (data != NULL) {
-		// Tính toán chỉ số mới cho head (đi ngược lại)
+		// NOTE - Tính toán chỉ số mới cho head (đi ngược lại)
 		uint32_t new_head = (fifo->head_index + fifo->buffer_size - 1) % fifo->buffer_size;
 
-		// Ghi dữ liệu vào vị trí mới của head
+		// NOTE - Ghi dữ liệu vào vị trí mới của head
 		uint8_t* p_dest = (uint8_t*)fifo->buffer + (new_head * fifo->element_size);
     memcpy(p_dest, data, fifo->element_size);
 
-		// Cập nhật head_index và fill_size
+		// NOTE - Cập nhật head_index và fill_size
 		fifo->head_index = new_head;
 		fifo->fill_size++;
-	}
-	else {
+	} else {
+		// NOTE - Dữ liệu là NULL, không thể thêm vào FIFO
 		return RET_FIFO_NG;
 	}
 
