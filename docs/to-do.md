@@ -587,9 +587,9 @@ Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST
 - [x] @! TID[epic=v1.1.6-bf2] DOCS-006 <+ Bổ sung các sửa đổi trong tài liệu thiết kế PLTF để phản ánh các thay đổi về module name và thiết kế logic của các module trong phiên bản 1.1.6-bf2.
 - [x] @! TID[epic=v1.1.7/BST] REPO-001 <+ Cân nhắc repotize 2 prjecobj-linux và projecobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
 - [x] @! TID[epic=v1.1.7/PSE] CORE-001 <+ Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
-- [ ] @! TID[epic=v1.1.6-bf3/bf2-fcr-missing] CORE-003 <+ Rà soát lại các sửa đổi của phiên bản 1.1.6-bf2 để bổ sung các FCR raise bị thiếu.
-- [ ] @! TID[epic=v1.1.6-bf3/common] CORE-004 <+ Rà soát lại các lib để bổ sung các FCR raise bị thiếu hoặc cần cover.
-- [ ] @! TID[epic=v1.1.6-bf3/common] DOCS-007 <+ Bổ sung tài liệu hướng dẫn sử dụng các lib trong sources/common.
+- [x] @! TID[epic=v1.1.6-bf3/bf2-fcr-missing] CORE-003 <+ Rà soát lại các sửa đổi của phiên bản 1.1.6-bf2 để bổ sung các FCR raise bị thiếu.
+- [x] @! TID[epic=v1.1.6-bf3/common] CORE-004 <+ Rà soát lại các lib để bổ sung các FCR raise bị thiếu hoặc cần cover.
+- [x] @! TID[epic=v1.1.6-bf3/common] DOCS-007 <+ Bổ sung tài liệu quy chuẩn thiết kế code.
 - [ ] @! TID[epic=v1.1.7/PSE] CORE-005 <+ Review lại implementation của PSE để xử lý các vấn đề liên quan đến việc gửi tin nhắn tới nhiều task đã đăng ký, đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
 - [ ] @! TID[epic=v1.1.7/PSE] DOCS-003 <+ Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
 
