@@ -85,7 +85,6 @@ eim_config.toml
 .env
 .vscode/c_cpp_properties.json
 .vscode/settings.json
-config.yaml
 
 # Nogic extension database
 .nogic/*
