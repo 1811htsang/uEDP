@@ -21,6 +21,13 @@
 	// ANCHOR - Forward declaration for task id
 	typedef ui16	task_id_t; 	// ID của tác vụ
 
+	// ANCHOR - Forward declaration for ptype_t
+	typedef enum ptype_t {
+		PTYPE_NONE = 0, 	// Không có payload
+		PTYPE_VAL, 			// Payload là giá trị (value)
+		PTYPE_REF, 			// Payload là tham chiếu (reference)
+	} ptype_t;
+
 	// ANCHOR - Forward declaration for memory pool info
 	typedef struct pal_memrp_info_t pal_memrp_info_t;
 
@@ -231,6 +238,6 @@
 
 	RETR_STAT uedp_msg_clear_topic(ui16 sig, task_norm_t task_list[]);
 
-	RETR_STAT uedp_msg_publish(ui16 sig, void* data);
+	RETR_STAT uedp_msg_publish(ui16 sig, void* data, ui16 len, ptype_t ptype);
 
 #endif //__UEDP_MSG_H__
