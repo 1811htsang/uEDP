@@ -79,6 +79,42 @@ elseif(PLAT STREQUAL "STM32F103")
   message(STATUS "[INFO]: Configuring for STM32F103 Build...")
   set(PAL_PLATFORM_SRCS "sources/pal/arch/stm32f103/stm32f103.c")
   add_compile_definitions(STM32F103_PLATFORM STM32F103xB USE_HAL_DRIVER)
+elseif(PLAT STREQUAL "STM32H723")
+  set(MCU_FLAGS "-mcpu=cortex-m7 -mthumb -mfpu=fpv5-d16 -mfloat-abi=hard -Os -ffunction-sections -fdata-sections")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MCU_FLAGS}" CACHE STRING "" FORCE)
+  set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${MCU_FLAGS}" CACHE STRING "" FORCE)
+  set(LINKER_FLASH_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../STM32H723ZGTX_FLASH.ld")
+  set(LINKER_RAM_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/../STM32H723ZGTX_RAM.ld")
+
+  # NOTE - Add parameter to select link flash or ram for STM32H723
+  option(LINK_TO_RAM "Link to RAM instead of Flash" OFF)
+
+  set(MCU_INCLUDE_DIRS
+    "${CMAKE_CURRENT_SOURCE_DIR}/../Core/Inc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32H7xx_HAL_Driver/Inc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/CMSIS/Device/ST/STM32H7xx/Include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/CMSIS/Include"
+  )
+
+  file(GLOB HAL_AND_CORE_SRCS
+    "${CMAKE_CURRENT_SOURCE_DIR}/../Core/Src/*.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../Drivers/STM32H7xx_HAL_Driver/Src/*.c"
+  )
+
+  file(GLOB STARTUP_SRC
+    "${CMAKE_CURRENT_SOURCE_DIR}/../Core/Startup/*.s"
+  )
+
+  set(EXTRA_MCU_SRCS 
+    ${HAL_AND_CORE_SRCS}
+    ${STARTUP_SRC}
+  )
+
+  message(STATUS "[INFO]: Configuring for STM32H723 Build...")
+  set(PAL_PLATFORM_SRCS "sources/pal/arch/stm32h723/stm32h723.c")
+  add_compile_definitions(STM32H723_PLATFORM STM32H723xx USE_HAL_DRIVER)
+
 elseif(PLAT STREQUAL "ESP32S3")
   message(STATUS "[INFO]: Configuring for ESP32S3 Standalone Build...")
 
@@ -173,6 +209,28 @@ endif()
 if(PLAT STREQUAL "STM32F103")
   target_link_options(${PROJECT_NAME} PRIVATE
     -mcpu=cortex-m3
+    -mthumb
+    "-T${LINKER_SCRIPT}"
+    --specs=nano.specs                  # Đặt duy nhất 1 lần tại đây
+    --specs=nosys.specs
+    -Wl,-Map=${PROJECT_NAME}.map,--cref
+    -Wl,--gc-sections
+    -static
+    -Wl,--start-group -lc -lm -Wl,--end-group
+  )
+elseif(PLAT STREQUAL "STM32H723")
+
+  # NOTE - Chọn script link flash hay ram dựa trên option LINK_TO_RAM
+  if(LINK_TO_RAM)
+    set(LINKER_SCRIPT "${LINKER_RAM_SCRIPT}")
+    message(STATUS "[INFO]: Linking to RAM using script: ${LINKER_RAM_SCRIPT}")
+  else()
+    set(LINKER_SCRIPT "${LINKER_FLASH_SCRIPT}")
+    message(STATUS "[INFO]: Linking to Flash using script: ${LINKER_FLASH_SCRIPT}")
+  endif()
+
+  target_link_options(${PROJECT_NAME} PRIVATE
+    -mcpu=cortex-m7
     -mthumb
     "-T${LINKER_SCRIPT}"
     --specs=nano.specs                  # Đặt duy nhất 1 lần tại đây

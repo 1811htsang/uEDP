@@ -20,7 +20,7 @@ void ring_buffer_init(ring_buffer_t* ring_buffer, void* buffer, uint32_t buffer_
 	ring_buffer->element_size = element_size;
 }
 
-bool 		ring_buffer_isinit(ring_buffer_t* ring_buffer) {
+bool ring_buffer_isinit(ring_buffer_t* ring_buffer) {
 	return (ring_buffer->buffer != NULL) ? true : false;
 }
 
@@ -54,12 +54,10 @@ uint8_t ring_buffer_put(ring_buffer_t* ring_buffer, void* data) {
 		if (ring_buffer->fill_size == ring_buffer->buffer_size) {
 			next_head_index = (++ring_buffer->head_index) % ring_buffer->buffer_size;
 			ring_buffer->head_index = next_head_index;
-		}
-		else {
+		} else {
 			ring_buffer->fill_size++;
 		}
-	}
-	else {
+	} else {
 		return RET_RING_BUFFER_NG;
 	}
 
@@ -69,9 +67,7 @@ uint8_t ring_buffer_put(ring_buffer_t* ring_buffer, void* data) {
 uint8_t ring_buffer_get(ring_buffer_t* ring_buffer, void* data) {
 	uint32_t next_head_index;
 
-	if (ring_buffer_is_empty(ring_buffer)) {
-		return RET_RING_BUFFER_NG;
-	}
+	if (ring_buffer_is_empty(ring_buffer)) return RET_RING_BUFFER_NG;
 
 	if (data != NULL) {
 		// Tính toán địa chỉ và tự động copy đúng số byte đã định nghĩa lúc ring_buffer_init
@@ -83,8 +79,7 @@ uint8_t ring_buffer_get(ring_buffer_t* ring_buffer, void* data) {
 		ring_buffer->head_index = next_head_index;
 
 		ring_buffer->fill_size--;
-	}
-	else {
+	} else {
 		return RET_RING_BUFFER_NG;
 	}
 
