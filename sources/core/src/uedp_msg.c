@@ -14,6 +14,9 @@
 #include "pal_memrp.h"
 #include "fifo.h"
 
+// ANCHOR - Bổ sung macro để tính toán index của task ID trong mảng quản lý task, dựa trên UEDP_TASK_NORM_MIN_ID
+#define GET_TASK_BIT_INDEX(id) ((id) - UEDP_TASK_NORM_OFFSET - UEDP_TASK_NORM_MIN_ID + 1) 
+
 /** ANCHOR - Khai báo cấu trúc quản lý Pool tin nhắn
  * @param free_list Con trỏ đến đầu của Pool tin nhắn
  * @param used_count Số lượng tin nhắn đang được sử dụng trong Pool
@@ -30,7 +33,7 @@ typedef struct uedp_msg_pool_header_t {
  * 						nên khi khởi tạo pool cần đảm bảo tính toán đúng offset để tránh tràn bộ nhớ hoặc ghi đè dữ liệu
  */
 
- // ANCHOR - Blank pool với kích thước là 8 32-bits units
+// ANCHOR - Blank pool với kích thước là 8 32-bits units
 
 sta uedp_msg_t blank_pool[UEDP_MSG_BLANK_QUEUE_SIZE] = {0};
 uedp_msg_pool_header_t g_blank_pool_ctrl = {0};
@@ -83,8 +86,9 @@ sta void internal_uedp_msg_pool_init(
 sta uedp_msg_t* internal_uedp_msg_pool_pop(uedp_msg_pool_header_t* header);
 sta void internal_uedp_msg_pool_push(uedp_msg_pool_header_t* header, uedp_msg_t* msg);
 sta uedp_msg_pool_header_t* internal_uedp_msg_find_best_pool(ui16 size);
-sta bool uedp_msg_is_valid_ptr(uedp_msg_t* msg);
+sta bool internal_uedp_msg_is_valid_ptr(uedp_msg_t* msg);
 sta uedp_gdp_slot_t* internal_uedp_gdp_find(const char* name);
+sta void internal_msg_release(uedp_msg_t* msg);
 
 void uedp_msg_pool_init() {
 	// Khởi tạo BLANK Pool
@@ -117,7 +121,7 @@ uedp_msg_t* uedp_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 	uedp_msg_pool_header_t* pool_header = internal_uedp_msg_find_best_pool(size);
 
 	if (pool_header == NULL) {
-		UEDP_FCR_RAISE(UEDP_FCR_MSG_POOL_EXHAUSTED); // Không tìm được Pool phù hợp cho kích thước yêu cầu -> coi như hết chỗ
+		// NOTE - internal_uedp_msg_find_best_pool() đã raise MSG_POOL_REF_RCM nếu không tìm thấy Pool phù hợp
 		return NULL;
 	}
 
@@ -152,7 +156,7 @@ uedp_msg_t* uedp_msg_alloc(ui16 des_task_id, ui16 sig, ui16 size) {
 }
 
 void uedp_msg_free(uedp_msg_t* msg) {
-	if (!msg || !uedp_msg_is_valid_ptr(msg)) {
+	if (!msg || !internal_uedp_msg_is_valid_ptr(msg)) {
 		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PTR, "free: null or invalid ptr");
 		return;
 	}
@@ -388,7 +392,8 @@ uedp_msg_pool_header_t* internal_uedp_msg_find_best_pool(ui16 size) {
 	} else if (size <= UEDP_MSG_ALLOC_DATA_MAX) {
 		return &g_alloc_pool_ctrl; // Pool Alloc
 	} else {
-		return NULL; // Không có Pool nào phù hợp -> caller (uedp_msg_alloc) sẽ raise MSG_POOL_EXHAUSTED
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_POOL_REF_RCM, "find_best_pool: no suitable pool, please use reference passing via GDP for large data");
+		return NULL; // Không có Pool nào phù hợp, cần sử dụng GDP để truyền tham chiếu dữ liệu lớn
 	}
 }
 
@@ -423,7 +428,7 @@ void uedp_msg_drain_isr_pool(void) {
  * @return true nếu con trỏ tin nhắn hợp lệ (được cấp phát từ một trong các Pool tin nhắn)
  * @return false nếu con trỏ tin nhắn không hợp lệ (không được cấp phát từ bất kỳ Pool tin nhắn nào)
  */
-bool uedp_msg_is_valid_ptr(uedp_msg_t* msg) {
+bool internal_uedp_msg_is_valid_ptr(uedp_msg_t* msg) {
 	if (!msg) {
 		return false; // Con trỏ NULL không hợp lệ - caller (uedp_msg_free) sẽ raise MSG_INVALID_PTR
 	}
@@ -624,4 +629,129 @@ sta uedp_gdp_slot_t* internal_uedp_gdp_find(const char* name) {
 	}
 
 	return NULL;
+}
+
+/** ANCHOR - Bảng ma trận TPM (Task-Priority Matrix) - dùng để xác định thông tin các task đăng ký tín hiệu
+ * @note 1 item trong ma trận TPM là 1 ui32, mỗi bit trong ui32 đại diện cho 1 task (tối đa 32 task), 
+ * 			 1 item sẽ có index tương ứng với 1 tín hiệu (signal)
+ * @example ví dụ: g_tpm_matrix[0] là ma trận cho tín hiệu 0, g_tpm_matrix[1] là ma trận cho tín hiệu 1, ...
+ * @attention Ma trận TPM này chỉ được sử dụng trong ngữ cảnh core, không được truy cập trực tiếp từ ISR hoặc các task khác,
+ * 						để tránh Race Condition và đảm bảo tính nhất quán của dữ liệu.
+ * @attention Do thiết kế gốc ràng buộc task norm bắt đầu từ 0xE4, cần đảm bảo có offset phù hợp khi truy cập ma trận TPM, tránh ghi đè sai dữ liệu.
+ */
+ui32 g_tpm_matrix[UEDP_TBM_MAX_SIZE] = {0};
+
+void internal_msg_release(uedp_msg_t* msg) {
+	pal_enter_critical(); // Bắt buộc phải khóa ngắt để tránh Race Condition
+	
+	if (msg->ref_count > 0) {
+		msg->ref_count--;
+	}
+	
+	// Chỉ khi tất cả các Task đã xử lý xong thì mới thực sự trả về Pool
+	if (msg->ref_count == 0) {
+		uedp_msg_free(msg);
+	}
+	
+	pal_exit_critical();
+}
+
+RETR_STAT uedp_msg_register_topic(ui16 sig, task_norm_t task_list[]) {
+	if (sig >= UEDP_TBM_MAX_SIZE) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PARAM, "register_topic: sig out of range");
+		return STAT_ERROR; // Signal vượt quá giới hạn, không hợp lệ
+	}
+
+	ui32 task_mask = 0;
+	for (int i = 0; task_list[i].id >= UEDP_TASK_NORM_MIN_ID && task_list[i].id < UEDP_TASK_NORM_MAX_ID; i++) {
+		ui16 bit_idx = GET_TASK_BIT_INDEX(task_list[i].id);
+		if (bit_idx < 32) { // Giới hạn số lượng task tối đa là 32, vì mỗi bit trong ui32 đại diện cho 1 task
+			task_mask |= (1u << bit_idx);
+		} else {
+			UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PARAM, "register_topic: task_id out of range");
+			return STAT_ERROR; // Task ID vượt quá giới hạn, không hợp lệ
+		}
+	}
+	
+	g_tpm_matrix[sig] |= task_mask;
+	return STAT_OK;
+}
+
+RETR_STAT uedp_msg_clear_topic(ui16 sig, task_norm_t task_list[]) {
+	if (sig >= UEDP_TBM_MAX_SIZE) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PARAM, "clear_topic: sig out of range");
+		return STAT_ERROR; // Signal vượt quá giới hạn, không hợp lệ
+	}
+	ui32 task_mask = 0;
+	for (int i = 0; task_list[i].id >= UEDP_TASK_NORM_MIN_ID && task_list[i].id < UEDP_TASK_NORM_MAX_ID; i++) {
+		ui16 bit_idx = GET_TASK_BIT_INDEX(task_list[i].id);
+		if (bit_idx < 32) { // Giới hạn số lượng task tối đa là 32, vì mỗi bit trong ui32 đại diện cho 1 task
+			task_mask |= (1u << bit_idx);
+		} else {
+			UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PARAM, "clear_topic: task_id out of range");
+			return STAT_ERROR; // Task ID vượt quá giới hạn, không hợp lệ
+		}
+	}
+	g_tpm_matrix[sig] &= ~task_mask; // Xóa các bit tương ứng với các task trong danh sách
+	return STAT_OK;
+}
+
+RETR_STAT uedp_msg_publish(ui16 sig, void* data, ui16 len, ptype_t ptype) {
+	if (sig >= UEDP_TBM_MAX_SIZE) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_INVALID_PARAM, "publish: sig out of range");
+		return STAT_ERROR; // Signal vượt quá giới hạn, không hợp lệ
+	}
+
+	ui32 task_mask = g_tpm_matrix[sig];
+	if (task_mask == 0) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_MSG_NO_REG_PSE, "publish: no task registered for sig");
+		return STAT_NRDY; // Không có task nào đăng ký tín hiệu này, không thể gửi tín hiệu
+	}
+
+	ui8 subscriber_count = __builtin_popcount(task_mask);
+
+	uedp_msg_t* msg = NULL;
+
+	if (len > 0) {
+		msg = uedp_msg_alloc(UEDP_PSE_TASK_NORM_BROADCAST, sig, UEDP_MSG_ALLOC_QUEUE_SIZE);
+		// NOTE - Nếu len > UEDP_MSG_ALLOC_DATA_MAX, sẽ không thể cấp phát tin nhắn từ Pool Alloc,
+		// do đó sẽ thực hiện đăng ký GDP để lưu dữ liệu, sau đó gửi tín hiệu kèm dữ liệu từ GDP.
+		if (!msg) {
+			UEDP_FCR_RAISE(UEDP_FCR_MSG_POOL_EXHAUSTED);
+			return STAT_ERROR;
+		}
+		
+		// Setup dữ liệu
+		if (ptype == PTYPE_VAL) {
+			memcpy(msg->data, data, len); // Phải dùng 'len' thay vì sizeof
+		} else { // PTYPE_REF
+			// Nếu là REF (D2MP), data lúc này mang địa chỉ GDA
+			msg->data = data; 
+		}
+	} else {
+		// Không có payload
+		msg = uedp_msg_alloc(UEDP_PSE_TASK_NORM_BROADCAST, sig, 0);
+		if (!msg) return STAT_ERROR;
+	}
+
+	// Thiết lập Metadata
+	uedp_msg_set_src_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST);
+	uedp_msg_set_des_task_id(msg, UEDP_PSE_TASK_NORM_BROADCAST);
+
+	// Thiết lập số lượng task đăng ký tín hiệu để các task biết khi nào có thể giải phóng tin nhắn
+	msg->ref_count = subscriber_count;
+
+	for (ui8 bit_idx = 0; bit_idx < 32; bit_idx++) {
+		if (task_mask & (1u << bit_idx)) {
+			// Phục hồi lại Task ID thật từ Bit Index
+			ui8 real_task_id = bit_idx + UEDP_TASK_NORM_MIN_ID + UEDP_TASK_NORM_OFFSET - 1; // -1 vì bit_idx bắt đầu từ 0
+			
+			// Post CÙNG MỘT CON TRỎ msg vào các queue khác nhau
+			if (uedp_task_norm_post_msg(real_task_id, msg) != STAT_OK) {
+				// Nếu 1 queue bị đầy, giảm ref_count để tránh Leak memory
+				internal_msg_release(msg); 
+			}
+		}
+	}
+	return STAT_OK;
 }

@@ -1,46 +1,167 @@
-/**
- * @file stm32h723.c
- * @author Shang Huang
- * @brief Implementation of STM32 Architecture Abstraction Layer for UEDP
- * @version 0.1
- * @date 2026-04-20
- * @copyright MIT License
- */
+//ANCHOR - Architecture-specific implementation for stm32h723 microcontroller
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include "stm32h723.h"
 #include "uedp_core.h"
 #include "uedp_task.h"
 #include "uedp_msg.h"
 #include "uedp_timer.h"
 #include "uedp_itnlog.h"
+#include "uedp_fcr.h"
+
+//ANCHOR - Khai báo thư viện encrypt
+#include "libcrc8.h"
+
+//ANCHOR - Khai báo thư viện hệ thống
+#include "pal_logdp.h"
 #include "pal_memrp.h"
+#include "pal_rprintf.h"
 
-sta int is_inited = 0x0u;
+//ANCHOR - stm32h723 BSP include
+#include "stm32h723xx.h"
+#include "core_cm7.h"
+#include "stm32h7xx.h"
+#include "stm32h7xx_hal.h"
+#include "stm32h7xx_hal_exti.h"
 
-/**
- * @brief Đảm bảo uedp_timer_tick được biết đến
- */
+//CRITICAL - Đảm bảo phải có ủy quyền timer_tick để gắn vào timer phần cứng
 
 extern void uedp_timer_tick(void);
 
-/**
- * @brief Khai báo hàm nội bộ 
- */
+//ANCHOR - Implementation cho uedp_core.h
 
-static void internal_hardfault_decoder(uint32_t *stack);
+sta ui8 is_inited = 0x0u;
 
-/**
- * @brief Định nghĩa các biểu tượng linker script để quản lý bộ nhớ
- */
+void uedp_core_init(void) {
+  pal_core_init();
+  uedp_msg_pool_init();
+  uedp_gdp_init();
+  uedp_timer_init();
+  uedp_itnlog_init();
+  uedp_itnlog_set_output(&stm32h723_log_alloc);
+  is_inited = 0x1u;
+}
 
-extern ui32 _etext;            /* End của code section (.text) 				    */
-extern ui32 _sidata;           /* Start của initialized data trong FLASH 	*/
-extern ui32 _sdata, _edata;    /* RAM initialized data 						        */
-extern ui32 _sbss, _ebss;      /* RAM zero-init data 							        */
-extern ui32 _estack;           /* Top of Stack 										        */
-extern ui32 _end;              /* Start of Heap (thường sau bss) 	        */
+//ANCHOR - Implementation cho pal_core.h
+
+//ANCHOR - GVI for PRIMASK register
+
+sta ui32 primask_gvi = 0x0u;
+
+void pal_core_init(void) {
+  stm32h723_config_exti_swisr();
+}
+
+//NOTE - not an optimal solution, but currently usable
+void pal_enter_critical(void) {
+  __disable_irq();
+  primask_gvi = __get_PRIMASK();
+}
+
+void pal_exit_critical(void) {
+  __enable_irq();
+  __set_PRIMASK(primask_gvi);
+}
+
+ui8 pal_math_get_highest_bit32(ui32 mask) {
+  if (mask == 0) {
+    return -1;
+  }
+  return 31 - __CLZ(mask);
+}
+
+ui32 pal_sys_get_tick(void) {
+  return HAL_GetTick();
+}
+
+void pal_sys_reset(void) {
+  NVIC_SystemReset();
+}
+
+void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
+  uedp_fcr_raise(UEDP_FCR_PAL_FATAL_API_CALLED, file, line, msg);
+}
+
+//ANCHOR - Implementation custom API cho {{arch_name}}.h
+/** CRITICAL - 
+  * Các parameter <return_type> và <parameters> cần được thay thế bằng kiểu dữ liệu thực tế 
+  * theo nhu cầu của người dùng
+  */
+
+//NOTE - sleep mode will exit after wake-up source finish
+void stm32h723_sleep_exit(void) {
+  HAL_SuspendTick();
+  HAL_PWR_EnableSleepOnExit();
+}
+
+//NOTE - sleep mode will resume after wake-up source finish
+void stm32h723_sleep_resume(void) {
+  HAL_SuspendTick();
+  HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+}
+
+void stm32h723_wakeup(void) {
+  HAL_ResumeTick();
+}
+
+//NOTE - using custom interrupt source would be nice instead of binding to specific functional interrupt
+
+void exti_line_0_swi_callback(void) {
+  stm32h723_wakeup();
+}
+
+sta EXTI_HandleTypeDef EXTI_L0_handler = {
+  EXTI_LINE_0,
+  &exti_line_0_swi_callback
+};
+
+sta EXTI_ConfigTypeDef EXTI_L0_config = {
+  EXTI_LINE_0,
+  EXTI_MODE_INTERRUPT,
+  EXTI_TRIGGER_RISING,
+  EXTI_GPIO //NOTE - This is mandatory but not in use
+};
+
+void stm32h723_config_exti_swisr(void) {
+  HAL_EXTI_SetConfigLine(&EXTI_L0_handler, &EXTI_L0_config);
+}
+
+void stm32h723_trigger_swisr(ui32 IRQnum) {
+  HAL_EXTI_GenerateSWI(&EXTI_L0_handler);
+}
+
+void SysTick_Handler(void) {
+  HAL_IncTick();
+  if (is_inited) {
+    uedp_timer_tick();
+  }
+}
+
+__attribute__((naked)) void HardFault_Handler(void) {
+  __asm volatile (
+    " tst lr, #4                                 \n" // Kiểm tra bit 2 của LR (EXC_RETURN)
+    " ite eq                                     \n"
+    " mrseq r0, msp                              \n" // Bit 2 = 0: Dùng Main Stack (MSP)
+    " mrsne r0, psp                              \n" // Bit 2 = 1: Dùng Process Stack (PSP)
+    " ldr r1, =internal_hardfault_decoder        \n"
+    " bx r1                                      \n"
+  );
+}
+
+//ANCHOR - Implementation cho internal API handling
+
+UEDP_ATTR_UNUSED void internal_hardfault_decoder(uint32_t *stack);
+
+//ANCHOR -  Định nghĩa các biểu tượng linker script để quản lý bộ nhớ
+
+extern UEDP_ATTR_UNUSED ui32 _etext;            /* End của code section (.text) 				    */
+extern UEDP_ATTR_UNUSED ui32 _sidata;           /* Start của initialized data trong FLASH 	*/
+extern UEDP_ATTR_UNUSED ui32 _sdata, _edata;    /* RAM initialized data 						        */
+extern UEDP_ATTR_UNUSED ui32 _sbss, _ebss;      /* RAM zero-init data 							        */
+extern UEDP_ATTR_UNUSED ui32 _estack;           /* Top of Stack 										        */
+extern UEDP_ATTR_UNUSED ui32 _end;              /* Start of Heap (thường sau bss) 	        */
 
 #define FLASH_START 0x08000000  /* STM32F1 FLASH Start Address */
 
@@ -51,90 +172,190 @@ extern ui32 _end;              /* Start of Heap (thường sau bss) 	        */
  */
 
 UEDP_ATTR_UNUSED void internal_hardfault_decoder(uint32_t *stack) {
-	
+  // NOTE - Lấy thông tin các thanh ghi CPU trước khi xảy ra fault
+  // NOTE - Bổ sung atttribute để tránh warning từ compiler
+  UEDP_ATTR_UNUSED uint32_t r0  = stack[0];
+  UEDP_ATTR_UNUSED uint32_t r1  = stack[1];
+  UEDP_ATTR_UNUSED uint32_t r2  = stack[2];
+  UEDP_ATTR_UNUSED uint32_t r3  = stack[3];
+  UEDP_ATTR_UNUSED uint32_t r12 = stack[4];
+  UEDP_ATTR_UNUSED uint32_t lr  = stack[5]; // Link Register (Địa chỉ trả về trước khi gọi hàm bị lỗi)
+  UEDP_ATTR_UNUSED uint32_t pc  = stack[6]; // Program Counter (Địa chỉ chính xác của lệnh gây ra lỗi)
+  UEDP_ATTR_UNUSED uint32_t psr = stack[7]; // Program Status Register
+
+  // NOTE - Đọc các thanh ghi cấu hình/chẩn đoán System Control Block (SCB)
+  volatile uint32_t cfsr = SCB->CFSR; // Configurable Fault Status Register ( gom MemManage, BusFault, UsageFault)
+  volatile uint32_t hfsr = SCB->HFSR; // HardFault Status Register
+  volatile uint32_t dfsr = SCB->DFSR; // Debug Fault Status Register
+  volatile uint32_t afsr = SCB->AFSR; // Auxiliary Fault Status Register
+
+  // NOTE - Lấy địa chỉ bộ nhớ gây lỗi (nếu có)
+  volatile uint32_t mmfar = SCB->MMFAR; // MemManage Fault Address
+  volatile uint32_t bfar  = SCB->BFAR;  // BusFault Address
+
+  // NOTE - Giữ chân CPU tại đây để quan sát qua Debugger hoặc log ra UART
+  (void)r0; (void)r1; (void)r2; (void)r3; (void)r12; (void)psr;
+  (void)cfsr; (void)hfsr; (void)dfsr; (void)afsr; (void)mmfar; (void)bfar;
+
+  // STUB - add itnlog here
+  uedp_itnlog_log(HAL_GetTick(), ITNLOG_LEVEL_FATAL, ITNLOG_TAG_FCR, (const char*)hfsr);
+
+  // STUB - add persistent log here with Backup Data Registers or external flash memory
+
+  __asm volatile ("bkpt #0"); // Dừng chương trình nếu đang cắm Debugger
+  while (1);
 }
 
-/**
- * @brief Implementation cho uedp_core.h
+ui32 stm32h723_get_tick(void) {
+  return HAL_GetTick();
+}
+
+/** NOTE
+ * Khai báo entry mặc định cho toàn bộ tính năng PPLP
  */
 
-void uedp_core_init(void) {
-  pal_core_init();
-  uedp_msg_pool_init();
-  uedp_timer_init();
-  uedp_itnlog_init();
-  is_inited = 0x1u;
-}
+sta const uedp_itnlog_entry_t default_entry = {
+  UEDP_TASK_NORM_IDLE_ID, // NOTE - IDLE task id
+  0x0, // NOTE - No message sig
+  0x0,
+  0x0,
+  (const char*)"0",
+  ITNLOG_TAG_PAL,
+  ITNLOG_LEVEL_INFO
+};
 
-/**
- * @brief Implementation cho pal_core.h
+/** NOTE
+ * entry của pal_log_dispatch được set global
+ * vì 1 số tham số có thể được thay đổi trong quá trình runtime,
+ * do đó chỉ cần set entry 1 lần duy nhất
  */
 
-void pal_core_init(void) {
-  pal_stm32_h723_init_env();
+sta uedp_itnlog_entry_t logdp_entry = default_entry;
+
+void stm32h723_log_alloc(const char* param) {
+  logdp_entry.msg = param;
+  logdp_entry.tmstmp = stm32h723_get_tick();
+  logdp_entry.hash = crc8((uint8_t*)param, strlen(param), 0xB4);
+  pal_logdp_dispatch(&logdp_entry);
 }
 
-void pal_enter_critical(void) {
+//ANCHOR - Add instance for stm32h723 peripheral handles
 
+sta I2C_HandleTypeDef i_hi2c1;
+
+sta I2S_HandleTypeDef i_hi2s3;
+
+sta SPI_HandleTypeDef i_hspi1;
+sta SPI_HandleTypeDef i_hspi2;
+
+sta UART_HandleTypeDef i_huart1;
+sta DMA_HandleTypeDef i_hdma_usart1_tx;
+sta DMA_HandleTypeDef i_hdma_usart1_rx;
+
+//ANCHOR - Add functions to get peripheral instances
+
+void stm32h723_get_uart_inst(UART_HandleTypeDef* instance) {
+  i_huart1.Instance = (USART_TypeDef*)instance;
 }
 
-void pal_exit_critical(void) {
-
+void stm32h723_get_i2c_inst(I2C_HandleTypeDef* instance) {
+  i_hi2c1.Instance = (I2C_TypeDef*)instance;
 }
 
-ui8 pal_math_get_highest_bit32(ui32 mask) {
-
+void stm32h723_get_spi_1_inst(SPI_HandleTypeDef* instance) {
+  i_hspi1.Instance = (SPI_TypeDef*)instance;
 }
 
-ui32 pal_sys_get_tick(void) {
-
+void stm32h723_get_spi_2_inst(SPI_HandleTypeDef* instance) {
+  i_hspi2.Instance = (SPI_TypeDef*)instance;
 }
 
-void pal_sys_reset(void) {
-
+void stm32h723_get_i2s_inst(I2S_HandleTypeDef* instance) {
+  i_hi2s3.Instance = (SPI_TypeDef*)SPI3;
 }
 
-void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
+//DEPRECATED - Old TASK - Need checking for pointer type casting
+//STATUS - correct due to i_hdma_usart1_tx reciev resolved data
 
+void stm32h723_get_dma_usart1_tx_inst(DMA_HandleTypeDef* instance) {
+  i_hdma_usart1_tx = *instance;
 }
 
-/**
- * @brief Implementation cho stm32_arch.h
+void stm32h723_get_dma_usart1_rx_inst(DMA_HandleTypeDef* instance) {
+  i_hdma_usart1_rx = *instance;
+}
+
+//ANCHOR - Define buffer size for UART TX/RX
+
+#define RX_BUF_SIZE (ui16)64u
+#define TX_BUF_SIZE (ui16)64u
+
+//ANCHOR - Define buffer for UART TX/RX communication
+
+sta ui8 rx_buf[RX_BUF_SIZE];
+sta ui8 tx_buf[TX_BUF_SIZE];
+
+RETR_STAT stm32h723_uart_init(void) {
+  HAL_UARTEx_ReceiveToIdle_DMA(&i_huart1, rx_buf, RX_BUF_SIZE);
+  // __HAL_DMA_DISABLE_IT(&i_hdma_usart1_tx, DMA_IT_HT);
+  // __HAL_DMA_DISABLE_IT(&i_hdma_usart1_rx, DMA_IT_HT);
+  //DEPRECATED - Old TASK - Change this to adding handler for handler callback
+  return STAT_OK;
+}
+
+void internal_uart_tx_dma(ui8 *data, ui16 size) {
+  memcpy(tx_buf, data, size);
+  HAL_UART_Transmit_DMA(&i_huart1, tx_buf, size);
+}
+
+void internal_uart_rx_dma(void) {
+  // Start DMA reception in normal mode
+  HAL_UART_Receive_DMA(&i_huart1, rx_buf, sizeof(rx_buf));
+}
+
+//DEPRECATED - Old TASK - Add detail implementation for UART output TX functions for rprintf service
+//DEPRECATED - Old TASK - cmake build to remove errors on C/C++ Intellisense
+
+void stm32h723_uart_putc(unsigned char c) {
+  // Transmit the character using DMA
+  internal_uart_tx_dma(&c, 1);
+}
+
+void stm32h723_uart_write(const uint8_t* data, ui16 len) {
+  // Transmit the data using DMA
+  internal_uart_tx_dma((uint8_t*)data, len);
+}
+
+bool stm32h723_uart_isready() {
+  HAL_UART_StateTypeDef status = HAL_UART_GetState(&i_huart1);
+  if (status != HAL_UART_STATE_READY) {
+    return false;
+  }
+  return true;
+}
+
+sta const uedp_itnlog_entry_t rprintf_entry = default_entry;
+
+/** NOTE
+ * rprintf_entry có thể thay đổi runtime nên cho phép const pointer ở khai báo trước,
+ * sau đó gán giá trị mới cho các trường trong struct khi cần thiết
  */
 
-void pal_stm32_h723_init_env(void) {
-  /**
-   * @brief Việc bổ sung các triển khai
-   *        tùy thuộc vào nhu cầu riêng của từng dự án, có thể là khởi tạo clock, GPIO, UART, v.v.
+pal_rprintf_service_t svc = {
+  "uart",
+  rprintf_entry,
+  &stm32h723_uart_init,
+  &stm32h723_uart_putc,
+  &stm32h723_uart_write,
+  &stm32h723_uart_isready
+};
+
+// STUB - In stm32f1xx_it.c has implement IRQ for DMA so no need to reinvent
+
+void stm32h723_check_hardfault_reason(char* retr) {
+  /** NOTE
+   * The result has aleady been logged in internal_hardfault_decoder, so just return a simple message
+   * However, the itnlog is not bene implemented to be persisted
+   * so the user can implement their own persistent log mechanism to store the hardfault reason for later analysis
    */
-  pal_memrp_get_sys_info(NULL, NULL, NULL); // Gọi hàm này để đảm bảo các biểu tượng linker script được sử dụng và không bị tối ưu hóa mất
-  pal_stm32_h723_nvic_config();
 }
-
-void pal_stm32_h723_idle_sleep(void) {
-
-}
-
-void pal_stm32_h723_nvic_config(void) {
-//	NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_2);
-}
-
-void pal_stm32_h723_exti_init(ui32 IRQnum) {
-
-}
-
-void pal_stm32_h723_check_hardfault_reason(char* retr) {
-}
-
-void pal_memrp_get_sys_info(ui32 *rom_used, ui32 *ram_used, ui32 *stack_curr) {
-
-}
-
-void SysTick_Handler(void) {
-}
-
-__attribute__((naked)) void HardFault_Handler(void) {
-
-}
-
-
