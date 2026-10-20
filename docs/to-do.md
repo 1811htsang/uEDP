@@ -590,7 +590,8 @@ Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST
 - [x] @! TID[epic=v1.1.6-bf3/bf2-fcr-missing] CORE-003 <+ Rà soát lại các sửa đổi của phiên bản 1.1.6-bf2 để bổ sung các FCR raise bị thiếu.
 - [x] @! TID[epic=v1.1.6-bf3/common] CORE-004 <+ Rà soát lại các lib để bổ sung các FCR raise bị thiếu hoặc cần cover.
 - [x] @! TID[epic=v1.1.6-bf3/common] DOCS-007 <+ Bổ sung tài liệu quy chuẩn thiết kế code.
-- [ ] @! TID[epic=v1.1.7/PSE] CORE-005 <+ Review lại implementation của PSE để xử lý các vấn đề liên quan đến việc gửi tin nhắn tới nhiều task đã đăng ký, đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
+- [x] @! TID[epic=v1.1.7/PSE] CORE-005 <+ Review lại implementation của PSE để xử lý các vấn đề liên quan đến việc gửi tin nhắn tới nhiều task đã đăng ký, đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
+- [x] @! TID[epic=v1.1.7/PSE] CORE-006 <+ Triển khai bugfix cho PSE để xử lý các vấn đề liên quan đến việc gửi tin nhắn tới nhiều task đã đăng ký, đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
 - [ ] @! TID[epic=v1.1.7/PSE] DOCS-003 <+ Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
 
 <!-- SECTION - PSE
@@ -624,6 +625,30 @@ Việc sử dụng truyền tham chiếu tin nhắn thay vì copy tin nhắn s�
 Ở thời điểm hiện tại, đề xuất PSE sẽ chỉ hỗ trợ việc gửi tin nhắn tới nhiều task đã đăng ký, nhưng không hỗ trợ việc gửi tin nhắn tới các task chưa đăng ký. Điều này có nghĩa là các task cần phải đăng ký trước khi nhận được tin nhắn từ Pub/Sub engine, nhằm đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
 
 Ngoài ra, các tính năng nâng cao như lọc tin nhắn theo topic, QoS (Quality of Service), v.v. sẽ được cân nhắc để triển khai trong các phiên bản sau của μEDP, nhằm đảm bảo rằng Pub/Sub engine có thể đáp ứng được các yêu cầu của các ứng dụng phức tạp hơn trong tương lai.
+
+# STATUS - 1552 191026 CORE-001
+
+Hiện tại sau khi hoàn thành implementation ở ticket CORE-001 thì đã phát hiện ra 5 lỗi chính
+
+## Cạm bẫy sizeof(void*) trong C
+
+`if (sizeof(data) > 0)` và `memcpy(msg->data, data, sizeof(data));` cho phép param truyền vào là `void* data` nhưng sizeof(data) sẽ luôn trả về 8 (trên nền tảng 64-bit) hoặc 4 (trên nền tảng 32-bit) thay vì kích thước thực tế của dữ liệu mà param data trỏ tới. Do đó, cần phải truyền thêm param `data_size` để xác định kích thước thực tế của dữ liệu mà param data trỏ tới như `ui16 len` hay `size_t len` để đảm bảo rằng dữ liệu được sao chép đúng kích thước và tránh các lỗi liên quan đến việc truy cập bộ nhớ ngoài phạm vi.
+
+## Mâu thuẫn Logic Offset của Task ID
+
+`task_list[i].id >= UEDP_TASK_NORM_MIN_ID` (ví dụ 0xE4 = 228), sau đó ngay lập tức kiểm tra `if (task_list[i].id < 32)`, nhánh if này sẽ không bao giờ được thực thi, code sẽ luôn nhảy vào else và báo lỗi FCR_MSG_INVALID_PARAM.
+
+Phải dùng công thức tính Index: bit_index = task_id - UEDP_TASK_NORM_MIN_ID;. Sau đó kiểm tra bit_index < 32.
+
+## Đánh mất hoàn toàn cơ chế "Zero-Copy" và "Reference Counting"
+
+Mặc dù đã viết hàm internal_msg_release quản lý ref_count rất hay, nhưng trong hàm publish, với mỗi Task subscribe, chúng ta lại cấp phát một Message mới hoàn toàn.
+
+## Thiếu kiểm tra giới hạn mảng (Buffer Overflow)
+
+Trong uedp_msg_register_topic(ui16 sig, ...), chúng ta gán g_tpm_matrix[sig] = task_mask; nhưng không hề kiểm tra xem sig < UEDP_TBM_MAX_SIZE hay không. Nếu người dùng truyền sig = 9999, hệ thống sẽ ghi đè vào vùng nhớ khác gây Crash.
+
+Trong trường hợp data quá lớn, ta lưu vào GDP với key cố định là "publish". Nếu Task A publish, dữ liệu lưu vào key "publish". Ngay sau đó (chưa kịp gửi xong), Task B bị ngắt và cũng publish, nó sẽ ghi đè lên key "publish". Các Task nhận sẽ đọc sai dữ liệu.
 
 //  !SECTION
 -->
