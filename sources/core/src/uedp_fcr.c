@@ -61,6 +61,7 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
   // Fallback - LUÔN đặt cuối cùng
   { UEDP_FCR_UNKNOWN,              "Unknown FCR code",                UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  }
 };
+// TASK - cần kiểm tra cập nhật số lượng các mã lỗi còn thiếu từ bên header file.
 
 #define UEDP_FCR_TABLE_SIZE   (sizeof(g_fcr_table) / sizeof(g_fcr_table[0]))
 
