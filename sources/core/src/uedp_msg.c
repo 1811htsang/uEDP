@@ -640,6 +640,8 @@ sta uedp_gdp_slot_t* internal_uedp_gdp_find(const char* name) {
  */
 ui32 g_tpm_matrix[UEDP_TBM_MAX_SIZE] = {0};
 
+// TASK - cần kiểm tra số lượng task có thể đăng ký trên uedp_core.h, nếu nhỏ hơn 32 thì có thể cân nhắc chuyển về dùng ui16 hoặc ui8 để tiết kiệm bộ nhớ
+
 void internal_msg_release(uedp_msg_t* msg) {
 	pal_enter_critical(); // Bắt buộc phải khóa ngắt để tránh Race Condition
 	
