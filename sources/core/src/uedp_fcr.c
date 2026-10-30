@@ -39,7 +39,7 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
 
   // [SM] (FSM/TSM)
   { UEDP_FCR_SM_INVALID_TRANS,     "SM invalid transition",           UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
-  { UEDP_FCR_SM_NULL_HANDLER,      "SM null state handler",           UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
+  { UEDP_FCR_SM_NULL_HANDLER,      "SM null state handler",           UEDP_FCR_SEV_ERROR, UEDP_FCR_ACT_SYS_PANIC  },
 
   // [ITNLOG]
   { UEDP_FCR_ITNLOG_BUF_CORRUPT,   "ITNLOG buffer corrupted",         UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
