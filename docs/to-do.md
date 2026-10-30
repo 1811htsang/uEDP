@@ -592,6 +592,7 @@ Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST
 - [x] @! TID[epic=v1.1.6-bf3/common] DOCS-007 <+ Bổ sung tài liệu quy chuẩn thiết kế code.
 - [x] @! TID[epic=v1.1.7/PSE] CORE-005 <+ Review lại implementation của PSE để xử lý các vấn đề liên quan đến việc gửi tin nhắn tới nhiều task đã đăng ký, đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
 - [x] @! TID[epic=v1.1.7/PSE] CORE-006 <+ Triển khai bugfix cho PSE để xử lý các vấn đề liên quan đến việc gửi tin nhắn tới nhiều task đã đăng ký, đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
+- [ ] @! TID[epic=v1.1.7/PSE] CORE-007 <+ Sửa các lỗi PSE/GDP/FCR phát hiện khi review test set (docs/test/pse-gdp-fcr-testset-review.md): ánh xạ task ID và kiểm tra biên topic (B1, B3); publish dùng sizeof(con trỏ) và không kiểm tra NULL (B2, B4); chia sẻ 1 tin nhắn cho nhiều task bằng ref_count thay vì cấp phát N tin nhắn; sửa ngưỡng ref_count 8-bit (B5); bỏ đường dự phòng GDP "publish" dùng chung tên (B6); bổ sung FCR MSG_INVALID_PARAM và LIB_COLLAPSE còn thiếu trong bảng; hàng đợi task đầy không còn raise LIB_COLLAPSE (FATAL, panic) mà chỉ raise TASK_QUEUE_FULL (ERROR).
 
 <!-- SECTION - PSE
 
