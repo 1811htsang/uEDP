@@ -24,6 +24,7 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
   { UEDP_FCR_MSG_INVALID_PTR,      "MSG invalid pointer",             UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_MSG_ISR_FIFO_FULL,    "MSG ISR fifo full",               UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
   { UEDP_FCR_MSG_POOL_MISCONFIG,   "MSG pool misconfigured",          UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
+  { UEDP_FCR_MSG_INVALID_PARAM,    "MSG invalid param",               UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
 
   // [TASK]
   { UEDP_FCR_TASK_QUEUE_FULL,      "TASK message queue full",         UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_RESET_TASK },
@@ -52,6 +53,7 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
   // [PAL]
   { UEDP_FCR_PAL_FATAL_API_CALLED, "PAL fatal API called",            UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
   { UEDP_FCR_PAL_LOGDP_TABLE_FULL, "PAL logdp output table full",     UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
+  { UEDP_FCR_LIB_COLLAPSE,         "LIB collapsed",                   UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
 
   { UEDP_FCR_GDP_TABLE_FULL,       "GDP table full",                  UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_GDP_NOT_FOUND,        "GDP name not found",              UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
@@ -61,6 +63,7 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
   // Fallback - LUÔN đặt cuối cùng
   { UEDP_FCR_UNKNOWN,              "Unknown FCR code",                UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  }
 };
+// TASK - cần kiểm tra cập nhật số lượng các mã lỗi còn thiếu từ bên header file.
 
 #define UEDP_FCR_TABLE_SIZE   (sizeof(g_fcr_table) / sizeof(g_fcr_table[0]))
 

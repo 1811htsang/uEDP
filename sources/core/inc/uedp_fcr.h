@@ -58,6 +58,8 @@
   #define UEDP_FCR_MSG_ISR_FIFO_FULL      UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x02) // Hàng đợi FIFO nhận tín hiệu ISR đã đầy
   #define UEDP_FCR_MSG_POOL_MISCONFIG     UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x03) // Tham số cấu hình Pool tin nhắn không hợp lệ lúc init (data_size/data_max/pool NULL)
   #define UEDP_FCR_MSG_INVALID_PARAM      UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x04) // Tham số truyền vào hàm tin nhắn không hợp lệ (NULL hoặc size=0)
+  #define UEDP_FCR_MSG_NO_REG_PSE         UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x05) // Không tìm thấy task nào đăng ký tín hiệu cho Publish/Subscribe (PSE) - g_tpm_matrix[sig] = 0
+  #define UEDP_FCR_MSG_POOL_REF_RCM       UEDP_FCR_CODE(UEDP_FCR_MOD_MSG, 0x06) // Không tìm thấy Pool phù hợp cho truyền tải, cần sử dụng GDP để truyền tham chiếu (size quá lớn hoặc pool đã hết chỗ)
 
   // NOTE - [TASK] - 0x91xx
   #define UEDP_FCR_TASK_QUEUE_FULL        UEDP_FCR_CODE(UEDP_FCR_MOD_TASK, 0x00) // Hàng đợi tin nhắn nội bộ của 1 tác vụ đã đầy

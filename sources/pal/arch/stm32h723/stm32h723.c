@@ -134,9 +134,7 @@ void stm32h723_trigger_swisr(ui32 IRQnum) {
 
 void SysTick_Handler(void) {
   HAL_IncTick();
-  if (is_inited) {
-    uedp_timer_tick();
-  }
+  if (is_inited) uedp_timer_tick();
 }
 
 __attribute__((naked)) void HardFault_Handler(void) {
@@ -241,16 +239,17 @@ void stm32h723_log_alloc(const char* param) {
 
 //ANCHOR - Add instance for stm32h723 peripheral handles
 
+sta UART_HandleTypeDef i_huart1;
+
 sta I2C_HandleTypeDef i_hi2c1;
 
-sta I2S_HandleTypeDef i_hi2s3;
+sta I2S_HandleTypeDef i_hi2s1;
 
-sta SPI_HandleTypeDef i_hspi1;
-sta SPI_HandleTypeDef i_hspi2;
-
-sta UART_HandleTypeDef i_huart1;
 sta DMA_HandleTypeDef i_hdma_usart1_tx;
 sta DMA_HandleTypeDef i_hdma_usart1_rx;
+
+sta DMA_HandleTypeDef i_hdma_spi1_tx;
+sta DMA_HandleTypeDef i_hdma_spi1_rx;
 
 //ANCHOR - Add functions to get peripheral instances
 
@@ -262,16 +261,8 @@ void stm32h723_get_i2c_inst(I2C_HandleTypeDef* instance) {
   i_hi2c1.Instance = (I2C_TypeDef*)instance;
 }
 
-void stm32h723_get_spi_1_inst(SPI_HandleTypeDef* instance) {
-  i_hspi1.Instance = (SPI_TypeDef*)instance;
-}
-
-void stm32h723_get_spi_2_inst(SPI_HandleTypeDef* instance) {
-  i_hspi2.Instance = (SPI_TypeDef*)instance;
-}
-
 void stm32h723_get_i2s_inst(I2S_HandleTypeDef* instance) {
-  i_hi2s3.Instance = (SPI_TypeDef*)SPI3;
+  i_hi2s1.Instance = (SPI_TypeDef*)SPI3;
 }
 
 //DEPRECATED - Old TASK - Need checking for pointer type casting
@@ -285,20 +276,35 @@ void stm32h723_get_dma_usart1_rx_inst(DMA_HandleTypeDef* instance) {
   i_hdma_usart1_rx = *instance;
 }
 
-//ANCHOR - Define buffer size for UART TX/RX
+void stm32h723_get_dma_spi1_tx_inst(DMA_HandleTypeDef* instance) {
+  i_hdma_spi1_tx = *instance;
+}
+
+void stm32h723_get_dma_spi1_rx_inst(DMA_HandleTypeDef* instance) {
+  i_hdma_spi1_rx = *instance;
+}
+
+//ANCHOR - Define buffer size for DMA TX/RX
 
 #define RX_BUF_SIZE (ui16)64u
 #define TX_BUF_SIZE (ui16)64u
 
-//ANCHOR - Define buffer for UART TX/RX communication
+//ANCHOR - Define buffer for DMA TX/RX communication
+/** NOTE
+ * Due to the hardware is single core, there fore we only track for single instance of rx/tx-buf.
+ * However, the race condition is the Task-ISR context switch may cause the data loss if the buffer is not processed in time.
+ * Therefore, we need to add a task only for processing the rx/tx buffer to avoid data loss.
+ * The buffer size is defined as 64 bytes, which is enough for most of the use cases. 
+ * If the user needs more buffer size, they can change the RX_BUF_SIZE and TX_BUF_SIZE macros.
+ */
 
-sta ui8 rx_buf[RX_BUF_SIZE];
-sta ui8 tx_buf[TX_BUF_SIZE];
+sta ui32 rx_buf[RX_BUF_SIZE];
+sta ui32 tx_buf[TX_BUF_SIZE];
 
 RETR_STAT stm32h723_uart_init(void) {
   HAL_UARTEx_ReceiveToIdle_DMA(&i_huart1, rx_buf, RX_BUF_SIZE);
-  // __HAL_DMA_DISABLE_IT(&i_hdma_usart1_tx, DMA_IT_HT);
-  // __HAL_DMA_DISABLE_IT(&i_hdma_usart1_rx, DMA_IT_HT);
+  __HAL_DMA_DISABLE_IT(&i_hdma_usart1_tx, DMA_IT_HT);
+  __HAL_DMA_DISABLE_IT(&i_hdma_usart1_rx, DMA_IT_HT);
   //DEPRECATED - Old TASK - Change this to adding handler for handler callback
   return STAT_OK;
 }
@@ -311,6 +317,16 @@ void internal_uart_tx_dma(ui8 *data, ui16 size) {
 void internal_uart_rx_dma(void) {
   // Start DMA reception in normal mode
   HAL_UART_Receive_DMA(&i_huart1, rx_buf, sizeof(rx_buf));
+}
+
+void internal_i2s_rx_dma(void) {
+  // Start DMA reception in normal mode
+  HAL_I2S_Receive_DMA(&i_hi2s1, rx_buf, sizeof(rx_buf));
+  //NOTE - We can only use one side to receive data, therefore no need to use tx_buf for i2s
+}
+
+void stm32h723_get_i2s_data(ui32 *rx_data, ui32 size) {
+  memcpy(rx_data, rx_buf, size);
 }
 
 //DEPRECATED - Old TASK - Add detail implementation for UART output TX functions for rprintf service
@@ -328,9 +344,7 @@ void stm32h723_uart_write(const uint8_t* data, ui16 len) {
 
 bool stm32h723_uart_isready() {
   HAL_UART_StateTypeDef status = HAL_UART_GetState(&i_huart1);
-  if (status != HAL_UART_STATE_READY) {
-    return false;
-  }
+  if (status != HAL_UART_STATE_READY) return false;
   return true;
 }
 
@@ -359,3 +373,7 @@ void stm32h723_check_hardfault_reason(char* retr) {
    * so the user can implement their own persistent log mechanism to store the hardfault reason for later analysis
    */
 }
+
+//TASK - Add I2S-SPI1 DMA TX/RX functions for stm32h723
+//TASK - Add OCTOSPI DMA TX/RX functions for stm32h723
+//TASK - Add SDMMC command tables 

@@ -239,7 +239,6 @@ RETR_STAT internal_uedp_task_norm_put_to_queue(task_id_t tid, uedp_msg_t* msg) {
 
   // Đưa tin nhắn vào hàng đợi của tác vụ
   if (fifo_put(&task->msg_queue, (uedp_msg_t*)(&msg)) == RET_FIFO_NG) {
-    UEDP_FCR_RAISE_MSG(UEDP_FCR_LIB_COLLAPSE, "put_to_queue: fifo_put failed");
     result = STAT_ERROR;
   }
 
@@ -359,7 +358,7 @@ void internal_uedp_task_norm_dispatch(task_norm_t* task, uedp_msg_t* msg) {
   }
 
   // Sau khi thực thi xong, có thể thực hiện các bước dọn dẹp hoặc cập nhật trạng thái nếu cần thiết
-  uedp_msg_free(msg); // Giải phóng tin nhắn sau khi đã xử lý xong
+  uedp_msg_ref_dec(msg); // Giảm tham chiếu, tin nhắn chỉ được giải phóng khi không còn tác vụ nào giữ
   g_current_msg = NULL; // Đặt con trỏ tin nhắn hiện tại về NULL
   g_active_task_norm_id = UEDP_TASK_NORM_IDLE_ID; // Đặt ID của tác vụ hiện tại về ID của tác vụ nhàn rỗi
   g_current_task_norm = (task_norm_t){0}; // Đặt thông tin của tác vụ hiện tại về giá trị mặc định

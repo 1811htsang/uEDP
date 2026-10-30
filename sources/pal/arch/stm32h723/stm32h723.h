@@ -32,12 +32,14 @@
 
   void stm32h723_get_i2s_inst(I2S_HandleTypeDef* instance);
 
-  void stm32h723_get_spi_1_inst(SPI_HandleTypeDef* instance);
-
-  void stm32h723_get_spi_2_inst(SPI_HandleTypeDef* instance);
-
   void stm32h723_get_dma_usart1_tx_inst(DMA_HandleTypeDef* instance);
 
   void stm32h723_get_dma_usart1_rx_inst(DMA_HandleTypeDef* instance);
+
+  void stm32h723_get_dma_spi1_tx_inst(DMA_HandleTypeDef* instance);
+
+  void stm32h723_get_dma_spi1_rx_inst(DMA_HandleTypeDef* instance);
+
+  void stm32h723_get_i2s_data(ui32 *rx_data, ui32 size);
 
 #endif // __STM32H723_H__
