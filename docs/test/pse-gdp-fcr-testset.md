@@ -1,4 +1,4 @@
-# Test Set Review: PSE, GDP and FCR
+# Test Set for PSE, GDP and FCR
 
 - Status: Draft for review
 - Date: 2026-10-30
