@@ -34,7 +34,7 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
 
   // [TIMER]
   { UEDP_FCR_TIMER_POOL_EXHAUSTED, "TIMER pool exhausted",            UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
-  { UEDP_FCR_TIMER_INVALID_PARAM,  "TIMER invalid param",             UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_TIMER_INVALID_PARAM,  "TIMER invalid param",             UEDP_FCR_SEV_ERROR,   UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_TIMER_CORRUPTED,      "TIMER linked list corrupted",     UEDP_FCR_SEV_FATAL,  UEDP_FCR_ACT_SYS_PANIC  },
 
   // [SM] (FSM/TSM)
