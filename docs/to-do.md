@@ -654,7 +654,7 @@ Trong trường hợp data quá lớn, ta lưu vào GDP với key cố định l
 -->
 
 - [x] @! TID[epic=v1.1.7/arch] ARCH-001 <+ Bổ sung API cho uutobj H723.
-- [ ] @! TID[epic=v1.1.7/PSE] DOCS-003 <+ Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
+- [x] @! TID[epic=v1.1.7/PSE] DOCS-003 <+ Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
 - [ ] @! TID[epic=v1.1.7/arch] ARCH-002 <+ Hoàn thiện bổ sung OCTOSPI, SDMMC cho uutobj H723.
 - [ ] @! TID[epic=v1.1.7/BST] TEST-001 <+ Bổ sung testobj-v1 để chuẩn bị cho BST task.
 - [ ] @! TID[epic=v1.1.7/BST] TEST-002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
