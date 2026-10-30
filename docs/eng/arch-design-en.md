@@ -611,6 +611,55 @@ The principle for choosing where to raise: **only raise on branches that are gen
 - `UEDP_FCR_ITNLOG_BUF_CORRUPT` already has a code in the table, but there is **no actual hash-checking logic yet** on the read side (`uedp_itnlog_dump()`) — currently `itnlog` only computes the hash on write and does not yet re-compare it on read to detect corruption.
 - Users at the application layer can declare their own error codes via `UEDP_FCR_CODE(UEDP_FCR_MOD_APP, x)`, but there is currently no mechanism allowing the application layer to **register additional entries** into `g_fcr_table[]` at runtime — the table is currently `static const`, so adding a new entry requires directly editing `uedp_fcr.c`.
 
+### [PSE] - Pub-Sub Engine — Publish/subscribe mechanism
+
+PSE allows a signal (`sig`) to be published to multiple registered tasks without the publisher needing to know the list of recipients. Registration and publishing are done through three APIs: `uedp_msg_register_topic()`, `uedp_msg_clear_topic()` and `uedp_msg_publish()`.
+
+#### Topic model
+
+Each signal is a **topic** with a bitmask of the tasks registered to it, stored in the table `g_tpm_matrix[UEDP_TBM_MAX_SIZE]` (32 topics by default):
+
+- Each norm task (ID from `UEDP_TASK_NORM_MIN_ID` = `0xE0` to `UEDP_TASK_NORM_MAX_ID` = `0xEF`) maps to one bit: `bit = task_id - UEDP_TASK_NORM_MIN_ID`. Each topic can therefore hold at most 16 tasks.
+- `uedp_msg_register_topic(sig, task_list[])` overwrites the topic's bitmask with the tasks in the given list; `uedp_msg_clear_topic(sig, task_list[])` clears the corresponding bits from the existing bitmask.
+- The `task_list[]` array is terminated by an element whose ID lies outside `0xE0..0xEF`.
+- `sig` must not exceed `UEDP_TBM_MAX_SIZE`; if it does, the function raises `MSG_INVALID_PARAM` and returns `STAT_ERROR`.
+
+#### Publish flow
+
+`uedp_msg_publish(sig, data, data_size)` proceeds as follows:
+
+1. Validate `sig` and the payload: `data_size` must not exceed `UEDP_MSG_ALLOC_DATA_MAX`, and `data` must not be `NULL` when `data_size > 0`. A violation raises `MSG_INVALID_PARAM`.
+2. Count the topic's registered tasks (`subscribers`). If there are none, the function returns `STAT_OK` immediately without allocating anything.
+3. Allocate **one** message from the pool matching `data_size` (`uedp_msg_alloc()`), and copy the payload into it with `memcpy` for exactly `data_size` bytes.
+4. Set `ref_count = subscribers` **before** posting, so the message cannot be returned to the pool while other tasks are still being posted to.
+5. Post the same message pointer to each registered task through `uedp_task_norm_post_msg()`. If a post fails, the function decrements `ref_count` by 1 for that post.
+
+As a result, N registered tasks receive **one** shared message (the payload is not copied per recipient), and there is no need to allocate N separate messages as in the original design.
+
+#### Lifecycle and release
+
+After a task finishes processing a message in `internal_uedp_task_norm_dispatch()`, it calls `uedp_msg_ref_dec()` instead of `uedp_msg_free()`. The message is returned to the pool only when `ref_count` reaches 0, that is, once every registered task has finished (or failed to receive it). `uedp_msg_ref_inc()` and `uedp_msg_ref_dec()` currently do not wrap `pal_enter_critical()`. This is safe for now because there is no `publish` call path from an ISR (an ISR only places a signal into `isr_pool`, and draining that pool runs in the scheduler). This is a convention rather than something the code enforces. If `publish` is later called from an ISR or on a multi-core system, these two functions must be wrapped in a critical section.
+
+`ref_count` is of type `ui16`, so the reference limit is `UINT16_MAX`; `uedp_msg_ref_inc()` does not increment past this limit.
+
+#### Error handling (FCR)
+
+| Situation | FCR | Behaviour |
+|---|---|---|
+| `sig >= UEDP_TBM_MAX_SIZE` | `MSG_INVALID_PARAM` (ERROR) | Returns `STAT_ERROR` |
+| `data_size` exceeds `UEDP_MSG_ALLOC_DATA_MAX`, or `data == NULL` with `data_size > 0` | `MSG_INVALID_PARAM` (ERROR) | Returns `STAT_ERROR`, nothing allocated |
+| Message pool exhausted | `MSG_POOL_EXHAUSTED` (FATAL) | Panics per the FCR table |
+| One task's queue is full | `TASK_QUEUE_FULL` (ERROR) | That task does not receive the message; `ref_count` is decremented; the remaining tasks still receive it normally; `publish` returns `STAT_ERROR` |
+
+A full task queue now raises only `TASK_QUEUE_FULL` (ERROR), not a panic. The function previously also raised `LIB_COLLAPSE` (FATAL), which caused a system panic; that has been removed.
+
+#### Current limitations
+
+- Only tasks **registered** at the time of publish are supported; there is no mechanism for sending to unregistered tasks or filtering by content.
+- Payloads larger than `UEDP_MSG_ALLOC_DATA_MAX` are rejected. There is no longer a GDP fallback, because that path used one fixed shared name `"publish"` and caused data to be overwritten when several publishes overlapped.
+- There is no QoS, no priority ordering among recipients, and no pass-by-reference through `ptype`. These features are being considered for later versions.
+- The current design does not yet have a complete test suite. The proposed and reviewed test cases are in `docs/test/pse-gdp-fcr-testset-review.md`.
+
 ## Development Tools
 
 ### [KwDI] Kconfig with Docker Integration

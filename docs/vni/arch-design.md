@@ -617,7 +617,52 @@ Nguyên tắc chọn nơi raise: **chỉ raise ở những nhánh thật sự b�
 
 ### [PSE] - Pub-Sub Engine - Cơ chế xuất bản-đăng ký
 
-Sẽ bắt đầu bổ sung.
+PSE cho phép một tín hiệu (`sig`) được phát (publish) tới nhiều tác vụ đã đăng ký mà không cần người phát biết danh sách người nhận. Việc đăng ký và phát được thực hiện qua ba API: `uedp_msg_register_topic()`, `uedp_msg_clear_topic()` và `uedp_msg_publish()`.
+
+#### Mô hình đăng ký (Topic)
+
+Mỗi tín hiệu là một **topic** với một bitmask các tác vụ đăng ký, lưu trong bảng `g_tpm_matrix[UEDP_TBM_MAX_SIZE]` (mặc định 32 topic):
+
+- Mỗi tác vụ norm (ID từ `UEDP_TASK_NORM_MIN_ID` = `0xE0` đến `UEDP_TASK_NORM_MAX_ID` = `0xEF`) ánh xạ tới một bit: `bit = task_id - UEDP_TASK_NORM_MIN_ID`. Mỗi topic do đó tối đa 16 tác vụ.
+- `uedp_msg_register_topic(sig, task_list[])` ghi đè bitmask của topic bằng danh sách tác vụ truyền vào; `uedp_msg_clear_topic(sig, task_list[])` xoá các bit tương ứng khỏi bitmask hiện có.
+- Danh sách `task_list[]` kết thúc bằng một phần tử có ID nằm ngoài dải `0xE0..0xEF`.
+- `sig` không được vượt quá `UEDP_TBM_MAX_SIZE`; nếu vượt quá, hàm raise `MSG_INVALID_PARAM` và trả về `STAT_ERROR`.
+
+#### Luồng phát tin (Publish)
+
+`uedp_msg_publish(sig, data, data_size)` thực hiện theo các bước sau:
+
+1. Kiểm tra `sig` và payload: `data_size` không được lớn hơn `UEDP_MSG_ALLOC_DATA_MAX`, và `data` không được `NULL` khi `data_size > 0`. Vi phạm sẽ raise `MSG_INVALID_PARAM`.
+2. Đếm số tác vụ đăng ký (`subscribers`) của topic. Nếu bằng 0, hàm trả về `STAT_OK` ngay mà không cấp phát gì.
+3. Cấp phát **một** tin nhắn duy nhất từ pool phù hợp với `data_size` (`uedp_msg_alloc()`), sao chép payload vào tin nhắn bằng `memcpy` đúng `data_size` byte.
+4. Đặt `ref_count = subscribers` **trước** khi post, để tin nhắn không bị trả về pool trong lúc các tác vụ khác còn đang được post.
+5. Post cùng một con trỏ tin nhắn tới từng tác vụ đăng ký qua `uedp_task_norm_post_msg()`. Nếu một lần post thất bại, hàm giảm `ref_count` đi 1 cho lần post đó.
+
+Nhờ vậy, N tác vụ đăng ký cùng nhận **một** tin nhắn chia sẻ (không sao chép payload cho từng người nhận), và không cần cấp phát N tin nhắn riêng như thiết kế ban đầu.
+
+#### Vòng đời và giải phóng
+
+Mỗi tác vụ, sau khi xử lý xong tin nhắn trong `internal_uedp_task_norm_dispatch()`, gọi `uedp_msg_ref_dec()` thay vì `uedp_msg_free()`. Tin nhắn chỉ được trả về pool khi `ref_count` về 0, tức là khi tất cả tác vụ đăng ký đã xử lý xong (hoặc không nhận được). `uedp_msg_ref_inc()` và `uedp_msg_ref_dec()` hiện không bọc `pal_enter_critical()`; hiện chưa có đường gọi `publish` từ ISR (ISR chỉ đưa tín hiệu vào `isr_pool`, còn việc xả hàng đợi chạy trong scheduler). Đây là ràng buộc theo quy ước chứ chưa được code kiểm tra; nếu sau này `publish` được gọi từ ISR hoặc hệ thống đa nhân, cần bọc hai hàm này bằng critical section.
+
+`ref_count` có kiểu `ui16`, nên giới hạn tham chiếu là `UINT16_MAX`; `uedp_msg_ref_inc()` không tăng vượt giới hạn này.
+
+#### Xử lý lỗi (FCR)
+
+| Tình huống | FCR | Hành vi |
+| --- | --- | --- |
+| `sig >= UEDP_TBM_MAX_SIZE` | `MSG_INVALID_PARAM` (ERROR) | Trả về `STAT_ERROR` |
+| `data_size` vượt `UEDP_MSG_ALLOC_DATA_MAX` hoặc `data == NULL` với `data_size > 0` | `MSG_INVALID_PARAM` (ERROR) | Trả về `STAT_ERROR`, không cấp phát |
+| Pool tin nhắn cạn | `MSG_POOL_EXHAUSTED` (FATAL) | Panic theo bảng FCR |
+| Hàng đợi của một tác vụ đầy | `TASK_QUEUE_FULL` (ERROR) | Tác vụ đó không nhận được; `ref_count` được giảm; các tác vụ còn lại vẫn nhận bình thường; `publish` trả về `STAT_ERROR` |
+
+Lỗi hàng đợi đầy chỉ raise `TASK_QUEUE_FULL` (ERROR), không panic. Trước đây hàm này raise thêm `LIB_COLLAPSE` (FATAL) và khiến hệ thống panic; lỗi đó đã được loại bỏ.
+
+#### Giới hạn hiện tại
+
+- Chỉ hỗ trợ gửi tới các tác vụ **đã đăng ký** tại thời điểm publish; không có cơ chế gửi tới tác vụ chưa đăng ký hay lọc theo nội dung.
+- Payload lớn hơn `UEDP_MSG_ALLOC_DATA_MAX` bị từ chối. Không còn đường dự phòng qua GDP, vì đường đó dùng chung một tên cố định `"publish"` và gây ghi đè dữ liệu khi có nhiều publish đồng thời.
+- Không có QoS, thứ tự ưu tiên giữa các người nhận, hay truyền tham chiếu theo `ptype`. Các tính năng này được xem xét cho các phiên bản sau.
+- Thiết kế hiện tại chưa có bộ kiểm thử đầy đủ. Các trường hợp kiểm thử được đề xuất và rà soát nằm trong `docs/test/pse-gdp-fcr-testset-review.md`.
 
 ## Công cụ hỗ trợ phát triển (Development Tools)
 
