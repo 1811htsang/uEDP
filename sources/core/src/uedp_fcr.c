@@ -27,7 +27,7 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
   { UEDP_FCR_MSG_INVALID_PARAM,    "MSG invalid param",               UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
 
   // [TASK]
-  { UEDP_FCR_TASK_QUEUE_FULL,      "TASK message queue full",         UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_RESET_TASK },
+  { UEDP_FCR_TASK_QUEUE_FULL,      "TASK message queue full",         UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_SYS_PANIC },
   { UEDP_FCR_TASK_INVALID_ID,      "TASK invalid ID",                 UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_TASK_PRI_EXHAUSTED,   "TASK priority escalation exhausted", UEDP_FCR_SEV_WARN, UEDP_FCR_ACT_LOG_ONLY  },
   { UEDP_FCR_TASK_INVALID_PRI,     "TASK invalid priority",           UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
@@ -39,7 +39,7 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
 
   // [SM] (FSM/TSM)
   { UEDP_FCR_SM_INVALID_TRANS,     "SM invalid transition",           UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
-  { UEDP_FCR_SM_NULL_HANDLER,      "SM null state handler",           UEDP_FCR_SEV_ERROR, UEDP_FCR_ACT_SYS_PANIC  },
+  { UEDP_FCR_SM_NULL_HANDLER,      "SM null state handler",           UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
 
   // [ITNLOG]
   { UEDP_FCR_ITNLOG_BUF_CORRUPT,   "ITNLOG buffer corrupted",         UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
@@ -57,7 +57,7 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
 
   { UEDP_FCR_GDP_TABLE_FULL,       "GDP table full",                  UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_GDP_NOT_FOUND,        "GDP name not found",              UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
-  { UEDP_FCR_GDP_INVALID_PARAM,    "GDP invalid param",               UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_GDP_INVALID_PARAM,    "GDP invalid param",               UEDP_FCR_SEV_WARN,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_GDP_DUPLICATE_NAME,   "GDP duplicate name",              UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
 
   // Fallback - LUÔN đặt cuối cùng
@@ -106,15 +106,6 @@ void uedp_fcr_raise(uedp_fcr_code_t code, const char* file, ui32 line, const cha
     case UEDP_FCR_ACT_LOG_ONLY:
       // NOTE - Không can thiệp thêm, chỉ ghi log ở bước 1
       // REVIEW - Bổ sung itnlog ở đây
-      break;
-
-    case UEDP_FCR_ACT_RESET_TASK:
-      /** NOTE
-       * Bản 0.1: chưa tự động khôi phục tác vụ (cần cơ chế reset TSM/FSM về IDLE
-       * an toàn từ bên ngoài ngữ cảnh của chính tác vụ đó). Hiện tại chỉ ghi log
-       * ở mức ERROR để tầng trên (task giám sát / OCE) tự quyết định xử lý tiếp.
-       */
-      // REVIEW - Bổ sung cơ chế như gửi cho task tín hiệu trước đó để task tự reset TSM/FSM về IDLE
       break;
 
     case UEDP_FCR_ACT_SYS_RESET:
