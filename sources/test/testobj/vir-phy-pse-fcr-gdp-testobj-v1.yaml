@@ -1,0 +1,66 @@
+pject: "bst-pse-gdp-happy-path"
+versh: "v1.1.7"
+
+# ANCHOR - Global Data Area (GDA) - Biến toàn cục
+
+glbda:
+  - &gda_sensor_data
+      name: GDA_SENSOR_DATA
+      type: "const char*"
+      initial_value: "\"TEMP: 25.5C, HUMIDITY: 60%\""
+
+# ANCHOR - Task-Priority Matrix
+
+psetbl:
+  - sig: *sig-0x30-ank # Kconfig phải cấp một Signal ID cho Topic này
+    subscribers: [TASK_NORM_B, TASK_NORM_C]
+  - sig: *sig-0x74-ank # Kconfig phải cấp một Signal ID cho Topic này
+    subscribers: [TASK_NORM_A]
+
+tlist:
+  # --- PUBLISHER TASK ---
+  - tnorm: TASK_NORM_USR
+    exec:
+      - on_sig: *sig-0x01-ank
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[SENSOR] Publishing Data to Topic...\n");
+                // Lấy tham chiếu từ GDP (Zero-copy)
+                void* data_ref = NULL;
+                uedp_gdp_get_ref("GDA_SENSOR_DATA", &data_ref);
+                
+                // Publish (truyền PTYPE_REF)
+                uedp_msg_publish(SIG_TOPIC_DATA, data_ref, 0, PTYPE_REF);
+    <<: *tnorm-usr-ank
+
+  # --- SUBSCRIBER TASK 1 ---
+  - tnorm: TASK_NORM_UI
+    exec:
+      - on_sig: *sig_topic_data-ank
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                if (msg->data != NULL) {
+                    const char* payload = (const char*)(msg->data);
+                    printf("[UI] Received via PSE: %s\n", payload);
+                } else {
+                    printf("[UI] Error: NULL data received!\n");
+                }
+    <<: *tnorm_ui-ank
+
+  # --- SUBSCRIBER TASK 2 ---
+  - tnorm: TASK_NORM_LOGGER
+    exec:
+      - on_sig: *sig_topic_data-ank
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                if (msg->data != NULL) {
+                    const char* payload = (const char*)(msg->data);
+                    printf("[LOGGER] Saving to flash: %s\n", payload);
+                }
+    <<: *tnorm_logger-ank
