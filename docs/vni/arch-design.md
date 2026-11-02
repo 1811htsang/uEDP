@@ -628,6 +628,28 @@ Mỗi tín hiệu là một **topic** với một bitmask các tác vụ đăng 
 - Danh sách `task_list[]` kết thúc bằng một phần tử có ID nằm ngoài dải `0xE0..0xEF`.
 - `sig` không được vượt quá `UEDP_TBM_MAX_SIZE`; nếu vượt quá, hàm raise `MSG_INVALID_PARAM` và trả về `STAT_ERROR`.
 
+#### Khai báo đăng ký tĩnh (psetbl)
+
+Khối `psetbl` trong μE-LS khai báo đăng ký topic lúc khởi tạo, thay cho việc gọi tay `uedp_msg_register_topic()` trong `logic_init`. Mỗi phần tử có `sig` (tín hiệu) và `sub` (danh sách tác vụ norm, viết đúng như khóa `tnorm` trong `tlist`):
+
+```yaml
+psetbl:
+  - sig: SIG_0X30
+    sub: [TASK_NORM_B, TASK_NORM_C]
+```
+
+Generator sinh một lệnh trong `logic_init()` cho mỗi phần tử, đặt trước khi post `SIG_USR_START`:
+
+```c
+{ task_norm_t task_list[] = { { TASK_NORM_B }, { TASK_NORM_C }, { UEDP_TASK_NORM_EOT_ID } }; uedp_msg_register_topic(SIG_0X30, task_list); }
+```
+
+Lưu ý:
+
+- Mọi tên trong `sub` phải là tác vụ norm đã khai báo; nếu không, generator báo lỗi và dừng.
+- `psetbl` chỉ đăng ký lúc khởi tạo. Gỡ đăng ký lúc chạy dùng `uedp_msg_clear_topic()` trong `c_stmt`.
+- Đăng ký hoàn tất trước khi `SIG_USR_START` được post, nên tác vụ nhận đúng topic từ tin nhắn đầu tiên.
+
 #### Luồng phát tin (Publish)
 
 `uedp_msg_publish(sig, data, data_size)` thực hiện theo các bước sau:
