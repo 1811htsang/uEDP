@@ -624,6 +624,28 @@ Each signal is a **topic** with a bitmask of the tasks registered to it, stored 
 - The `task_list[]` array is terminated by an element whose ID lies outside `0xE0..0xEF`.
 - `sig` must not exceed `UEDP_TBM_MAX_SIZE`; if it does, the function raises `MSG_INVALID_PARAM` and returns `STAT_ERROR`.
 
+#### Static registration (psetbl)
+
+The `psetbl` block in μE-LS registers topics at initialisation, instead of calling `uedp_msg_register_topic()` by hand in `logic_init`. Each entry has `sig` (the signal) and `sub` (the list of norm tasks, written exactly as the `tnorm` keys in `tlist`):
+
+```yaml
+psetbl:
+  - sig: SIG_0X30
+    sub: [TASK_NORM_B, TASK_NORM_C]
+```
+
+The generator emits one statement in `logic_init()` per entry, placed before `SIG_USR_START` is posted:
+
+```c
+{ task_norm_t task_list[] = { { TASK_NORM_B }, { TASK_NORM_C }, { UEDP_TASK_NORM_EOT_ID } }; uedp_msg_register_topic(SIG_0X30, task_list); }
+```
+
+Notes:
+
+- Every name in `sub` must be a declared norm task; otherwise the generator reports an error and stops.
+- `psetbl` registers only at initialisation. To unregister at runtime, call `uedp_msg_clear_topic()` from a `c_stmt`.
+- Registration completes before `SIG_USR_START` is posted, so tasks receive the topic from the first message onward.
+
 #### Publish flow
 
 `uedp_msg_publish(sig, data, data_size)` proceeds as follows:
