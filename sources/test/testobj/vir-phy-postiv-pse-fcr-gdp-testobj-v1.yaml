@@ -24,31 +24,31 @@ glbda:
 psetbl:
   # A -> B, C
   - sig: SIG_0X30
-    subscribers: [TASK_NORM_B, TASK_NORM_C]
+    sub: [TASK_NORM_B, TASK_NORM_C]
 
   # C -> A
   - sig: SIG_0X74
-    subscribers: [TASK_NORM_A]
+    sub: [TASK_NORM_A]
 
   # C -> B
   - sig: SIG_0XA4
-    subscribers: [TASK_NORM_B]
+    sub: [TASK_NORM_B]
 
   # B -> B
   - sig: SIG_0X0A
-    subscribers: [TASK_NORM_B]
+    sub: [TASK_NORM_B]
 
   # B -> USR, A, C
   - sig: SIG_0X01
-    subscribers: [TASK_NORM_USR, TASK_NORM_A, TASK_NORM_C]
+    sub: [TASK_NORM_USR, TASK_NORM_A, TASK_NORM_C]
 
   # TC_POS_04: B bị unsubscribe, C vẫn tiếp tục nhận message.
   - sig: SIG_TC_POS_04
-    subscribers: [TASK_NORM_B, TASK_NORM_C]
+    sub: [TASK_NORM_B, TASK_NORM_C]
 
   # TC_POS_06: payload VAL được gửi tới B để kiểm tra bản sao độc lập.
   - sig: SIG_TC_POS_06
-    subscribers: [TASK_NORM_B]
+    sub: [TASK_NORM_B]
 
 tlist:
   # USR --STR--> A
