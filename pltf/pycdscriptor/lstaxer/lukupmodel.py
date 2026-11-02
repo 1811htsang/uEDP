@@ -323,8 +323,8 @@ def lukupmodel_tnorm_logic(yaml_text):
         fsm_list=[_parse_fsm_obj(x) for x in fsm_raw if _parse_fsm_obj(x) is not None]
       )
 
-    if 'kwexec' in item:
-      kwexec_raw = item.get('kwexec', [])
+    if 'kwexec' in item or 'exec' in item:
+      kwexec_raw = item.get('kwexec', item.get('exec', []))
       model.kwexec = C_kwexec_list_obj(
         kwexec=[_parse_kwexec_obj(x) for x in kwexec_raw if _parse_kwexec_obj(x) is not None]
       )
