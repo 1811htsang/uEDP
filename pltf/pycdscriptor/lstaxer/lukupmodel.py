@@ -368,6 +368,24 @@ def lukupmodel_tpoll_logic(yaml_text):
 
   return out
 
+def lukupmodel_psetbl_logic(yaml_text):
+  payload = yaml.safe_load(yaml_text) or {}
+  entries = payload.get('psetbl', [])
+  if not isinstance(entries, list):
+    return []
+
+  out = []
+  for item in entries:
+    if not isinstance(item, dict) or 'sig' not in item:
+      continue
+
+    out.append(C_psetbl_obj(
+      sig=_normalize_alias_value(item.get('sig'), 'id_symbol') or '',
+      sub=[str(task) for task in item.get('sub', []) or []],
+    ))
+
+  return out
+
 # DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
 
 def lukupmodel_outexec_logic(yaml_text):
