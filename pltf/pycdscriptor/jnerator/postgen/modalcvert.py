@@ -172,6 +172,14 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
     for task in tnorm_codegen
     if task['fsm_states']
   )
+  for entry in context['psetbl_logic']:
+    unknown = [sub for sub in entry['sub'] if sub not in task_symbols]
+    if unknown:
+      raise ValueError(f"psetbl sig {entry['sig']} references unknown task: {', '.join(unknown)}")
+    task_list = ', '.join([f'{{ {sub} }}' for sub in entry['sub']] + ['{ UEDP_TASK_NORM_EOT_ID }'])
+    context['init_actions'].append(
+      f'{{ task_norm_t task_list[] = {{ {task_list} }}; uedp_msg_register_topic({entry["sig"]}, task_list); }}'
+    )
   # CRITICAL - Find any task containing USR, as the initial message to start the user task
   usr_task = next((task for task in tnorm_codegen if 'USR' in task['task']), None)
   if usr_task:
