@@ -55,6 +55,7 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
 
   for logic in context['tnorm_logic']:
     resource = resources.get(logic['task'], {})
+    exec_items = logic.get('kwexec', {}).get('kwexec', [])
     tsm_states = []
     for state_index, state in enumerate(logic.get('tsm', {}).get('tsm_list', [])):
       state_name = state['id']
@@ -109,6 +110,13 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
       'task': logic['task'],
       'handler_name': resource.get('handler', f"{logic['task'].lower()}_nhler"),
       'dispatch_kind': dispatch_kind,
+      'exec_items': [
+        {
+          'sig': item['on_sig'],
+          'actions': _emit_actions(_actions(item.get('steps')), task_symbols),
+        }
+        for item in exec_items
+      ],
       'tsm_states': tsm_states,
       'fsm_states': fsm_states,
       'tsm_object': resource.get('tsm_resrc', {}).get('object', f'{logic["task"].lower()}_tsm'),
