@@ -18,11 +18,11 @@ glbda:
 psetbl:
   # TC_NEG_02: a subscriber is required to make publish allocate a message.
   - sig: SIG_TC_NEG_02
-    subscribers: [TASK_NORM_B]
+    sub: [TASK_NORM_B]
 
   # TC_NEG_03: B is intentionally filled before this topic is published.
   - sig: SIG_TC_NEG_03
-    subscribers: [TASK_NORM_B, TASK_NORM_C]
+    sub: [TASK_NORM_B, TASK_NORM_C]
 
 tlist:
   - tnorm: TASK_NORM_USR
