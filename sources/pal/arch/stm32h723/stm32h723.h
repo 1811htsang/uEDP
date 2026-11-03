@@ -26,13 +26,13 @@
 
   void stm32h723_log_alloc(const char* param);
 
-  void stm32h723_get_uart_inst(UART_HandleTypeDef* instance);
-
   void stm32h723_get_i2c_inst(I2C_HandleTypeDef* instance);
 
-  void stm32h723_get_dma_usart1_tx_inst(DMA_HandleTypeDef* instance);
-
-  void stm32h723_get_dma_usart1_rx_inst(DMA_HandleTypeDef* instance);
+  /** ANCHOR - USART1 API
+   * @attention huart phải là handle đã được HAL_UART_Init() bởi CubeIDE (MX_USART1_UART_Init)
+   * @attention DMA TX/RX được CubeIDE liên kết vào huart qua __HAL_LINKDMA, PAL không cần handle DMA riêng
+   */
+  void stm32h723_uart_bind(UART_HandleTypeDef* huart);
 
   void stm32h723_get_dma_spi1_tx_inst(DMA_HandleTypeDef* instance);
 
