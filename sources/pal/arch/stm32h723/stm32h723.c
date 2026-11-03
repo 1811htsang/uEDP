@@ -10,6 +10,7 @@
 #include "uedp_timer.h"
 #include "uedp_itnlog.h"
 #include "uedp_fcr.h"
+#include "fifo.h"
 
 //ANCHOR - Khai báo thư viện encrypt
 #include "libcrc8.h"
@@ -239,7 +240,7 @@ void stm32h723_log_alloc(const char* param) {
 
 //ANCHOR - Add instance for stm32h723 peripheral handles
 
-sta UART_HandleTypeDef i_huart1;
+sta UART_HandleTypeDef* i_huart1 = NULL;
 
 sta I2C_HandleTypeDef i_hi2c1;
 
@@ -247,31 +248,17 @@ sta I2S_HandleTypeDef* i_hi2s1 = NULL;
 sta OSPI_HandleTypeDef* i_hospi1 = NULL;
 sta stm32h723_i2s_rx_cb_t i2s_rx_cb = NULL;
 
-sta DMA_HandleTypeDef i_hdma_usart1_tx;
-sta DMA_HandleTypeDef i_hdma_usart1_rx;
-
 sta DMA_HandleTypeDef i_hdma_spi1_tx;
 sta DMA_HandleTypeDef i_hdma_spi1_rx;
 
 //ANCHOR - Add functions to get peripheral instances
 
-void stm32h723_get_uart_inst(UART_HandleTypeDef* instance) {
-  i_huart1.Instance = (USART_TypeDef*)instance;
-}
-
 void stm32h723_get_i2c_inst(I2C_HandleTypeDef* instance) {
   i_hi2c1.Instance = (I2C_TypeDef*)instance;
 }
 
-//DEPRECATED - Old TASK - Need checking for pointer type casting
-//STATUS - correct due to i_hdma_usart1_tx reciev resolved data
-
-void stm32h723_get_dma_usart1_tx_inst(DMA_HandleTypeDef* instance) {
-  i_hdma_usart1_tx = *instance;
-}
-
-void stm32h723_get_dma_usart1_rx_inst(DMA_HandleTypeDef* instance) {
-  i_hdma_usart1_rx = *instance;
+void stm32h723_uart_bind(UART_HandleTypeDef* huart) {
+  i_huart1 = huart;
 }
 
 void stm32h723_get_dma_spi1_tx_inst(DMA_HandleTypeDef* instance) {
@@ -286,6 +273,7 @@ void stm32h723_get_dma_spi1_rx_inst(DMA_HandleTypeDef* instance) {
 
 #define RX_BUF_SIZE (ui16)64u
 #define TX_BUF_SIZE (ui16)64u
+#define TX_QUEUE_SIZE (ui16)256u
 
 //ANCHOR - Define buffer for DMA TX/RX communication
 /** NOTE
@@ -296,25 +284,55 @@ void stm32h723_get_dma_spi1_rx_inst(DMA_HandleTypeDef* instance) {
  * If the user needs more buffer size, they can change the RX_BUF_SIZE and TX_BUF_SIZE macros.
  */
 
-sta ui32 rx_buf[RX_BUF_SIZE];
-sta ui32 tx_buf[TX_BUF_SIZE];
+sta uint8_t rx_buf[RX_BUF_SIZE];
+sta uint8_t tx_buf[TX_BUF_SIZE];
+sta uint8_t tx_queue_mem[TX_QUEUE_SIZE];
+sta fifo_t tx_queue;
 
 RETR_STAT stm32h723_uart_init(void) {
-  HAL_UARTEx_ReceiveToIdle_DMA(&i_huart1, rx_buf, RX_BUF_SIZE);
-  __HAL_DMA_DISABLE_IT(&i_hdma_usart1_tx, DMA_IT_HT);
-  __HAL_DMA_DISABLE_IT(&i_hdma_usart1_rx, DMA_IT_HT);
-  //DEPRECATED - Old TASK - Change this to adding handler for handler callback
+  if (i_huart1 == NULL || i_huart1->hdmatx == NULL || i_huart1->hdmarx == NULL) return STAT_ERROR;
+  fifo_init(&tx_queue, tx_queue_mem, TX_QUEUE_SIZE, sizeof(uint8_t));
+  __HAL_DMA_DISABLE_IT(i_huart1->hdmatx, DMA_IT_HT);
+  __HAL_DMA_DISABLE_IT(i_huart1->hdmarx, DMA_IT_HT);
+  if (HAL_UARTEx_ReceiveToIdle_DMA(i_huart1, rx_buf, RX_BUF_SIZE) != HAL_OK) return STAT_ERROR;
   return STAT_OK;
 }
 
-void internal_uart_tx_dma(ui8 *data, ui16 size) {
-  memcpy(tx_buf, data, size);
-  HAL_UART_Transmit_DMA(&i_huart1, tx_buf, size);
+sta void internal_uart_tx_start_next(void) {
+  ui16 chunk = 0;
+  while (chunk < TX_BUF_SIZE) {
+    uint8_t byte;
+    if (fifo_get(&tx_queue, &byte) != RET_FIFO_OK) break;
+    tx_buf[chunk++] = byte;
+  }
+  if (chunk == 0) return;
+  if (HAL_UART_Transmit_DMA(i_huart1, tx_buf, chunk) != HAL_OK) {
+    fifo_init(&tx_queue, tx_queue_mem, TX_QUEUE_SIZE, sizeof(uint8_t));
+  }
 }
 
-void internal_uart_rx_dma(void) {
-  // Start DMA reception in normal mode
-  HAL_UART_Receive_DMA(&i_huart1, rx_buf, sizeof(rx_buf));
+sta RETR_STAT internal_uart_tx_enqueue(const uint8_t* data, ui16 size) {
+  if (i_huart1 == NULL || data == NULL) return STAT_ERROR;
+  pal_enter_critical();
+  if (fifo_available(&tx_queue) + size > TX_QUEUE_SIZE) {
+    pal_exit_critical();
+    return STAT_ERROR;
+  }
+  for (ui16 i = 0; i < size; i++) {
+    fifo_put(&tx_queue, (void*)&data[i]);
+  }
+  if (i_huart1->gState == HAL_UART_STATE_READY) {
+    internal_uart_tx_start_next();
+  }
+  pal_exit_critical();
+  return STAT_OK;
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
+  if (huart != i_huart1) return;
+  pal_enter_critical();
+  internal_uart_tx_start_next();
+  pal_exit_critical();
 }
 
 void stm32h723_i2s_bind(I2S_HandleTypeDef* hi2s) {
@@ -331,9 +349,20 @@ RETR_STAT stm32h723_i2s_rx_start(ui32* buf, ui16 size) {
   return STAT_OK;
 }
 
+sta void internal_i2s_abort_done(DMA_HandleTypeDef* hdma) {
+  (void)hdma;
+  if (i_hi2s1 == NULL) return;
+  CLEAR_BIT(i_hi2s1->Instance->CFG1, SPI_CFG1_RXDMAEN);
+  __HAL_I2S_DISABLE(i_hi2s1);
+  i_hi2s1->RxXferCount = 0U;
+  i_hi2s1->State = HAL_I2S_STATE_READY;
+}
+
 RETR_STAT stm32h723_i2s_rx_stop(void) {
-  if (i_hi2s1 == NULL) return STAT_ERROR;
-  if (HAL_I2S_DMAStop(i_hi2s1) != HAL_OK) return STAT_ERROR;
+  if (i_hi2s1 == NULL || i_hi2s1->hdmarx == NULL) return STAT_ERROR;
+  if (i_hi2s1->State != HAL_I2S_STATE_BUSY_RX) return STAT_ERROR;
+  i_hi2s1->hdmarx->XferAbortCallback = internal_i2s_abort_done;
+  if (HAL_DMA_Abort_IT(i_hi2s1->hdmarx) != HAL_OK) return STAT_ERROR;
   return STAT_OK;
 }
 
@@ -373,23 +402,19 @@ RETR_STAT stm32h723_ospi_receive(OSPI_RegularCmdTypeDef* cmd, ui8* data, ui32 si
   return STAT_OK;
 }
 
-//DEPRECATED - Old TASK - Add detail implementation for UART output TX functions for rprintf service
 //DEPRECATED - Old TASK - cmake build to remove errors on C/C++ Intellisense
 
 void stm32h723_uart_putc(unsigned char c) {
-  // Transmit the character using DMA
-  internal_uart_tx_dma(&c, 1);
+  uint8_t byte = c;
+  internal_uart_tx_enqueue(&byte, 1);
 }
 
 void stm32h723_uart_write(const uint8_t* data, ui16 len) {
-  // Transmit the data using DMA
-  internal_uart_tx_dma((uint8_t*)data, len);
+  internal_uart_tx_enqueue(data, len);
 }
 
 bool stm32h723_uart_isready() {
-  HAL_UART_StateTypeDef status = HAL_UART_GetState(&i_huart1);
-  if (status != HAL_UART_STATE_READY) return false;
-  return true;
+  return i_huart1 != NULL && i_huart1->gState != HAL_UART_STATE_RESET;
 }
 
 sta const uedp_itnlog_entry_t rprintf_entry = default_entry;
