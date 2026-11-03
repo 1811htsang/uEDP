@@ -243,7 +243,9 @@ sta UART_HandleTypeDef i_huart1;
 
 sta I2C_HandleTypeDef i_hi2c1;
 
-sta I2S_HandleTypeDef i_hi2s1;
+sta I2S_HandleTypeDef* i_hi2s1 = NULL;
+sta OSPI_HandleTypeDef* i_hospi1 = NULL;
+sta stm32h723_i2s_rx_cb_t i2s_rx_cb = NULL;
 
 sta DMA_HandleTypeDef i_hdma_usart1_tx;
 sta DMA_HandleTypeDef i_hdma_usart1_rx;
@@ -259,10 +261,6 @@ void stm32h723_get_uart_inst(UART_HandleTypeDef* instance) {
 
 void stm32h723_get_i2c_inst(I2C_HandleTypeDef* instance) {
   i_hi2c1.Instance = (I2C_TypeDef*)instance;
-}
-
-void stm32h723_get_i2s_inst(I2S_HandleTypeDef* instance) {
-  i_hi2s1.Instance = (SPI_TypeDef*)SPI3;
 }
 
 //DEPRECATED - Old TASK - Need checking for pointer type casting
@@ -319,14 +317,60 @@ void internal_uart_rx_dma(void) {
   HAL_UART_Receive_DMA(&i_huart1, rx_buf, sizeof(rx_buf));
 }
 
-void internal_i2s_rx_dma(void) {
-  // Start DMA reception in normal mode
-  HAL_I2S_Receive_DMA(&i_hi2s1, rx_buf, sizeof(rx_buf));
-  //NOTE - We can only use one side to receive data, therefore no need to use tx_buf for i2s
+void stm32h723_i2s_bind(I2S_HandleTypeDef* hi2s) {
+  i_hi2s1 = hi2s;
 }
 
-void stm32h723_get_i2s_data(ui32 *rx_data, ui32 size) {
-  memcpy(rx_data, rx_buf, size);
+void stm32h723_i2s_set_rx_callback(stm32h723_i2s_rx_cb_t cb) {
+  i2s_rx_cb = cb;
+}
+
+RETR_STAT stm32h723_i2s_rx_start(ui32* buf, ui16 size) {
+  if (i_hi2s1 == NULL || buf == NULL || size == 0) return STAT_ERROR;
+  if (HAL_I2S_Receive_DMA(i_hi2s1, (uint16_t*)buf, size) != HAL_OK) return STAT_ERROR;
+  return STAT_OK;
+}
+
+RETR_STAT stm32h723_i2s_rx_stop(void) {
+  if (i_hi2s1 == NULL) return STAT_ERROR;
+  if (HAL_I2S_DMAStop(i_hi2s1) != HAL_OK) return STAT_ERROR;
+  return STAT_OK;
+}
+
+void HAL_I2S_RxCpltCallback(I2S_HandleTypeDef* hi2s) {
+  if (hi2s != i_hi2s1 || i2s_rx_cb == NULL) return;
+  i2s_rx_cb(STM32H723_I2S_RX_DONE);
+}
+
+void HAL_I2S_ErrorCallback(I2S_HandleTypeDef* hi2s) {
+  if (hi2s != i_hi2s1 || i2s_rx_cb == NULL) return;
+  i2s_rx_cb(STM32H723_I2S_RX_ERROR);
+}
+
+void stm32h723_ospi_bind(OSPI_HandleTypeDef* hospi) {
+  i_hospi1 = hospi;
+}
+
+RETR_STAT stm32h723_ospi_command(OSPI_RegularCmdTypeDef* cmd, ui32 timeout) {
+  if (i_hospi1 == NULL || cmd == NULL) return STAT_ERROR;
+  if (HAL_OSPI_Command(i_hospi1, cmd, timeout) != HAL_OK) return STAT_ERROR;
+  return STAT_OK;
+}
+
+RETR_STAT stm32h723_ospi_transmit(OSPI_RegularCmdTypeDef* cmd, ui8* data, ui32 size, ui32 timeout) {
+  if (i_hospi1 == NULL || cmd == NULL || data == NULL || size == 0) return STAT_ERROR;
+  cmd->NbData = size;
+  if (HAL_OSPI_Command(i_hospi1, cmd, timeout) != HAL_OK) return STAT_ERROR;
+  if (HAL_OSPI_Transmit(i_hospi1, data, timeout) != HAL_OK) return STAT_ERROR;
+  return STAT_OK;
+}
+
+RETR_STAT stm32h723_ospi_receive(OSPI_RegularCmdTypeDef* cmd, ui8* data, ui32 size, ui32 timeout) {
+  if (i_hospi1 == NULL || cmd == NULL || data == NULL || size == 0) return STAT_ERROR;
+  cmd->NbData = size;
+  if (HAL_OSPI_Command(i_hospi1, cmd, timeout) != HAL_OK) return STAT_ERROR;
+  if (HAL_OSPI_Receive(i_hospi1, data, timeout) != HAL_OK) return STAT_ERROR;
+  return STAT_OK;
 }
 
 //DEPRECATED - Old TASK - Add detail implementation for UART output TX functions for rprintf service
