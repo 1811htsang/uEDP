@@ -28,6 +28,9 @@ file(GLOB_RECURSE CORE_SRCS
 )
 file(GLOB COMMON_XPRINTF_SRCS "sources/common/xprintf/*.c")
 file(GLOB APP_SRCS "sources/app/app.c")
+if (PLAT STREQUAL "LINUX")
+  list(APPEND APP_SRCS "sources/pal/arch/linux/main.c")
+endif()
 file(GLOB_RECURSE PAL_SERVICE_SRCS
   "sources/pal/service/memrp/*.c"
   "sources/pal/service/logdp/*.c"
@@ -172,8 +175,10 @@ set(SOURCES
 )
 
 # ANCHOR - Tạo mục tiêu build
-if (PLAT STREQUAL "TEST" OR PLAT STREQUAL "LINUX")
+if (PLAT STREQUAL "TEST")
   add_library(${PROJECT_NAME} OBJECT ${SOURCES})
+elseif (PLAT STREQUAL "LINUX")
+  add_executable(${PROJECT_NAME} ${SOURCES})
 else()
   add_executable(${PROJECT_NAME} ${SOURCES})
 endif()
