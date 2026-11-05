@@ -92,3 +92,7 @@ eim_config.toml
 # Build output
 build/*
 !build/README.md
+
+# Python cache
+__pycache__/*
+sources/test/__pycache__/*
