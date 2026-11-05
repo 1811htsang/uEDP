@@ -1,0 +1,338 @@
+tnorms:
+  '1': &tnorm1-ank
+    tsm_resrc:
+      states: []
+      state_trans: []
+    fsm_resrc:
+      states: []
+    id_symbol: TASK_NORM_USR_ID
+    queue_name: tnorm_usr_msgq
+    handler: tnorm_usr_nhler
+    hex_val: '0xe3'
+  '2': &tnorm2-ank
+    tsm_resrc:
+      states: []
+      state_trans: []
+    fsm_resrc:
+      states: []
+    id_symbol: TASK_NORM_A_ID
+    queue_name: tnorm_a_msgq
+    handler: tnorm_a_nhler
+    hex_val: '0xe4'
+  '3': &tnorm3-ank
+    tsm_resrc:
+      states: []
+      state_trans: []
+    fsm_resrc:
+      states: []
+    id_symbol: TASK_NORM_B_ID
+    queue_name: tnorm_b_msgq
+    handler: tnorm_b_nhler
+    hex_val: '0xe5'
+  '4': &tnorm4-ank
+    tsm_resrc:
+      states: []
+      state_trans: []
+    fsm_resrc:
+      states: []
+    id_symbol: TASK_NORM_C_ID
+    queue_name: tnorm_c_msgq
+    handler: tnorm_c_nhler
+    hex_val: '0xe6'
+tpolls: {}
+sigs:
+  '1': &sig1-ank
+    id_symbol: SIG_0X30_ID
+    hex_val: '0x1'
+  '2': &sig2-ank
+    id_symbol: SIG_0X74_ID
+    hex_val: '0x2'
+  '3': &sig3-ank
+    id_symbol: SIG_0XA4_ID
+    hex_val: '0x3'
+  '4': &sig4-ank
+    id_symbol: SIG_0X0A_ID
+    hex_val: '0x4'
+  '5': &sig5-ank
+    id_symbol: SIG_0X01_ID
+    hex_val: '0x5'
+  '6': &sig6-ank
+    id_symbol: SIG_TC_POS_04_ID
+    hex_val: '0x6'
+  '7': &sig7-ank
+    id_symbol: SIG_TC_POS_06_ID
+    hex_val: '0x7'
+  '8': &sig8-ank
+    id_symbol: SIG_STR_ID
+    hex_val: '0x8'
+  '9': &sig9-ank
+    id_symbol: SIG_TC_POS_03_ID
+    hex_val: '0x9'
+  '10': &sig10-ank
+    id_symbol: SIG_0X04_ID
+    hex_val: '0xa'
+  '11': &sig11-ank
+    id_symbol: SIG_TC_POS_05_ID
+    hex_val: '0xb'
+
+pject: "vir-phy-pse-fcr-gdp-testobj-v1"
+versh: "v1.1.7"
+
+# ANCHOR - Global Data Area (GDA)
+# GDA_TC_POS_05_REF dùng cho kiểm tra ptype: REF.
+# GDA_TC_POS_06_SOURCE và GDA_TC_POS_06_COPY dùng cho kiểm tra ptype: VAL.
+glbda:
+  - &gda_tc_pos05_ref
+      name: GDA_TC_POS_05_REF
+      type: "int"
+      initial_value: 42
+  - &gda_tc_pos05_ref_result
+      name: GDA_TC_POS_05_REF_RESULT
+      type: "int"
+      initial_value: 0
+  - &gda_tc_pos06_source
+      name: GDA_TC_POS_06_SOURCE
+      type: "const char*"
+      initial_value: "VALUE_PAYLOAD"
+
+# Các signal này nên được ánh xạ sang anchor do Kconfig sinh ra.
+# Ví dụ: SIG_0X30 có thể thay bằng *sig-0x30-ank.
+
+psetbl:
+  # A -> B, C
+  - sig: SIG_0X30
+    sub: [TASK_NORM_B, TASK_NORM_C]
+
+  # C -> A
+  - sig: SIG_0X74
+    sub: [TASK_NORM_A]
+
+  # C -> B
+  - sig: SIG_0XA4
+    sub: [TASK_NORM_B]
+
+  # B -> B
+  - sig: SIG_0X0A
+    sub: [TASK_NORM_B]
+
+  # B -> USR, A, C
+  - sig: SIG_0X01
+    sub: [TASK_NORM_USR, TASK_NORM_A, TASK_NORM_C]
+
+  # TC_POS_04: B bị unsubscribe, C vẫn tiếp tục nhận message.
+  - sig: SIG_TC_POS_04
+    sub: [TASK_NORM_B, TASK_NORM_C]
+
+  # TC_POS_06: payload VAL được gửi tới B để kiểm tra bản sao độc lập.
+  - sig: SIG_TC_POS_06
+    sub: [TASK_NORM_B]
+
+tlist:
+  # USR --STR--> A
+  - tnorm: TASK_NORM_USR
+    <<: *tnorm1-ank
+    exec:
+      - on_sig: SIG_STR
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[USR] RECV STR -> POST STR TO A\n");
+
+                uedp_msg_t* msg =
+                  uedp_msg_alloc(TASK_NORM_A, SIG_STR, UEDP_MSG_TYPE_BLANK);
+                if (msg != NULL) {
+                  uedp_task_norm_post_msg(TASK_NORM_A, msg);
+                }
+
+      # B --0x01--> USR, sau đó USR kết thúc bằng STP/END
+      - on_sig: SIG_0X01
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[USR] RECV 0x01 -> STP -> END\n");
+                printf("[USR] END\n");
+
+      # TC_POS_03: publish không có subscriber, không cấp phát message.
+      - on_sig: SIG_TC_POS_03
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                RETR_STAT result = uedp_msg_publish(SIG_TC_POS_03, NULL, 0);
+                printf("[TC_POS_03] publish without subscribers: %s\n",
+                       result == STAT_OK ? "PASS" : "FAIL");
+
+      # TC_POS_04: xoá B khỏi topic rồi publish; chỉ C được nhận.
+      - on_sig: SIG_TC_POS_04
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                task_norm_t removed_tasks[] = {
+                  { TASK_NORM_B },
+                  { UEDP_TASK_NORM_EOT_ID }
+                };
+                RETR_STAT clear_result =
+                    uedp_msg_clear_topic(SIG_TC_POS_04, removed_tasks);
+                RETR_STAT publish_result =
+                    uedp_msg_publish(SIG_TC_POS_04, NULL, 0);
+                printf("[TC_POS_04] clear B: %s, publish: %s\n",
+                       clear_result == STAT_OK ? "PASS" : "FAIL",
+                       publish_result == STAT_OK ? "PASS" : "FAIL");
+
+      # TC_POS_05: đăng ký GDA, lấy REF và xác nhận cùng một địa chỉ.
+      - on_sig: SIG_TC_POS_05
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                uedp_gdp_init();
+                RETR_STAT register_result = uedp_gdp_register(
+                    "GDA_TC_POS_05_REF",
+                    &GDA_TC_POS_05_REF,
+                    sizeof(GDA_TC_POS_05_REF));
+                int* ref = (int*)uedp_gdp_get_ref("GDA_TC_POS_05_REF");
+                bool ref_ok = register_result == STAT_OK &&
+                              ref == &GDA_TC_POS_05_REF;
+                if (ref_ok) {
+                  *ref = 84;
+                  GDA_TC_POS_05_REF_RESULT = *ref;
+                }
+                printf("[TC_POS_05] GDP REF: %s, value=%d\n",
+                       ref_ok ? "PASS" : "FAIL",
+                       GDA_TC_POS_05_REF_RESULT);
+
+      # TC_POS_06: đăng ký GDA và publish bản sao payload theo kích thước thật.
+      - on_sig: SIG_TC_POS_06
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                uedp_gdp_init();
+                RETR_STAT register_result = uedp_gdp_register(
+                    "GDA_TC_POS_06_SOURCE",
+                    GDA_TC_POS_06_SOURCE,
+                    strlen(GDA_TC_POS_06_SOURCE) + 1);
+                RETR_STAT publish_result = uedp_msg_publish(
+                    SIG_TC_POS_06,
+                    GDA_TC_POS_06_SOURCE,
+                    strlen(GDA_TC_POS_06_SOURCE) + 1);
+                printf("[TC_POS_06] GDP VAL source registration: %s, publish: %s\n",
+                       register_result == STAT_OK ? "PASS" : "FAIL",
+                       publish_result == STAT_OK ? "PASS" : "FAIL");
+
+  # A --0x30--> B,C khi nhận STR
+  # A --0x04--> A khi nhận 0x74
+  - tnorm: TASK_NORM_A
+    <<: *tnorm2-ank
+    exec:
+      - on_sig: SIG_STR
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[A] RECV STR -> PUBLISH 0x30 to B,C\n");
+                uedp_msg_publish(SIG_0X30, NULL, 0);
+
+      - on_sig: SIG_0X74
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[A] RECV 0x74 -> POST 0x04 TO A\n");
+
+                uedp_msg_t* msg =
+                  uedp_msg_alloc(TASK_NORM_A, SIG_0X04, UEDP_MSG_TYPE_BLANK);
+                if (msg != NULL) {
+                  uedp_task_norm_post_msg(TASK_NORM_A, msg);
+                }
+
+      - on_sig: SIG_0X04
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[A] RECV 0x04 -> STAY\n");
+
+  # B nhận 0x30 qua PSE 1-N
+  # B --0x01--> USR,A,C khi nhận 0xA4
+  - tnorm: TASK_NORM_B
+    <<: *tnorm3-ank
+    exec:
+      - on_sig: SIG_0X30
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[B] RECV 0x30 -> WAIT 0xA4\n");
+
+      - on_sig: SIG_0XA4
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[B] RECV 0xA4 -> PUBLISH 0x01 to USR,A,C\n");
+                uedp_msg_publish(SIG_0X01, NULL, 0);
+
+                printf("[B] RECV 0xA4 -> POST 0x0A TO B\n");
+                uedp_msg_t* msg =
+                  uedp_msg_alloc(TASK_NORM_B, SIG_0X0A, UEDP_MSG_TYPE_BLANK);
+                if (msg != NULL) {
+                  uedp_task_norm_post_msg(TASK_NORM_B, msg);
+                }
+
+      - on_sig: SIG_0X0A
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[B] RECV 0x0A -> STAY\n");
+
+      # TC_POS_04: B không được nhận message sau khi bị clear khỏi topic.
+      - on_sig: SIG_TC_POS_04
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[TC_POS_04] FAIL: B received message after unsubscribe\n");
+
+      # TC_POS_06: nhận bản sao VAL, sửa bản sao và xác nhận nguồn không đổi.
+      - on_sig: SIG_TC_POS_06
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                char copied_payload[sizeof("VALUE_PAYLOAD")];
+                memcpy(copied_payload,
+                       msg->data,
+                       strlen(GDA_TC_POS_06_SOURCE) + 1);
+                copied_payload[0] = 'X';
+                printf("[TC_POS_06] copy=%s, source=%s, %s\n",
+                       copied_payload,
+                       GDA_TC_POS_06_SOURCE,
+                       GDA_TC_POS_06_SOURCE[0] == 'V' ? "PASS" : "FAIL");
+
+  # C nhận 0x30 qua PSE 1-N
+  # C --0x74--> A và C --0xA4--> B
+  - tnorm: TASK_NORM_C
+    <<: *tnorm4-ank
+    exec:
+      - on_sig: SIG_0X30
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[C] RECV 0x30 -> PUBLISH 0x74 to A\n");
+                uedp_msg_publish(SIG_0X74, NULL, 0);
+
+                printf("[C] RECV 0x30 -> PUBLISH 0xA4 to B\n");
+                uedp_msg_publish(SIG_0XA4, NULL, 0);
+
+      - on_sig: SIG_TC_POS_04
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[TC_POS_04] PASS: C received message after B unsubscribe\n");

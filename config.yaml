@@ -1,0 +1,76 @@
+tnorms:
+  '1':
+    tsm_resrc:
+      states: []
+      state_trans: []
+    fsm_resrc:
+      states: []
+    id_symbol: TASK_NORM_USR_ID
+    queue_name: tnorm_usr_msgq
+    handler: tnorm_usr_nhler
+    hex_val: '0xe3'
+  '2':
+    tsm_resrc:
+      states: []
+      state_trans: []
+    fsm_resrc:
+      states: []
+    id_symbol: TASK_NORM_A_ID
+    queue_name: tnorm_a_msgq
+    handler: tnorm_a_nhler
+    hex_val: '0xe4'
+  '3':
+    tsm_resrc:
+      states: []
+      state_trans: []
+    fsm_resrc:
+      states: []
+    id_symbol: TASK_NORM_B_ID
+    queue_name: tnorm_b_msgq
+    handler: tnorm_b_nhler
+    hex_val: '0xe5'
+  '4':
+    tsm_resrc:
+      states: []
+      state_trans: []
+    fsm_resrc:
+      states: []
+    id_symbol: TASK_NORM_C_ID
+    queue_name: tnorm_c_msgq
+    handler: tnorm_c_nhler
+    hex_val: '0xe6'
+tpolls: {}
+sigs:
+  '1':
+    id_symbol: SIG_0X30_ID
+    hex_val: '0x1'
+  '2':
+    id_symbol: SIG_0X74_ID
+    hex_val: '0x2'
+  '3':
+    id_symbol: SIG_0XA4_ID
+    hex_val: '0x3'
+  '4':
+    id_symbol: SIG_0X0A_ID
+    hex_val: '0x4'
+  '5':
+    id_symbol: SIG_0X01_ID
+    hex_val: '0x5'
+  '6':
+    id_symbol: SIG_TC_POS_04_ID
+    hex_val: '0x6'
+  '7':
+    id_symbol: SIG_TC_POS_06_ID
+    hex_val: '0x7'
+  '8':
+    id_symbol: SIG_STR_ID
+    hex_val: '0x8'
+  '9':
+    id_symbol: SIG_TC_POS_03_ID
+    hex_val: '0x9'
+  '10':
+    id_symbol: SIG_0X04_ID
+    hex_val: '0xa'
+  '11':
+    id_symbol: SIG_TC_POS_05_ID
+    hex_val: '0xb'
