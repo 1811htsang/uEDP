@@ -13,3 +13,12 @@ menu "Hardware Specifier"
     help
       Hardware name for identification. Code generation will be in lower case.
 endmenu
+menu "Hardware API configuration"
+
+endmenu
+menu "Hardware API configuration"
+
+endmenu
+menu "Hardware API configuration"
+
+endmenu
