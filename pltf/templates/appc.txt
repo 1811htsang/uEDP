@@ -84,8 +84,16 @@ uedp_fsm_t {{ task.fsm_object }};
 void {{ task.handler_name }}(uedp_msg_t* msg) {
   {%- if task.tsm_states %}
   uedp_tsm_dispatch(&{{ task.tsm_object }}, msg);
-  {%- else %}
+  {%- elif task.fsm_states %}
   uedp_fsm_dispatch(&{{ task.fsm_object }}, msg);
+  {%- else %}
+  {%- for exec in task.exec_items %}
+  if (msg->sig == {{ exec.sig }}) {
+  {%- for action in exec.actions %}
+{{ action | indent(4, true) }}
+  {%- endfor %}
+  }
+  {%- endfor %}
   {%- endif %}
   system_action_count++;
 }

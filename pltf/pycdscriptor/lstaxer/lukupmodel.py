@@ -323,8 +323,8 @@ def lukupmodel_tnorm_logic(yaml_text):
         fsm_list=[_parse_fsm_obj(x) for x in fsm_raw if _parse_fsm_obj(x) is not None]
       )
 
-    if 'kwexec' in item:
-      kwexec_raw = item.get('kwexec', [])
+    if 'kwexec' in item or 'exec' in item:
+      kwexec_raw = item.get('kwexec', item.get('exec', []))
       model.kwexec = C_kwexec_list_obj(
         kwexec=[_parse_kwexec_obj(x) for x in kwexec_raw if _parse_kwexec_obj(x) is not None]
       )
@@ -365,6 +365,24 @@ def lukupmodel_tpoll_logic(yaml_text):
         parsed_kwexec.append(action)
 
     out.append(C_tpoll_obj(tpoll=task_name, kwexec=[a for a in parsed_kwexec if a is not None]))
+
+  return out
+
+def lukupmodel_psetbl_logic(yaml_text):
+  payload = yaml.safe_load(yaml_text) or {}
+  entries = payload.get('psetbl', [])
+  if not isinstance(entries, list):
+    return []
+
+  out = []
+  for item in entries:
+    if not isinstance(item, dict) or 'sig' not in item:
+      continue
+
+    out.append(C_psetbl_obj(
+      sig=_normalize_alias_value(item.get('sig'), 'id_symbol') or '',
+      sub=[str(task) for task in item.get('sub', []) or []],
+    ))
 
   return out
 

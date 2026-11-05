@@ -24,35 +24,36 @@ glbda:
 psetbl:
   # A -> B, C
   - sig: SIG_0X30
-    subscribers: [TASK_NORM_B, TASK_NORM_C]
+    sub: [TASK_NORM_B, TASK_NORM_C]
 
   # C -> A
   - sig: SIG_0X74
-    subscribers: [TASK_NORM_A]
+    sub: [TASK_NORM_A]
 
   # C -> B
   - sig: SIG_0XA4
-    subscribers: [TASK_NORM_B]
+    sub: [TASK_NORM_B]
 
   # B -> B
   - sig: SIG_0X0A
-    subscribers: [TASK_NORM_B]
+    sub: [TASK_NORM_B]
 
   # B -> USR, A, C
   - sig: SIG_0X01
-    subscribers: [TASK_NORM_USR, TASK_NORM_A, TASK_NORM_C]
+    sub: [TASK_NORM_USR, TASK_NORM_A, TASK_NORM_C]
 
   # TC_POS_04: B bị unsubscribe, C vẫn tiếp tục nhận message.
   - sig: SIG_TC_POS_04
-    subscribers: [TASK_NORM_B, TASK_NORM_C]
+    sub: [TASK_NORM_B, TASK_NORM_C]
 
   # TC_POS_06: payload VAL được gửi tới B để kiểm tra bản sao độc lập.
   - sig: SIG_TC_POS_06
-    subscribers: [TASK_NORM_B]
+    sub: [TASK_NORM_B]
 
 tlist:
   # USR --STR--> A
   - tnorm: TASK_NORM_USR
+    <<: *tnorm1-ank
     exec:
       - on_sig: SIG_STR
         steps:
@@ -93,7 +94,7 @@ tlist:
               kind: c_stmt
               code: |
                 task_norm_t removed_tasks[] = {
-                  { TASK_NORM_B_ID },
+                  { TASK_NORM_B },
                   { UEDP_TASK_NORM_EOT_ID }
                 };
                 RETR_STAT clear_result =
@@ -148,6 +149,7 @@ tlist:
   # A --0x30--> B,C khi nhận STR
   # A --0x04--> A khi nhận 0x74
   - tnorm: TASK_NORM_A
+    <<: *tnorm2-ank
     exec:
       - on_sig: SIG_STR
         steps:
@@ -180,6 +182,7 @@ tlist:
   # B nhận 0x30 qua PSE 1-N
   # B --0x01--> USR,A,C khi nhận 0xA4
   - tnorm: TASK_NORM_B
+    <<: *tnorm3-ank
     exec:
       - on_sig: SIG_0X30
         steps:
@@ -237,6 +240,7 @@ tlist:
   # C nhận 0x30 qua PSE 1-N
   # C --0x74--> A và C --0xA4--> B
   - tnorm: TASK_NORM_C
+    <<: *tnorm4-ank
     exec:
       - on_sig: SIG_0X30
         steps:
