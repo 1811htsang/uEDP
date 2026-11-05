@@ -60,7 +60,7 @@
 		
 		/* Quản lý bộ nhớ & Pool */
 		ui16  type;          	/* uedp_msg_type_t */
-		ui8  ref_count;     	/* Số lượng tham chiếu (dùng cho broadcast) */
+		ui16 ref_count;     	/* Số lượng tham chiếu (dùng cho broadcast) */
 
 		/* Payload dữ liệu */
 		ui32* data;          	/* Con trỏ đến vùng dữ liệu */
@@ -193,7 +193,8 @@
 	void uedp_gdp_init(void);
 
 	/** ANCHOR - Đăng ký 1 biến toàn cục vào GDP
-	 * @param name Tên định danh, dùng để tra cứu lại sau này - không được trùng với tên đã đăng ký
+	 * @param name Tên định danh, dùng để tra cứu lại sau này - không được trùng với tên đã đăng ký.
+	 *             GDP chỉ lưu con trỏ tới chuỗi name (không sao chép), nên chuỗi phải tồn tại suốt thời gian đăng ký (ví dụ chuỗi hằng)
 	 * @param data_ptr Con trỏ tới vùng nhớ thật của biến (static/global - KHÔNG phải biến cục bộ,
 	 *                 vì GDP không sở hữu/copy vùng nhớ này, chỉ lưu con trỏ trỏ tới nó)
 	 * @param size Kích thước dữ liệu tính bằng byte
@@ -234,10 +235,31 @@
 	 */
 	RETR_STAT uedp_gdp_set_val(const char* name, const void* in_buf, ui16 buf_size);
 
+	/** ANCHOR - Đăng ký các tác vụ nhận tín hiệu sig (PSE)
+	 * @param sig Tín hiệu, phải nhỏ hơn UEDP_TBM_MAX_SIZE
+	 * @param task_list Danh sách tác vụ kết thúc bằng phần tử có id ngoài dải UEDP_TASK_NORM_MIN_ID..MAX_ID
+	 * @return RETR_STAT STAT_ERROR nếu sig >= UEDP_TBM_MAX_SIZE
+	 */
 	RETR_STAT uedp_msg_register_topic(ui16 sig, task_norm_t task_list[]);
 
+	/** ANCHOR - Huỷ đăng ký các tác vụ khỏi tín hiệu sig (PSE)
+	 * @param sig Tín hiệu, phải nhỏ hơn UEDP_TBM_MAX_SIZE
+	 * @param task_list Danh sách tác vụ kết thúc bằng phần tử có id ngoài dải UEDP_TASK_NORM_MIN_ID..MAX_ID
+	 * @return RETR_STAT STAT_ERROR nếu sig >= UEDP_TBM_MAX_SIZE
+	 */
 	RETR_STAT uedp_msg_clear_topic(ui16 sig, task_norm_t task_list[]);
 
-	RETR_STAT uedp_msg_publish(ui16 sig, void* data, ui16 len, ptype_t ptype);
+	/** ANCHOR - Phát tín hiệu sig tới tất cả tác vụ đã đăng ký (PSE)
+	 * @param sig Tín hiệu, phải nhỏ hơn UEDP_TBM_MAX_SIZE
+	 * @param data Dữ liệu payload, được sao chép vào tin nhắn (NULL chỉ hợp lệ khi data_size = 0)
+	 * @param data_size Kích thước payload tính bằng byte, tối đa UEDP_MSG_ALLOC_DATA_MAX
+	 * @return RETR_STAT STAT_ERROR nếu tham số không hợp lệ, hoặc có ít nhất 1 tác vụ không nhận được (hàng đợi đầy).
+	 *         Các tác vụ còn lại vẫn nhận bình thường.
+	 * @attention Một tin nhắn duy nhất được cấp phát và chia sẻ cho mọi tác vụ đăng ký,
+	 *            ref_count = số tác vụ đăng ký. Mỗi tác vụ xử lý xong (hoặc không nhận được) sẽ giảm ref_count,
+	 *            tin nhắn chỉ được trả về pool khi ref_count = 0.
+	 *            Payload lớn hơn UEDP_MSG_ALLOC_DATA_MAX bị từ chối (không còn đường dự phòng qua GDP).
+	 */
+	RETR_STAT uedp_msg_publish(ui16 sig, const void* data, ui16 data_size);
 
 #endif //__UEDP_MSG_H__

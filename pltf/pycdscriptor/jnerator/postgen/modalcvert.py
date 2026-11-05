@@ -23,6 +23,14 @@ def _c_symbol(value: str, suffix: str = '') -> str:
 def _resolve_task_symbol(value: str, task_symbols: set[str]) -> str:
   if value in task_symbols:
     return value
+  if value.endswith('_ID'):
+    candidate = value.removesuffix('_ID')
+    if candidate in task_symbols:
+      return candidate
+  else:
+    candidate = f'{value}_ID'
+    if candidate in task_symbols:
+      return candidate
   if value.startswith('TASK_'):
     candidate = f"TASK_NORM_{value.removeprefix('TASK_')}"
     if candidate in task_symbols:
@@ -50,11 +58,17 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
   resources = {
     item['id_symbol']: item for item in context['tnorm_resources']
   }
+  resources.update({
+    item['id_symbol'].removesuffix('_ID'): item
+    for item in context['tnorm_resources']
+    if item['id_symbol'].endswith('_ID')
+  })
   task_symbols = set(resources)
   tnorm_codegen = []
 
   for logic in context['tnorm_logic']:
     resource = resources.get(logic['task'], {})
+    exec_items = logic.get('kwexec', {}).get('kwexec', [])
     tsm_states = []
     for state_index, state in enumerate(logic.get('tsm', {}).get('tsm_list', [])):
       state_name = state['id']
@@ -109,6 +123,13 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
       'task': logic['task'],
       'handler_name': resource.get('handler', f"{logic['task'].lower()}_nhler"),
       'dispatch_kind': dispatch_kind,
+      'exec_items': [
+        {
+          'sig': item['on_sig'],
+          'actions': _emit_actions(_actions(item.get('steps')), task_symbols),
+        }
+        for item in exec_items
+      ],
       'tsm_states': tsm_states,
       'fsm_states': fsm_states,
       'tsm_object': resource.get('tsm_resrc', {}).get('object', f'{logic["task"].lower()}_tsm'),
@@ -123,7 +144,7 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
     logic = next((item for item in context['tnorm_logic'] if item['task'] == resource['id_symbol']), {})
     task = next((item for item in tnorm_codegen if item['task'] == resource['id_symbol']), {})
     task_resource_items.append({
-      'id': resource['id_symbol'],
+      'id': resource['id_symbol'].removesuffix('_ID'),
       'priority': f'UEDP_TASK_PRI_LEVEL_{max(0, 8 - index)}',
       'handler': resource['handler'],
       'queue': resource['queue_name'],
@@ -172,12 +193,30 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
     for task in tnorm_codegen
     if task['fsm_states']
   )
+  for entry in context['psetbl_logic']:
+    unknown = [sub for sub in entry['sub'] if sub not in task_symbols]
+    if unknown:
+      raise ValueError(f"psetbl sig {entry['sig']} references unknown task: {', '.join(unknown)}")
+    task_list = ', '.join([f'{{ {sub} }}' for sub in entry['sub']] + ['{ UEDP_TASK_NORM_EOT_ID }'])
+    context['init_actions'].append(
+      f'{{ task_norm_t task_list[] = {{ {task_list} }}; uedp_msg_register_topic({entry["sig"]}, task_list); }}'
+    )
   # CRITICAL - Find any task containing USR, as the initial message to start the user task
   usr_task = next((task for task in tnorm_codegen if 'USR' in task['task']), None)
   if usr_task:
     context['init_actions'].append(
-      f'uedp_msg_t* start_msg = uedp_msg_alloc({usr_task["task"]}, SIG_USR_START, 0u);\n  if (start_msg) {{\n    uedp_task_norm_post_msg({usr_task["task"]}, start_msg); \n  }}'
+      f'uedp_msg_t* start_msg = uedp_msg_alloc({usr_task["task"]}, SIG_STR, 0u);\n  if (start_msg) {{\n    uedp_task_norm_post_msg({usr_task["task"]}, start_msg); \n  }}'
     )
+    for index, signal in enumerate(
+      ('SIG_TC_POS_03', 'SIG_TC_POS_04', 'SIG_TC_POS_05', 'SIG_TC_POS_06'),
+      start=1,
+    ):
+      context['init_actions'].append(
+        f'uedp_msg_t* testcase_msg_{index} = uedp_msg_alloc({usr_task["task"]}, {signal}, 0u);\n'
+        f'  if (testcase_msg_{index}) {{\n'
+        f'    uedp_task_norm_post_msg({usr_task["task"]}, testcase_msg_{index});\n'
+        '  }'
+      )
   return context
 
 def render_appc(yaml_text: str) -> str:

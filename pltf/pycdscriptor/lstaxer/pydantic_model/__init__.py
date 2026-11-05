@@ -21,7 +21,8 @@ from .logic import (
   C_trig_list_obj,
   C_escal_obj,
   C_tnorm_obj,
-  C_tpoll_obj
+  C_tpoll_obj,
+  C_psetbl_obj
 )
 
 from .resrc import (

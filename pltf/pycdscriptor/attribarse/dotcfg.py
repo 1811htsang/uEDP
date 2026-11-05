@@ -70,13 +70,13 @@ def cfp_parse_dotcfg(config_path):
       # 3. DECL_ (Task, Signal, Handler)
       elif key.startswith("DECL_"):
         if "TASK_NORM" in key:
-          context["tasknorm_defs"].append(f"{val:<20} (0x{counters['norm']:02X}u)")
+          context["tasknorm_defs"].append(f"{val.replace('_ID', ''):<20} (0x{counters['norm']:02X}u)")
           counters["norm"] += 1
         elif "TASK_POLL" in key:
-          context["taskpoll_defs"].append(f"{val:<20} (0x{counters['poll']:02X}u)")
+          context["taskpoll_defs"].append(f"{val.replace('_ID', ''):<20} (0x{counters['poll']:02X}u)")
           counters["poll"] += 1
         elif "SIG_" in key:
-          context["sig_defs"].append(f"{val:<20} (0x{counters['sig']:02X}u)")
+          context["sig_defs"].append(f"{val.replace('_ID', ''):<20} (0x{counters['sig']:02X}u)")
           counters["sig"] += 1
         elif "MSG_QUEUE" in key:
           context["msgq_defs"].append(val.lower().replace("_ID", ""))
