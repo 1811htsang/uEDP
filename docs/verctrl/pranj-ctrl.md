@@ -2,7 +2,7 @@
 
 This document defines how branches, commits, and common Git operations are handled in the uEDP repository.
 
-## 1. Branch Overview
+## 1. Current Branch Overview
 
 | Branch | Purpose | Direct push | Notes |
 | -------- | --------- | ------------- | ------- |
@@ -235,3 +235,107 @@ or you can reset the local branch to before the merge commit then fetch the remo
 git reset --hard <commit-sha>
 git fetch origin
 ```
+
+## 11. Toward new branch model from v1.1.7 release
+
+### 11.1. Current situation for branch `fix`
+
+Currently, we have a branch `fix` which is used for bug fixes. However, since the release of v1.1.4, we have not been using this branch for bug fixes. Instead, we have been merging bug fixes directly into the `feat` branch. This has caused some confusion and issues with our release process as the `fix` branch is not being used as intended.
+
+To address this, it is encouraged to use the `fix` branch for bug fixes, and to merge bug fixes into the `fix` branch first before merging into `feat`. This will help to keep the release process organized and ensure that bug fixes are properly tracked and tested before being included in a release.
+
+### 11.2. Recommendation for branch `fix` and branch `feat`
+
+Furthermore, it should make up a table to ensure the usage of each branch is clear and consistent. The following rules are proposed:
+
+| What changes | Branch | Rule |
+| --- | --- | --- |
+| Add new capability/behavior | feat | feat/... |
+| Existing behavior is incorrect from requirement | fix | fix/... |
+| Crash / exception / incorrect output | fix | fix/... |
+| Regression | fix | fix/... |
+| Test failed due to implementation defect | fix | fix/... |
+| Cleanup code, behavior is not changed | refactor | refactor/... |
+| Documentation only | doc | doc/... |
+| Maintenance/tool/config dependency | chore | chore/... |
+
+This is also in line with Conventional Commits where fix = patch a bug, while feat = introduce new feature. [[conventionalcommits.org]](https://www.conventionalcommits.org/en/v1.0.0/?ref=refind)
+
+However, it should be noted that `feat` and `fix` branches are closely related to the type of change being made. Therefore, when encountering a bug that requires actions, we should ask:
+
+> If we make this change, is the current software violating any requirements or expected behavior?
+>
+> YES → fix
+> NO, the change is adding new capability → feat
+
+For example below:
+
+```examples
+Requirement: 
+
+Feature A shall set signal X = 0 when system enters state YX.
+Actual: 
+  X remains 1. 
+Change: 
+  Correct condition to set X = 0.
+```
+
+In this case, it is a fix, even though the developer has to write new logic.
+
+In contrast:
+
+```examples
+New requirement: 
+
+Feature A shall support a new NG state. 
+Current implementation: 
+  No NG state. 
+Change: 
+  Implement NG state.
+```
+
+In this case, it is a feat.
+
+> This is important because "I am adding new code" **does not mean** feat.
+
+### 11.3. Release-Integration branch model
+
+Currently, we have a branch model where `feat`, `fix`, `doc`, and `chore` branches are long-lived integration branches. However, this can lead to confusion and issues with the release process as these branches can become cluttered with changes that are not yet ready for release or may not be relevant to the current release like currently, `feat` branch contains features ranging from v1.1.6-bf3 to v1.1.7. Therefore, any release merging from branch `feat` will contain features that are not fully tested.
+
+To address this, v1.1.7 release to v1.1.8 will apply a new changes to the branch model with `main`, `integration`, `release`, `docs` as follow:
+
+```asciidocs
+                           ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+                           │ release                                                                                   development phase │
+                           │ candidate bug   ┌─── reft - refactor ◄─────┐                                                                │
+ final release   ┌─────────┼────────────────►│       │                  │                                                                │
+┌────────────────┼──────┐  │                 ├─── fix│ - bugfix   ◄─────┤                                                                │
+│                │      │  │                 │    ▼  ▼                  │                                                                │
+│ main ◄───── release ◄─│┬─│─ integration ◄──┴─── feat - feature ────┬──┼─► app/testobj-v? - specific application codebase for testing   │
+│  │                    ││ │                             ▲           │  │                                                                │
+└──┼────────────────────┘└─│─ docs ◄──── chore           │           └──┴─► sub-feat/v?.?.? - single branch for specific version release │
+   ▼                     ▲ │                             │                       │                                                       │
+  hotfix ────────────────┘ │                             └───────────────────────┘                                                       │
+           if need         │                              only merge after stable                                                        │
+                           │                                                                                                             │
+                           └─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+The branching model separates the software lifecycle into development, release preparation, and final release stages.
+
+During the development phase, `feat` serves as the primary feature-development and integration stream, where application-specific branches such as `app/testobj-v?` can be used to develop and test a particular application codebase, while `sub-feat/v?.?.?` isolates development for a specific feature or version and is merged back into `feat` only after it reaches a stable state.
+
+Supporting changes are separated by purpose:
+
+- `reft` is used for refactoring that does not intentionally introduce new functionality
+- `fix` is used for correcting bugs found during normal development
+- `chore` is used for maintenance, tooling, configuration, or housekeeping changes
+- `docs` contains documentation-related updates.
+
+Stable development changes are consolidated into `integration`, which acts as the convergence point before a release candidate is created.
+
+If a bug is discovered during release-candidate validation, the bugfix (`-bfX` suffix) is created from the affected `release`/`integration` baseline and merged back into the relevant development stream so that the correction is preserved in subsequent versions. Once the release candidate has been validated and considered stable, it progresses through `release` and is finally merged into `main`, where `main` represents the official released codebase.
+
+Bugs discovered after the software has already been released are handled separately through a `hotfix` created from `main`; after verification, the `hotfix` is merged back into `main` for the corrective `release` and propagated back toward the active development or `integration` stream when required, preventing the same defect from reappearing in future releases.
+
+Overall, this model keeps feature development (`feat`), development bug fixing (`fix`), refactoring (`reft`), maintenance (`chore`), documentation (`docs`), release stabilization (`integration`/`release`), and production correction (`hotfix`) logically separated while maintaining a controlled forward path from development to final release and a backward synchronization path for critical fixes.
