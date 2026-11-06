@@ -667,7 +667,7 @@ Trong trường hợp data quá lớn, ta lưu vào GDP với key cố định l
 - [x] @! TID[epic=v1.1.7/arch] ARCH-002 <+ Hoàn thiện bổ sung OCTOSPI, SDMMC cho uutobj H723.
 - [x] @! TID[epic=v1.1.7/BST] TEST-001 <+ Bổ sung testobj-v1 và testobj-v2 để chuẩn bị cho BST task.
 - [x] @! TID[epic=v1.1.7/BST] TEST-003 <+ Bổ sung .config cho các BST task.
-- [ ] @! TID[epic=v1.1.7/BST] TEST-002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
+- [x] @! TID[epic=v1.1.7/BST] TEST-002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
 - [ ] @! TID[epic=v1.1.7/BST] TEST-004 <+ Tổng hợp cấu hình và tạo branch cho nhánh testobj-v1 và testobj-v2 sau khi hoàn tất BST task.
 
 <!-- NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6. -->
