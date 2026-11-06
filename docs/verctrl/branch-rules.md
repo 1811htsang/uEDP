@@ -12,9 +12,14 @@ This document defines how branches, commits, and common Git operations are handl
 | `fix` | Integration branch for bug fixes | Not allowed | Fix branches merge here |
 | `doc` | Integration branch for documentation | Not allowed | Documentation branches merge here |
 | `chore` | Integration branch for maintenance | Not allowed | Build, tooling, and housekeeping |
-| `<type>/<name>` | Short-lived work branch | Allowed (owner only) | Deleted after merge |
+| `<type>/<name>` | Short-lived work branch | Allowed (owner only) | Deleted after merge, except for `app/<name>` |
+| `app/<name>` | Application-specific branch | Allowed (owner only) | Long-lived, used for application-specific development which rely on testobj for delta test and regression testing. |
 
-Merge direction: work branches merge into the matching integration branch (`feat`, `fix`, `doc`, `chore`), and the integration branch merges into `main` through a pull request.
+Merge direction before halfway of v1.1.7:
+
+Changes are merged directly from work branches into `feat`, `fix`, `doc`, or `chore`. Before or after the main release like v1.1.6, v1.1.7, all changes must be merged into `release` first, then merged into `main` after the release is complete.
+
+However, after v1.1.7, we will create a new branch `sub-feat/v1.1.7` to contain all features for v1.1.7, and merge it into `feat` only when all features are complete and tested. Any new features from v1.1.8 and beyond will follow the same pattern, creating a new branch for each version. The pattern for `release` and `main` will remain the same, where all changes must be merged into `release` first, then merged into `main` after the release is complete.
 
 ## 2. Branch Naming
 
@@ -42,6 +47,8 @@ Do not use:
 - Personal names in branch names (`shanghuang/test`)
 - Dates or ticket-only names without a description (`feat/123`)
 - Uppercase letters, spaces, or underscores
+
+This example only applied to naming but not for real developing experience. We consider that sub branch name will only used for versioning, not for any objects. Therefore, `sub-feat/v1.1.7` or `sub-feat/v1.1.6-bf4` is a better naming convention for versioning, `sub-feat/testobj-v2-negative-cases` is not allowed for using in versioning. The reason is that we want to keep the versioning branch name simple and clear, and avoid dividing the versioning branch into too many sub-branches. The versioning branch should be used for all features and fixes related to that version, and any task branches should be created from the versioning branch.
 
 ## 3. Splitting Branches by Feature Version
 
@@ -213,3 +220,18 @@ Rules for force updates:
 - Use the pull request template: see [pull-request-template.md](pull-request-template.md).
 - Keep the title in commit message format: `<type>(<scope>): <subject>`.
 - Delete the source branch after merge.
+
+## 10. Conflicts when fetching
+
+When fetching, if you see the branch is spilting into two branches or having merge commits, it means that your local branch is not up to date with the remote branch. To resolve this, you can use the following command to reset your local branch to match the remote branch:
+
+```bash
+git reset --hard origin/<branch-name>
+```
+
+or you can reset the local branch to before the merge commit then fetch the remote branch again:
+
+```bash
+git reset --hard <commit-sha>
+git fetch origin
+```
