@@ -1,0 +1,51 @@
+tnorms:
+  '1':
+    tsm_resrc:
+      states: []
+      state_trans: []
+    fsm_resrc:
+      states: []
+    id_symbol: TASK_NORM_USR
+    queue_name: tnorm_usr_msgq
+    handler: tnorm_usr_nhler
+    hex_val: '0xe3'
+  '2':
+    tsm_resrc:
+      states: []
+      state_trans: []
+    fsm_resrc:
+      states: []
+    id_symbol: TASK_NORM_B
+    queue_name: tnorm_b_msgq
+    handler: tnorm_b_nhler
+    hex_val: '0xe4'
+  '3':
+    tsm_resrc:
+      states: []
+      state_trans: []
+    fsm_resrc:
+      states: []
+    id_symbol: TASK_NORM_C
+    queue_name: tnorm_c_msgq
+    handler: tnorm_c_nhler
+    hex_val: '0xe5'
+tpolls: {}
+sigs:
+  '1':
+    id_symbol: SIG_TC_NEG_01
+    hex_val: '0x1'
+  '2':
+    id_symbol: SIG_TC_NEG_02
+    hex_val: '0x2'
+  '3':
+    id_symbol: SIG_TC_NEG_03
+    hex_val: '0x3'
+  '4':
+    id_symbol: SIG_TC_NEG_04
+    hex_val: '0x4'
+  '5':
+    id_symbol: SIG_TC_NEG_05
+    hex_val: '0x5'
+  '6':
+    id_symbol: SIG_TC_NEG_06
+    hex_val: '0x6'
