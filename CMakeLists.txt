@@ -18,6 +18,11 @@ project(uedp C ASM)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug)
 
+option(UEDP_NEG_TESTCASE "Allow Linux negative FCR tests to continue after fatal paths" OFF)
+if (UEDP_NEG_TESTCASE)
+  add_compile_definitions(UEDP_NEG_TESTCASE)
+endif()
+
 # ANCHOR - Thu thập file nguồn chung
 file(GLOB_RECURSE CORE_SRCS 
   "sources/core/src/*.c"
