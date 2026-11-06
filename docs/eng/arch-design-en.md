@@ -553,7 +553,9 @@ The FCR error code (`uedp_fcr_code_t`, of type `ui16`) uses the same encoding pr
 | `UEDP_FCR_MOD_ITNLOG` | `0x94` | Internal logger (`uedp_itnlog`) |
 | `UEDP_FCR_MOD_OCE` | `0x95` | Out-Context Execution (`uedp_ocesvc`) |
 | `UEDP_FCR_MOD_PAL` | `0x96` | PAL / hardware services (logdp, rprintf, memrp, arch...) |
-| `0x97` → `0x9D` | *(unused)* | Reserved for core modules introduced later |
+| `UEDP_FCR_MOD_GDP` | `0x97` | Global Data Pool (GDP in `uedp_msg.c`) |
+| `UEDP_FCR_MOD_LIB` | `0x98` | External libraries in `sources/common` |
+| `0x99` → `0x9D` | *(unused)* | Reserved for core modules introduced later |
 | `UEDP_FCR_MOD_APP` | `0x9E` | Reserved for the application layer to declare its own error codes |
 | `UEDP_FCR_MOD_UNK` | `0x9F` | Fallback when a lookup fails to find the error code |
 
@@ -589,7 +591,7 @@ FCR does not log directly on its own; instead it goes through `uedp_itnlog_log()
 
 #### Points where FCR has been integrated into the Core
 
-FCR only has value once it is actually "stitched" into the places that were genuinely silent failures before, rather than existing as a standalone module on its own. As of this version, FCR has been raised at more than 40 points across 7 core files:
+FCR only has value once it is actually "stitched" into the places that were genuinely silent failures before, rather than existing as a standalone module on its own. As of this version, FCR is raised at about 76 call sites across 8 files (7 core files and `pal_logdp.c`):
 
 | File | Some representative error codes |
 | --- | --- |
@@ -607,7 +609,7 @@ The principle for choosing where to raise: **only raise on branches that are gen
 
 #### Limitations / remaining work
 
-- In version 0.1, `UEDP_FCR_ACT_RESET_TASK` **does not yet automatically recover** the affected task — it currently only goes as far as logging an `ERROR`; resetting the TSM/FSM to a safe state still has to be handled by a higher layer (a supervisor task or OCE) on its own.
+- `UEDP_FCR_ACT_RESET_TASK` **does not yet have a handler** in `uedp_fcr_raise()`: its `switch` only covers `LOG_ONLY`, `SYS_RESET` and `SYS_PANIC`, so an entry with this action currently falls through to `pal_sys_fatal()` (the `default` branch). No table entry uses it at present. Resetting the TSM/FSM to a safe state still has to be handled by a higher layer (a supervisor task or OCE) on its own.
 - `UEDP_FCR_ITNLOG_BUF_CORRUPT` already has a code in the table, but there is **no actual hash-checking logic yet** on the read side (`uedp_itnlog_dump()`) — currently `itnlog` only computes the hash on write and does not yet re-compare it on read to detect corruption.
 - Users at the application layer can declare their own error codes via `UEDP_FCR_CODE(UEDP_FCR_MOD_APP, x)`, but there is currently no mechanism allowing the application layer to **register additional entries** into `g_fcr_table[]` at runtime — the table is currently `static const`, so adding a new entry requires directly editing `uedp_fcr.c`.
 
@@ -671,16 +673,16 @@ After a task finishes processing a message in `internal_uedp_task_norm_dispatch(
 | `sig >= UEDP_TBM_MAX_SIZE` | `MSG_INVALID_PARAM` (ERROR) | Returns `STAT_ERROR` |
 | `data_size` exceeds `UEDP_MSG_ALLOC_DATA_MAX`, or `data == NULL` with `data_size > 0` | `MSG_INVALID_PARAM` (ERROR) | Returns `STAT_ERROR`, nothing allocated |
 | Message pool exhausted | `MSG_POOL_EXHAUSTED` (FATAL) | Panics per the FCR table |
-| One task's queue is full | `TASK_QUEUE_FULL` (ERROR) | That task does not receive the message; `ref_count` is decremented; the remaining tasks still receive it normally; `publish` returns `STAT_ERROR` |
+| One task's queue is full | `TASK_QUEUE_FULL` (ERROR in severity, `SYS_PANIC` action) | That task does not receive the message; `ref_count` is decremented; the remaining tasks still receive it normally; `publish` returns `STAT_ERROR` |
 
-A full task queue now raises only `TASK_QUEUE_FULL` (ERROR), not a panic. The function previously also raised `LIB_COLLAPSE` (FATAL), which caused a system panic; that has been removed.
+A full task queue raises `TASK_QUEUE_FULL`, whose table entry has the `SYS_PANIC` action, so the system is halted at that point. The `LIB_COLLAPSE` raise that was in `put_to_queue()` before commit `03a3aa6` has been removed from the publish path; the code is kept in the table, but it is currently not raised anywhere.
 
 #### Current limitations
 
 - Only tasks **registered** at the time of publish are supported; there is no mechanism for sending to unregistered tasks or filtering by content.
 - Payloads larger than `UEDP_MSG_ALLOC_DATA_MAX` are rejected. There is no longer a GDP fallback, because that path used one fixed shared name `"publish"` and caused data to be overwritten when several publishes overlapped.
 - There is no QoS, no priority ordering among recipients, and no pass-by-reference through `ptype`. These features are being considered for later versions.
-- The current design does not yet have a complete test suite. The proposed and reviewed test cases are in `docs/test/pse-gdp-fcr-testset-review.md`.
+- The current design does not yet have a complete test suite. The proposed test cases are in `docs/test/pse-gdp-fcr-testset.md`.
 
 ## Development Tools
 
