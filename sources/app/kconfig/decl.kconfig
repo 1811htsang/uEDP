@@ -1,0 +1,234 @@
+menu "Task Norm configuration"
+
+	menu "Task #1 configuration"
+		config DECL_TASK_NORM_1_NAME
+			string "Name of task #1"
+			default "TASK_NORM_1"
+
+			help
+
+				This is the name of task norm, please use upper case.
+
+				Prefer like eg. `TASK_NORM_A`, `TASK_NORM_USR`
+
+				This is only used for internal identification.
+
+		config DECL_MSG_QUEUE_1_NAME
+			string "Name of message queue #1"
+			default "MSG_QUEUE_1"
+			depends on DECL_TASK_NORM_1_NAME != ""
+
+			help
+
+				This is the name of task norm message queue.
+
+				Format output as extern uedp_msg_t* <value>_msgq[UEDP_MSG_BLANK_QUEUE_SIZE];.
+
+				Usually prefer eg. `tnorm_a` to produce `tnorm_a_msgq[UEDP_MSG_BLANK_QUEUE_SIZE]`.
+
+		config DECL_NORM_HANDLER_1_NAME
+			string "Name of handler #1"
+			default "NORM_HANDLER_1"
+			depends on DECL_TASK_NORM_1_NAME != ""
+
+			help
+
+				This is the name of task norm handler.
+
+				Format output as void <value>_nhler(uedp_msg_t* msg);.
+
+				Usually prefer eg. `tnorm_a` to produce `tnorm_a_nhler(uedp_msg_t* msg);`.
+
+	endmenu
+
+	menu "Task #2 configuration"
+		config DECL_TASK_NORM_2_NAME
+			string "Name of task #2"
+			default "TASK_NORM_2"
+
+			help
+
+				This is the name of task norm, please use upper case.
+
+				Prefer like eg. `TASK_NORM_A`, `TASK_NORM_USR`
+
+				This is only used for internal identification.
+
+		config DECL_MSG_QUEUE_2_NAME
+			string "Name of message queue #2"
+			default "MSG_QUEUE_2"
+			depends on DECL_TASK_NORM_2_NAME != ""
+
+			help
+
+				This is the name of task norm message queue.
+
+				Format output as extern uedp_msg_t* <value>_msgq[UEDP_MSG_BLANK_QUEUE_SIZE];.
+
+				Usually prefer eg. `tnorm_a` to produce `tnorm_a_msgq[UEDP_MSG_BLANK_QUEUE_SIZE]`.
+
+		config DECL_NORM_HANDLER_2_NAME
+			string "Name of handler #2"
+			default "NORM_HANDLER_2"
+			depends on DECL_TASK_NORM_2_NAME != ""
+
+			help
+
+				This is the name of task norm handler.
+
+				Format output as void <value>_nhler(uedp_msg_t* msg);.
+
+				Usually prefer eg. `tnorm_a` to produce `tnorm_a_nhler(uedp_msg_t* msg);`.
+
+	endmenu
+
+	menu "Task #3 configuration"
+		config DECL_TASK_NORM_3_NAME
+			string "Name of task #3"
+			default "TASK_NORM_3"
+
+			help
+
+				This is the name of task norm, please use upper case.
+
+				Prefer like eg. `TASK_NORM_A`, `TASK_NORM_USR`
+
+				This is only used for internal identification.
+
+		config DECL_MSG_QUEUE_3_NAME
+			string "Name of message queue #3"
+			default "MSG_QUEUE_3"
+			depends on DECL_TASK_NORM_3_NAME != ""
+
+			help
+
+				This is the name of task norm message queue.
+
+				Format output as extern uedp_msg_t* <value>_msgq[UEDP_MSG_BLANK_QUEUE_SIZE];.
+
+				Usually prefer eg. `tnorm_a` to produce `tnorm_a_msgq[UEDP_MSG_BLANK_QUEUE_SIZE]`.
+
+		config DECL_NORM_HANDLER_3_NAME
+			string "Name of handler #3"
+			default "NORM_HANDLER_3"
+			depends on DECL_TASK_NORM_3_NAME != ""
+
+			help
+
+				This is the name of task norm handler.
+
+				Format output as void <value>_nhler(uedp_msg_t* msg);.
+
+				Usually prefer eg. `tnorm_a` to produce `tnorm_a_nhler(uedp_msg_t* msg);`.
+
+	endmenu
+
+endmenu
+menu "Task Poll configuration"
+
+endmenu
+menu "Signal configuration"
+
+	menu "Signal #1 configuration"
+		config DECL_SIG_1_NAME
+			string "Name of signal #1"
+			default "SIG_1"
+
+			help
+
+				This is the name of signal, please use upper case.
+
+				Prefer like eg. `SIG_A`, `SIG_USR`
+
+				This is only used for internal identification.
+
+				The value is emitted as a C preprocessor symbol and should not use the `_ID` suffix.
+
+	endmenu
+
+	menu "Signal #2 configuration"
+		config DECL_SIG_2_NAME
+			string "Name of signal #2"
+			default "SIG_2"
+
+			help
+
+				This is the name of signal, please use upper case.
+
+				Prefer like eg. `SIG_A`, `SIG_USR`
+
+				This is only used for internal identification.
+
+				The value is emitted as a C preprocessor symbol and should not use the `_ID` suffix.
+
+	endmenu
+
+	menu "Signal #3 configuration"
+		config DECL_SIG_3_NAME
+			string "Name of signal #3"
+			default "SIG_3"
+
+			help
+
+				This is the name of signal, please use upper case.
+
+				Prefer like eg. `SIG_A`, `SIG_USR`
+
+				This is only used for internal identification.
+
+				The value is emitted as a C preprocessor symbol and should not use the `_ID` suffix.
+
+	endmenu
+
+	menu "Signal #4 configuration"
+		config DECL_SIG_4_NAME
+			string "Name of signal #4"
+			default "SIG_4"
+
+			help
+
+				This is the name of signal, please use upper case.
+
+				Prefer like eg. `SIG_A`, `SIG_USR`
+
+				This is only used for internal identification.
+
+				The value is emitted as a C preprocessor symbol and should not use the `_ID` suffix.
+
+	endmenu
+
+	menu "Signal #5 configuration"
+		config DECL_SIG_5_NAME
+			string "Name of signal #5"
+			default "SIG_5"
+
+			help
+
+				This is the name of signal, please use upper case.
+
+				Prefer like eg. `SIG_A`, `SIG_USR`
+
+				This is only used for internal identification.
+
+				The value is emitted as a C preprocessor symbol and should not use the `_ID` suffix.
+
+	endmenu
+
+	menu "Signal #6 configuration"
+		config DECL_SIG_6_NAME
+			string "Name of signal #6"
+			default "SIG_6"
+
+			help
+
+				This is the name of signal, please use upper case.
+
+				Prefer like eg. `SIG_A`, `SIG_USR`
+
+				This is only used for internal identification.
+
+				The value is emitted as a C preprocessor symbol and should not use the `_ID` suffix.
+
+	endmenu
+
+endmenu
