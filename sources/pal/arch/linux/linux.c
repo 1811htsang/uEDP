@@ -91,8 +91,12 @@ void pal_sys_reset(void) {
 void pal_sys_fatal(const char* file, ui32 line, const char* msg) {
   fprintf(stderr, "\n[FATAL ERROR] %s\n", msg);
   fprintf(stderr, "Location: %s:%u\n", file, line);
-  linux_cleanup();
-  abort(); // Tạo core dump để debug
+  #ifdef UEDP_NEG_TESTCASE
+    return;
+  #else
+    linux_cleanup();
+    abort(); // Tạo core dump để debug
+  #endif
 }
 
 /** ANCHOR -  Implementation cho linux_arch.h

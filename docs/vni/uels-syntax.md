@@ -196,6 +196,7 @@ Cần rewrite lại phần này tương ứng với các khối phát triển đ
 | SII | Đưa signal từ ISR vào hệ thống | `isr -> to/sig` | `to`, `sig` | `uedp_task_norm_post_isr()`, `uedp_msg_drain_isr_pool()` |
 | PPLP | Cấu hình logging pipeline | `pplp -> itnlog -> level/tag/output` | `level`, `tag`, `output.backend`, `output.sink`, `log.timestamp`, `log.msg` | `uedp_itnlog_set_filter()`, `uedp_itnlog_set_output()` |
 | APE | Gọi urgent message / priority escalation | `escal -> trigger -> post_urgent` | `mode: slnf`, `mode: non-slnf`, `scope: self`, `keep_queue_order`, `extra_rounds`, `post_urgent` | `uedp_task_norm_post_urgent()`, `uedp_task_norm_set_urgent()` |
+| PSE | Publish/Subscribe: đăng ký tác vụ nhận tín hiệu | `psetbl -> sig/sub` | `sig`, `sub` | `uedp_msg_register_topic()`, `uedp_msg_publish()` |
 | OCE | Service chạy ngoài luồng logic chính | `outexec -> name/handler/context/state` | `name`, `handler`, `context`, `state` | `ocesvc_register()`, `ocesvc_scheduler()` |
 
 Số lượng state trong `tsm`/`fsm` của mỗi `tnorm` (hàng Task Norm ở trên) khớp 1-1 với khai báo `APPCFG_TSM_TASK_{i}_STATE_{j}`/`APPCFG_FSM_TASK_{i}_STATE_{j}` do `kconfigspec.tnorm` và `kconfigspec.usrinp` sinh riêng cho từng task #i — xem mục "Đồng bộ với `kconfigspec.usrinp` / `kconfigspec.tnorm`" bên dưới.
@@ -557,6 +558,35 @@ Khi dùng `mode: non-slnf`, tnorm không bắt buộc phải tự gửi một ur
 <!-- DEPRECATED - Old TASK
 Cân nhắc loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
 -->
+
+### PSE - Pub-Sub Engine
+
+Khối `psetbl` khai báo quan hệ đăng ký giữa tín hiệu và tác vụ norm cho PSE. Mỗi phần tử gồm:
+
+- `sig`: tín hiệu được phát bằng `uedp_msg_publish()`.
+- `sub`: danh sách tác vụ norm nhận `sig`, viết đúng tên như khóa `tnorm` trong `tlist`.
+
+```yaml
+psetbl:
+  # A -> B, C
+  - sig: SIG_0X30
+    sub: [TASK_NORM_B, TASK_NORM_C]
+
+  # B -> USR, A, C
+  - sig: SIG_0X01
+    sub: [TASK_NORM_USR, TASK_NORM_A, TASK_NORM_C]
+```
+
+Phát tín hiệu trong logic dùng `c_stmt`:
+
+```yaml
+- actv:
+    kind: c_stmt
+    code: |
+      uedp_msg_publish(SIG_0X30, NULL, 0);
+```
+
+Cơ chế đăng ký lúc khởi tạo và các lưu ý xem mục "Khai báo đăng ký tĩnh (psetbl)" trong `docs/vni/arch-design.md`.
 
 ### OCE - Dịch vụ ngoài ngữ cảnh logic
 

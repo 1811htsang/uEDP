@@ -17,16 +17,16 @@ def task_norm_declaration(num_tasks_norm, num_tsm_states_list, num_fsm_states_li
     # NOTE - Config name
     kconfig_content.append(f'\t\tconfig DECL_TASK_NORM_{i}_NAME') 
     kconfig_content.append(f'\t\t\tstring "Name of task #{i}"')
-    kconfig_content.append(f'\t\t\tdefault "TASK_NORM_{i}_ID"\n')
+    kconfig_content.append(f'\t\t\tdefault "TASK_NORM_{i}"\n')
     kconfig_content.append(f'\t\t\thelp\n')
     kconfig_content.append(f'\t\t\t\tThis is the name of task norm, please use upper case.\n') 
-    kconfig_content.append(f'\t\t\t\tPrefer like eg. `TASK_NORM_A_ID`, `TASK_NORM_USR_ID`\n')
+    kconfig_content.append(f'\t\t\t\tPrefer like eg. `TASK_NORM_A`, `TASK_NORM_USR`\n')
     kconfig_content.append(f'\t\t\t\tThis is only used for internal identification.\n')
 
     # NOTE - Config message queue name
     kconfig_content.append(f'\t\tconfig DECL_MSG_QUEUE_{i}_NAME')
     kconfig_content.append(f'\t\t\tstring "Name of message queue #{i}"')
-    kconfig_content.append(f'\t\t\tdefault "MSG_QUEUE_{i}_ID"')
+    kconfig_content.append(f'\t\t\tdefault "MSG_QUEUE_{i}"')
     kconfig_content.append(f'\t\t\tdepends on DECL_TASK_NORM_{i}_NAME != ""\n')
     kconfig_content.append(f'\t\t\thelp\n')
     kconfig_content.append(f'\t\t\t\tThis is the name of task norm message queue.\n')
@@ -36,7 +36,7 @@ def task_norm_declaration(num_tasks_norm, num_tsm_states_list, num_fsm_states_li
     # NOTE - Config handler name
     kconfig_content.append(f'\t\tconfig DECL_NORM_HANDLER_{i}_NAME') 
     kconfig_content.append(f'\t\t\tstring "Name of handler #{i}"')
-    kconfig_content.append(f'\t\t\tdefault "NORM_HANDLER_{i}_ID"')
+    kconfig_content.append(f'\t\t\tdefault "NORM_HANDLER_{i}"')
     kconfig_content.append(f'\t\t\tdepends on DECL_TASK_NORM_{i}_NAME != ""\n')
     kconfig_content.append(f'\t\t\thelp\n')
     kconfig_content.append(f'\t\t\t\tThis is the name of task norm handler.\n')
@@ -55,18 +55,19 @@ def task_norm_declaration(num_tasks_norm, num_tsm_states_list, num_fsm_states_li
       # NOTE - Config TSM name
       kconfig_content.append(f'\tconfig APPCFG_TSM_TASK_{i}') 
       kconfig_content.append(f'\t\tstring "Name of TSM task #{i}"')
-      kconfig_content.append(f'\t\tdefault "TSM_TASK_{i}_ID"')
+      kconfig_content.append(f'\t\tdefault "TSM_TASK_{i}"')
       kconfig_content.append(f'\t\tdepends on DECL_TASK_NORM_{i}_NAME != ""\n')
       kconfig_content.append(f'\t\thelp\n')
       kconfig_content.append(f'\t\t\tThis is the name of TSM task.\n')
       kconfig_content.append(f'\t\t\tFormat output as extern uedp_tsm_t <value>;\n')
       kconfig_content.append(f'\t\t\tUsually prefer eg. `tsm_task_1` to produce `extern uedp_tsm_t tsm_task_1;` in tsm objects.\n')
       kconfig_content.append(f'\t\t\tUsually prefer eg. `tsm_task_1` to produce `extern tsm_state_desc_t tsm_task_1_tbl[];` in tsm objects table which contains list of states.\n')
+      kconfig_content.append(f'\t\t\tThe value is an internal C identifier and should not use the `_ID` suffix.\n')
       # NOTE - Config TSM state name (số lượng state riêng của task #i)
       for j in range(1, num_tsm_states + 1):
         kconfig_content.append(f'\tconfig APPCFG_TSM_TASK_{i}_STATE_{j}')
         kconfig_content.append(f'\t\tstring "Name of TSM task #{i} state #{j}"')
-        kconfig_content.append(f'\t\tdefault "TSM_TASK_{i}_STATE_{j}_ID"')
+        kconfig_content.append(f'\t\tdefault "TSM_TASK_{i}_STATE_{j}"')
         kconfig_content.append(f'\t\tdepends on DECL_TASK_NORM_{i}_NAME != ""\n')
         kconfig_content.append(f'\t\thelp\n')
         kconfig_content.append(f'\t\t\tThis is the name of TSM task state.\n')
@@ -74,6 +75,7 @@ def task_norm_declaration(num_tasks_norm, num_tsm_states_list, num_fsm_states_li
         kconfig_content.append(f'\t\t\tAlso used for ntry/actv/exit function names\n')
         kconfig_content.append(f'\t\t\tUsually prefer eg. `tsm_task_1_state_1` to produce `tsm_task_1_state_1_trans[]` in tsm state transition table.\n')
         kconfig_content.append(f'\t\t\tUsually prefer eg. `tsm_task_1_state_1` to produce `tsm_task_1_state_1_ntry()`, `tsm_task_1_state_1_actv()`, `tsm_task_1_state_1_exit()` in tsm state transition table.\n')
+        kconfig_content.append(f'\t\t\tThe value must be unique within this TSM task and should not use the `_ID` suffix.\n')
 
       kconfig_content.append('\t\tendmenu\n')
 
@@ -83,22 +85,25 @@ def task_norm_declaration(num_tasks_norm, num_tsm_states_list, num_fsm_states_li
       # NOTE - Config FSM name
       kconfig_content.append(f'\tconfig APPCFG_FSM_TASK_{i}')
       kconfig_content.append(f'\t\tstring "Name of FSM task #{i}"')
-      kconfig_content.append(f'\t\tdefault "FSM_TASK_{i}_ID"')
+      kconfig_content.append(f'\t\tdefault "FSM_TASK_{i}"')
       kconfig_content.append(f'\t\tdepends on DECL_TASK_NORM_{i}_NAME != ""\n')
       kconfig_content.append(f'\t\thelp\n')
       kconfig_content.append(f'\t\t\tThis is the name of FSM task.\n')
       kconfig_content.append(f'\t\t\tFormat output as extern uedp_fsm_t <value>;\n')
       kconfig_content.append(f'\t\t\tUsually prefer eg. `fsm_task_1` to produce `extern uedp_fsm_t fsm_task_1;` in fsm objects.\n')
+      kconfig_content.append(f'\t\t\tFSM state handlers are generated from the configured state names.\n')
+      kconfig_content.append(f'\t\t\tThe value is an internal C identifier and should not use the `_ID` suffix.\n')
       # NOTE - Config FSM state name (số lượng state riêng của task #i)
       for j in range(1, num_fsm_states + 1):
         kconfig_content.append(f'\tconfig APPCFG_FSM_TASK_{i}_STATE_{j}') 
         kconfig_content.append(f'\t\tstring "Name of FSM task #{i} state #{j}"')
-        kconfig_content.append(f'\t\tdefault "FSM_TASK_{i}_STATE_{j}_ID"')
+        kconfig_content.append(f'\t\tdefault "FSM_TASK_{i}_STATE_{j}"')
         kconfig_content.append(f'\t\tdepends on DECL_TASK_NORM_{i}_NAME != ""\n')
         kconfig_content.append(f'\t\thelp\n')
         kconfig_content.append(f'\t\t\tThis is the name of FSM task state.\n')
         kconfig_content.append(f'\t\t\tFormat output as fsm_state_desc_t <value>_trans[];\n')
         kconfig_content.append(f'\t\t\tUsually prefer eg. `fsm_task_1_state_1` to produce `fsm_task_1_state_1_onst()` in fsm state transition function.\n')
+        kconfig_content.append(f'\t\t\tThe value must be unique within this FSM task and should not use the `_ID` suffix.\n')
 
       kconfig_content.append('\t\tendmenu\n')
 

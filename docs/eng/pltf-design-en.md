@@ -68,11 +68,12 @@ pltf/
     │   ├── dotcfg.py
     │   └── glbda.py           # Bridges context["task_tsm"/"task_fsm"] with the μE-LS glbda: block
     ├── lstaxer/               # Parses + validates the μE-LS YAML (see section 3.5)
-    │   ├── symresolv.py, nullremov.py, strucjec.py
+    │   ├── symresolv.py, strucjec.py
     │   ├── lukupmodel.py, vlid.py, kre8.py
     │   └── pydantic_model/    # logic.py, resrc.py, misc.py
     ├── ustab/                 # Unified Symbol Table (see section 3.5)
     │   ├── gnnerate.py, cvert.py, xportstax.py
+    │   ├── ankorpin.py        # Anchor pinning (DEPRECATED, still called by ntrypont.py)
     │   └── custab.py          # Orchestrator
     └── jnerator/
         ├── pregen/            # Generates Kconfig-based declarations (one artifact per file)
@@ -126,7 +127,7 @@ The logic is nearly identical to the old `sources/common/pyspec/` from KwDI (bac
 This is the direct replacement for the logic that used to walk `kconf.unique_defined_syms`, scattered across `corecfg_gen`/`palcfg_gen` inside the old `uedp.py`. `dotcfg.cfp_parse_dotcfg(config_path)` reads the `.config` file (in `CONFIG_KEY=value` text form) directly — `kconfiglib` is **no longer needed** at this step — and returns a structured `context` dict:
 
 - `core_configs`, `pal_configs`: lists of `#define` strings for `CORE_*` / `PAL_*`.
-- `tasknorm_defs`, `taskpoll_defs`, `sig_defs`: automatically assigned increasing hex IDs, starting at `0xE6` (task norm), `0xD4` (task poll), `0x01` (signal) — matching the `[HES] Heximal Encoding Signals` ranges already described in `arch-design.md` (`TASK_NORM` in the `0xEx` range, `TASK_POLL` in the `0xDx` range).
+- `tasknorm_defs`, `taskpoll_defs`, `sig_defs`: automatically assigned increasing hex IDs, starting at `0xE3` (task norm), `0xD0` (task poll), `0x01` (signal) — matching the `[HES] Heximal Encoding Signals` ranges already described in `arch-design.md` (`TASK_NORM` in the `0xEx` range, `TASK_POLL` in the `0xDx` range).
 - `msgq_defs`, `normhler_lists`, `pollhler_lists`: lists of queue/handler names used to generate the task table.
 - `appcfg_tsm_*`, `appcfg_fsm_*`, `tsmio_lists`, `fsmio_lists`: data specific to TSM/FSM (objects, state-transition tables, state lists).
 - `arch_name`, `arch_apis`: the PAL architecture name and the list of Hardware APIs to generate.
@@ -177,14 +178,18 @@ Because it uses whole-file template rendering instead of patching, PLTF **no lon
 
 ### 3.5 μE-LS / PLD: the `lstaxer` + `ustab` pipeline (now implemented)
 
-Unlike PLTF's early stage (when `attribarse/glbda.py` and `test.yaml` were still an independent draft/PoC, not yet called by any orchestrator), as of 1.1.6 the μE-LS pipeline (Logical Syntax-izer, part of the PLD - Parse-able Logical Descriptor feature) has been fully implemented and integrated into `entrypoint.sh` (see section 4.2). The full YAML syntax is described in detail in `docs/uels-syntax.md`; this section only summarizes the modules directly relevant to the code-generation pipeline:
+Unlike PLTF's early stage (when `attribarse/glbda.py` and `test.yaml` were still an independent draft/PoC, not yet called by any orchestrator), as of 1.1.6 the μE-LS pipeline (Logical Syntax-izer, part of the PLD - Parse-able Logical Descriptor feature) has been fully implemented and integrated into `jainerator.py` and `ntrypont.py` (see section 4.2). The full YAML syntax is described in detail in `docs/uels-syntax.md`; this section only summarizes the modules directly relevant to the code-generation pipeline:
 
-- `pltf/pycdscriptor/lstaxer/`: the parser + validator for the μE-LS YAML file (e.g. `sources/app/lstaxizer.yaml`) — including `symresolv.py` (builds a Symbol Resolution Map to resolve anchors/aliases), `nullremov.py` (cleans up redundant `NULL` declarations the user doesn't need to fill in), `strucjec.py` (normalizes the `actvobj`/`fsm`/`tsm` structure of `tlist`), `lukupmodel.py` (feeds post-validated data into `pydantic_model`), `vlid.py` (5 validation strategies), and `kre8.py` (assembles everything into the `context` for the code-generation step, via `build_generator_context()`).
+- `pltf/pycdscriptor/lstaxer/`: the parser + validator for the μE-LS YAML file (e.g. `sources/app/lstaxizer.yaml`) — including `symresolv.py` (builds a Symbol Resolution Map to resolve anchors/aliases), `strucjec.py` (normalizes the `actvobj`/`fsm`/`tsm` structure of `tlist`), `lukupmodel.py` (feeds post-validated data into `pydantic_model`), `vlid.py` (5 validation strategies), and `kre8.py` (assembles everything into the `context` for the code-generation step, via `build_generator_context()`).
 - `pltf/pycdscriptor/attribarse/glbda.py`: the bridge between `dotcfg.py` (the `task_tsm`/`task_fsm` field, section 3.3) and the `glbda:` block in the μE-LS syntax.
 - `pltf/pycdscriptor/jnerator/postgen/`: the code-generation stage **after** the logic has been validated (`cgen.py` calls `lstaxer.kre8.build_generator_context()` then `modalcvert.generate_appc()` to render `sources/app/app.c` directly from the YAML — this is the biggest difference from `jnerator/pregen/`, which only generates declarations/definitions rather than implementation logic).
 - `pltf/pycdscriptor/ustab/`: the Unified Symbol Table — `gnnerate.py` builds a symbol table from `.config`/Kconfig, `xportstax.py` exports the entire config to YAML for cross-checking against μE-LS, and `custab.py` is the orchestrator calling both.
 
-In other words, the pipeline now has 3 sequential stages: **pre-logicdef** (`jnerator/pregen`, generates Kconfig-based declarations) → **post-logicdef** (`jnerator/postgen`, generates implementation logic from validated YAML) → **ustab** (cross-checking, symbol-table export). `docs/uels-syntax.md` describes the YAML semantics in detail; this document only focuses on how the PLTF pipeline calls those modules.
+> Update in version v1.1.6-bf4
+>
+> In version v1.1.6-bf4, the generated names of tasks, signals and message queues no longer carry the `_ID` suffix (e.g. `TASK_NORM_A` instead of `TASK_NORM_A_ID`); `attribarse/dotcfg.py` strips this suffix when generating `tasknorm_defs`, `sig_defs` and `msgq_defs`. `modalcvert.py` also accepts both forms when resolving symbols. The `psetbl` block is validated and emitted as `uedp_msg_register_topic()` calls in `init_actions`, and `exec` is accepted as an alias of `kwexec` in `tnorm`.
+>
+> In other words, the pipeline now has 3 sequential stages: **pre-logicdef** (`jnerator/pregen`, generates Kconfig-based declarations) → **post-logicdef** (`jnerator/postgen`, generates implementation logic from validated YAML) → **ustab** (cross-checking, symbol-table export). `docs/uels-syntax.md` describes the YAML semantics in detail; this document only focuses on how the PLTF pipeline calls those modules.
 
 ## 4. New Docker & orchestration
 
@@ -197,44 +202,39 @@ Compared with the original KwDI version (just `python:3.13-slim` + `kconfiglib`)
 - `jinja2`, `pytest`, `pyserial` installed alongside `kconfiglib` — serving the template-rendering pipeline and (in the future) running automated tests.
 - 2 separate working directories pre-created: `/uedp-libs` (the μEDP core source, mounted from the repo) and `/uedp-test` (a dedicated PLTF workspace) — directly addressing the "no workspace separation" limitation noted for KwDI.
 - `gosu` installed to drop privileges from `root` down to a regular user before entering the interactive shell.
-- `ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]` instead of a `CMD` that calls `python uedp.py menuconfig` directly as in the original version.
+- `ENTRYPOINT ["python", "/uedp-libs/ntrypont.py", "--docker"]` instead of a `CMD` that calls `python uedp.py menuconfig` directly as in the original version.
 
-### 4.2 `entrypoint.sh`
+> Update in version v1.1.6-bf2
+>
+> In version v1.1.6-bf2, Docker became an option rather than a requirement. Users can run directly on the host if Python 3.13, Jinja2, pytest, pyserial, kconfiglib and ESP-IDF v5.1 are installed. However, using Docker is still recommended to keep environments consistent across different development machines.
 
-```bash
-#!/bin/bash
-set -e
-USER_ID=${MY_UID:-1000}
-GROUP_ID=${MY_GID:-1000}
-# Create a "uedp_user" matching the host user's UID/GID
-if ! id -u uedp_user >/dev/null 2>&1; then
-  groupadd -g $GROUP_ID uedp_group 2>/dev/null || true
-  useradd --shell /bin/bash -u $USER_ID -g $GROUP_ID -o -c "" -m uedp_user
-fi
-chown $USER_ID:$GROUP_ID /uedp-libs
-chown $USER_ID:$GROUP_ID /uedp-test
-export HOME=/home/uedp_user
-echo "source $IDF_PATH/export.sh > /dev/null 2>&1" >> /home/uedp_user/.bashrc
-# [ENTRY 1] Input collection + menuconfig (unchanged from KwDI)
-python uedp.py menuconfig
-# [ENTRY 2] Generate pre-logicdef (Kconfig-based) declarations from .config
-python -m pltf.pycdscriptor.jnerator.pregen.fpregen
-# [ENTRY 3] Generate implementation logic (app.c) from the post-logicdef YAML (μE-LS)
-python -m pltf.pycdscriptor.jnerator.postgen.cgen \
-  --yaml sources/app/lstaxizer.yaml \
-  --output sources/app/app.c
-# [ENTRY 4] Generate/cross-check the Unified Symbol Table
-python -m pltf.pycdscriptor.ustab.custab
-chown -R $USER_ID:$GROUP_ID /uedp-libs/*
-exec gosu uedp_user bash
+### 4.2 `ntrypont.py`
+
+```python
+# ntrypont.py (abridged)
+def setup_user():        # create uedp_user matching MY_UID/MY_GID, chown /uedp-libs and /uedp-test
+def run_pipeline(include_menuconfig=True):
+  if include_menuconfig:
+    run_cmd(["python", "uedp.py", "menuconfig"])
+  run_cmd(["python", "-m", "pltf.pycdscriptor.jnerator.pregen.fpregen"])
+  run_cmd(["python", "-m", "pltf.pycdscriptor.ustab.custab"])
+  run_cmd(["python", "-m", "pltf.pycdscriptor.ustab.ankorpin"])
+
+# mode --docker: setup_user() → run_pipeline(menuconfig) → chown → gosu uedp_user bash
+# mode --it:     run_pipeline(menuconfig)
+# mode --n-it:   run_pipeline(without menuconfig)
 ```
 
-Four design points worth noting:
+Design points worth noting:
 
 - **Handling UID/GID via the `MY_UID`/`MY_GID` environment variables** (default `1000`): directly solves KwDI's "files created end up owned by `root` on the host" problem, since the `.:/uedp-libs` volume is a two-way mount.
-- **4 sequential stages in a single container run**: `menuconfig` (KwDI, unchanged) → `fpregen` (pre-logicdef, generates Kconfig-based declarations, section 3.4) → `cgen` (post-logicdef, generates `app.c` from validated μE-LS YAML, section 3.5) → `ustab.custab` (cross-checking, symbol-table export). From the user's perspective, the experience is still "one command, one run," but internally there are now 4 separate pipelines, each of which can also be invoked independently via `python -m pltf.pycdscriptor....`.
-- Compared with the original PLTF version (only 2 ENTRY stages: menuconfig + a single code-generation script), splitting out ENTRY 3/4 reflects the fact that the μE-LS pipeline (section 3.5) is now genuinely wired into orchestration, no longer an independent debug script.
-- **`exec gosu uedp_user bash`** at the end: after code generation finishes, the container does not exit immediately but drops into a shell as a regular user, allowing further work (`cd /uedp-test` to develop PLTF further, or `exit` to simply take the code that was just generated).
+- The pipeline runs sequentially: `menuconfig` (KwDI, unchanged) → `fpregen` (pre-logicdef, generates Kconfig-based declarations, section 3.4) → `ustab.custab` (cross-checking, symbol-table export) → `ustab.ankorpin`. The μE-LS `app.c` generation step (`cgen`) is not part of `ntrypont.py`; it is invoked by `jainerator.py`, see section 3.5.
+- The `--n-it` mode skips `menuconfig`, which suits CI/CD.
+- In `--docker` mode, after the pipeline finishes, `ntrypont.py` re-chowns `/uedp-libs` and then calls `os.execvp("gosu", ...)` into a shell as `uedp_user`, so the container does not exit immediately and the user can keep working (`cd /uedp-test` to develop PLTF further, or `exit` to simply take the code that was just generated).
+
+> Update in version v1.1.6-bf2
+>
+> In version v1.1.6-bf2, the Bash-type modules are fully converted to Python-type, so the scripts `entrypoint.sh`, `jainerator.sh` and `insert.sh` are replaced by corresponding Python scripts that keep the same functionality.
 
 ### 4.3 `docker-compose.yaml`
 
@@ -277,20 +277,19 @@ Unchanged from KwDI — `docs/` (which holds large reference PDFs and instructio
 | Code-generation mechanism | Patching a string between 2 markers into an existing `.h` file | Rendering an entirely new file via a Jinja2 template (`pregen`) or from validated YAML (`postgen`) |
 | Input to the code-generation step | The `kconf` object directly (`kconfiglib`) | The `.config` file, parsed once via `cfpcall.py` (`pregen`), and the μE-LS YAML file after it passes `lstaxer.vlid` (`postgen`) |
 | Docker image | `python:3.13-slim` + `kconfiglib` | + `gcc/cmake/gdb`, + ESP-IDF v5.1, + `jinja2/pytest/pyserial`, + `gosu` |
-| Container startup | `CMD` calling `uedp.py menuconfig` directly | `entrypoint.sh` (creates a user, handles UID/GID, runs 4 ENTRY stages in sequence, then drops into a shell) |
+| Container startup | `CMD` calling `uedp.py menuconfig` directly | `ntrypont.py --docker` (creates a user, handles UID/GID, runs the pipeline, then drops into a shell) |
 | Orchestration | None (manual `docker run`) | `docker-compose.yaml` (`uedp_udc` service) |
 | Workspace | Everything mixed into one directory | Separated into `/uedp-libs` (core lib) and `/uedp-test` (PLTF workspace) |
 | Advanced test spec (μE-LS/PLD) | None | Fully implemented: `lstaxer/` (parse + validate) + `attribarse/glbda.py` (bridge to `dotcfg`) + `jnerator/postgen` (generates `app.c`) + `ustab/` (symbol cross-checking) — see `docs/uels-syntax.md` and section 3.5 |
 
 ## 6. Remaining work / risks to note going forward
 
-- **A leftover `sys.path` entry from before the move into `pltf/`**: `uedp.py` still inserts `sources/common/kconfigspec` into `sys.path` even though that directory no longer exists (the real module has fully moved to `pltf/kconfigspec/` and is imported via the `pltf.kconfigspec` package) — this insertion is now dead code, harmless but confusing to read. This cleanup is listed as a separate item in `docs/to-do.md` ("chore filename to unify PLTF's separate modules"), not yet done as of this writing.
-- **The position of `ustab.custab` in `entrypoint.sh` needs review**: it currently runs at the very last ENTRY stage, after `cgen` has already generated `app.c` — worth confirming whether this ordering matches the intended design (`docs/to-do.md` still has a separate, unresolved item: "adjust the position of ustab.custab in the entrypoint.sh pipeline").
-- **`entrypoint.sh` always runs `uedp.py menuconfig` on every container startup**: fine for an interactive session on a dev machine, but there's no non-interactive branch yet (e.g., reading an existing `.config` directly and skipping menuconfig) for use in CI/CD.
-- **No automated tests for `pltf/` itself yet**: the testing framework itself (parser, generator, template, and now also the `lstaxer`/`ustab` pipeline) currently has no dedicated tests to guard against regressions when editing a template or a parser.
-- **`lstaxer.nullremov` is flagged as possibly redundant**: `docs/to-do.md` records a consideration to drop this module from the shared pipeline, since it may add parsing complexity without a matching benefit - the final decision should be tracked and section 3.5 updated if the module is removed.
-- **No BST (Basic Software Test) on real hardware yet for the PLD/μE-LS pipeline**: work so far has stopped at code generation and design review; there is not yet a real test cycle confirming that `app.c` generated from μE-LS actually runs correctly on hardware.
+- **No automated tests for `pltf/` itself yet**: the testing framework itself (parser, generator, template, and now also the `lstaxer`/`ustab` pipeline) currently has no dedicated tests to guard against regressions when editing a template or a parser. Consider using testobj-v0 and `pytest` to write a few simple tests for each module in `pltf/` (e.g., `dotcfg.py`, `glbda.py`, `symresolv.py`, `strucjec.py`, `vlid.py`, `kre8.py`, `cfpcall.py`, `fpregen.py`, `modalcvert.py`) to ensure that the pipeline continues to work correctly after future edits.
+
+<!-- STATUS
+In version v1.1.6, the tasks have been completed or marked as unnecessary, so the items in the remaining-work list have been updated and no unresolved issues remain.
+-->
 
 ## 7. Conclusion
 
-PLTF does not replace KwDI's Kconfig or Docker usage — instead, it **decouples the layers**, separating code generation from configuration collection, while also containerizing the environment more fully (build toolchain + ESP-IDF + user-permission handling) so the container can be used not just to run `menuconfig` once, but as a full development and testing environment for μEDP throughout. Unlike the early stage (when the μE-LS/PLD extension direction was still an independent `glbda.py`/`test.yaml` draft), as of 1.1.6 this pipeline has been fully implemented and genuinely integrated into `entrypoint.sh` through 3 stages, `pregen` → `postgen` → `ustab` (sections 3.4, 3.5, 4.2). The largest remaining piece of work is no longer "integrating μE-LS" — it has shifted to technical cleanup (the leftover `sys.path` entry, the position of `ustab.custab` in the pipeline), adding automated tests for `pltf/`, and running BST on real hardware — as listed in section 6.
+PLTF does not replace KwDI's Kconfig or Docker usage — instead, it **decouples the layers**, separating code generation from configuration collection, while also containerizing the environment more fully (build toolchain + ESP-IDF + user-permission handling) so the container can be used not just to run `menuconfig` once, but as a full development and testing environment for μEDP throughout. Unlike the early stage (when the μE-LS/PLD extension direction was still an independent `glbda.py`/`test.yaml` draft), as of 1.1.6 this pipeline has been fully implemented and genuinely integrated into `jainerator.py` (`postgen`) and `ntrypont.py` (`pregen`, `ustab`) (sections 3.4, 3.5, 4.2). The largest remaining piece of work is no longer "integrating μE-LS" — it has shifted to adding pipeline configuration for new feature release and writing automated tests for the PLTF pipeline itself, to ensure that future edits do not break the code-generation flow.

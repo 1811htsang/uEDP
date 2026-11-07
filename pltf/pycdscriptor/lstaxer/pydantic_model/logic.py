@@ -116,3 +116,7 @@ class C_tnorm_obj(BaseModel):
 class C_tpoll_obj(BaseModel):
   tpoll: str
   kwexec: List[C_act_obj]
+
+class C_psetbl_obj(BaseModel):
+  sig: str
+  sub: List[str]

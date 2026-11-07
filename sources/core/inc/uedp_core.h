@@ -37,7 +37,7 @@
    *         message được cấp phát ngoài ngữ cảnh dispatch thật (ISR, timer, main()).
    */
 
-  #define UEDP_TASK_NORM_MAX_SIZE						(16u) 	// 16 tác vụ, từ 0 đến 15
+  #define UEDP_TASK_NORM_MAX_SIZE						(16u)  // 16 tác vụ, từ 0 đến 15
   #define UEDP_TASK_NORM_SYS_ID							(0xE0) // Tác vụ hệ thống (info + memrp) — dùng làm src_task_id khi message không xuất phát từ 1 task dispatch thật, xem uedp_msg.c
   #define UEDP_TASK_NORM_USR_ID							(0xE1) // Tác vụ người dùng (dùng để entry) — bắt buộc phải có trong bảng tác vụ, xem app_cfg.h
   #define UEDP_TASK_NORM_IDLE_ID						(0xE2) // Tác vụ rảnh — dùng làm sentinel "không có task nào đang thực thi", xem g_active_task_norm_id trong uedp_task.c
@@ -45,6 +45,9 @@
   #define UEDP_TASK_NORM_MIN_ID 						(0xE0) // ID đầu tiên
   #define UEDP_TASK_NORM_MAX_ID							(0xEF) // ID cuối cùng
   #define UEDP_TASK_NORM_OFFSET						  (0x03) // Offset để tránh trùng với các tác vụ khác (3 tác vụ mặc định: SYS, USR, IDLE)
+
+  // ANCHOR - Define special task norm ID for PSE feature
+  #define UEDP_PSE_TASK_NORM_BROADCAST      (0xF0) // Tác vụ đặc biệt dùng cho broadcast message trong PSE (Poll Scheduler Extension) - không được dùng làm ID của tác vụ bình thường nào khác
 
   /** ANCHOR - Define constants for poll task IDs
    * @brief Định nghĩa các hằng số cho ID của tác vụ poll
@@ -107,6 +110,7 @@
    *            cho phép hệ thống UEDP quản lý tối đa 16 tín hiệu đặc biệt 
    * 						khác nhau để điều khiển vòng đời của trạng thái trong FSM,
    */
+
   #define UEDP_FSM_SIG_ENTRY    (0xB0u)
   #define UEDP_FSM_SIG_EXIT     (0xB1u)
   #define UEDP_FSM_SIG_INIT     (0xB2u)
@@ -120,6 +124,7 @@
    * 						trong đó `x` là một giá trị từ 0 đến 15 (0x0 đến 0xF),
    * 						cho phép hệ thống UEDP quản lý tối đa 16 tín hiệu
    */
+
   #define UEDP_TSM_SIG_ENTRY    (0xA0u)
   #define UEDP_TSM_SIG_EXIT     (0xA1u)
   #define UEDP_TSM_SIG_MIN      (0xA0u) // ID thấp nhất
@@ -135,6 +140,7 @@
    *            nên dải trạng thái TSM được thiết kế có offset là 0x003 
    *            để tránh trùng lặp với các trạng thái đặc biệt này.
    */
+
   #define UEDP_TSM_STATE_BACK   (0xAF0u) // Quay lại trạng thái cũ
   #define UEDP_TSM_STATE_STAY   (0xAF1u) // Giữ nguyên trạng thái hiện tại
   #define UEDP_TSM_STATE_MIN		(0xAF0u) // ID thấp nhất
@@ -175,6 +181,7 @@
   /** ANCHOR - Define various message queue sizes for different task types
    * @brief Define các kích thước của các hàng đợi tin nhắn cho các tác vụ trong hệ thống UEDP
    */
+  
   #ifndef UEDP_TASK_MSG_QUEUE_SIZE
     #define UEDP_TASK_MSG_QUEUE_SIZE  (8u) // Số lượng tin nhắn tối đa trong hàng đợi của mỗi tác vụ
   #endif
@@ -182,6 +189,7 @@
   /** ANCHOR - Define constants for maximum number of timers
    * @brief Khai báo các hằng số cho số lượng timer tối đa có thể chạy cùng lúc
    */
+
   #ifndef UEDP_TIMER_MAX_NODES
     #define UEDP_TIMER_MAX_NODES    (4u) // units
   #endif
@@ -216,8 +224,17 @@
 	 * @attention Hiện để default trực tiếp tại đây (giống pattern LOGDP_MAX_OUTPUT_FN) - có thể
 	 *            đưa vào Kconfig/PLTF codegen sau này giống các Pool khác (BLANK/ALLOC/EXTAL/ISR) nếu cần.
 	 */
+
 	#ifndef UEDP_GDP_QUEUE_SIZE
 		#define UEDP_GDP_QUEUE_SIZE (16u)
+	#endif
+
+  /** ANCHOR - Số lượng Topic tối đa mà hệ thống UEDP có thể quản lý cùng lúc
+   * @attention Nên lựa chọn cơ số dạng 8n (8, 16, 24...) để thuận tiện cho việc quản lý bitmask
+   */
+
+	#ifndef UEDP_TBM_MAX_SIZE
+		#define UEDP_TBM_MAX_SIZE (32u)
 	#endif
 
   /** ANCHOR - Define constants for flush log entry threshold

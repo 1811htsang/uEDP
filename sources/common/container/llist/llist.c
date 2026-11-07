@@ -20,9 +20,7 @@ static bool llist_pool_ready = false;
 
 static void llist_pool_init(void) {
   //NOTE - enforce singleton pattern for pool initialization
-  if (llist_pool_ready) {
-    return;
-  }
+  if (llist_pool_ready) return;
 
   for (uint32_t i = 0; i < (LLIST_MAX_NODES - 1U); i++) {
     llist_node_pool[i].next = &llist_node_pool[i + 1U];
@@ -36,9 +34,7 @@ static void llist_pool_init(void) {
 static llist_node_t* llist_alloc_node(void) {
   llist_pool_init();
 
-  if (llist_free_list == NULL) {
-    return NULL;
-  }
+  if (llist_free_list == NULL) return NULL;
 
   llist_node_t* node = llist_free_list;
   llist_free_list = llist_free_list->next;
@@ -47,18 +43,14 @@ static llist_node_t* llist_alloc_node(void) {
 }
 
 static void llist_free_node(llist_node_t* node) {
-  if (node == NULL) {
-    return;
-  }
+  if (node == NULL) return;
 
   node->next = llist_free_list;
   llist_free_list = node;
 }
 
 void llist_init(llist_t* list) {
-  if (list == NULL) {
-    return;
-  }
+  if (list == NULL) return;
 
   list->head = NULL;
   list->tail = NULL;
@@ -66,38 +58,30 @@ void llist_init(llist_t* list) {
 }
 
 bool llist_is_empty(llist_t* list) {
-  if (list == NULL) {
-    return true;
-  }
-
+  if (list == NULL) return true;
   return (list->size == 0) ? true : false;
 }
 
 void llist_append(llist_t* list, void* data) {
-  if (data == NULL || list == NULL) {
-    return;
-  }
+  if (data == NULL || list == NULL) return;
 
   llist_node_t* cnter_node = list->head;
 
+  /**
+   * @brief Lưu ý rằng phụ thuộc vào logic,
+   * ở đây API được thiết kế phục vụ 
+   * tính chất idempotency cho OCE,
+   * nên nếu dữ liệu đã tồn tại trong linked list, 
+   * chúng ta sẽ không thêm lại.
+   */
+
   while (cnter_node != NULL) {
-    if (cnter_node->data == data) {
-      return; // Dữ liệu đã tồn tại trong linked list, không thêm lại
-      /**
-       * @brief Lưu ý rằng phụ thuộc vào logic,
-       * ở đây API được thiết kế phục vụ 
-       * tính chất idempotency cho OCE,
-       * nên nếu dữ liệu đã tồn tại trong linked list, 
-       * chúng ta sẽ không thêm lại.
-       */
-    }
+    if (cnter_node->data == data) return; // Dữ liệu đã tồn tại trong linked list, không thêm lại
     cnter_node = cnter_node->next;
   }
 
   llist_node_t* node = llist_alloc_node();
-  if (node == NULL) {
-    return;
-  }
+  if (node == NULL) return;
 
   node->data = data;
   node->next = NULL;
@@ -112,9 +96,7 @@ void llist_append(llist_t* list, void* data) {
 }
 
 bool llist_remove(llist_t* list, void* data) {
-  if (list == NULL || data == NULL) {
-    return false;
-  }
+  if (list == NULL || data == NULL) return false;
 
   llist_node_t* cnter_node = list->head;
   llist_node_t* prev_node = NULL;
@@ -128,9 +110,7 @@ bool llist_remove(llist_t* list, void* data) {
         prev_node->next = cnter_node->next;
       }
 
-      if (cnter_node == list->tail) {
-        list->tail = prev_node;
-      }
+      if (cnter_node == list->tail) list->tail = prev_node;
 
       llist_free_node(cnter_node);
       list->size--;

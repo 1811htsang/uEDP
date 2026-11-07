@@ -1,0 +1,165 @@
+pject: "vir-phy-negtiv-pse-fcr-gdp-testobj-v2"
+versh: "v1.1.7"
+
+# Build negative tests with UEDP_FCR_NEG_TESTCASE so uedp_fcr_raise()
+# emits the FCR trace required by the test report.
+
+# ANCHOR - Global Data Area (GDA)
+glbda:
+  - &gda_tc_neg04_name
+      name: GDA_TC_NEG_04_NAME
+      type: "const char*"
+      initial_value: "MISSING_GDA"
+  - &gda_tc_neg05_source
+      name: GDA_TC_NEG_05_SOURCE
+      type: "const char*"
+      initial_value: "PAYLOAD_TOO_LARGE_FOR_OUTPUT"
+
+psetbl:
+  # TC_NEG_02: a subscriber is required to make publish allocate a message.
+  - sig: SIG_TC_NEG_02
+    sub: [TASK_NORM_B]
+
+  # TC_NEG_03: B is intentionally filled before this topic is published.
+  - sig: SIG_TC_NEG_03
+    sub: [TASK_NORM_B, TASK_NORM_C]
+
+tlist:
+  - tnorm: TASK_NORM_USR
+    exec: &tc_neg_usr_exec
+      # TC_NEG_01: invalid topic ID must return STAT_ERROR and raise
+      # UEDP_FCR_MSG_INVALID_PARAM.
+      - on_sig: SIG_TC_NEG_01
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                const ui16 invalid_sig = UEDP_TBM_MAX_SIZE;
+                task_norm_t task_list[] = {
+                  { TASK_NORM_B_ID },
+                  { UEDP_TASK_NORM_EOT_ID }
+                };
+                RETR_STAT register_result =
+                    uedp_msg_register_topic(invalid_sig, task_list);
+                RETR_STAT clear_result =
+                    uedp_msg_clear_topic(invalid_sig, task_list);
+                RETR_STAT publish_result =
+                    uedp_msg_publish(invalid_sig, NULL, 0);
+                printf("[TC_NEG_01] register=%s clear=%s publish=%s\n",
+                       register_result == STAT_ERROR ? "PASS" : "FAIL",
+                       clear_result == STAT_ERROR ? "PASS" : "FAIL",
+                       publish_result == STAT_ERROR ? "PASS" : "FAIL");
+
+      # TC_NEG_02: hold every blank-pool slot, then publish to a subscriber.
+      # The negative-test PAL stub must let pal_sys_fatal() return so the
+      # scenario can release the held messages.
+      - on_sig: SIG_TC_NEG_02
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                uedp_msg_t* held[UEDP_MSG_BLANK_QUEUE_SIZE] = {0};
+                ui16 held_count = 0;
+                for (ui16 i = 0; i < UEDP_MSG_BLANK_QUEUE_SIZE; i++) {
+                  held[i] = uedp_msg_alloc(
+                      TASK_NORM_B_ID, SIG_TC_NEG_02, UEDP_MSG_TYPE_BLANK);
+                  if (held[i] != NULL) {
+                    held_count++;
+                  }
+                }
+                RETR_STAT publish_result =
+                    uedp_msg_publish(SIG_TC_NEG_02, NULL, 0);
+                printf("[TC_NEG_02] held=%u publish=%s\n",
+                       held_count,
+                       publish_result == STAT_ERROR ? "PASS" : "FAIL");
+                for (ui16 i = 0; i < held_count; i++) {
+                  uedp_msg_free(held[i]);
+                }
+
+      # TC_NEG_03: fill B's queue, then publish to B and C. B raises
+      # TASK_QUEUE_FULL while C remains eligible to receive the message.
+      - on_sig: SIG_TC_NEG_03
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                uedp_msg_t* queued[UEDP_MSG_BLANK_QUEUE_SIZE] = {0};
+                ui16 queued_count = 0;
+                for (ui16 i = 0; i < UEDP_MSG_BLANK_QUEUE_SIZE; i++) {
+                  queued[i] = uedp_msg_alloc(
+                      TASK_NORM_B_ID, SIG_TC_NEG_03, sizeof(ui8));
+                  if (queued[i] != NULL &&
+                      uedp_task_norm_post_msg(TASK_NORM_B_ID, queued[i]) == STAT_OK) {
+                    queued_count++;
+                  }
+                }
+                RETR_STAT publish_result =
+                    uedp_msg_publish(SIG_TC_NEG_03, NULL, 0);
+                printf("[TC_NEG_03] queued=%u publish=%s\n",
+                       queued_count,
+                       publish_result == STAT_ERROR ? "PASS" : "FAIL");
+
+      # TC_NEG_04: GDP lookup of a missing name returns NULL and raises
+      # UEDP_FCR_GDP_NOT_FOUND at WARN level.
+      - on_sig: SIG_TC_NEG_04
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                uedp_gdp_init();
+                void* ref = uedp_gdp_get_ref(GDA_TC_NEG_04_NAME);
+                printf("[TC_NEG_04] missing GDP ref: %s\n",
+                       ref == NULL ? "PASS" : "FAIL");
+
+      # TC_NEG_05: a destination buffer smaller than the registered GDP
+      # value must return STAT_ERROR and leave the buffer unchanged.
+      - on_sig: SIG_TC_NEG_05
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                uedp_gdp_init();
+                RETR_STAT register_result = uedp_gdp_register(
+                    "GDA_TC_NEG_05_SOURCE",
+                    GDA_TC_NEG_05_SOURCE,
+                    strlen(GDA_TC_NEG_05_SOURCE) + 1);
+                char small_buffer[4] = "OK";
+                RETR_STAT get_result = uedp_gdp_get_val(
+                    "GDA_TC_NEG_05_SOURCE",
+                    small_buffer,
+                    sizeof(small_buffer));
+                printf("[TC_NEG_05] register=%s get_small=%s buffer=%s\n",
+                       register_result == STAT_OK ? "PASS" : "FAIL",
+                       get_result == STAT_ERROR ? "PASS" : "FAIL",
+                       small_buffer);
+
+      # TC_NEG_06: SSI is not present in sources/core, and no
+      # SSI_UNAUTHORIZED_ACCESS FCR exists. Keep this case visible but
+      # explicitly excluded from execution until SSI is implemented.
+      - on_sig: SIG_TC_NEG_06
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[TC_NEG_06] SKIP: SSI module is not implemented\n");
+    kwexec: *tc_neg_usr_exec
+
+  - tnorm: TASK_NORM_B
+    exec: &tc_neg_b_exec
+      - on_sig: SIG_TC_NEG_03
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[TC_NEG_03] B queue-full path reached\n");
+    kwexec: *tc_neg_b_exec
+
+  - tnorm: TASK_NORM_C
+    exec: &tc_neg_c_exec
+      - on_sig: SIG_TC_NEG_03
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[TC_NEG_03] C received after B queue-full\n");
+    kwexec: *tc_neg_c_exec

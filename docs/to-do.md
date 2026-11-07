@@ -585,19 +585,27 @@ Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST
 - [x] @! TID[epic=v1.1.6-bf2] ARCH-002 <+ Sửa đổi `include.xml` để loại bỏ các đường dẫn specific của nền tảng trong include.
 - [x] @! TID[epic=v1.1.6-bf2] DOCS-005 <+ Sửa đổi user-manual.md để bổ sung các hướng dẫn sử dụng mới cho các tính năng được triển khai trong phiên bản 1.1.6-bf2.
 - [x] @! TID[epic=v1.1.6-bf2] DOCS-006 <+ Bổ sung các sửa đổi trong tài liệu thiết kế PLTF để phản ánh các thay đổi về module name và thiết kế logic của các module trong phiên bản 1.1.6-bf2.
-- [ ] @! TID[epic=v1.1.7/arch] ARCH-001 <+ Bổ sung API cho uutobj H723.
-- [ ] @! TID[epic=v1.1.7/BST] TEST-001 <+ Bổ sung testobj-v1 để chuẩn bị cho BST task.
-- [ ] @! TID[epic=v1.1.7/BST] REPO-001 <+ Cân nhắc repotize 2 prjecobj-linux và projecobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
-- [ ] @! TID[epic=v1.1.7/BST] TEST-002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
-
-<!-- NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6. -->
-
-- [ ] @! TID[epic=PSE] COR-001 <+ Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
-- [ ] @! TID[epic=PSE] DOC-003 <+ Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
+- [x] @! TID[epic=v1.1.7/BST] REPO-001 <+ Cân nhắc repotize 2 prjecobj-linux và projecobj-f103 để chuẩn bị cho BST task thay vì phải reclone mỗi lần thực hiện BST task.
+- [x] @! TID[epic=v1.1.7/PSE] CORE-001 <+ Thiết kế và triển khai Publish-Subscribe (Pub/Sub) engine để một tin nhắn có thể phát tới nhiều task đã đăng ký.
+- [x] @! TID[epic=v1.1.6-bf3/bf2-fcr-missing] CORE-003 <+ Rà soát lại các sửa đổi của phiên bản 1.1.6-bf2 để bổ sung các FCR raise bị thiếu.
+- [x] @! TID[epic=v1.1.6-bf3/common] CORE-004 <+ Rà soát lại các lib để bổ sung các FCR raise bị thiếu hoặc cần cover.
+- [x] @! TID[epic=v1.1.6-bf3/common] DOCS-007 <+ Bổ sung tài liệu quy chuẩn thiết kế code.
+- [x] @! TID[epic=v1.1.7/PSE] CORE-005 <+ Review lại implementation của PSE để xử lý các vấn đề liên quan đến việc gửi tin nhắn tới nhiều task đã đăng ký, đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
+- [x] @! TID[epic=v1.1.7/PSE] CORE-006 <+ Triển khai bugfix cho PSE để xử lý các vấn đề liên quan đến việc gửi tin nhắn tới nhiều task đã đăng ký, đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
+- [x] @! TID[epic=v1.1.7/PSE] CORE-007 <+ Sửa các lỗi PSE/GDP/FCR phát hiện khi review test set (docs/test/pse-gdp-fcr-testset-review.md): ánh xạ task ID và kiểm tra biên topic (B1, B3); publish dùng sizeof(con trỏ) và không kiểm tra NULL (B2, B4); chia sẻ 1 tin nhắn cho nhiều task bằng ref_count thay vì cấp phát N tin nhắn; sửa ngưỡng ref_count 8-bit (B5); bỏ đường dự phòng GDP "publish" dùng chung tên (B6); bổ sung FCR MSG_INVALID_PARAM và LIB_COLLAPSE còn thiếu trong bảng; hàng đợi task đầy không còn raise LIB_COLLAPSE (FATAL, panic) mà chỉ raise TASK_QUEUE_FULL (ERROR).
+- [x] @! TID[epic=v1.1.7/PSE] CORE-008 <+ Đồng bộ mức lỗi FCR với tài liệu FCP (docs/references/fcp-document.md): `SM_NULL_HANDLER` đã chuyển sang FATAL; cập nhật `GDP_INVALID_PARAM` (WARN -> ERROR) trong `uedp_fcr.c`; cập nhật `docs/test/pse-gdp-fcr-testset.md`; thay action của `TASK_QUEUE_FULL`.
+- [x] @! TID[epic=v1.1.7/PSE] CORE-009 <+ Đồng bộ mức lỗi `TIMER_INVALID_PARAM` (WARN -> ERROR) trong `uedp_fcr.c` theo tài liệu FCP (commit 517ec45).
+- [x] @! TID[epic=v1.1.7/PSE] PLTF-002 <+ Triển khai psetbl trong PLTF: model `C_psetbl_obj` (sig, sub), validate entry trong `modalcvert`, xử lý trong `lukupmodel` và tích hợp vào `kre8` để sinh đăng ký topic tĩnh trong `logic_init`.
+- [x] @! TID[epic=v1.1.7/PSE] TEST-005 <+ Đổi khóa `subscribers` thành `sub` trong testobj-v1 và testobj-v2 để thống nhất với psetbl.
+- [x] @! TID[epic=v1.1.6-bf3] CORE-010 <+ Bổ sung kiểm tra phòng vệ (null pointer, tràn số, critical section cho danh sách timer) cho msg, task, timer, tsm, fsm và itnlog.
+- [x] @! TID[epic=v1.1.7/arch] ARCH-003 <+ Refactor PAL uutobj H723: quản lý instance UART/DMA, API USART1, API I2S/OSPI và getter SPI/I2S DMA instance.
+- [x] @! TID[epic=v1.1.7/arch] ARCH-004 <+ Bổ sung hàm `main` và cấu hình CMake build cho uutobj Linux.
+- [x] @! TID[epic=v1.1.7/pltf] PLTF-003 <+ Bỏ hậu tố `_ID` khỏi định nghĩa task/signal/message queue trong `dotcfg`, phân giải symbol trong `modalcvert`, thêm pre-anchor cho task trong testobj-v1, hỗ trợ key `exec` cùng execution items trong `appc`.
+- [x] @! TID[epic=v1.1.7/pltf] PLTF-004 <+ Cập nhật giá trị mặc định và help text cho Kconfig: `sig`, `tnorm`, `tpoll`, `hwapi`.
 
 <!-- SECTION - PSE
 
-# TASK - Minh nên bổ sung thêm 1 tài liệu review về ý tưởng cho PSE tại docs/review/pse.md để thống nhất các ý tưởng và đề xuất cải tiến cho Pub/Sub engine của μEDP.
+# DEPRECATED - Old TASK - Minh nên bổ sung thêm 1 tài liệu review về ý tưởng cho PSE tại docs/review/pse.md để thống nhất các ý tưởng và đề xuất cải tiến cho Pub/Sub engine của μEDP.
 
 # DEPRECATED - Old TASK - Cần cân nhắc để Minh chủ trì phiên bản này do đã có nền tảng placeholder từ baseline gốc của AK-EDP, có thể so sánh với các thiết kế sẵn có như MQTT, RabbitMQ, Kafka, v.v. để đưa ra các đề xuất cải tiến và tối ưu hóa cho Pub/Sub engine của μEDP, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và lổn định.
 
@@ -627,10 +635,53 @@ Việc sử dụng truyền tham chiếu tin nhắn thay vì copy tin nhắn s�
 
 Ngoài ra, các tính năng nâng cao như lọc tin nhắn theo topic, QoS (Quality of Service), v.v. sẽ được cân nhắc để triển khai trong các phiên bản sau của μEDP, nhằm đảm bảo rằng Pub/Sub engine có thể đáp ứng được các yêu cầu của các ứng dụng phức tạp hơn trong tương lai.
 
+# STATUS - 1552 191026 CORE-001
+
+Hiện tại sau khi hoàn thành implementation ở ticket CORE-001 thì đã phát hiện ra 5 lỗi chính
+
+## Cạm bẫy sizeof(void*) trong C
+
+`if (sizeof(data) > 0)` và `memcpy(msg->data, data, sizeof(data));` cho phép param truyền vào là `void* data` nhưng sizeof(data) sẽ luôn trả về 8 (trên nền tảng 64-bit) hoặc 4 (trên nền tảng 32-bit) thay vì kích thước thực tế của dữ liệu mà param data trỏ tới. Do đó, cần phải truyền thêm param `data_size` để xác định kích thước thực tế của dữ liệu mà param data trỏ tới như `ui16 len` hay `size_t len` để đảm bảo rằng dữ liệu được sao chép đúng kích thước và tránh các lỗi liên quan đến việc truy cập bộ nhớ ngoài phạm vi.
+
+## Mâu thuẫn Logic Offset của Task ID
+
+`task_list[i].id >= UEDP_TASK_NORM_MIN_ID` (ví dụ 0xE4 = 228), sau đó ngay lập tức kiểm tra `if (task_list[i].id < 32)`, nhánh if này sẽ không bao giờ được thực thi, code sẽ luôn nhảy vào else và báo lỗi FCR_MSG_INVALID_PARAM.
+
+Phải dùng công thức tính Index: bit_index = task_id - UEDP_TASK_NORM_MIN_ID;. Sau đó kiểm tra bit_index < 32.
+
+## Đánh mất hoàn toàn cơ chế "Zero-Copy" và "Reference Counting"
+
+Mặc dù đã viết hàm internal_msg_release quản lý ref_count rất hay, nhưng trong hàm publish, với mỗi Task subscribe, chúng ta lại cấp phát một Message mới hoàn toàn.
+
+## Thiếu kiểm tra giới hạn mảng (Buffer Overflow)
+
+Trong uedp_msg_register_topic(ui16 sig, ...), chúng ta gán g_tpm_matrix[sig] = task_mask; nhưng không hề kiểm tra xem sig < UEDP_TBM_MAX_SIZE hay không. Nếu người dùng truyền sig = 9999, hệ thống sẽ ghi đè vào vùng nhớ khác gây Crash.
+
+Trong trường hợp data quá lớn, ta lưu vào GDP với key cố định là "publish". Nếu Task A publish, dữ liệu lưu vào key "publish". Ngay sau đó (chưa kịp gửi xong), Task B bị ngắt và cũng publish, nó sẽ ghi đè lên key "publish". Các Task nhận sẽ đọc sai dữ liệu.
+
 //  !SECTION
 -->
 
-- [ ] Ra mắt phiên bản 1.1.6 của lõi μEDP với đầy đủ tính năng PLD/μE-LS, Pub/Sub engine và tài liệu hướng dẫn sử dụng.
+- [x] @! TID[epic=v1.1.7/arch] ARCH-001 <+ Bổ sung API cho uutobj H723.
+- [x] @! TID[epic=v1.1.7/PSE] DOCS-003 <+ Bổ sung tài liệu thiết kế chi tiết cho Pub/Sub engine để làm rõ cách thức hoạt động, lợi ích và cách sử dụng của tính năng này trong mô hình hướng sự kiện.
+- [x] @! TID[epic=v1.1.7/arch] ARCH-002 <+ Hoàn thiện bổ sung OCTOSPI, SDMMC cho uutobj H723.
+- [x] @! TID[epic=v1.1.7/BST] TEST-001 <+ Bổ sung testobj-v1 và testobj-v2 để chuẩn bị cho BST task.
+- [x] @! TID[epic=v1.1.7/BST] TEST-003 <+ Bổ sung .config cho các BST task.
+- [x] @! TID[epic=v1.1.7/BST] TEST-002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
+- [x] @! TID[epic=v1.1.7/BST] TEST-004 <+ Tổng hợp cấu hình và tạo branch cho nhánh testobj-v1 và testobj-v2 sau khi hoàn tất BST task.
+
+<!-- NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6. -->
+
+<!-- SECTION - epic=v1.1.7/BST >> TEST-001
+Ở thời điểm từ v1.1.5 cho đến hiện tại, các tính năng như FCR vẫn chưa được hoàn thiện việc kiểm thử đầy đủ. Do đó ở thời điển v1.1.7 này, BST sẽ bắt buộc được đưa vào lộ trình thiết kế với 2 mục tiêu chính:
+
+- PSE được kiểm thử đầy đủ với testobj-v1 để đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
+- FCR sẽ được kiểm thử phụ thuộc vào PSE để kiểm tra cover lỗi.
+- GDP sẽ được kiểm thử phụ thuộc vào PSE để kiểm tra cấp phát của D2MP và DMP.
+//  !SECTION
+-->
+
+- [ ] Ra mắt phiên bản 1.1.7 của lõi μEDP với đầy đủ tính năng PSE, tài liệu hướng dẫn sử dụng và các testobj, bugfix từ v1.1.6.
 
 //  !SECTION
 
@@ -643,6 +694,7 @@ Phiên bản này được đưa lên từ 1.1.7/8 (pre-2509) sang 1.1.8/9 để
 -->
 
 - [ ] Phản biện tài liệu `review/tsd-tlc.md` để thống nhất các ý tưởng và đề xuất cải tiến cho Test Strategy Design (TSD) và Test Logic Control (TLC) của μEDP.
+- [ ] Phân tách nhánh từ `feat` sang `sub-feat/v1.1.8` để triển khai phiên bản 1.1.8 với các tính năng liên quan đến TSD và TLC, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 - [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8.
 - [ ] Bổ sung khả năng phân giải PPLP vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 - [ ] Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
