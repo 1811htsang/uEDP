@@ -594,6 +594,14 @@ Nhưng, hiện tại thì đã đủ điều kiện để đưa triển khai BST
 - [x] @! TID[epic=v1.1.7/PSE] CORE-006 <+ Triển khai bugfix cho PSE để xử lý các vấn đề liên quan đến việc gửi tin nhắn tới nhiều task đã đăng ký, đảm bảo rằng các task nhận được thông tin một cách chính xác và hiệu quả.
 - [x] @! TID[epic=v1.1.7/PSE] CORE-007 <+ Sửa các lỗi PSE/GDP/FCR phát hiện khi review test set (docs/test/pse-gdp-fcr-testset-review.md): ánh xạ task ID và kiểm tra biên topic (B1, B3); publish dùng sizeof(con trỏ) và không kiểm tra NULL (B2, B4); chia sẻ 1 tin nhắn cho nhiều task bằng ref_count thay vì cấp phát N tin nhắn; sửa ngưỡng ref_count 8-bit (B5); bỏ đường dự phòng GDP "publish" dùng chung tên (B6); bổ sung FCR MSG_INVALID_PARAM và LIB_COLLAPSE còn thiếu trong bảng; hàng đợi task đầy không còn raise LIB_COLLAPSE (FATAL, panic) mà chỉ raise TASK_QUEUE_FULL (ERROR).
 - [x] @! TID[epic=v1.1.7/PSE] CORE-008 <+ Đồng bộ mức lỗi FCR với tài liệu FCP (docs/references/fcp-document.md): `SM_NULL_HANDLER` đã chuyển sang FATAL; cập nhật `GDP_INVALID_PARAM` (WARN -> ERROR) trong `uedp_fcr.c`; cập nhật `docs/test/pse-gdp-fcr-testset.md`; thay action của `TASK_QUEUE_FULL`.
+- [x] @! TID[epic=v1.1.7/PSE] CORE-009 <+ Đồng bộ mức lỗi `TIMER_INVALID_PARAM` (WARN -> ERROR) trong `uedp_fcr.c` theo tài liệu FCP (commit 517ec45).
+- [x] @! TID[epic=v1.1.7/PSE] PLTF-002 <+ Triển khai psetbl trong PLTF: model `C_psetbl_obj` (sig, sub), validate entry trong `modalcvert`, xử lý trong `lukupmodel` và tích hợp vào `kre8` để sinh đăng ký topic tĩnh trong `logic_init`.
+- [x] @! TID[epic=v1.1.7/PSE] TEST-005 <+ Đổi khóa `subscribers` thành `sub` trong testobj-v1 và testobj-v2 để thống nhất với psetbl.
+- [x] @! TID[epic=v1.1.6-bf3] CORE-010 <+ Bổ sung kiểm tra phòng vệ (null pointer, tràn số, critical section cho danh sách timer) cho msg, task, timer, tsm, fsm và itnlog.
+- [x] @! TID[epic=v1.1.7/arch] ARCH-003 <+ Refactor PAL uutobj H723: quản lý instance UART/DMA, API USART1, API I2S/OSPI và getter SPI/I2S DMA instance.
+- [x] @! TID[epic=v1.1.7/arch] ARCH-004 <+ Bổ sung hàm `main` và cấu hình CMake build cho uutobj Linux.
+- [x] @! TID[epic=v1.1.7/pltf] PLTF-003 <+ Bỏ hậu tố `_ID` khỏi định nghĩa task/signal/message queue trong `dotcfg`, phân giải symbol trong `modalcvert`, thêm pre-anchor cho task trong testobj-v1, hỗ trợ key `exec` cùng execution items trong `appc`.
+- [x] @! TID[epic=v1.1.7/pltf] PLTF-004 <+ Cập nhật giá trị mặc định và help text cho Kconfig: `sig`, `tnorm`, `tpoll`, `hwapi`.
 
 <!-- SECTION - PSE
 
@@ -659,8 +667,8 @@ Trong trường hợp data quá lớn, ta lưu vào GDP với key cố định l
 - [x] @! TID[epic=v1.1.7/arch] ARCH-002 <+ Hoàn thiện bổ sung OCTOSPI, SDMMC cho uutobj H723.
 - [x] @! TID[epic=v1.1.7/BST] TEST-001 <+ Bổ sung testobj-v1 và testobj-v2 để chuẩn bị cho BST task.
 - [x] @! TID[epic=v1.1.7/BST] TEST-003 <+ Bổ sung .config cho các BST task.
-- [ ] @! TID[epic=v1.1.7/BST] TEST-002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
-- [ ] @! TID[epic=v1.1.7/BST] TEST-004 <+ Tổng hợp cấu hình và tạo branch cho nhánh testobj-v1 và testobj-v2 sau khi hoàn tất BST task.
+- [x] @! TID[epic=v1.1.7/BST] TEST-002 <+ Bổ sung BST (Basic Software Test) cho phiên bản 1.1.5 để bảo vệ tạm thời các tính năng được phát triển pre-1.2.0 trước khi áp dụng PLTF và TSD/TLC trong kiểm thử.
+- [x] @! TID[epic=v1.1.7/BST] TEST-004 <+ Tổng hợp cấu hình và tạo branch cho nhánh testobj-v1 và testobj-v2 sau khi hoàn tất BST task.
 
 <!-- NOTE - BST sẽ được thực thi với uutobj Linux và F103, các uutobj khác sẽ được thực hiện sau khi hoàn tất việc rebase sub-tasklist từ v1.2.0 lên v1.1.6. -->
 
