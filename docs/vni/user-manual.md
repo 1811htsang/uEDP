@@ -140,14 +140,58 @@ Kể từ phiên bản 1.1.5, `uedp_msg_t` hỗ trợ gán riêng ID của tác 
 Ví dụ: task A muốn gửi cho task B một message nhưng vẫn cần task B biết message này đến từ task A (ví dụ để phản hồi lại đúng nơi gửi):
 
 ```c
-uedp_msg_t* msg = uedp_msg_alloc(UEDP_TASK_NORM_B_ID, SIG_REQUEST, 0);
-uedp_msg_set_src_task_id(msg, UEDP_TASK_NORM_A_ID);
+uedp_msg_t* msg = uedp_msg_alloc(TASK_NORM_B, SIG_REQUEST, 0);
+uedp_msg_set_src_task_id(msg, TASK_NORM_A);
 uedp_task_norm_send_msg(msg);
 ```
 
 Trong handler của task B, có thể đọc lại `msg->src_task_id` để biết nơi gửi và dùng `uedp_msg_set_des_task_id()` trên một message phản hồi mới để gửi ngược lại đúng task A. Đây là cơ chế đơn giản, người dùng tự chọn ID phù hợp - Core không tự ràng buộc hay xác thực cặp nguồn/đích này.
 
 > **Lưu ý**: kể từ 1.1.5, API `internal_uedp_msg_pool_panic` đã được loại bỏ khỏi Core. Các lỗi nghiêm trọng liên quan đến message pool (hết chỗ, con trỏ không hợp lệ, ISR FIFO đầy...) giờ được báo cáo qua cơ chế FCR (xem mục "FCR (Fatal Code Return)" bên dưới) thay vì gọi thẳng panic như trước.
+
+### Pub-Sub Engine (PSE) - Cơ chế xuất bản-đăng ký
+
+PSE cho phép một tín hiệu được phát (publish) tới nhiều tác vụ đã đăng ký mà người phát không cần biết danh sách người nhận.
+
+#### Đăng ký topic
+
+- `uedp_msg_register_topic(sig, task_list)`: ghi đè danh sách tác vụ đăng ký của `sig`.
+- `uedp_msg_clear_topic(sig, task_list)`: bỏ các tác vụ trong `task_list` khỏi đăng ký của `sig`.
+
+`task_list` kết thúc bằng `UEDP_TASK_NORM_EOT_ID`. Mỗi tác vụ norm ứng với một bit, nên một topic có tối đa 16 tác vụ đăng ký. `sig` phải nhỏ hơn `UEDP_TBM_MAX_SIZE` (mặc định 32 topic), nếu không hàm trả về `STAT_ERROR`.
+
+```c
+task_norm_t task_list[] = { { TASK_NORM_B }, { TASK_NORM_C }, { UEDP_TASK_NORM_EOT_ID } };
+uedp_msg_register_topic(SIG_0X30, task_list);
+```
+
+#### Khai báo tĩnh (psetbl)
+
+Trong μE-LS, khối `psetbl` đăng ký topic lúc khởi tạo, thay cho việc gọi tay `uedp_msg_register_topic()` trong `logic_init`:
+
+```yaml
+psetbl:
+  - sig: SIG_0X30
+    sub: [TASK_NORM_B, TASK_NORM_C]
+```
+
+Mọi tên trong `sub` phải là tác vụ norm đã khai báo. Gỡ đăng ký lúc chạy dùng `uedp_msg_clear_topic()`.
+
+#### Phát tin
+
+`uedp_msg_publish(sig, data, data_size)`:
+
+- `data_size` không được vượt `UEDP_MSG_ALLOC_DATA_MAX`, và `data` không được `NULL` khi `data_size > 0`. Vi phạm trả về `STAT_ERROR`.
+- Nếu topic chưa có tác vụ đăng ký, hàm trả về `STAT_OK` và không cấp phát gì.
+- Hệ thống chỉ cấp phát **một** message và chia sẻ cho tất cả tác vụ đăng ký, không sao chép payload cho từng người nhận. Message được trả về pool khi tất cả tác vụ đã xử lý xong.
+- Nếu hàng đợi của một tác vụ đầy, tác vụ đó không nhận được tin nhắn, các tác vụ khác vẫn nhận bình thường, và `publish` trả về `STAT_ERROR`.
+
+#### Giới hạn hiện tại
+
+- Chỉ gửi tới các tác vụ đã đăng ký tại thời điểm publish.
+- Payload lớn hơn `UEDP_MSG_ALLOC_DATA_MAX` bị từ chối.
+- Chưa có QoS, thứ tự ưu tiên giữa các người nhận, hoặc truyền tham chiếu theo `ptype`.
+- Quy ước: không gọi `uedp_msg_publish()` từ ngữ cảnh ISR. Code hiện chưa kiểm tra điều này.
 
 ### FCR (Fatal Code Return) - Xử lý lỗi nghiêm trọng
 
@@ -307,6 +351,35 @@ Timer có thể được sử dụng như 1 công cụ để tạo ra delay ho�
 #### Nguyên tắc bắt buộc
 
 Dù có sử dụng các API của timer hay không, `uedp_timer_tick()` luôn phải được binding vào system tick của nền tảng để Core có thể quản lý thời gian và phát sinh tín hiệu đúng lúc. Nếu không có tick, các timer sẽ không hoạt động và các task cần timeout sẽ bị treo.
+
+### PAL STM32H723 - API ngoại vi
+
+Các API dưới đây được khai báo trong `sources/pal/arch/stm32h723/stm32h723.h`, dùng cho ứng dụng sau khi đã khởi tạo HAL bằng CubeIDE (`MX_*_Init`). PAL không tạo handle HAL riêng: người dùng truyền handle đã khởi tạo vào bằng hàm `*_bind`.
+
+#### UART (USART1)
+
+- `stm32h723_uart_bind(UART_HandleTypeDef* huart)`: `huart` phải đã được `HAL_UART_Init()` (`MX_USART1_UART_Init`). DMA TX/RX được CubeIDE liên kết qua `__HAL_LINKDMA`, PAL không cần handle DMA riêng.
+
+#### I2S (SPI1)
+
+- `stm32h723_i2s_bind(I2S_HandleTypeDef* hi2s)`: `hi2s` phải đã được `HAL_I2S_Init()` (`MX_I2S1_Init`).
+- `stm32h723_i2s_set_rx_callback(stm32h723_i2s_rx_cb_t cb)`: đăng ký callback nhận sự kiện `STM32H723_I2S_RX_DONE` hoặc `STM32H723_I2S_RX_ERROR`.
+- `stm32h723_i2s_rx_start(ui32* buf, ui16 samples)` và `stm32h723_i2s_rx_stop(void)`.
+
+Lưu ý:
+
+- `buf` phải nằm trong RAM truy cập được bởi DMA (RAM_D1/D2/D3), không dùng DTCMRAM.
+- Callback chạy trong ngữ cảnh ISR, chỉ được gọi các hàm an toàn trong ISR.
+- Đơn vị của `samples` chưa được xác minh với dữ liệu 24-bit, cần kiểm tra trên phần cứng.
+
+#### OCTOSPI1
+
+- `stm32h723_ospi_bind(OSPI_HandleTypeDef* hospi)`: `hospi` phải đã được `HAL_OSPI_Init()` và `HAL_OSPIM_Config()` (`MX_OCTOSPI1_Init`).
+- `stm32h723_ospi_command(OSPI_RegularCmdTypeDef* cmd, ui32 timeout)`
+- `stm32h723_ospi_transmit(OSPI_RegularCmdTypeDef* cmd, ui8* data, ui32 size, ui32 timeout)`
+- `stm32h723_ospi_receive(OSPI_RegularCmdTypeDef* cmd, ui8* data, ui32 size, ui32 timeout)`
+
+`cmd.NbData` được gán tự động theo `size`; các trường còn lại của `cmd` do người gọi cấu hình.
 
 ### Itnlog
 
@@ -604,20 +677,20 @@ Cụ thể hơn:
 ```bash
 # pwd return at root of project
 # Nếu ở interact mode
-./entrypoint.sh --it
-## Viết mô tả logic vào app/lstaxizer.yaml
+python ntrypont.py --it
+## Viết mô tả logic vào sources/app/lstaxizer.yaml
 # Validate và sinh code
-./jainerator.sh
+python jainerator.py
 
 # Nếu ở non-interact mode
-./entrypoint.sh --n-it
+python ntrypont.py --n-it
 cd sources/test
-./insert.sh vir-phy-logic-testobj-v0
+python insert.py vir-phy-logic-testobj-v0
 cd ..
-./jainerator.sh
+python jainerator.py
 ```
 
-Ở chế độ không tương tác, người dùng có thể sử dụng script để insert các testobj (test object) làm mô tả logic vào file `app/lstaxizer.yaml`, sau đó chạy `jainerator.sh` để validate và sinh code tự động. Quy trình này giúp đảm bảo rằng các thông số cấu hình được khai báo một cách chính xác và đầy đủ, đồng thời giảm thiểu lỗi do trùng lặp hoặc sai sót khi khai báo thủ công.
+Ở chế độ không tương tác, người dùng có thể sử dụng script để insert các testobj (test object) làm mô tả logic vào file `sources/app/lstaxizer.yaml`, sau đó chạy `jainerator.py` để validate và sinh code tự động. Các testobj hiện có trong `sources/test/testobj/` gồm `vir-phy-logic-testobj-v0`, `vir-phy-postiv-pse-fcr-gdp-testobj-v1` và `vir-phy-negtiv-pse-fcr-gdp-testobj-v2`. Quy trình này giúp đảm bảo rằng các thông số cấu hình được khai báo một cách chính xác và đầy đủ, đồng thời giảm thiểu lỗi do trùng lặp hoặc sai sót khi khai báo thủ công.
 
 Sau khi sinh code tự động, tùy thuộc vào nền tảng sử dụng như STMCubeIDE, ESP-IDF hay Linux, người dùng có thể add các headers và source files vào project để biên dịch và chạy ứng dụng.
 
@@ -653,6 +726,8 @@ Nếu người dùng muốn biên dịch thư viện trực tiếp từ repo g�
 rm -rf build && cmake -B build -DPLAT=TEST -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 make -C build
 ```
+
+Trên nền tảng Linux, `main()` được cung cấp sẵn bởi PAL (`sources/pal/arch/linux/main.c`) và gọi `app_main()`. Hàm `app_main()` được sinh trong `app.c` từ template `pltf/templates/appc.txt`, nên người dùng chỉ cần triển khai logic ứng dụng và không cần viết `main()`.
 
 > Cập nhật mới trong phiên bản v1.1.6-bf2
 >
