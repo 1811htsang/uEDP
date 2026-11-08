@@ -305,20 +305,20 @@ Currently, we have a branch model where `feat`, `fix`, `doc`, and `chore` branch
 To address this, v1.1.7 release to v1.1.8 will apply a new changes to the branch model with `main`, `integration`, `release`, `docs` as follow:
 
 ```asciidocs
-                           ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-                           │ release                                                                                   development phase │
-                           │ candidate bug   ┌─── reft - refactor ◄─────┐                                                                │
- final release   ┌─────────┼────────────────►│       │                  │                                                                │
-┌────────────────┼──────┐  │                 ├─── fix│ - bugfix   ◄─────┤                                                                │
-│                │      │  │                 │    ▼  ▼                  │                                                                │
-│ main ◄───── release ◄─│┬─│─ integration ◄──┴─── feat - feature ────┬──┼─► app/testobj-v? - specific application codebase for testing   │
-│  │                    ││ │                             ▲           │  │                                                                │
-└──┼────────────────────┘└─│─ docs ◄──── chore           │           └──┴─► sub-feat/v?.?.? - single branch for specific version release │
-   ▼                     ▲ │                             │                       │                                                       │
-  hotfix ────────────────┘ │                             └───────────────────────┘                                                       │
-           if need         │                              only merge after stable                                                        │
-                           │                                                                                                             │
-                           └─────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+                     integration              ┌───────────────────────────────────────────────────────────────────────────────────────────┐
+│ Rv1.1.8-i0 ◄───────    release ◄──┐         │ release                                                                 development phase │
+│        -i1                        │         │ candidate bug   ┌─── reft - refactor ◄─────┐                                              │
+▼        -i2        final release   ├─────────┼────────────────►│       │                  │                                              │
+                  ┌─────────────────┼──────┐  │                 ├─── fix│ - bugfix   ◄─────┤                                              │
+                  │                 │      │  │                 │    ▼  ▼                  │                                              │
+    ▲ v1.1.7 ◄────┼─ main ◄───── release ◄─│┬─│─ integration ◄──┴─── feat - feature ────┬──┼─► app/testobj-v? - specific application      │
+    │ v1.1.6      │   │                    ││ │                             ▲           │  │                    codebase for testing      │
+    │ v1.1.5      └───┼────────────────────┘└─│─ docs ◄──── chore           │           └──┴─► sub-feat/v?.?.? - single branch for        │
+                      ▼                     ▲ │                             │                       │            specific version release │
+│ v1.1.6-bf1 ◄────── hotfix ────────────────┘ │                             └───────────────────────┘                                     │
+│ v1.1.6-bf2                  if need         │                              only merge after stable                                      │
+│ v1.1.6-bf3                                  └───────────────────────────────────────────────────────────────────────────────────────────┘
+▼ v1.1.6-bf4                                                                                                                               
 ```
 
 The branching model separates the software lifecycle into development, release preparation, and final release stages.
