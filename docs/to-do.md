@@ -685,20 +685,33 @@ Trong trường hợp data quá lớn, ta lưu vào GDP với key cố định l
 
 //  !SECTION
 
-### Phiên bản 1.1.8: The baseline for PLTF.TSD/TLC && Phiên bản 1.1.8: The incremental step for Testing
+### Phiên bản 1.1.8: The integration of UnityFW and PLTF.TSD/TLC
 
-//  SECTION - v1.1.8 & v1.1.9
+//  SECTION - v1.1.8
 
 <!-- CRITICAL
 Phiên bản này được đưa lên từ 1.1.7/8 (pre-2509) sang 1.1.8/9 để tiếp tục lộ trình triển khai tiếp tục.
 -->
 
-- [x] @! TID[epic=Rv1.1.8-i0/REPO] REPO-001 <+ Phân tách nhánh từ `feat` sang `sub-feat/Rv1.1.8` để triển khai phiên bản 1.1.8 với các tính năng liên quan đến TSD và TLC, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
-- [ ] Phản biện tài liệu `review/tsd-tlc.md` để thống nhất các ý tưởng và đề xuất cải tiến cho Test Strategy Design (TSD) và Test Logic Control (TLC) của μEDP.
-- [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8.
-- [ ] Bổ sung khả năng phân giải PPLP vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
-- [ ] Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
-- [ ] Thêm trường priority vào trong syntax của task để hỗ trợ việc phân giải mức độ ưu tiên của task trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
+- [x] @! TID[epic=Rv1.1.8-i0/repo] REPO-001 <+ Phân tách nhánh từ `feat` sang `sub-feat/Rv1.1.8` để triển khai phiên bản 1.1.8 với các tính năng liên quan đến TSD và TLC, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.ccall-cstmt] DOCS-001 <+ Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8.
+
+<!-- STATUS
+Loại bỏ do không còn cần thiết. `args` có sự đa dạng và linh hoạt, có thể sử dụng các alias khác nhau để phân giải các tham số trong syntax mà không cần phải bổ sung các quy tắc phân giải alias vào `args`. Do đó, task này sẽ được loại bỏ để tránh sự phức tạp không cần thiết trong việc triển khai các tính năng mới của μEDP.
+-->
+
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.tsd/pltf.tlc] DOCS-002 <+ Phản biện tài liệu `review/tsd-tlc.md` để thống nhất các ý tưởng và đề xuất cải tiến cho Test Strategy Design (TSD) và Test Logic Control (TLC) của μEDP.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.pllp] PLTF-001 <+ Bổ sung khả năng phân giải PPLP vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.oce] PLTF-002 <+ Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.tnorm] PLTF-003 <+ Thêm trường priority vào trong syntax của task để hỗ trợ việc phân giải mức độ ưu tiên của task trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf+unityfw] PLTF-004 <+ Tìm hiểu về Framework Unit Test Unity để đánh giá khả năng tích hợp với PLTF.TSD/TLC nhằm hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
+
+//  !SECTION
+
+### Phiên bản 1.1.9: OPC introduction and DEM-FCR cross fault management
+
+//  SECTION - v1.1.9
+
 - [ ] Đề xuất cơ chế quản lý chẩn đoán DEM (Diagnostic Event Management) với ECS (Enable Condition Stage), DBS (Debouncing Stage) và pzsto (persistence store) kết hợp FCR trong quản lý lỗi.
 
 //  !SECTION
