@@ -693,8 +693,8 @@ Trong trường hợp data quá lớn, ta lưu vào GDP với key cố định l
 Phiên bản này được đưa lên từ 1.1.7/8 (pre-2509) sang 1.1.8/9 để tiếp tục lộ trình triển khai tiếp tục.
 -->
 
+- [x] @! TID[epic=Rv1.1.8-i0/REPO] REPO-001 <+ Phân tách nhánh từ `feat` sang `sub-feat/Rv1.1.8` để triển khai phiên bản 1.1.8 với các tính năng liên quan đến TSD và TLC, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 - [ ] Phản biện tài liệu `review/tsd-tlc.md` để thống nhất các ý tưởng và đề xuất cải tiến cho Test Strategy Design (TSD) và Test Logic Control (TLC) của μEDP.
-- [ ] Phân tách nhánh từ `feat` sang `sub-feat/Rv1.1.8` để triển khai phiên bản 1.1.8 với các tính năng liên quan đến TSD và TLC, đồng thời đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 - [ ] Cân nhắc đưa khả năng bổ sung phân giải alias vào `args` của syntax ở phiên bản 1.1.7 hoặc 1.1.8.
 - [ ] Bổ sung khả năng phân giải PPLP vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 - [ ] Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
