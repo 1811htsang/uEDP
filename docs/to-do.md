@@ -681,7 +681,7 @@ Trong trường hợp data quá lớn, ta lưu vào GDP với key cố định l
 //  !SECTION
 -->
 
-- [ ] Ra mắt phiên bản 1.1.7 của lõi μEDP với đầy đủ tính năng PSE, tài liệu hướng dẫn sử dụng và các testobj, bugfix từ v1.1.6.
+- [x] Ra mắt phiên bản 1.1.7 của lõi μEDP với đầy đủ tính năng PSE, tài liệu hướng dẫn sử dụng và các testobj, bugfix từ v1.1.6.
 
 //  !SECTION
 
