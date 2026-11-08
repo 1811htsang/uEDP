@@ -704,7 +704,8 @@ Loại bỏ do không còn cần thiết. `args` có sự đa dạng và linh ho
 - [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.pllp] PLTF-001 <+ Bổ sung khả năng phân giải PPLP vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS.
 - [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.oce] PLTF-002 <+ Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 - [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.tnorm] PLTF-003 <+ Thêm trường priority vào trong syntax của task để hỗ trợ việc phân giải mức độ ưu tiên của task trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
-- [ ] @! TID[epic=Rv1.1.8-i0/pltf+unityfw] PLTF-004 <+ Tìm hiểu về Framework Unit Test Unity để đánh giá khả năng tích hợp với PLTF.TSD/TLC nhằm hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf+unityfw] PLTF-004 <+ Tìm hiểu về Framework Unit Test Unity để đánh giá khả năng tích hợp với PLTF.TSD/TLC nhằm hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf+unityfw] PLTF-005 <+ Thêm concept testing tiêu chuẩn thay thế cho Unity hiện tại.
 
 //  !SECTION
 
