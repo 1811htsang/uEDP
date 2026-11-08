@@ -1,4 +1,4 @@
-# μEDP: micro Event-Driven Programming Framework (formerly CIEDPC)
+# μEDP: micro Event-Driven Programming Framework
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Language: C](https://img.shields.io/badge/Language-Pure%20C-blue.svg)
@@ -6,7 +6,7 @@
 ![Platform: Agnostic](https://img.shields.io/badge/Platform-STM32%20|%20ESP32%20|%20Linux-green.svg)
 ![Status: Active Development](https://img.shields.io/badge/Status-Active%20Development-orange.svg)
 
-**μEDP** (formerly CIEDPC) is a lightweight, high-performance, event-driven programming framework based on the **Active Object** model with a focus on real-time embedded systems. It is designed to be platform-agnostic, OS-centric feature-rich, and highly efficient, making it suitable for a wide range of applications in the embedded domain.
+**μEDP** is a lightweight, high-performance, event-driven programming framework based on the **Active Object** model with a focus on real-time embedded systems. It is designed to be platform-agnostic, OS-centric feature-rich, and highly efficient, making it suitable for a wide range of applications in the embedded domain.
 
 The core goal is to achieve **"Zero-Touch Porting"** — enabling the porting of application logic between platforms (STM32, ESP32, Linux) without changing the core source code.
 
@@ -17,6 +17,36 @@ Video demonstrations of μEDP in action can be found at [docs/videos](./docs/vid
 Also, documentations refer to section [Documentation](#-documentation) for more details.
 
 Feel free to star the projetct and contribute to its development. Your support is greatly appreciated!
+
+---
+
+## 📌 Release Notes
+
+### v1.1.7 - Pub/Sub, PLTF and BST
+
+Version v1.1.7 extends the μEDP core and the PLTF pipeline with the following changes:
+
+- **Pub/Sub Engine (PSE):** A message can be published to multiple subscribed tasks through statically registered signal topics.
+- **Safer message delivery:** Publish and task-dispatch paths now support reference counting, payload validation, topic-bound checks and improved queue-full handling, preserving zero-copy delivery where applicable.
+- **FCR alignment:** Missing message/library error codes were added and error severity/actions were synchronized with the FCP specification.
+- **Defensive core checks:** Message, task, timer, TSM, FSM and event-logging paths received additional null-pointer, overflow and critical-section protection.
+- **PLTF and μE-LS generation:** `psetbl` is parsed, validated and emitted into generated initialization code; task, signal and message-queue symbols no longer require the `_ID` suffix; `exec` is accepted as an alias of `kwexec`.
+- **Configuration improvements:** Kconfig defaults and help text for signals, normal/poll tasks and hardware APIs were revised for clearer generated declarations.
+- **Testing workflow:** New positive and negative PSE/GDP/FCR test objects, BST configurations and test documentation were added for Linux and STM32F103 targets.
+- **Platform support:** Linux now has a buildable application entry point, while the STM32H723 PAL received UART/DMA management and I2S, OSPI and SDMMC-related API improvements.
+- **Documentation and tooling:** English/Vietnamese architecture and user documentation, release/branch conventions, coding style guidance and the Python-based generation/test scripts were updated.
+
+### Planned for v1.1.8
+
+The v1.1.8 scope is planned and may change during design review. Its current priorities are:
+
+- **TSD/TLC foundation:** Review and implement the Test Scenario Descriptor (TSD) and Test Logic Control (TLC) design, beginning with a minimal generated test flow and incremental test-level selection.
+- **μE-LS resolver extensions:** Evaluate alias resolution in `args`, and add syntax resolution for Plug-N-Play Logging Pipeline (PPLP) and Out-Context Execution (OCE) declarations.
+- **Task priority declaration:** Add a `priority` field to the task syntax so generated application logic can resolve task priorities from μE-LS.
+- **Diagnostic management design:** Define a DEM direction using enable-condition, debouncing and persistence stages together with FCR.
+- **Backend generation follow-up:** Continue reducing manual PAL/backend setup, including generated or better-integrated `rprintf` backend registration where the design is stable.
+
+The v1.1.8 roadmap is tracked in [`docs/to-do.md`](./docs/to-do.md) and the TSD/TLC design proposal in [`docs/review/tsd-tlc.md`](./docs/review/tsd-tlc.md).
 
 ---
 
@@ -37,8 +67,6 @@ Feel free to star the projetct and contribute to its development. Your support i
 - **[PSE]** Pub/Sub Engine: A publish-subscribe mechanism for decoupled communication between tasks, allowing for flexible and scalable event handling.
 - **[SIF]** Safe Input Filter: A mechanism for safely filtering and validating input data, ensuring that only valid and expected data is processed by the system.
 - **[IOMS]** I/O Mapping Shell: A shell for mapping certain operations to I/O hardware, enabling command-based control and interaction with hardware components.
-- **[PSE]** Pub/Sub Engine: A publish-subscribe mechanism for decoupled communication between tasks, allowing for flexible and scalable event handling.
-- **[SOCI]** Safe Out-Core Interaction: Ensuring safe and efficient interaction between the Core infrastructure and the external data flow, preventing issues such as data corruption and ensuring Core stability.
 
 ---
 
@@ -106,9 +134,8 @@ graph LR
 │   └── xprintf/                 # Thư viện xprintf sử dụng cho việc format chuỗi log và xuất ra nhiều backend khác nhau
 └── test/                        # Các test case và testobj (mô tả PLD/μE-LS) để kiểm tra các tính năng của μEDP
     ├── testobj/                 # Testobj tuân thủ test framework (`vir-`/`phy-`/`logic-` prefix + versioning), xem sources/test/README.md
-    ├── test04/                  # Test với tính năng itnlog
     ├── insert.sh                # Script chèn nhanh nội dung 1 testobj vào sources/app/lstaxizer.yaml để chạy BST
-    └── deprecated/              # test01-03 cũ, chỉ giữ lại để tham khảo, không còn dùng cho test mới
+    └── deprecated/              # test01-04 cũ, chỉ giữ lại để tham khảo, không còn dùng cho test mới
 
 pltf/                            # Pipeline sinh code từ Kconfig + cú pháp PLD/μE-LS, xem docs/pltf-design.md
 ├── kconfigspec/                 # Sinh decl.kconfig (usrinp, tnorm, tpoll, sig, hwapi)
