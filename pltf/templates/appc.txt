@@ -57,6 +57,11 @@ task_poll_t app_poll_table[] = {
 void {{ state.entry_name }}(uedp_msg_t* msg);
 void {{ state.active_name }}(uedp_msg_t* msg);
 void {{ state.exit_name }}(uedp_msg_t* msg);
+{%- for transition in state.transitions %}
+{%- if transition.action %}
+void {{ transition.action }}(uedp_msg_t* msg);
+{%- endif %}
+{%- endfor %}
 
 {% endfor -%}
 //ANCHOR - Khai báo tsm_object
@@ -73,6 +78,17 @@ tsm_state_desc_t {{ task.tsm_table }}[] = {
   { {{ state.state_id }}, {{ state.entry_name }}, {{ state.exit_name }}, {{ state.id }}_trans, (ui8)(sizeof({{ state.id }}_trans) / sizeof({{ state.id }}_trans[0])), {{ state.active_name if state.active_actions else 'NULL' }} },
   {%- endfor %}
 };
+{% for state in task.tsm_states %}
+{% for transition in state.transitions %}
+{% if transition.action %}
+void {{ transition.action }}(uedp_msg_t* msg) {
+  system_action_count++;
+{{ transition.action_body | indent(2, true) }}
+}
+
+{% endif %}
+{% endfor %}
+{% endfor %}
 {% endif -%}
 {% for state in task.fsm_states %}
 void {{ state.handler_name }}(uedp_msg_t* msg);
