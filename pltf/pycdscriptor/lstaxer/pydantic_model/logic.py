@@ -120,3 +120,19 @@ class C_tpoll_obj(BaseModel):
 class C_psetbl_obj(BaseModel):
   sig: str
   sub: List[str]
+
+class C_lpipe_itnlog_obj(BaseModel):
+  level: str
+  tag: str
+
+class C_lpipe_rprintf_obj(BaseModel):
+  name: str
+  init: Optional[str] = None
+  putc: Optional[str] = None
+  write: Optional[str] = None
+  is_ready: Optional[str] = None
+
+class C_lpipe_obj(BaseModel):
+  itnlog: C_lpipe_itnlog_obj
+  logdp: List[str]
+  rprintf: List[C_lpipe_rprintf_obj]
