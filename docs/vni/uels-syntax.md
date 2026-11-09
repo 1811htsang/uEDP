@@ -194,7 +194,7 @@ Cần rewrite lại phần này tương ứng với các khối phát triển đ
 | Task Norm | Task có trạng thái hoặc xử lý message | `tlist -> tnorm -> tsm/fsm/exec/escal` | `tsm`, `fsm`, `exec`, `escal`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps`, [`actv`, `kind`, `code`, `func`, `args`] | `uedp_task_norm_create()`, `uedp_task_norm_post_msg()` |
 | Task Poll | Task vòng lặp nhẹ, không theo message | `tlist -> tpoll -> exec` | `exec`, `steps`, [`actv`, `kind`, `code`, `func`, `args`], `ability` | `uedp_task_poll_create()`, `uedp_task_poll_set_ability()` |
 | SII | Đưa signal từ ISR vào hệ thống | `isr -> to/sig` | `to`, `sig` | `uedp_task_norm_post_isr()`, `uedp_msg_drain_isr_pool()` |
-| PPLP | Cấu hình logging pipeline | `pplp -> itnlog -> level/tag/output` | `level`, `tag`, `output.backend`, `output.sink`, `log.timestamp`, `log.msg` | `uedp_itnlog_set_filter()`, `uedp_itnlog_set_output()` |
+| PPLP | Cấu hình logging pipeline | `lpipe -> itnlog -> level/tag/output` | `level`, `tag`, `output.backend`, `output.sink`, `log.timestamp`, `log.msg` | `uedp_itnlog_set_filter()`, `uedp_itnlog_set_output()` |
 | APE | Gọi urgent message / priority escalation | `escal -> trigger -> post_urgent` | `mode: slnf`, `mode: non-slnf`, `scope: self`, `keep_queue_order`, `extra_rounds`, `post_urgent` | `uedp_task_norm_post_urgent()`, `uedp_task_norm_set_urgent()` |
 | PSE | Publish/Subscribe: đăng ký tác vụ nhận tín hiệu | `psetbl -> sig/sub` | `sig`, `sub` | `uedp_msg_register_topic()`, `uedp_msg_publish()` |
 | OCE | Service chạy ngoài luồng logic chính | `outexec -> name/handler/context/state` | `name`, `handler`, `context`, `state` | `ocesvc_register()`, `ocesvc_scheduler()` |
@@ -362,7 +362,7 @@ PPLP khai báo chính sách logging cho Core và backend xuất log. Trong runti
 Với thiết kế PPLP, hệ thống được chia ra làm 3 phần là `itnlog` (filter), `logdp` (sink) và `rprintf` (backend). Cấu hình PPLP nên được viết theo kiểu sau:
 
 ```yaml
-pplp:
+lpipe:
   itnlog:
     level: ITNLOG_LEVEL_INFO
     tag: ITNLOG_TAG_TSK
@@ -403,7 +403,7 @@ Với `rprintf`:
 - Kiểm tra lại cú pháp logging pipeline, đảm bảo các trường `level`, `tag`, `output` được ánh xạ đúng với core API.
 
 ```yaml
-pplp:
+lpipe:
   itnlog:
     level: ITNLOG_LEVEL_INFO
     tag: ITNLOG_TAG_TSK
