@@ -222,6 +222,11 @@ tlist:
         trans:
           - sig: KID_SIG_USR_START
             goto: STATE_USR_WAITING
+            action:
+              actv:
+                kind: c_call
+                function: printf
+                args: ['"[System Task USR] Transition action.\\n"']
         on_ntry: NULL # Có thể NULL
         on_actv: NULL
         on_exit: NULL
@@ -249,6 +254,26 @@ tlist:
 ```
 
 `tsm` nên được dùng khi `tnorm` cần quản lý vòng đời trạng thái rõ ràng và có thể sinh ra `on_entry`, `on_exit` và `on_active` tự động bởi `pycdscriptor`.
+
+Mỗi phần tử trong `trans` có thể có thêm `action`. Đây là một action đơn được gọi ngay trước khi TSM chuyển sang trạng thái đích; callback được sinh với tham số `uedp_msg_t* msg`, nên có thể dùng `msg` trong `c_stmt`. Hỗ trợ `c_call` và `c_stmt` theo cùng cú pháp với các action khác:
+
+```yaml
+trans:
+  - sig: KID_SIG_USR_START
+    goto: STATE_USR_WAITING
+    action:
+      actv:
+        kind: c_stmt
+        code: |
+          printf("transition signal: %u\\n", msg->sig);
+```
+
+Nếu không khai báo `action`, transition giữ callback `NULL`.
+
+Vậy sự khác biệt giữa `action` và `on_actv` là gì ?
+
+- `action` là hành vi được gọi ngay trước khi TSM chuyển sang trạng thái đích, chỉ thực thi một lần cho mỗi transition. Nghĩa là ở trạng thái X nếu nhận tín hiệu Y để chuyển sang trạng thái Z, thì `action` sẽ được gọi một lần trước khi TSM chuyển sang Z.
+- `on_actv` là hành vi được gọi mỗi khi TSM đang ở trạng thái X và nhận tín hiệu Y, bất kể có chuyển sang trạng thái Z hay không. Nghĩa là nếu ở trạng thái X nhận tín hiệu Y nhiều lần, `on_actv` sẽ được gọi nhiều lần, còn `action` chỉ được gọi một lần cho transition đầu tiên. Tín hiệu có thể là bất kỳ signal nào, không nhất thiết phải là signal trong `trans`.
 
 `fsm` nên được dùng khi `tnorm` chỉ cần dispatch theo tín hiệu với state handler trực tiếp hoặc có thể lồng vào TSM để xử lý các hành vi phức tạp hơn.
 
