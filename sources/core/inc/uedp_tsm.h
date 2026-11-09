@@ -54,8 +54,9 @@
 		tsm_state_id_t state_id;     
 		tsm_func_f on_entry;     
 		tsm_func_f on_exit;      
-		const tsm_trans_t* transitions; 
-		ui8 trans_count;  
+		const tsm_trans_t* transitions;
+		ui8 trans_count;
+		tsm_func_f on_active;
 	} tsm_state_desc_t;
 
 	/** ANCHOR - Cấu trúc quản lý thông tin của máy trạng thái chuyển tiếp (TSM)
