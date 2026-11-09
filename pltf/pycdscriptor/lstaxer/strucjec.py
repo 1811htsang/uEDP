@@ -146,6 +146,19 @@ def strucjec_validate_action_syntax(yaml_text):
             'msg': f"{actv} requires: {', '.join(missing)}",
           })
 
+    for state in task.get('tsm', []) or []:
+      if not isinstance(state, dict):
+        continue
+      for transition in state.get('trans', []) or []:
+        if not isinstance(transition, dict) or not isinstance(transition.get('action'), dict):
+          continue
+        action = transition['action']
+        if 'actv' not in action and 'kind' not in action and 'type' not in action:
+          errors.append({
+            'loc': f"Task: {task_name} -> transition action",
+            'msg': "transition action requires 'actv' or 'kind' field",
+          })
+
   return errors
 
 def _iter_action_objects(value):
