@@ -82,6 +82,7 @@ void {{ state.handler_name }}(uedp_msg_t* msg);
 uedp_fsm_t {{ task.fsm_object }};
 {% endif %}
 void {{ task.handler_name }}(uedp_msg_t* msg) {
+  system_action_count++;
   {%- if task.tsm_states %}
   uedp_tsm_dispatch(&{{ task.tsm_object }}, msg);
   {%- elif task.fsm_states %}
@@ -95,7 +96,6 @@ void {{ task.handler_name }}(uedp_msg_t* msg) {
   }
   {%- endfor %}
   {%- endif %}
-  system_action_count++;
 }
 {% for state in task.tsm_states %}
 void {{ state.entry_name }}(uedp_msg_t* msg) {
