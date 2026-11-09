@@ -226,9 +226,17 @@ def _parse_action_list(data):
 def _parse_trans_obj(data):
   if not isinstance(data, dict):
     return None
+
+  action = data.get('action')
+  if isinstance(action, dict) and 'actv' not in action and (
+    'kind' in action or 'type' in action
+  ):
+    action = {'actv': action}
+
   return C_trans_obj(
     sig=_normalize_alias_value(data.get('sig'), 'id_symbol') or '',
     goto=_normalize_alias_value(data.get('goto')) or '',
+    action=_parse_actv_obj(action) if action is not None else None,
   )
 
 def _parse_tsm_obj(data):
