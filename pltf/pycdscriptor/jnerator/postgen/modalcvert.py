@@ -18,6 +18,12 @@ def _c_symbol(value: str, suffix: str = '') -> str:
     return ''
   return value if value.endswith(suffix) or not suffix else f'{value}{suffix}'
 
+def _priority_macro(priority: str) -> str:
+  level = priority.removeprefix('LEVEL_')
+  if not level.isdigit() or not 0 <= int(level) <= 11:
+    raise ValueError(f"invalid task priority '{priority}', expected LEVEL_0..LEVEL_11")
+  return f'UEDP_TASK_PRI_LEVEL_{int(level)}'
+
 # DEPRECATED - _data_parts will be removed from section of actv-obj-post removal
 
 def _resolve_task_symbol(value: str, task_symbols: set[str]) -> str:
@@ -139,13 +145,13 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
 
   context['tnorm_codegen'] = tnorm_codegen
   task_resource_items = []
-  # DEPRECATED - Old TASK - Forgot to add priority levels to the task resource items, add task for this
   for index, resource in enumerate(context['tnorm_resources']):
     logic = next((item for item in context['tnorm_logic'] if item['task'] == resource['id_symbol']), {})
     task = next((item for item in tnorm_codegen if item['task'] == resource['id_symbol']), {})
+    priority = logic.get('priority')
     task_resource_items.append({
       'id': resource['id_symbol'].removesuffix('_ID'),
-      'priority': f'UEDP_TASK_PRI_LEVEL_{max(0, 8 - index)}',
+      'priority': _priority_macro(priority) if priority else f'UEDP_TASK_PRI_LEVEL_{max(0, 8 - index)}',
       'handler': resource['handler'],
       'queue': resource['queue_name'],
       'fsm': f"&{resource['fsm_resrc']['kwobject'].lower()}" if logic.get('fsm') else 'NULL',
