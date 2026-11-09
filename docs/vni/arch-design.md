@@ -243,7 +243,7 @@ Do đó, khi thiết kế hệ thống, cần đảm bảo rằng các task có 
 └────────────────────────────────────────┴────────────────┘
 ```
 
-Dự kiến ở phiên bản 1.1.8, TSM sẽ được nâng cấp để hỗ trợ đặc điểm mới chính là sự phân biệt rõ ràng giữa hàm thực thi trong trạng thái - `_onst` và hàm thực thi khi chuyển trạng thái - `actv`. Tại sao lại có sự phân biệt rõ ràng như vậy? 
+Dự kiến ở phiên bản 1.1.8, TSM sẽ được nâng cấp để hỗ trợ đặc điểm mới chính là sự phân biệt rõ ràng giữa hàm thực thi trong trạng thái - `_onst` và hàm thực thi khi chuyển trạng thái - `actv`. Tại sao lại có sự phân biệt rõ ràng như vậy?
 
 > `action` là hành vi được gọi ngay trước khi TSM chuyển sang trạng thái đích, chỉ thực thi một lần cho mỗi transition. Nghĩa là ở trạng thái X nếu nhận tín hiệu Y để chuyển sang trạng thái Z, thì `action` sẽ được gọi một lần trước khi TSM chuyển sang Z.
 
