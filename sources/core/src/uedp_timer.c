@@ -1,23 +1,24 @@
-/**
+/** ANCHOR - Implementation of timer management for UEDP system
  * @file uedp_timer.c
  * @author Shang Huang
- * @brief Implementation of timer management for UEDP system
  * @version 0.1
  * @date 2026-04-18
- * 
  * @copyright MIT License
- * 
  */
 #include <string.h>
 #include <stdint.h>
-#include <stdio.h>
-#include "unistd.h"
+
+//NOTE - lib only used for Linux platform, for debug purpose
+#ifdef UEDP_PLATFORM_LINUX
+	#include <stdio.h>
+#endif
+
 #include "uedp_core.h"
 #include "uedp_timer.h"
 #include "uedp_task.h"
+#include "uedp_fcr.h"
 
-/**
- * @brief Cấu trúc quản lý toàn bộ hệ thống Timer
+/** ANCHOR - Cấu trúc quản lý toàn bộ hệ thống Timer
  * @param head: Con trỏ đến đầu danh sách liên kết các timer đang chạy
  * @param free_list: Con trỏ đến danh sách các nút timer đang rảnh trong Pool
  * @param active_count: Số lượng timer đang chạy, dùng để quản lý và giới hạn số lượng timer hoạt động cùng lúc
@@ -28,19 +29,17 @@ typedef struct {
 	ui8             active_count;   /* Số lượng timer đang chạy */
 } uedp_timer_ctrl_t;
 
-/**
- * @brief Khai báo tick hệ thống độc lập, không phụ thuộc vào
- * 				task.
- */
+// ANCHOR - Khai báo tick hệ thống độc lập, không phụ thuộc vào task.
+
 sta ui32 sys_tick = 0x0u;
 
-/**
- * @brief Khai báo Pool timer
- */
+// ANCHOR - Khai báo Pool timer
+
 sta uedp_timer_t timer_pool[UEDP_TIMER_MAX_NODES] = {0};
 sta uedp_timer_ctrl_t timer_ctrl = {0};
 
-sta uedp_timer_t* internal_uedp_timer_find(ui8 tid, ui8 sig) {
+//NOTE - mod from ui8 to ui16 to avoid overflow when UEDP_TIMER_MAX_NODES > 255
+sta uedp_timer_t* internal_uedp_timer_find(ui16 tid, ui8 sig) {
 	uedp_timer_t* curr = timer_ctrl.head;
 	while (curr) {
 		if (curr->des_task_id == tid && curr->sig == sig) return curr;
@@ -61,6 +60,7 @@ void uedp_timer_init(void) {
 
 RETR_STAT uedp_timer_set(ui16 tid, ui8 sig, ui32 ms, uedp_timer_type_t type) {
 	if (ms == 0 || type > UEDP_TIMER_PERIODIC) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_TIMER_INVALID_PARAM, "timer_set: ms=0 or bad type");
 		return STAT_ERROR; // Tham số không hợp lệ
 	}
 
@@ -79,11 +79,13 @@ RETR_STAT uedp_timer_set(ui16 tid, ui8 sig, ui32 ms, uedp_timer_type_t type) {
 	}
 
 	if (timer_ctrl.active_count >= UEDP_TIMER_MAX_NODES) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_TIMER_POOL_EXHAUSTED, "đã đạt UEDP_TIMER_MAX_NODES timer đang active");
 		pal_exit_critical();
 		return STAT_BUSY; // Đã đạt đến giới hạn số lượng timer hoạt động
 	}
 
 	if (!timer_ctrl.free_list) {
+		UEDP_FCR_RAISE(UEDP_FCR_TIMER_POOL_EXHAUSTED); // Không còn nút timer nào rảnh trong Pool
 		pal_exit_critical();
 		return STAT_BUSY; // Không còn nút timer nào rảnh trong Pool
 	}
@@ -120,6 +122,9 @@ RETR_STAT uedp_timer_remove(ui16 tid, ui8 sig) {
 	if (!check) {
 		// Exit critical section
 		pal_exit_critical();
+		//FIXME - Sang: Need to consider injection for this, Minh should add new //NOTE under this to decide FCR injection or not
+		//NOTE - Minh: DO NOT raise FCR. Calling remove on a non-existent timer can occur naturally if a ONE_SHOT timer has already expired and been automatically removed. This is a valid behavior. 
+
 		return STAT_NRDY; // Không tìm thấy timer với cặp Task ID và Signal này
 	}
 
@@ -156,11 +161,17 @@ RETR_STAT uedp_timer_remove(ui16 tid, ui8 sig) {
 	// Exit critical section
 	pal_exit_critical();
 
+	//FIXME - Sang: Need to consider injection for this, Minh should add new //NOTE under this to decide FCR injection or not
+	//NOTE - Minh: FCR INJECTED. If internal_find found the node but the traversal loop did not (within the same critical section), it indicates that the linked list memory has been corrupted/overwritten. This is a severe structural error. - done
+	UEDP_FCR_RAISE_MSG(UEDP_FCR_TIMER_CORRUPTED, "remove: linked list corrupted");
 	return STAT_ERROR; // Không tìm thấy timer với cặp Task ID và Signal đã cho
 }
 
 /* Hàm này được gọi từ System Tick ISR (ví dụ mỗi 1ms) */
+//NOTE - Add critical section to protect the timer list from concurrent modification by set/remove functions
 void uedp_timer_tick(void) {
+	pal_enter_critical(); // Tick chạy ở ngữ cảnh ngắt, trong khi set/remove sửa cùng danh sách -> phải loại trừ lẫn nhau
+
 	sys_tick++;
 
 	uedp_timer_t* curr = timer_ctrl.head;
@@ -175,7 +186,6 @@ void uedp_timer_tick(void) {
 			if (curr->counter == 0) {
 				#ifdef UEDP_PLATFORM_LINUX
 					printf("[Timer] Timer expired: Task ID=%u, Signal=0x%02X\n", curr->des_task_id, curr->sig);
-					usleep(curr->period * 10); // Sleep for 3 * timer period to simulate processing delay and test timer accuracy under load
 				#endif
 
 				/* 1. Đã hết hạn -> Publish Event tới Task đích */
@@ -199,18 +209,31 @@ void uedp_timer_tick(void) {
 					expired->is_active = false;
 					expired->next = timer_ctrl.free_list;
 					timer_ctrl.free_list = expired;
-					timer_ctrl.active_count--;
+					//NOTE - Add defensive check to avoid underflow when decrementing active_count
+					if (timer_ctrl.active_count > 0) {
+						timer_ctrl.active_count--;
+					}
 					continue; // Bỏ qua việc gán prev
 				}
 			} else {
 				prev = curr;
 				curr = curr->next;
 			}
+		} else {
+			prev = curr;
+			curr = curr->next;
 		}
 	}
+
+	pal_exit_critical();
 }
 
 void uedp_timer_get_stats(ui8* active, ui8* max_capacity) {
+	if (!active || !max_capacity) {
+		UEDP_FCR_RAISE_MSG(UEDP_FCR_TIMER_INVALID_PARAM, "get_stats: null out param");
+		return;
+	}
+	//NOTE - Add defensive check to avoid invalid param
 	*active = timer_ctrl.active_count;
 	*max_capacity = UEDP_TIMER_MAX_NODES;
 }

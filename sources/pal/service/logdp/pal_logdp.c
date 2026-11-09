@@ -8,6 +8,7 @@
  */
 #include "uedp_core.h"
 #include "uedp_itnlog.h"
+#include "uedp_fcr.h"
 #include "pal_core.h"
 #include "pal_logdp.h"
 
@@ -23,9 +24,9 @@ void pal_logdp_register(logdp_output_fn output_fn) {
       break;
     }
   }
-  // Nếu bảng đã đầy, có thể thêm xử lý lỗi hoặc ghi log cảnh báo ở đây
+  // Nếu bảng đã đầy, đưa qua FCR để ghi log + xử lý theo bảng hành động (SYS_PANIC)
   if (logdp_output_fns[LOGDP_MAX_OUTPUT_FN - 1] != NULL) {
-    pal_sys_fatal(__FILE__, __LINE__, "[LOGDP] Output function table is full."); // Ghi log lỗi nếu đã đạt đến giới hạn đăng ký
+    UEDP_FCR_RAISE(UEDP_FCR_PAL_LOGDP_TABLE_FULL);
   }
 }
 
@@ -44,5 +45,6 @@ void pal_logdp_dispatch(uedp_itnlog_entry_t* entry) {
     if (logdp_output_fns[i] != NULL) {
       logdp_output_fns[i](entry); // Gọi hàm callback để xuất dữ liệu log
     }
+    //REVIEW - Cân nhắc bổ sung 1 đoạn logic để raise lỗi nếu không có hàm callback nào được đăng ký, raise qua FCR để ghi log + xử lý theo bảng hành động (SYS_PANIC)
   }
 }

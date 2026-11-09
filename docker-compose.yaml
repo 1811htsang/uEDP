@@ -1,0 +1,10 @@
+services:
+  uedp_udc:
+    image: uedp-p:latest
+    container_name: uedp_udc
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/uedp-libs
+    working_dir: /uedp-libs
+    hostname: container_env
