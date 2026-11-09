@@ -225,27 +225,31 @@ Khi bắt đầu, `tsm_init()` được gọi để thiết lập trạng thái 
 Do đó, khi thiết kế hệ thống, cần đảm bảo rằng các task có mức độ ưu tiên phù hợp để tránh tình trạng loop hoặc sai logic.
 
 ```asciidoc
-                    #all                   ║
-                    ┌──────────┐ [in]      ║ > tsm_init
-                    │  ot_ntry │           ║
-                    └────┼─────┘           ║
-          -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
-                  #cur ┌─┴──┐[out][on]     ║
-                ┌──────┼actv┼──────┐       ║ > tsm_dispatch
-                │      └────┘      │       ║
-          -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
-                │                  │  #nxt ║
-              ┌─┼──┐           ┌───┼───┐   ║
-         #cur │exit┼───────────┼il_ntry│   ║ > tsm_trans
-              └────┘           └───────┘   ║
-                [on]                 [in]  ║
-                                           ║
+┌────────────────────────────────────────┬────────────────┐
+│         #all [in]                      │                │
+│         ┌───────┐                      │                │
+│         │ot_ntry│                      │ > tsm_init     │
+│         └───┬───┘                      │                │
+├─────────────┼──────────────────────────┼────────────────┤
+│         #cur│   [on]         [on]      │                │
+│           ┌─▼──┐       ┌────┐[out]     │                │
+│         ┌─►onst┼───────►actv┼─┐        │ > tsm_dispatch │
+│         │ └────┘       └────┘ │        │                │
+├─────────┼─────────────────────┼────────┼────────────────┤
+│ #nxt┌───┴───┐               ┌─▼──┐#cur │                │
+│     │il_ntry◄───────────────┤exit│     │ > tsm_trans    │
+│ [in]└───────┘               └────┘[on] │                │
+│                                        │                │
+└────────────────────────────────────────┴────────────────┘
 ```
 
-<!-- DEPRECATED - Old TASK
-Bổ sung mẹo sử dụng HSMC trong syntax của PLD/μE-LS.
-#STATUS - DONE
--->
+Dự kiến ở phiên bản 1.1.8, TSM sẽ được nâng cấp để hỗ trợ đặc điểm mới chính là sự phân biệt rõ ràng giữa hàm thực thi trong trạng thái - `_onst` và hàm thực thi khi chuyển trạng thái - `actv`. Tại sao lại có sự phân biệt rõ ràng như vậy? 
+
+> `action` là hành vi được gọi ngay trước khi TSM chuyển sang trạng thái đích, chỉ thực thi một lần cho mỗi transition. Nghĩa là ở trạng thái X nếu nhận tín hiệu Y để chuyển sang trạng thái Z, thì `action` sẽ được gọi một lần trước khi TSM chuyển sang Z.
+
+Trong khi đó,
+
+> `on_actv` là hành vi được gọi mỗi khi TSM đang ở trạng thái X và nhận tín hiệu Y, bất kể có chuyển sang trạng thái Z hay không. Nghĩa là nếu ở trạng thái X nhận tín hiệu Y nhiều lần, `on_actv` sẽ được gọi nhiều lần, còn `action` chỉ được gọi một lần cho transition đầu tiên. Tín hiệu có thể là bất kỳ signal nào, không nhất thiết phải là signal trong `trans`.
 
 #### FSM - Finite State Machine
 
