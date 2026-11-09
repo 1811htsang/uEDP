@@ -309,7 +309,7 @@ def lukupmodel_tnorm_logic(yaml_text):
       continue
 
     task_name = str(item.get('tnorm', ''))
-    model = C_tnorm_obj(task=task_name)
+    model = C_tnorm_obj(task=task_name, priority=_normalize_alias_value(item.get('priority')))
 
     if 'tsm' in item:
       tsm_raw = item.get('tsm', [])
