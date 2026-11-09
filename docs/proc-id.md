@@ -23,7 +23,7 @@ Chỉ số (INDEX) là một số nguyên duy nhất để phân biệt các Tas
 
 1. `[CORE - XXX]` dành cho mã nguồn lõi của μEDP, bao gồm các thành phần như PLD/μE-LS, S-LnF APE, PLTF, và các thành phần khác liên quan đến lõi của hệ thống.
 2. `[PLTF - XXX]` dành cho các thành phần liên quan đến khung kiểm thử cục bộ (Portable Local Test Framework), bao gồm các thành phần như testobj, BST, và các thành phần khác liên quan đến kiểm thử.
-3. `[DOCS - XXX]` dành cho các tài liệu liên quan đến dự án μEDP, bao gồm các tài liệu như hướng dẫn sử dụng, tài liệu thiết kế, và các tài liệu khác liên quan đến dự án.
+3. `[DOCS - XXX]` dành cho các tài liệu liên quan đến dự án μEDP, bao gồm các tài liệu như hướng dẫn sử dụng, tài liệu thiết kế, và các tài liệu khác liên quan đến dự án, trong đó các task review tài liệu cũng được phân loại vào nhóm này.
 4. `[TEST - XXX]` dành cho các tác vụ liên quan đến kiểm thử, bao gồm các tác vụ như kiểm thử đơn vị, kiểm thử tích hợp, và các tác vụ khác liên quan đến kiểm thử.
 5. `[NETW - XXX]` dành cho các tác vụ liên quan đến mạng, bao gồm các tác vụ như cấu hình mạng, kiểm tra kết nối, và các tác vụ khác liên quan đến mạng.
 6. `[REPO - XXX]` dành cho các tác vụ liên quan đến kho lưu trữ mã nguồn, bao gồm các tác vụ như quản lý nhánh, hợp nhất mã nguồn, và các tác vụ khác liên quan đến kho lưu trữ.
