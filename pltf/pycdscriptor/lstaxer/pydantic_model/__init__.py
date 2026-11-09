@@ -22,7 +22,10 @@ from .logic import (
   C_escal_obj,
   C_tnorm_obj,
   C_tpoll_obj,
-  C_psetbl_obj
+  C_psetbl_obj,
+  C_lpipe_itnlog_obj,
+  C_lpipe_rprintf_obj,
+  C_lpipe_obj
 )
 
 from .resrc import (
