@@ -339,3 +339,13 @@ If a bug is discovered during release-candidate validation, the bugfix (`-bfX` s
 Bugs discovered after the software has already been released are handled separately through a `hotfix` created from `main`; after verification, the `hotfix` is merged back into `main` for the corrective `release` and propagated back toward the active development or `integration` stream when required, preventing the same defect from reappearing in future releases.
 
 Overall, this model keeps feature development (`feat`), development bug fixing (`fix`), refactoring (`reft`), maintenance (`chore`), documentation (`docs`), release stabilization (`integration`/`release`), and production correction (`hotfix`) logically separated while maintaining a controlled forward path from development to final release and a backward synchronization path for critical fixes.
+
+### 11.4. When to use pull request and when to merge directly
+
+In current implementation, pull request - PR is used for any changes required to be merged. Therefore, it is inconclusive to use PR for all changes, especially for small changes like typo fix or doc update. Therefore, we will use the following rules to determine when to use PR and when to merge directly:
+
+| Change type | Merge method | Rule | Example |
+| --- | --- | --- | --- |
+| Small fix (e.g., typo, doc update) | Direct merge | For minor changes that don't require review | Fixing a typo in a comment or updating a README file, merge documents into sub feature branches |
+| Medium fix (e.g., bug fix, small feature) | Pull request | For changes that require review and testing | Fixing a bug in the code or adding a small feature, merge into sub feature branches, usually for more significant changes from fix/reft into sub feature branches |
+| Large fix (e.g., major feature, refactor) | Pull request | For changes that require review, testing, and approval | Adding a new feature or refactoring a large section of code, merge into sub feature branches, usually for more significant changes sub feature branches into main feature branches |
