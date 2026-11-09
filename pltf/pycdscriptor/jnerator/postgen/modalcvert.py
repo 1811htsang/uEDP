@@ -93,9 +93,18 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
             'goto_value': (
               f"({transition['goto']}_ID)" if transition['goto'] != 'UEDP_TSM_STATE_STAY' else f"({transition['goto']})"
             ),
-            'action': None,
+            'action': (
+              f'{prefix}_trans_{transition_index}_func'
+              if transition.get('action') else None
+            ),
+            'action_body': (
+              _emit_action(transition['action'], task_symbols)
+              if transition.get('action') else None
+            ),
           }
-          for transition in state.get('trans', {}).get('trans', [])
+          for transition_index, transition in enumerate(
+            state.get('trans', {}).get('trans', [])
+          )
         ],
         'entry_actions': _emit_actions(_actions(state.get('on_ntry')), task_symbols),
         'active_actions': _emit_actions(_actions(state.get('on_actv')), task_symbols),
