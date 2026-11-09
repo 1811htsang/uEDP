@@ -2,6 +2,8 @@
 
 Tài liệu này phác thảo thiết kế cho TSD (Test Scenario Descriptor) và TLC (Test Level Coverager). Hai thành phần này là mảnh ghép cuối cùng của lộ trình v1.2.x, đóng vai trò chuyển đổi quá trình kiểm thử từ thủ công sang tự động (Model-Based Testing).
 
+**Quyết định tích hợp framework:** Unity đã có sẵn trong `sources/common/unity` (v2.7.2) và sẽ được dùng làm assertion/test runner cho artifact TSD. Unity chỉ được link vào executable kiểm thử; không được thêm vào production target, `app.c` hay các firmware target.
+
 ## 1. TSD (Test Scenario Descriptor) - Đặc tả Kịch bản Kiểm thử
 
 Thay vì là một biến thể của khai báo tác vụ (`tlist`), TSD được thiết kế như một thực thể ngang hàng (Peer Entity). Nó không định nghĩa logic hệ thống, mà đóng vai trò là một "người lái" (Driver) tác động vào các Task/Signal đã được định nghĩa và đánh giá kết quả trả về.
@@ -44,11 +46,14 @@ Quy trình xử lý TSD sẽ phản chiếu (mirror) hoàn toàn luồng xử l�
 4. Jinja2 Template: Tạo một template hoàn toàn mới: `pltf/templates/testc.txt`.
     * Template này không sinh ra ứng dụng, mà sinh ra hàm `main()` chuyên biệt cho kiểm thử.
     * *Luồng chạy của C Code:* Gọi `uedp_core_init()` $\rightarrow$ Lặp qua các `steps` $\rightarrow$ Đánh giá `expect` bằng các lệnh `if/else` đơn giản $\rightarrow$ Trả về `0` (Pass) hoặc khác `0` (Fail). Việc không phụ thuộc vào Framework bên thứ 3 (như Unity/CMock) giúp giữ vững triết lý "siêu nhẹ" của OS.
-5. Post-generation (Build Script): Tạo module `testgen.py` (tương đương `modalcvert.py`) được kích hoạt bởi script `jainerator_test.sh`.
+5. Post-generation (Build Script): Tạo module `testgen.py` (tương đương `modalcvert.py`) được kích hoạt bởi pipeline test riêng, sau bước sinh `app.c`.
+6. Build/Test: Tạo executable `uedp_tsd_test` riêng trên `PLAT=LINUX`, link `unity.c` và `app.c` sinh ra nhưng loại `sources/pal/arch/linux/main.c`. Runner gọi `UNITY_BEGIN()`, `RUN_TEST(...)`, `UNITY_END()`; mã trả về của `UnityEnd()` là kết quả CTest.
 
 ### Tận dụng Nền tảng có sẵn (Reusability)
 
-* Linux Backend: Việc bơm tín hiệu trong `post_isr` có thể tái sử dụng trực tiếp hàm `pal_linux_simulate_interrupt()` đã có sẵn trong `linux.c`. Điều này giúp việc chạy TSD trên môi trường mô phỏng (Linux) gần như "miễn phí".
+* Linux Backend: Việc bơm tín hiệu trong `post_isr` có thể tái sử dụng trực tiếp hàm `linux_simulate_interrupt()` đã có trong `linux.c/linux.h`. Điều này giúp việc chạy TSD trên môi trường mô phỏng (Linux) gần như "miễn phí".
+* Runtime initialization: `uedp_core_init()` của Linux đã gọi `pal_core_init()`, khởi tạo message pool, timer, itnlog và tạo tick thread. Runner không được gọi lại các hàm init này hoặc tự tạo thêm tick thread.
+* Unity lifecycle: `setUp()`/`tearDown()` để reset trạng thái từng scenario; `suiteSetUp()`/`suiteTearDown()` chỉ dùng nếu cần chuẩn bị toàn suite. Không dùng macro `TEST_CHECK` tự định nghĩa khi assertion tương ứng của Unity đã có sẵn.
 * Escape Hatch (Lối thoát hiểm): Nếu khối `expect` chưa hỗ trợ đủ các điều kiện phức tạp trong phiên bản v0, hãy cho phép dùng `c_stmt` hoặc `c_call` bên trong `expect`. Lập trình viên có thể viết lệnh assert C thô thay vì bị tắc nghẽn chờ DSL hoàn thiện.
 
 ---
@@ -72,8 +77,9 @@ Thay vì tạo ra một ngôn ngữ hay cú pháp riêng biệt cho TLC, chúng 
 
 Tránh việc thiết kế quá đà (over-engineering) ngay từ đầu. Hãy bắt đầu với một "lát cắt" tối thiểu cho v0:
 
-1. Tính năng TSD v0: Chỉ hỗ trợ `post_isr` và `advance_tick` (cho Steps); chỉ hỗ trợ kiểm tra `tsm_state` và `gda_value` (cho Expect).
-2. Tính năng TLC v0: Chỉ hỗ trợ một mức duy nhất là `ut`. Sinh ra một file test duy nhất và gắn cứng vào CMake.
-3. Quy ước Đặt tên: Vì `docs/test/README.md` đang quy định tiền tố `vir-/phy-/logic-` cho các file Test Object (Task/Logic), TSD cần một quy ước riêng để tránh nhầm lẫn. Đề xuất: Dùng tiền tố `tsd-<name>-v#.yaml` cho các tệp chứa kịch bản kiểm thử.
+1. Tính năng TSD v0: Chỉ hỗ trợ `post_isr` và `advance_tick` (cho Steps); chỉ hỗ trợ kiểm tra `tsm_state` và `gda_value` (cho Expect). `post_isr` chỉ hợp lệ trên `PLAT=LINUX` ở v0.
+2. Unity v0: Sinh các hàm test từ TSD và đăng ký bằng `RUN_TEST`; dùng `TEST_ASSERT_*`/`TEST_ASSERT_EQUAL_*`, không tạo assertion framework riêng.
+3. Tính năng TLC v0: Chỉ hỗ trợ một mức duy nhất là `ut`. Sinh ra một file test duy nhất, gắn vào `uedp_tsd_test` và đăng ký CTest với label `ut`.
+4. Quy ước Đặt tên: Vì `docs/test/README.md` đang quy định tiền tố `vir-/phy-/logic-` cho các file Test Object (Task/Logic), TSD cần một quy ước riêng để tránh nhầm lẫn. Đề xuất: Dùng tiền tố `tsd-<name>-v#.yaml` cho các tệp chứa kịch bản kiểm thử.
 
 Khi "lát cắt mỏng" này có thể thực hiện vòng đời khép kín (Round-trip) và chạy thành công trên một file mẫu như `vir-phy-logic-testobj-v0.yaml`, chúng ta mới tiến hành mở rộng các luật `expect` và tích hợp `CTest` đầy đủ.
