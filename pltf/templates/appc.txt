@@ -64,13 +64,13 @@ uedp_tsm_t {{ task.tsm_object }};
 {% for state in task.tsm_states %}
 tsm_trans_t {{ state.id }}_trans[] = {
   {%- for transition in state.transitions %}
-  { {{ transition.sig }}, {{ transition.goto_value }}, {{ state.active_name if state.active_actions else 'NULL' }} },
+  { {{ transition.sig }}, {{ transition.goto_value }}, {{ transition.action or 'NULL' }} },
   {%- endfor %}
 };
 {% endfor %}
 tsm_state_desc_t {{ task.tsm_table }}[] = {
   {%- for state in task.tsm_states %}
-  { {{ state.state_id }}, {{ state.entry_name }}, {{ state.exit_name }}, {{ state.id }}_trans, (ui8)(sizeof({{ state.id }}_trans) / sizeof({{ state.id }}_trans[0])) },
+  { {{ state.state_id }}, {{ state.entry_name }}, {{ state.exit_name }}, {{ state.id }}_trans, (ui8)(sizeof({{ state.id }}_trans) / sizeof({{ state.id }}_trans[0])), {{ state.active_name if state.active_actions else 'NULL' }} },
   {%- endfor %}
 };
 {% endif -%}
