@@ -43,6 +43,7 @@ class C_act_list_obj(BaseModel):
 class C_trans_obj(BaseModel):
   sig: str
   goto: str
+  action: Optional[C_act_obj] = None
 
 class C_trans_list_obj(BaseModel):
   trans: List[C_trans_obj]
