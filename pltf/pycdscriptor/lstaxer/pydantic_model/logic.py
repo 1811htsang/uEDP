@@ -107,6 +107,7 @@ class C_escal_obj(BaseModel):
 
 class C_tnorm_obj(BaseModel):
   task: str
+  priority: Optional[str] = None
   tsm: Optional[C_tsm_list_obj] = None
   fsm: Optional[C_fsm_list_obj] = None
   kwexec: Optional[C_kwexec_list_obj] = None
