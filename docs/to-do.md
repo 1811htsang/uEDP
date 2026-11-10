@@ -700,7 +700,7 @@ Phiên bản này được đưa lên từ 1.1.7/8 (pre-2509) sang 1.1.8/9 để
 Loại bỏ do không còn cần thiết. `args` có sự đa dạng và linh hoạt, có thể sử dụng các alias khác nhau để phân giải các tham số trong syntax mà không cần phải bổ sung các quy tắc phân giải alias vào `args`. Do đó, task này sẽ được loại bỏ để tránh sự phức tạp không cần thiết trong việc triển khai các tính năng mới của μEDP.
 -->
 
-- [ ] @! TID[epic=Rv1.1.8-i0/pltf.tsd/pltf.tlc] DOCS-002 <+ Phản biện tài liệu `review/tsd-tlc.md` để thống nhất các ý tưởng và đề xuất cải tiến cho Test Strategy Design (TSD) và Test Logic Control (TLC) của μEDP.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.tsd/pltf.tlc] DOCS-002 <+ Phản biện tài liệu `review/tsd-tlc.md` để thống nhất các ý tưởng và đề xuất cải tiến cho Test Strategy Design (TSD) và Test Logic Control (TLC) của μEDP.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.pllp] PLTF-001 <+ Bổ sung khả năng phân giải PPLP vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS.
 
 <!-- STATUS
