@@ -707,10 +707,12 @@ Loại bỏ do không còn cần thiết. `args` có sự đa dạng và linh ho
 Hiện tại chỉ còn lại modelcver và appc template chưa được hoàn thiện do thiếu lib `pydantic` để chạy kiểm tra. Cập nhật sau.
 -->
 
-- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.oce] PLTF-002 <+ Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
+- [x] @! DEPRECATED[epic=Rv1.1.8-i0/pltf.pycdscriptor.oce] PLTF-002 <+ Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 
 <!-- STATUS
 Hiện tại chưa kiểm tra chi tiết đối với tính năng OCE trong PLTF và cũng thiếu BST để kiểm tra tính năng này. Nhưng đã có phản hồi ở `to_generator_context()` thiếu dataclass cho outexec nên cần kiểm tra lại task này trước khi xác nhận làm hay deprecate task.
+
+Sau khi kiểm tra thì thấy rằng task này đã được triển khai ở release 1.1.6 nhưng thiếu BST cho OCE nên vẫn được raise lại ticket mới nhưng ticket này sẽ deprecated.
 -->
 
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.tnorm] PLTF-003 <+ Thêm trường priority vào trong syntax của task để hỗ trợ việc phân giải mức độ ưu tiên của task trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
