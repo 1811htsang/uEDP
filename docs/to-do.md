@@ -720,6 +720,7 @@ Sau khi kiểm tra thì thấy rằng task này đã được triển khai ở r
 - [ ] @! TID[epic=Rv1.1.8-i0/pltf+unityfw] PLTF-005 <+ Thêm concept testing tiêu chuẩn thay thế cho Unity hiện tại.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.tnorm] PLTF-006 <+ Hoàn thiện cho modelcvert và appc template để hỗ trợ việc phân giải các cấu hình YAML sang các hàm thực thi trong lõi μEDP một cách hiệu quả và ổn định.
 - [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.test] TEST-001 <+ Bổ sung testobj-v3 để thực hiện kiểm thử các thay đổi mới cho OCE và ticket PLTF-002, PLTF-003, PLTF-006 nhằm đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+- [ ] @! TID[epic=Rv1.1.8-i0/test-structure] DOCS-003 <+ Bổ sung tài liệu chuẩn hóa cấu trúc thiết kế và lưu trữ testcase, nội dung testcase, kết quả testcase, v.v. để hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
 
 //  !SECTION
 
