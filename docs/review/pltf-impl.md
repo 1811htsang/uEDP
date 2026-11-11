@@ -4,7 +4,7 @@
 
 - Ngày viết: 2026-09-23
 - Phạm vi: `pltf/pycdscriptor` (lớp `lstaxer` + `jnerator`), `pltf/templates`, `CMakeLists.txt`, pipeline `entrypoint.sh`/`jainerator.sh`
-- Liên quan: [`docs/uels-syntax.md`](../uels-syntax.md) (cú pháp đề xuất TSD/TLC), [`docs/to-do.md`](../to-do.md) (mục "Bổ sung tài liệu review thiết kế TSD/TLC" và "Hoàn thiện thiết kế TLC" trong v1.2.1 — Safe Input Filter)
+- Liên quan: [`docs/vni/uels-syntax.md`](../vni/uels-syntax.md) (cú pháp đề xuất TSD/TLC), [`docs/to-do.md`](../to-do.md) (mục "Bổ sung tài liệu review thiết kế TSD/TLC" và "Hoàn thiện thiết kế TLC" trong v1.2.1 — Safe Input Filter)
 - Mục đích tài liệu: đề xuất các bước triển khai chi tiết (implementation roadmap) cho TSD (Test Scenario Descriptor) và TLC (Test Level Coverager), dựa trên kiến trúc codegen thực tế hiện có — không phải bản ghi tranh luận nhiều vòng như các review khác trong thư mục này.
 
 ## 1. Mục tiêu
@@ -36,9 +36,9 @@ Codegen cuối (`jnerator/postgen`):
 - `modalcvert.py::build_appc_context()` — build dict context cho Jinja2 từ YAML text.
 - `pltf/templates/appc.txt` — template Jinja2 duy nhất sinh toàn bộ `sources/app/app.c` (task table, TSM/FSM state functions, `logic_init()`, `app_main()` với `while(1) uedp_task_scheduler();`).
 
-Build: `CMakeLists.txt` có `PLAT` = `TEST|LINUX|STM32F103|STM32H723|ESP32S3`. `PLAT=LINUX` link `pthread`/`m`, thêm `sources/pal/arch/linux/linux.c`, define `LINUX_PLATFORM`. `APP_SRCS` chỉ gồm `sources/app/app.c`.
+Build: `CMakeLists.txt` có `PLAT` = `TEST|LINUX|STM32F103|STM32H723|ESP32S3`. `PLAT=LINUX` link `pthread`/`m`, thêm `sources/pal/arch/linux/linux.c`, define `LINUX_PLATFORM`. Target production thêm `sources/pal/arch/linux/main.c` để gọi `app_main()`, còn target TSD phải loại file này và link `sources/common/unity/unity.c` cùng `sources/app/app.c` sinh ra.
 
-Tiền lệ gần nhất cho một test runner Linux: `sources/test/deprecated/test04/test.c` (deprecated nhưng đúng cấu trúc: `TEST_CHECK` macro, `uedp_itnlog_set_output()` để capture log, pthread tick thread 1ms gọi `uedp_timer_tick()`, vòng lặp scheduler giới hạn 100000 lần + `usleep(100)`, thoát bằng cờ `g_test_done`).
+Tiền lệ gần nhất cho hành vi test runner Linux: `sources/test/deprecated/test04/test.c` (deprecated; hữu ích để tham khảo capture log và scheduler loop, nhưng không copy `TEST_CHECK` hoặc pthread tick thread vì runner mới dùng Unity và tick lifecycle của Linux PAL).
 
 ## 3. Các quyết định thiết kế cần chốt trước khi viết code
 
@@ -63,7 +63,7 @@ rồi hàm helper `fsm_state_matches(task_id, "STATE_A")` duyệt mảng và so 
 
 `app.c` là code sản xuất (`app_main()` chạy `while(1)`). TSD cần một `main()` khác: khởi tạo, bơm scenario, chờ, assert, thoát bằng exit code — không thể sống chung vòng lặp vô hạn của `app_main()`.
 
-Đề xuất: sinh một file C hoàn toàn mới (ví dụ `sources/test/generated/tsd_runner.c`) từ một template Jinja2 mới (`pltf/templates/testc.txt`), dùng lại các hàm/table đã có sẵn trong `app.c` (task table, TSM/FSM state functions, `logic_init()`) bằng cách `#include "app.c"` có điều kiện, hoặc — sạch hơn — thêm guard `#ifndef UEDP_TSD_RUNNER_BUILD` quanh `app_main()` trong `appc.txt` để `tsd_runner.c` có thể `#include "../../app/app.c"` và tự viết `main()` của riêng nó mà không đụng độ symbol `main`. Cách include-file thay vì link riêng object tránh phải sinh lại toàn bộ task/TSM/FSM tables lần hai.
+Đề xuất: sinh một file C hoàn toàn mới (ví dụ `sources/test/generated/tsd_runner.c`) từ một template Jinja2 mới (`pltf/templates/testc.txt`). Runner chỉ khai báo `extern` cho task table và hàm logic cần dùng; CMake link `app.c` như một source/object riêng. Không `#include` file `.c`, không sửa `appc.txt` để tạo guard, và không link `sources/pal/arch/linux/main.c` vào test target.
 
 ### 3.3. TLC coverage: tính tĩnh (static, tại thời điểm codegen) chứ chưa làm runtime instrumentation
 
@@ -131,11 +131,11 @@ File mới: `pltf/pycdscriptor/jnerator/postgen/tsdcvert.py` (đặt tên song s
 File mới: `pltf/templates/testc.txt`. Cấu trúc dựa theo tiền lệ `test04/test.c`:
 
 - `#include` app logic (theo cách include ở mục 3.2) + `test.h`-tương-đương tự sinh nếu cần khai báo thêm.
-- `TEST_CHECK(desc, cond)` macro (copy nguyên mẫu từ `test04/test.c`).
-- Capture log qua `uedp_itnlog_set_output()`/`uedp_itnlog_set_filter()` — dùng cho `expect.signal_sent` nếu cần xác nhận qua log thay vì state trực tiếp.
-- `{% for scenario in tsd_scenarios %}` sinh 1 hàm `run_scenario_{{ scenario.id }}(void)` thực hiện tuần tự các `steps` (map `post_msg`→`uedp_task_norm_post_msg`, `post_isr`→`pal_linux_simulate_interrupt` [chỉ hợp lệ khi build LINUX — cần warn/skip khi target khác LINUX], `post_urgent`→`uedp_task_norm_post_urgent`, `wait`→`usleep`), rồi các `TEST_CHECK` cho từng `expect`.
-- pthread tick thread 1ms gọi `uedp_timer_tick()` (giống `test04`).
-- `main()`: `uedp_core_init()` → `uedp_msg_pool_init()` → `uedp_timer_init()` → `uedp_itnlog_init()` → `uedp_task_norm_create(app_task_table)` → áp dụng workaround `cur_pri` đã ghi nhận trong `test04/test.c` (gán `cur_pri = base_pri` thủ công cho từng task, vì `uedp_task_norm_create()` chưa tự làm việc này — đây là gap có sẵn ở core, không phải của TSD, nhưng runner sinh ra phải biết để không bị "task không bao giờ chạy") → tạo tick thread → gọi từng `run_scenario_*` → tổng kết PASS/FAIL → trả exit code khác 0 nếu có FAIL.
+- `#include "unity.h"`; dùng assertion và lifecycle của Unity, không sinh macro assertion riêng.
+- Capture log qua `uedp_itnlog_set_output()`/`uedp_itnlog_set_filter()` chỉ khi oracle cần log; không dùng log thay cho state/GDA oracle nếu core có thể đọc trực tiếp.
+- `{% for scenario in tsd_scenarios %}` sinh test function và đăng ký bằng `RUN_TEST`; map `post_msg`→`uedp_task_norm_post_msg`, `post_isr`→`linux_simulate_interrupt` (chỉ hợp lệ trên Linux), `post_urgent`→`uedp_task_norm_post_urgent`, `advance_tick`→`linux_simulate_tick` hoặc một helper test được xác định rõ. Mỗi oracle dùng macro Unity tương ứng.
+- Không tạo pthread tick thread trong runner: `uedp_core_init()` của Linux đã tạo tick thread. Nếu cần dừng/join tick thread để tránh chạy sau khi Unity kết thúc, phải bổ sung lifecycle API ở PAL trước khi codegen; không tự chạm vào state nội bộ của `linux.c`.
+- `main()`: `UNITY_BEGIN()` → `uedp_core_init()` → `uedp_task_norm_create(app_task_table)` → `logic_init()` nếu scenario yêu cầu → `RUN_TEST(...)` → `UNITY_END()`. Cần kiểm chứng thứ tự init bằng một scenario mẫu; không gọi lặp lại `uedp_msg_pool_init()`/`uedp_timer_init()`/`uedp_itnlog_init()`.
 
 ### Bước 8 — Postgen CLI module mới
 
@@ -155,10 +155,19 @@ if (UEDP_BUILD_TSD_TEST)
   if (NOT PLAT STREQUAL "LINUX")
     message(FATAL_ERROR "UEDP_BUILD_TSD_TEST requires PLAT=LINUX")
   endif()
-  add_executable(uedp_tsd_test sources/test/generated/tsd_runner.c ${PAL_PLATFORM_SRCS} ${CORE_SRCS} ${COMMON_XPRINTF_SRCS} ${PAL_SERVICE_SRCS})
-  target_compile_definitions(uedp_tsd_test PRIVATE UEDP_TSD_RUNNER_BUILD)
+  add_executable(uedp_tsd_test
+    sources/test/generated/tsd_runner.c
+    sources/app/app.c
+    ${CORE_SRCS} ${COMMON_XPRINTF_SRCS} ${PAL_SERVICE_SRCS}
+    sources/pal/arch/linux/linux.c
+    sources/common/unity/unity.c
+  )
+  target_compile_definitions(uedp_tsd_test PRIVATE UEDP_TSD_RUNNER_BUILD UNITY_DIFFERENTIATE_FINAL_FAIL)
   target_link_libraries(uedp_tsd_test pthread m)
   target_include_directories(uedp_tsd_test PRIVATE ...) # giống target chính
+  enable_testing()
+  add_test(NAME tsd_ut COMMAND uedp_tsd_test)
+  set_tests_properties(tsd_ut PROPERTIES LABELS "ut")
 endif()
 ```
 
@@ -173,6 +182,16 @@ python -m pltf.pycdscriptor.jnerator.postgen.testgen --yaml sources/app/lstaxize
 python -m pltf.pycdscriptor.jnerator.postgen.covrpt   --yaml sources/app/lstaxizer.yaml --output sources/test/generated/tlc_report.md
 ```
 
+Sau codegen, quy trình kiểm chứng tối thiểu là:
+
+```bash
+cmake -S . -B build-tsd -DPLAT=LINUX -DUEDP_BUILD_TSD_TEST=ON
+cmake --build build-tsd --target uedp_tsd_test
+ctest --test-dir build-tsd --output-on-failure -L ut
+```
+
+Unity phải in kết quả test ra stdout và trả exit code khác 0 khi có assertion fail; CTest không được tự coi việc sinh file C thành test pass.
+
 ### Bước 12 — Thứ tự rollout đề xuất (để giảm rủi ro)
 
 1. Bước 1–4 (parse + validate only, chưa sinh code) — có thể review độc lập, rủi ro thấp.
@@ -184,11 +203,12 @@ python -m pltf.pycdscriptor.jnerator.postgen.covrpt   --yaml sources/app/lstaxiz
 ## 5. Câu hỏi mở / rủi ro cần chốt với người review
 
 1. `expect.fsm_state`: đồng ý cách tiếp cận bảng lookup id→function pointer sinh riêng cho test runner (mục 3.1), hay muốn thêm hẳn một `state_id_t` enum song song vào core FSM (đổi cấu trúc `uedp_fsm_t`, ảnh hưởng rộng hơn nhiều)?
-2. `post_isr` trên non-Linux target: `pal_linux_simulate_interrupt()` chỉ tồn tại trong `linux.c`. Nếu `tsd.target` trỏ tới task build cho STM32/ESP32, bước này cần báo lỗi rõ ràng ở generate-time (validate) thay vì lỗi compile khó hiểu — nên thêm rule ở Bước 2/3.
+2. `post_isr` trên non-Linux target: `linux_simulate_interrupt()` chỉ tồn tại trong Linux PAL. Nếu `tsd.target` trỏ tới task build cho STM32/ESP32, bước này cần báo lỗi rõ ràng ở generate-time (validate) thay vì lỗi compile khó hiểu — nên thêm rule ở Bước 2/3.
 3. TLC `level` (ut/ct/st/it): xác nhận hoãn sang review syntax riêng (mục 3.4) thay vì làm luôn trong đợt này.
 4. Coverage runtime (mục 3.3(b)): có cần ngay trong v1.2.1, hay static coverage là đủ cho mốc này?
 5. Vị trí output file sinh ra: đề xuất `sources/test/generated/` (thư mục mới, tách khỏi `sources/test/deprecated/`) — cần xác nhận quy ước đặt tên/thư mục này có khớp với hướng tổ chức project không.
+6. Có cần lifecycle API để dừng tick thread Linux sau `UnityEnd()` không? Nếu có, bổ sung API PAL trước khi sinh runner; không cho template truy cập biến `static` của `linux.c`.
 
 ## 6. Đề xuất kết luận
 
-Triển khai theo đúng 12 bước ở mục 4, đi theo lộ trình rollout ở mục 12 để có thể review từng phần nhỏ thay vì một PR khổng lồ. Trước khi bắt đầu Bước 1, cần chốt trả lời cho 5 câu hỏi mở ở mục 5 — đặc biệt câu 1 (FSM state) vì nó quyết định hình dạng của cả template `testc.txt` và context builder `tsdcvert.py`.
+Triển khai theo đúng 12 bước ở mục 4, đi theo lộ trình rollout ở mục 12 để có thể review từng phần nhỏ thay vì một PR khổng lồ. Trước khi bắt đầu Bước 1, cần chốt trả lời cho 6 câu hỏi mở ở mục 5. Unity được chốt là framework assertion và test lifecycle của runner; không chốt việc dùng Unity để mock core hoặc tạo coverage runtime. Mốc đầu tiên phải chứng minh được vòng đời `generate → build → ctest -L ut` trên Linux với một scenario mẫu.
