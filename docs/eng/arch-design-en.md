@@ -669,7 +669,7 @@ After a task finishes processing a message in `internal_uedp_task_norm_dispatch(
 #### Error handling (FCR)
 
 | Situation | FCR | Behaviour |
-|---|---|---|
+| --- | --- | --- |
 | `sig >= UEDP_TBM_MAX_SIZE` | `MSG_INVALID_PARAM` (ERROR) | Returns `STAT_ERROR` |
 | `data_size` exceeds `UEDP_MSG_ALLOC_DATA_MAX`, or `data == NULL` with `data_size > 0` | `MSG_INVALID_PARAM` (ERROR) | Returns `STAT_ERROR`, nothing allocated |
 | Message pool exhausted | `MSG_POOL_EXHAUSTED` (FATAL) | Panics per the FCR table |
