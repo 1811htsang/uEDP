@@ -700,23 +700,37 @@ Phiên bản này được đưa lên từ 1.1.7/8 (pre-2509) sang 1.1.8/9 để
 Loại bỏ do không còn cần thiết. `args` có sự đa dạng và linh hoạt, có thể sử dụng các alias khác nhau để phân giải các tham số trong syntax mà không cần phải bổ sung các quy tắc phân giải alias vào `args`. Do đó, task này sẽ được loại bỏ để tránh sự phức tạp không cần thiết trong việc triển khai các tính năng mới của μEDP.
 -->
 
-- [ ] @! TID[epic=Rv1.1.8-i0/pltf.tsd/pltf.tlc] DOCS-002 <+ Phản biện tài liệu `review/tsd-tlc.md` để thống nhất các ý tưởng và đề xuất cải tiến cho Test Strategy Design (TSD) và Test Logic Control (TLC) của μEDP.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.tsd/pltf.tlc] DOCS-002 <+ Phản biện tài liệu `review/tsd-tlc.md` để thống nhất các ý tưởng và đề xuất cải tiến cho Test Strategy Design (TSD) và Test Logic Control (TLC) của μEDP.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.pllp] PLTF-001 <+ Bổ sung khả năng phân giải PPLP vào trong pycdscriptor.lstaxer để hỗ trợ tính năng PPLP trong PLD/μE-LS.
 
 <!-- STATUS
 Hiện tại chỉ còn lại modelcver và appc template chưa được hoàn thiện do thiếu lib `pydantic` để chạy kiểm tra. Cập nhật sau.
 -->
 
-- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.oce] PLTF-002 <+ Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
+- [x] @! DEPRECATED[epic=Rv1.1.8-i0/pltf.pycdscriptor.oce] PLTF-002 <+ Bổ sung khả năng phân giải OCE vào trong pycdscriptor.lstaxer để hỗ trợ tính năng OCE trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 
 <!-- STATUS
 Hiện tại chưa kiểm tra chi tiết đối với tính năng OCE trong PLTF và cũng thiếu BST để kiểm tra tính năng này. Nhưng đã có phản hồi ở `to_generator_context()` thiếu dataclass cho outexec nên cần kiểm tra lại task này trước khi xác nhận làm hay deprecate task.
+
+Sau khi kiểm tra thì thấy rằng task này đã được triển khai ở release 1.1.6 nhưng thiếu BST cho OCE nên vẫn được raise lại ticket mới nhưng ticket này sẽ deprecated.
 -->
 
-- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.tnorm] PLTF-003 <+ Thêm trường priority vào trong syntax của task để hỗ trợ việc phân giải mức độ ưu tiên của task trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.tnorm] PLTF-003 <+ Thêm trường priority vào trong syntax của task để hỗ trợ việc phân giải mức độ ưu tiên của task trong PLD/μE-LS ở phiên bản 1.1.7 hoặc 1.1.8.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf+unityfw] PLTF-004 <+ Tìm hiểu về Framework Unit Test Unity để đánh giá khả năng tích hợp với PLTF.TSD/TLC nhằm hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
-- [ ] @! TID[epic=Rv1.1.8-i0/pltf+unityfw] PLTF-005 <+ Thêm concept testing tiêu chuẩn thay thế cho Unity hiện tại.
-- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.tnorm] PLTF-006 <+ Hoàn thiện cho modelcvert và appc template để hỗ trợ việc phân giải các cấu hình YAML sang các hàm thực thi trong lõi μEDP một cách hiệu quả và ổn định.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf+unityfw] PLTF-005 <+ Thêm concept testing tiêu chuẩn bổ sung khái niệm cho Unity hiện tại.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.tnorm] PLTF-006 <+ Hoàn thiện cho modelcvert và appc template để hỗ trợ việc phân giải các cấu hình YAML sang các hàm thực thi trong lõi μEDP một cách hiệu quả và ổn định.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.test] TEST-001 <+ Bổ sung testobj-v3 để thực hiện kiểm thử các thay đổi mới cho OCE và ticket PLTF-002, PLTF-003, PLTF-006 nhằm đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+- [x] @! TID[epic=Rv1.1.8-i0/test-structure] DOCS-003 <+ Bổ sung tài liệu chuẩn hóa cấu trúc thiết kế và lưu trữ testcase, nội dung testcase, kết quả testcase, v.v. để hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
+- [x] @! TID[epic=Rv1.1.8-i0/pl-ooc] DOCS-004 <+ Tìm hiểu về PLOOC framework và so sánh với Python trong khả năng triển khai OOP trong quản lý test.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.lstaxer.tsd] PLTF-007 <+ Bổ sung model cho TSD (Test Scenario Descriptor).
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-008 <+ Bổ sung template cho testing và pipeling của TSD và TLC để hỗ trợ việc kiểm thử các tính năng của lõi μEDP.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-009 <+ Cập nhật các assertion cho PLTF.
+
+<!-- STATUS
+Thông qua quá trình review và so sánh giữa PLOOC framework và Python, đã nhận thấy rằng Python có khả năng triển khai OOP một cách linh hoạt và mạnh mẽ hơn so với PLOOC framework. 
+
+Do đó, quyết định sử dụng Python để triển khai các tính năng OOP trong quản lý test thay vì PLOOC framework để đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+-->
 
 //  !SECTION
 
@@ -724,7 +738,8 @@ Hiện tại chưa kiểm tra chi tiết đối với tính năng OCE trong PLTF
 
 //  SECTION - v1.1.9
 
-- [ ] Đề xuất cơ chế quản lý chẩn đoán DEM (Diagnostic Event Management) với ECS (Enable Condition Stage), DBS (Debouncing Stage) và pzsto (persistence store) kết hợp FCR trong quản lý lỗi.
+- [ ] @! TID[epic=Rv1.1.8-i0/core.fcr-update] DOCS-001 <+ Đề xuất cơ chế quản lý chẩn đoán DEM (Diagnostic Event Management) với ECS (Enable Condition Stage), DBS (Debouncing Stage) và pzsto (persistence store) kết hợp FCR trong quản lý lỗi.
+- [ ] @! TID[epic=Rv1.1.8-i0/core.fcr-update] DOCS-002 <+ Bổ sung tìm hiểu về OPC (Operation Preventing Condition), APC (Activation Preventing Condition) và IOC (Inhibition Preventing Condition) để hỗ trợ việc quản lý các điều kiện ngăn chặn hoạt động trong hệ thống.
 
 //  !SECTION
 
