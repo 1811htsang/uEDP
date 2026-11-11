@@ -14,6 +14,12 @@ extern uint32_t system_action_count;
 extern {{ item.type }} {{ item.name }};
 {%- endfor %}
 
+//ANCHOR - Chạy scheduler đến khi không còn tác vụ sẵn sàng, để assert đọc trạng thái đã xử lý
+static void drain_scheduler(void) {
+  while (uedp_task_scheduler() != STAT_NRDY) {
+  }
+}
+
 void setUp(void) {}
 void tearDown(void) {}
 
@@ -22,9 +28,11 @@ void test_{{ scenario.name }}(void) {
 {%- for step in scenario.steps %}
 {%- if step.post_isr %}
   uedp_task_norm_post_isr({{ step.post_isr.to }}, {{ step.post_isr.sig }});
+  drain_scheduler();
 {%- elif step.advance_tick %}
   for (int i = 0; i < {{ step.advance_tick }}; i++) {
     uedp_timer_tick();
+    drain_scheduler();
   }
 {%- endif %}
 {%- endfor %}
@@ -32,13 +40,12 @@ void test_{{ scenario.name }}(void) {
 {%- if check.tsm_state %}
   TEST_ASSERT_EQUAL_UINT16({{ check.tsm_state.state }}, {{ tsm_objects[check.tsm_state.task] }}.cur_state);
 {%- elif check.gda_value %}
-{%- set gtype = gda_names | selectattr('name', 'equalto', check.gda_value.name) | map(attribute='type') | first %}
-{%- if 'char' in gtype %}
-  TEST_ASSERT_EQUAL_STRING("{{ check.gda_value.equals }}", {{ check.gda_value.name }});
-{%- elif gtype == 'bool' %}
-  TEST_ASSERT_EQUAL({{ check.gda_value.equals }}, {{ check.gda_value.name }});
+{%- if check.gda_value.assert_macro == 'TEST_ASSERT_EQUAL_STRING' %}
+  {{ check.gda_value.assert_macro }}("{{ check.gda_value.equals }}", {{ check.gda_value.name }});
+{%- elif check.gda_value.assert_macro in ('TEST_ASSERT_TRUE', 'TEST_ASSERT_FALSE') %}
+  {{ check.gda_value.assert_macro }}({{ check.gda_value.name }});
 {%- else %}
-  TEST_ASSERT_EQUAL({{ check.gda_value.equals }}, {{ check.gda_value.name }});
+  {{ check.gda_value.assert_macro }}({{ check.gda_value.equals }}, {{ check.gda_value.name }});
 {%- endif %}
 {%- endif %}
 {%- endfor %}
