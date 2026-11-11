@@ -102,6 +102,10 @@ void uedp_tsm_dispatch(uedp_tsm_t* tsm_table, uedp_msg_t* msg) {
 		}
 		const tsm_state_desc_t* desc = &tsm_table->state_table[state_index];
 
+		if (desc->on_active) {
+			desc->on_active(msg);
+		}
+
 		for (int index = 0; index < desc->trans_count; index++) {
 			if (desc->transitions[index].sig == msg->sig) {
 				if (desc->transitions[index].tsm_func) {

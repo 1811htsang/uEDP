@@ -6,6 +6,7 @@ import pprint
 from .lukupmodel import (
 	lukupmodel_glbda_logic,
 	lukupmodel_outexec_logic,
+	lukupmodel_lpipe_logic,
 	lukupmodel_psetbl_logic,
 	lukupmodel_sig_resrc,
 	lukupmodel_tnorm_logic,
@@ -24,6 +25,7 @@ class Kre8Project:
 	gda: list[Any]
 	outexec: list[Any]
 	psetbl: list[Any]
+	lpipe: Any = None
 
 	def to_generator_context(self) -> dict[str, Any]:
 		return {
@@ -35,6 +37,7 @@ class Kre8Project:
 			'glbda_defs': [_model_to_dict(item) for item in self.gda],
 			'outexec': [_model_to_dict(item) for item in self.outexec],
 			'psetbl_logic': [_model_to_dict(item) for item in self.psetbl],
+			'lpipe': _model_to_dict(self.lpipe) if self.lpipe is not None else None,
 		}
 
 def _model_to_dict(model: Any) -> dict[str, Any]:
@@ -54,6 +57,7 @@ def build_project_ir(yaml_text: str) -> Kre8Project:
 		gda=lukupmodel_glbda_logic(yaml_text),
 		outexec=lukupmodel_outexec_logic(yaml_text),
 		psetbl=lukupmodel_psetbl_logic(yaml_text),
+		lpipe=lukupmodel_lpipe_logic(yaml_text),
 	)
 
 def build_generator_context(yaml_text: str) -> dict[str, Any]:

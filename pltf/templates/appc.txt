@@ -57,6 +57,11 @@ task_poll_t app_poll_table[] = {
 void {{ state.entry_name }}(uedp_msg_t* msg);
 void {{ state.active_name }}(uedp_msg_t* msg);
 void {{ state.exit_name }}(uedp_msg_t* msg);
+{%- for transition in state.transitions %}
+{%- if transition.action %}
+void {{ transition.action }}(uedp_msg_t* msg);
+{%- endif %}
+{%- endfor %}
 
 {% endfor -%}
 //ANCHOR - Khai báo tsm_object
@@ -64,15 +69,26 @@ uedp_tsm_t {{ task.tsm_object }};
 {% for state in task.tsm_states %}
 tsm_trans_t {{ state.id }}_trans[] = {
   {%- for transition in state.transitions %}
-  { {{ transition.sig }}, {{ transition.goto_value }}, {{ state.active_name if state.active_actions else 'NULL' }} },
+  { {{ transition.sig }}, {{ transition.goto_value }}, {{ transition.action or 'NULL' }} },
   {%- endfor %}
 };
 {% endfor %}
 tsm_state_desc_t {{ task.tsm_table }}[] = {
   {%- for state in task.tsm_states %}
-  { {{ state.state_id }}, {{ state.entry_name }}, {{ state.exit_name }}, {{ state.id }}_trans, (ui8)(sizeof({{ state.id }}_trans) / sizeof({{ state.id }}_trans[0])) },
+  { {{ state.state_id }}, {{ state.entry_name }}, {{ state.exit_name }}, {{ state.id }}_trans, (ui8)(sizeof({{ state.id }}_trans) / sizeof({{ state.id }}_trans[0])), {{ state.active_name if state.active_actions else 'NULL' }} },
   {%- endfor %}
 };
+{% for state in task.tsm_states %}
+{% for transition in state.transitions %}
+{% if transition.action %}
+void {{ transition.action }}(uedp_msg_t* msg) {
+  system_action_count++;
+{{ transition.action_body | indent(2, true) }}
+}
+
+{% endif %}
+{% endfor %}
+{% endfor %}
 {% endif -%}
 {% for state in task.fsm_states %}
 void {{ state.handler_name }}(uedp_msg_t* msg);
@@ -82,6 +98,7 @@ void {{ state.handler_name }}(uedp_msg_t* msg);
 uedp_fsm_t {{ task.fsm_object }};
 {% endif %}
 void {{ task.handler_name }}(uedp_msg_t* msg) {
+  system_action_count++;
   {%- if task.tsm_states %}
   uedp_tsm_dispatch(&{{ task.tsm_object }}, msg);
   {%- elif task.fsm_states %}
@@ -95,7 +112,6 @@ void {{ task.handler_name }}(uedp_msg_t* msg) {
   }
   {%- endfor %}
   {%- endif %}
-  system_action_count++;
 }
 {% for state in task.tsm_states %}
 void {{ state.entry_name }}(uedp_msg_t* msg) {

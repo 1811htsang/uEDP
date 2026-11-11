@@ -226,9 +226,17 @@ def _parse_action_list(data):
 def _parse_trans_obj(data):
   if not isinstance(data, dict):
     return None
+
+  action = data.get('action')
+  if isinstance(action, dict) and 'actv' not in action and (
+    'kind' in action or 'type' in action
+  ):
+    action = {'actv': action}
+
   return C_trans_obj(
     sig=_normalize_alias_value(data.get('sig'), 'id_symbol') or '',
     goto=_normalize_alias_value(data.get('goto')) or '',
+    action=_parse_actv_obj(action) if action is not None else None,
   )
 
 def _parse_tsm_obj(data):
@@ -309,7 +317,7 @@ def lukupmodel_tnorm_logic(yaml_text):
       continue
 
     task_name = str(item.get('tnorm', ''))
-    model = C_tnorm_obj(task=task_name)
+    model = C_tnorm_obj(task=task_name, priority=_normalize_alias_value(item.get('priority')))
 
     if 'tsm' in item:
       tsm_raw = item.get('tsm', [])
@@ -385,6 +393,34 @@ def lukupmodel_psetbl_logic(yaml_text):
     ))
 
   return out
+
+def lukupmodel_lpipe_logic(yaml_text):
+  payload = yaml.safe_load(yaml_text) or {}
+  entry = payload.get('lpipe')
+  if not isinstance(entry, dict):
+    return None
+
+  itnlog = entry.get('itnlog') or {}
+  logdp = entry.get('logdp') or {}
+  rprintf_items = entry.get('rprintf') or []
+
+  return C_lpipe_obj(
+    itnlog=C_lpipe_itnlog_obj(
+      level=str(itnlog.get('level', 'ITNLOG_LEVEL_DEBUG')),
+      tag=str(itnlog.get('tag', 'NULL')),
+    ),
+    logdp=[str(item) for item in logdp.get('register', []) or []],
+    rprintf=[
+      C_lpipe_rprintf_obj(
+        name=str(item.get('contract', '')),
+        init=_normalize_alias_value(item.get('init')),
+        putc=_normalize_alias_value(item.get('putc')),
+        write=_normalize_alias_value(item.get('write')),
+        is_ready=_normalize_alias_value(item.get('is_ready')),
+      )
+      for item in rprintf_items if isinstance(item, dict)
+    ],
+  )
 
 # DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
 

@@ -5,7 +5,7 @@
  * @date 2026-08-01
  * @copyright MIT License
  */
-#ifdef UEDP_FCR_NEG_TESTCASE
+#ifdef UEDP_NEG_TESTCASE
   #include <stdio.h>
 #endif
 #include <stddef.h>
@@ -121,7 +121,7 @@ void uedp_fcr_raise(uedp_fcr_code_t code, const char* file, ui32 line, const cha
       break;
   }
 
-  #ifdef UEDP_FCR_NEG_TESTCASE
+  #ifdef UEDP_NEG_TESTCASE
     printf("[UEDP_FCR] RAISE: code=0x%04X, desc='%s', severity=%d, action=%d\n",
            entry->code, entry->desc, entry->severity, entry->action);
   #endif
