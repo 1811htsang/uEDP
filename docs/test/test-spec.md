@@ -107,3 +107,32 @@ Khi một testcase được thực hiện, kết quả của nó có thể đư�
 Kết quả sau cùng của một testcase được đánh giá dựa trên kết quả của các bước kiểm thử có mức ưu tiên cao nhất. Nếu có bất kỳ bước kiểm thử nào có kết quả `fel` hoặc `err`, thì kết quả sau cùng của testcase sẽ là `fel` hoặc `err`. Nếu tất cả các bước kiểm thử đều có kết quả `paz`, thì kết quả sau cùng của testcase sẽ là `paz`. Nếu tất cả các bước kiểm thử đều có kết quả `non`, thì kết quả sau cùng của testcase sẽ là `non`. Nếu tất cả các bước kiểm thử đều có kết quả `inkon`, thì kết quả sau cùng của testcase sẽ là `inkon`.
 
 Hay một cách đơn giản hơn: `non < paz < inkon < fel < err`.
+
+## Tích hợp Unity và phân mức kiểm thử (ut / ct / st / it)
+
+Unity (`sources/common/unity`, v2.7.2) là assertion và test runner cho artifact kiểm thử của μEDP. Unity chỉ được link vào executable kiểm thử; không được thêm vào production target, `app.c` hay các firmware target.
+
+`lunity.h` là lớp bao (wrapper) đặt tên theo quy ước của dự án, không thay đổi hành vi của Unity:
+
+| Macro trong `lunity.h` | Hàm Unity tương ứng | Vai trò |
+| --- | --- | --- |
+| `TEST_SETUP()` / `TEST_TEARDOWN()` | `setUp()` / `tearDown()` | Reset trạng thái trước/sau từng testcase |
+| `TESTSUITE_SETUP()` / `TESTSUITE_TEARDOWN(n)` | `suiteSetUp()` / `suiteTearDown(n)` | Chuẩn bị/dọn dẹp toàn suite |
+| `TEST_RESET()` / `TEST_VERIFY()` | `resetTest()` / `verifyTest()` | Chạy teardown và kiểm tra cuối testcase |
+
+Lưu ý: các hàm trên là **hook do người dùng cung cấp**. `sources/common/unity/unity.c` chỉ khai báo chúng trong `unity.h`, không định nghĩa. Mỗi file test phải tự định nghĩa những hàm cần dùng; nếu thiếu, link sẽ lỗi.
+
+Quy ước assertion: dùng `TEST_ASSERT_*` / `TEST_ASSERT_EQUAL_*` của Unity. Không tạo assertion framework riêng. Runner gọi `UNITY_BEGIN()`, `RUN_TEST(...)`, `UNITY_END()`, và giá trị trả về của `UNITY_END()` là kết quả để CTest đánh giá.
+
+### Định nghĩa các mức kiểm thử
+
+| Mức | Ý nghĩa | Trạng thái |
+| --- | --- | --- |
+| `ut` (unit) | Gọi trực tiếp một hàm do codegen sinh (ví dụ `{state}_onst`, `{state}_entry`, `{state}_exit`) với một `uedp_msg_t` dựng tay; assert side-effect. Không qua scheduler, không qua hàng đợi, không cần tick thread. | **Đề xuất**, chưa có runner riêng |
+| `ct` (component) | Chạy TSM/FSM đầy đủ của một task qua scheduler, nhưng chặn (stub) các message gửi sang task khác. | **Đề xuất**, cần cơ chế stub cross-task |
+| `st` (system) | Nhiều task, qua scheduler thật và PAL Linux thật. | **Đã có** (`tsd_runner` baseline) |
+| `it` (integration) | Tích hợp với phần cứng hoặc subsystem thật (ví dụ STM32 thật). | **Ngoài phạm vi** `pycdscriptor`; cần quy trình riêng với board thật |
+
+Hiện tại mọi kịch bản đều chạy như `st`, bất kể nhãn `level` khai báo. Nhãn chỉ đổi cách nhóm báo cáo, chưa đổi cách chạy. Việc để `level` điều khiển cách chạy cần quyết định trước vị trí của trường `level` (trên `tsd` hay `tlc`); xem [docs/review/tlc-impl-post-v123.md](../review/tlc-impl-post-v123.md).
+
+Tích hợp CTest dự kiến: map mỗi mức vào thuộc tính `LABELS` của `add_test()` để chạy `ctest -L <level>`. Đây là thiết kế, chưa được triển khai trong `CMakeLists.txt`.
