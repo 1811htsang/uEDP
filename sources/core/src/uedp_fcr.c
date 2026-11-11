@@ -28,6 +28,7 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
   { UEDP_FCR_MSG_ISR_FIFO_FULL,    "MSG ISR fifo full",               UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
   { UEDP_FCR_MSG_POOL_MISCONFIG,   "MSG pool misconfigured",          UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
   { UEDP_FCR_MSG_INVALID_PARAM,    "MSG invalid param",               UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_MSG_POOL_REF_RCM,    "MSG no suitable pool, use GDP ref", UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
 
   // [TASK]
   { UEDP_FCR_TASK_QUEUE_FULL,      "TASK message queue full",         UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_SYS_PANIC },
