@@ -52,11 +52,11 @@ void test_{{ scenario.name }}(void) {
 }
 {% endfor %}
 int main(void) {
-  UNITY_BEGIN();
+  LIBUNITY_BEGIN();
   uedp_core_init();
   logic_init();
 {%- for scenario in scenarios %}
   RUN_TEST(test_{{ scenario.name }});
 {%- endfor %}
-  return UNITY_END();
+  return LIBUNITY_END();
 }
