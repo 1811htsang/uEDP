@@ -1,5 +1,5 @@
 /**
- * @file lunity.h
+ * @file libunity.h
  * @author Shang Huang
  * @brief Customized Unity Framework for μEDP Testing with μEDP coding style and conventions
  * @version 0.1
