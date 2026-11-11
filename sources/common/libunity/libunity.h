@@ -25,4 +25,8 @@
   #define TEST_RESET() resetTest()
   #define TEST_VERIFY() verifyTest()
 
+  //ANCHOR - Test Call
+  #define LIBUNITY_BEGIN() UNITY_BEGIN()
+  #define LIBUNITY_END() UNITY_END()
+
 #endif
