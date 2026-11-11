@@ -738,7 +738,8 @@ Do đó, quyết định sử dụng Python để triển khai các tính năng 
 
 //  SECTION - v1.1.9
 
-- [ ] Đề xuất cơ chế quản lý chẩn đoán DEM (Diagnostic Event Management) với ECS (Enable Condition Stage), DBS (Debouncing Stage) và pzsto (persistence store) kết hợp FCR trong quản lý lỗi.
+- [ ] @! TID[epic=Rv1.1.8-i0/core.fcr-update] DOCS-001 <+ Đề xuất cơ chế quản lý chẩn đoán DEM (Diagnostic Event Management) với ECS (Enable Condition Stage), DBS (Debouncing Stage) và pzsto (persistence store) kết hợp FCR trong quản lý lỗi.
+- [ ] @! TID[epic=Rv1.1.8-i0/core.fcr-update] DOCS-002 <+ Bổ sung tìm hiểu về OPC (Operation Preventing Condition), APC (Activation Preventing Condition) và IOC (Inhibition Preventing Condition) để hỗ trợ việc quản lý các điều kiện ngăn chặn hoạt động trong hệ thống.
 
 //  !SECTION
 
