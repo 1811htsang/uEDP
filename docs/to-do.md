@@ -742,6 +742,11 @@ Do đó, quyết định sử dụng Python để triển khai các tính năng 
 - [x] @! TID[epic=Rv1.1.8-i0/core.fcr-update] DOCS-002 <+ Bổ sung tìm hiểu về OPC (Operation Preventing Condition), APC (Activation Preventing Condition) và IOC (Inhibition Preventing Condition) để hỗ trợ việc quản lý các điều kiện ngăn chặn hoạt động trong hệ thống.
 - [x] @! TID[epic=Rv1.1.7-bf1/core.fcr-update] CORE-001 <+ Cập nhật bổ sung mã lỗi `UEDP_FCR_MSG_POOL_REF_RCM` chưa khai báo và assign action trong `uedp_fcr.c` để hỗ trợ việc quản lý các lỗi liên quan đến việc pool recommendation.
 - [x] @! TID[epic=Rv1.1.7-bf1/core.fcr-update] CORE-002 <+ Cập nhật loại bỏ mã lỗi `UEDP_FCR_MSG_NO_REG_PSE` do không còn sử dụng.
+- [x] @! TID[epic=Rv1.1.7-bf1/repo] REPO-001 <+ Thực hiện pickup các update từ nhánh `fix` sang `sub-feat/Rv1.1.7-bf1`.
+
+<!-- STATUS
+Do các fix này không gây ảnh hưởng đến kết quả kiểm thử nên không cần thực hiện regezBST.
+-->
 
 //  !SECTION
 
