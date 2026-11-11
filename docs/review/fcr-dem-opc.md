@@ -111,3 +111,11 @@ Lưu ý: OCE được thiết kế theo nguyên tắc chỉ chạy khi hệ th�
 4. Sau khi các điểm trên được chốt, mới cập nhật `docs/eng/arch-design-en.md`, `docs/vni/arch-design.md` và user manual.
 
 Hai ticket DOCS-001 và DOCS-002 trong `docs/to-do.md` vẫn để trạng thái `[ ]`, cho đến khi người phụ trách xác nhận nội dung.
+
+## Trạng thái cập nhật cho các findings
+
+- Vấn đề 1,2 đã được giải quyết trong nhánh `sub-feat/Rv1.1.7-bf1` (commit `core.fcr-update`), nhưng chưa merge vào nhánh chính để cho ra release.
+- Vấn đề 3 đã được giải quyết từ trước khi release phiên bản 1.1.7, do đó không cần bổ sung tài liệu.
+- Vấn đề 4 sẽ được open ticket riêng để bổ sung log FCR code hay các concatenation đặc biệt.
+- Vấn đề 5 đã deprecated do không còn sử dụng, nên không cần cập nhật tài liệu.
+- Vấn đề 6,7 là các vấn đề về comment và sắp xếp, không ảnh hưởng hành vi, nên không cần cập nhật tài liệu.
