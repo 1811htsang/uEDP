@@ -349,3 +349,31 @@ In current implementation, pull request - PR is used for any changes required to
 | Small fix (e.g., typo, doc update) | Direct merge | For minor changes that don't require review | Fixing a typo in a comment or updating a README file, merge documents into sub feature branches |
 | Medium fix (e.g., bug fix, small feature) | Pull request | For changes that require review and testing | Fixing a bug in the code or adding a small feature, merge into sub feature branches, usually for more significant changes from fix/reft into sub feature branches |
 | Large fix (e.g., major feature, refactor) | Pull request | For changes that require review, testing, and approval | Adding a new feature or refactoring a large section of code, merge into sub feature branches, usually for more significant changes sub feature branches into main feature branches |
+
+## 12. Changes selection
+
+When we have multiple branches for development among release, having only one branch for documentation can cause issues due to the fact that only current next release source code can be merged into the documentation branch. Therefore, we will need a rule to select which changes from docs branch to support documentation among multiple development branches. The following rules are proposed:
+
+> using `git restore --source <branch> <file>` to restore the file from the documentation branch to the current working branch, then commit and push the changes to the current working branch. This will ensure that the documentation is up to date with the latest changes and also allow for the documentation to be updated without having to merge the entire documentation branch into the current working branch.
+
+Along with the rules, commit message should be in the following format:
+
+```examples
+struct(docs > <file_name>): <short description>
+```
+
+Where `<file_name>` is the name of the file being updated, and `<short description>` is a brief summary of the changes made to the file. This will help to keep track of changes made to the documentation and ensure that they are properly documented in the commit history.
+
+For example, current next release is v1.1.8, and we have two development branches `sub-feat/v1.1.8` and `sub-feat/v1.1.9`. Due to current development is prioritize for v1.1.8, the source code from `sub-feat/v1.1.8` will be allowed to be merged into the documentation branch. If we want to update the task list for v1.1.9, apply the rule above:
+
+```bash
+git restore --source doc docs/to-do.md
+```
+
+Then commit and push the changes to the `sub-feat/v1.1.9` branch with the following commit message:
+
+```examples
+struct(docs > to-do.md): update task list for v1.1.9
+```
+
+Follow the same rule for any other files in the documentation branch. This will ensure that the documentation is up to date with the latest changes and also allow for the documentation to be updated without having to merge the entire documentation branch into the current working branch.
