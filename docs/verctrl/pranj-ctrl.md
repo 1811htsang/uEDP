@@ -350,6 +350,8 @@ In current implementation, pull request - PR is used for any changes required to
 | Medium fix (e.g., bug fix, small feature) | Pull request | For changes that require review and testing | Fixing a bug in the code or adding a small feature, merge into sub feature branches, usually for more significant changes from fix/reft into sub feature branches |
 | Large fix (e.g., major feature, refactor) | Pull request | For changes that require review, testing, and approval | Adding a new feature or refactoring a large section of code, merge into sub feature branches, usually for more significant changes sub feature branches into main feature branches |
 
+Specifically for PR from any `sub-feat/` branch into `feat` branch, it is required to have at least 3 major changes to consider a PR before merging into `integration` branch with documentation for release.
+
 ## 12. Changes selection
 
 ### 12.1. Documentation update between development branches
