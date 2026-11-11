@@ -721,7 +721,7 @@ Sau khi kiểm tra thì thấy rằng task này đã được triển khai ở r
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.tnorm] PLTF-006 <+ Hoàn thiện cho modelcvert và appc template để hỗ trợ việc phân giải các cấu hình YAML sang các hàm thực thi trong lõi μEDP một cách hiệu quả và ổn định.
 - [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.test] TEST-001 <+ Bổ sung testobj-v3 để thực hiện kiểm thử các thay đổi mới cho OCE và ticket PLTF-002, PLTF-003, PLTF-006 nhằm đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 - [x] @! TID[epic=Rv1.1.8-i0/test-structure] DOCS-003 <+ Bổ sung tài liệu chuẩn hóa cấu trúc thiết kế và lưu trữ testcase, nội dung testcase, kết quả testcase, v.v. để hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
-- [x] @! TID[epic=Rv1.1.8-i0/pl-ooc] DOCS-003 <+ Tìm hiểu về PLOOC framework và so sánh với Python trong khả năng triển khai OOP trong quản lý test.
+- [x] @! TID[epic=Rv1.1.8-i0/pl-ooc] DOCS-004 <+ Tìm hiểu về PLOOC framework và so sánh với Python trong khả năng triển khai OOP trong quản lý test.
 
 <!-- STATUS
 Thông qua quá trình review và so sánh giữa PLOOC framework và Python, đã nhận thấy rằng Python có khả năng triển khai OOP một cách linh hoạt và mạnh mẽ hơn so với PLOOC framework. 
