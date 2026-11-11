@@ -352,6 +352,8 @@ In current implementation, pull request - PR is used for any changes required to
 
 ## 12. Changes selection
 
+### 12.1. Documentation update between development branches
+
 When we have multiple branches for development among release, having only one branch for documentation can cause issues due to the fact that only current next release source code can be merged into the documentation branch. Therefore, we will need a rule to select which changes from docs branch to support documentation among multiple development branches. The following rules are proposed:
 
 > using `git restore --source <branch> <file>` to restore the file from the documentation branch to the current working branch, then commit and push the changes to the current working branch. This will ensure that the documentation is up to date with the latest changes and also allow for the documentation to be updated without having to merge the entire documentation branch into the current working branch.
@@ -377,3 +379,17 @@ struct(docs > to-do.md): update task list for v1.1.9
 ```
 
 Follow the same rule for any other files in the documentation branch. This will ensure that the documentation is up to date with the latest changes and also allow for the documentation to be updated without having to merge the entire documentation branch into the current working branch.
+
+### 12.2. Code update between development branches
+
+When we have a release that has been released and we are having branch `fix` to apply bug fixes for multiple release, it may create a situation where merging the `fix` branch into the `sub-feat/` branch for that release may cause redundant changes or conflicts. Therefore, we will need a rule to select which changes from `fix` branch to support code update among multiple development branches. The following rules are proposed:
+
+> using `git cherry-pick <commit-sha>` to select the specific commit from the `fix` branch to be applied to the current working branch, then commit and push the changes to the current working branch. This will ensure that only the necessary changes are applied to the current working branch and also allow for the code to be updated without having to merge the entire `fix` branch into the current working branch.
+
+Then add a commit message as follows:
+
+```bash
+git commit --allow-empty -m "sub-feat(dummy): add dummy commit to highlight new fix copied from branch fix"
+```
+
+This will create a new commit in the current working branch that highlights the new fix that has been copied from the `fix` branch. The `--allow-empty` flag allows for an empty commit to be created, which can be useful for highlighting changes that have been made without actually modifying any files.
