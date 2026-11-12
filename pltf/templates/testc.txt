@@ -1,0 +1,62 @@
+//ANCHOR - Test runner sinh từ TSD (level: {{ level }})
+#include "unity.h"
+#include "libunity.h"
+#include "uedp_core.h"
+#include "uedp_task.h"
+#include "uedp_timer.h"
+#include "uedp_tsm.h"
+#include "app_decl.h"
+
+//ANCHOR - Khai báo các hàm từ app.c được sinh bởi generator
+extern void logic_init(void);
+extern uint32_t system_action_count;
+{%- for item in gda_names %}
+extern {{ item.type }} {{ item.name }};
+{%- endfor %}
+
+//ANCHOR - Chạy scheduler đến khi không còn tác vụ sẵn sàng, để assert đọc trạng thái đã xử lý
+static void drain_scheduler(void) {
+  while (uedp_task_scheduler() != STAT_NRDY) {
+  }
+}
+
+void setUp(void) {}
+void tearDown(void) {}
+
+{% for scenario in scenarios %}
+void test_{{ scenario.name }}(void) {
+{%- for step in scenario.steps %}
+{%- if step.post_isr %}
+  uedp_task_norm_post_isr({{ step.post_isr.to }}, {{ step.post_isr.sig }});
+  drain_scheduler();
+{%- elif step.advance_tick %}
+  for (int i = 0; i < {{ step.advance_tick }}; i++) {
+    uedp_timer_tick();
+    drain_scheduler();
+  }
+{%- endif %}
+{%- endfor %}
+{%- for check in scenario.expect %}
+{%- if check.tsm_state %}
+  TEST_ASSERT_EQUAL_UINT16({{ check.tsm_state.state }}, {{ tsm_objects[check.tsm_state.task] }}.cur_state);
+{%- elif check.gda_value %}
+{%- if check.gda_value.assert_macro == 'TEST_ASSERT_EQUAL_STRING' %}
+  {{ check.gda_value.assert_macro }}("{{ check.gda_value.equals }}", {{ check.gda_value.name }});
+{%- elif check.gda_value.assert_macro in ('TEST_ASSERT_TRUE', 'TEST_ASSERT_FALSE') %}
+  {{ check.gda_value.assert_macro }}({{ check.gda_value.name }});
+{%- else %}
+  {{ check.gda_value.assert_macro }}({{ check.gda_value.equals }}, {{ check.gda_value.name }});
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+}
+{% endfor %}
+int main(void) {
+  LIBUNITY_BEGIN();
+  uedp_core_init();
+  logic_init();
+{%- for scenario in scenarios %}
+  RUN_TEST(test_{{ scenario.name }});
+{%- endfor %}
+  return LIBUNITY_END();
+}
