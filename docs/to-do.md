@@ -725,6 +725,7 @@ Sau khi kiểm tra thì thấy rằng task này đã được triển khai ở r
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.lstaxer.tsd] PLTF-007 <+ Bổ sung model cho TSD (Test Scenario Descriptor).
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-008 <+ Bổ sung template cho testing và pipeling của TSD và TLC để hỗ trợ việc kiểm thử các tính năng của lõi μEDP.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-009 <+ Cập nhật các assertion cho PLTF.
+- [x] @! TID[epic=v1.1.8/gitsp] REPO-003 <+ Bổ sung gitsp để hỗ trợ các thao tác quản lý với git và repo nhằm tối ưu hóa việc quản lý mã nguồn và các thay đổi trong dự án μEDP.
 
 <!-- STATUS
 Thông qua quá trình review và so sánh giữa PLOOC framework và Python, đã nhận thấy rằng Python có khả năng triển khai OOP một cách linh hoạt và mạnh mẽ hơn so với PLOOC framework. 
