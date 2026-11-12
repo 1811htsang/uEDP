@@ -275,9 +275,9 @@ def next_ticket_number(todo_path, prefix):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Git Branch Tool")
-        self.geometry("1000x720")
-        self.minsize(840, 580)
+        self.title("gitps - Git Support Tool")
+        self.geometry("1600x900")
+        self.minsize(1280, 720)
 
         script_dir = os.path.dirname(os.path.abspath(__file__))
         self.repo_var = tk.StringVar(value=detect_repo(script_dir))
