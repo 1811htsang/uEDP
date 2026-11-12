@@ -1,4 +1,5 @@
 import os
+import json
 import re
 import subprocess
 import tkinter as tk
@@ -57,6 +58,74 @@ def list_branches(repo):
 
 def current_branch(repo):
     return git_ok(repo, "branch", "--show-current").decode("utf-8", errors="replace").strip()
+
+
+def list_submodules(repo):
+    raw = git_ok(repo, "submodule", "status", "--recursive").decode("utf-8", errors="replace")
+    entries = []
+    for line in raw.splitlines():
+        parts = line.strip().split(maxsplit=2)
+        if len(parts) < 2:
+            continue
+        sha = parts[0].lstrip("-+U")
+        path = parts[1]
+        subrepo = os.path.join(repo, *path.split("/"))
+        try:
+            branch = current_branch(subrepo)
+            dirty = working_tree_dirty(subrepo)
+        except GitError:
+            branch = "(chưa khởi tạo)"
+            dirty = False
+        entries.append(
+            {
+                "path": path,
+                "sha": sha,
+                "branch": branch,
+                "dirty": dirty,
+                "repo": subrepo,
+            }
+        )
+    return entries
+
+
+def load_submodule_rules(repo):
+    path = os.path.join(repo, ".gitsp-submodules.json")
+    try:
+        with open(path, encoding="utf-8") as handle:
+            data = json.load(handle)
+    except FileNotFoundError:
+        return {}
+    except (OSError, json.JSONDecodeError) as exc:
+        raise GitError(f"Không đọc được {path}: {exc}") from exc
+    if not isinstance(data, dict) or not all(isinstance(value, dict) for value in data.values()):
+        raise GitError(f"Định dạng {path} không hợp lệ.")
+    return data
+
+
+def save_submodule_rules(repo, rules):
+    path = os.path.join(repo, ".gitsp-submodules.json")
+    try:
+        with open(path, "w", encoding="utf-8") as handle:
+            json.dump(rules, handle, ensure_ascii=False, indent=2)
+            handle.write("\n")
+    except OSError as exc:
+        raise GitError(f"Không ghi được {path}: {exc}") from exc
+
+
+def branch_exists(repo, branch):
+    return git_run(repo, "show-ref", "--verify", "--quiet", f"refs/heads/{branch}")[0] == 0 or git_run(
+        repo, "show-ref", "--verify", "--quiet", f"refs/remotes/origin/{branch}"
+    )[0] == 0
+
+
+def checkout_branch(repo, branch):
+    if git_run(repo, "show-ref", "--verify", "--quiet", f"refs/heads/{branch}")[0] == 0:
+        git_ok(repo, "checkout", branch)
+        return
+    if git_run(repo, "show-ref", "--verify", "--quiet", f"refs/remotes/origin/{branch}")[0] == 0:
+        git_ok(repo, "checkout", "-b", branch, "--track", f"origin/{branch}")
+        return
+    raise GitError(f"Repo '{repo}' không có branch '{branch}'.")
 
 
 def list_files(repo, branch):
@@ -294,6 +363,11 @@ class App(tk.Tk):
         self.rw_branch_var = tk.StringVar()
         self.rw_pending = {}
         self.rw_commits = []
+        self.submodule_main_branch_var = tk.StringVar()
+        self.submodule_branch_var = tk.StringVar()
+        self.submodule_path_var = tk.StringVar()
+        self.submodule_rules = {}
+        self.submodule_entries = []
         self.ctype_var = tk.StringVar(value="feat")
         self.commit_scope_var = tk.StringVar()
         self.commit_name_var = tk.StringVar()
@@ -368,6 +442,7 @@ class App(tk.Tk):
         self._build_commit_tab(notebook)
         self._build_doc_tab(notebook)
         self._build_rewrite_tab(notebook)
+        self._build_submodule_tab(notebook)
 
     def _build_files_tab(self, notebook):
         tab = ttk.Frame(notebook, padding=8)
@@ -725,6 +800,137 @@ class App(tk.Tk):
             command=lambda: self.guarded(self.rewrite_local_messages),
         ).pack(side="right", padx=6)
 
+    def _build_submodule_tab(self, notebook):
+        tab = ttk.Frame(notebook, padding=8)
+        notebook.add(tab, text="Submodule & ràng buộc")
+
+        top = ttk.Frame(tab)
+        top.pack(fill="x")
+        ttk.Label(top, text="Branch repo chính:").pack(side="left")
+        self.submodule_main_combo = ttk.Combobox(
+            top, textvariable=self.submodule_main_branch_var, state="readonly", width=34
+        )
+        self.submodule_main_combo.pack(side="left", padx=4)
+        self.submodule_main_combo.bind(
+            "<<ComboboxSelected>>", lambda _event: self.guarded(self.load_submodule_state)
+        )
+        ttk.Button(top, text="Kiểm tra submodule", command=lambda: self.guarded(self.load_submodule_state)).pack(
+            side="left", padx=(8, 0)
+        )
+        ttk.Button(top, text="Lưu ràng buộc", command=lambda: self.guarded(self.save_current_submodule_rule)).pack(
+            side="left", padx=4
+        )
+        ttk.Button(
+            top, text="Chuyển branch theo ràng buộc", command=lambda: self.guarded(self.switch_with_submodules)
+        ).pack(side="right")
+
+        frame = ttk.Frame(tab)
+        frame.pack(fill="both", expand=True, pady=(8, 0))
+        self.submodule_tree = ttk.Treeview(
+            frame, columns=("path", "current", "required", "state"), show="headings", selectmode="browse"
+        )
+        for column, title, width in (
+            ("path", "Submodule", 360),
+            ("current", "Branch hiện tại", 180),
+            ("required", "Branch ràng buộc", 180),
+            ("state", "Trạng thái", 240),
+        ):
+            self.submodule_tree.heading(column, text=title)
+            self.submodule_tree.column(column, width=width, stretch=column == "path")
+        scroll = ttk.Scrollbar(frame, orient="vertical", command=self.submodule_tree.yview)
+        self.submodule_tree.configure(yscrollcommand=scroll.set)
+        self.submodule_tree.pack(side="left", fill="both", expand=True)
+        scroll.pack(side="right", fill="y")
+        self.submodule_tree.bind("<<TreeviewSelect>>", self.select_submodule)
+
+        form = ttk.Frame(tab)
+        form.pack(fill="x", pady=(8, 0))
+        ttk.Label(form, text="Submodule đã chọn:").pack(side="left")
+        ttk.Label(form, textvariable=self.submodule_path_var).pack(side="left", padx=4)
+        ttk.Label(form, text="Branch tương ứng:").pack(side="left", padx=(16, 0))
+        ttk.Entry(form, textvariable=self.submodule_branch_var, width=30).pack(side="left", padx=4)
+
+        ttk.Label(
+            tab,
+            text="Ràng buộc được lưu trong .gitsp-submodules.json và nên được commit cùng repo chính.",
+            foreground="gray",
+        ).pack(anchor="w", pady=(8, 0))
+
+    def load_submodule_state(self):
+        repo = self.repo()
+        branches = list_local_branches(repo)
+        self.submodule_main_combo.configure(values=branches)
+        main_branch = self.submodule_main_combo.get()
+        if main_branch not in branches:
+            main_branch = self.current_name if self.current_name in branches else (branches[0] if branches else "")
+            self.submodule_main_combo.set(main_branch)
+        self.submodule_rules = load_submodule_rules(repo)
+        self.submodule_entries = list_submodules(repo)
+        self.submodule_tree.delete(*self.submodule_tree.get_children())
+        rules = self.submodule_rules.get(main_branch, {})
+        for entry in self.submodule_entries:
+            required = rules.get(entry["path"], "")
+            state = "Thiếu ràng buộc" if not required else ("Đúng branch" if required == entry["branch"] else "Lệch branch")
+            if entry["dirty"]:
+                state += "; working tree bẩn"
+            self.submodule_tree.insert(
+                "", "end", iid=entry["path"], values=(entry["path"], entry["branch"] or "(detached)", required, state)
+            )
+        self.submodule_path_var.set("")
+        self.submodule_branch_var.set("")
+        self.log(f"Đã kiểm tra {len(self.submodule_entries)} submodule trên branch {main_branch or '(chưa chọn)'}.")
+
+    def select_submodule(self, _event=None):
+        selection = self.submodule_tree.selection()
+        if not selection:
+            return
+        path = selection[0]
+        self.submodule_path_var.set(path)
+        main_branch = self.submodule_main_combo.get()
+        self.submodule_branch_var.set(self.submodule_rules.get(main_branch, {}).get(path, ""))
+
+    def save_current_submodule_rule(self):
+        main_branch = self.submodule_main_combo.get()
+        path = self.submodule_path_var.get()
+        branch = self.submodule_branch_var.get().strip()
+        if not main_branch or not path:
+            raise GitError("Chọn branch chính và submodule trước.")
+        if not branch:
+            raise GitError("Branch ràng buộc không được rỗng.")
+        self.submodule_rules.setdefault(main_branch, {})[path] = branch
+        save_submodule_rules(self.repo(), self.submodule_rules)
+        self.load_submodule_state()
+        self.log(f"Đã lưu ràng buộc {main_branch} -> {path}: {branch}.")
+
+    def switch_with_submodules(self):
+        repo = self.repo()
+        target = self.submodule_main_combo.get()
+        if not target:
+            raise GitError("Chưa chọn branch repo chính.")
+        entries = list_submodules(repo)
+        rules = load_submodule_rules(repo).get(target, {})
+        missing = [entry["path"] for entry in entries if entry["path"] not in rules]
+        invalid = [entry["path"] for entry in entries if entry["path"] in rules and not branch_exists(entry["repo"], rules[entry["path"]])]
+        if missing:
+            raise GitError("Thiếu ràng buộc cho: " + ", ".join(missing))
+        if invalid:
+            raise GitError("Branch ràng buộc không tồn tại trong: " + ", ".join(invalid))
+        if working_tree_dirty(repo) or any(entry["dirty"] for entry in entries):
+            raise GitError("Repo chính hoặc submodule còn thay đổi đã tracked. Hãy commit hoặc stash trước.")
+        if target == self.current_name and all(entry["branch"] == rules[entry["path"]] for entry in entries):
+            raise GitError("Repo chính và các submodule đã đúng ràng buộc.")
+        if not messagebox.askyesno(
+            "Xác nhận chuyển branch",
+            f"Chuyển repo chính sang '{target}' và đồng bộ {len(entries)} submodule theo ràng buộc?",
+        ):
+            return
+        checkout_branch(repo, target)
+        for entry in entries:
+            checkout_branch(entry["repo"], rules[entry["path"]])
+        self.refresh_branches()
+        self.load_submodule_state()
+        self.log(f"Đã chuyển {target} và đồng bộ {len(entries)} submodule.")
+
     def load_rewrite_commits(self):
         repo = self.repo()
         branch = self.rw_branch_var.get()
@@ -905,6 +1111,7 @@ class App(tk.Tk):
 
         self.log(f"Đã tải {len(branches)} branch. Branch hiện tại: {self.current_name or '(detached HEAD)'}")
         self.load_files()
+        self.load_submodule_state()
 
     def load_files(self):
         source = self.source_var.get()
