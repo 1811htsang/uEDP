@@ -3,22 +3,26 @@ import re
 import subprocess
 import tkinter as tk
 from datetime import date, datetime, timedelta
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, simpledialog, ttk
 
 CREATE_NO_WINDOW = 0x08000000 if os.name == "nt" else 0
 SEP = "\x1f"
 DATE_FORMAT = "--date=format:%Y-%m-%d %H:%M"
 LOG_FORMAT = f"--pretty=format:%H{SEP}%h{SEP}%ad{SEP}%an{SEP}%s"
+PROTECTED_BRANCHES = ("main", "release", "feat", "fix", "integration")
+RAW_AUTHOR = re.compile(rb"author (.*) <(.*)> (\d+ [+-]\d{4})$")
 
 
 class GitError(Exception):
     pass
 
 
-def git_run(repo, *args):
+def git_run(repo, *args, env=None, stdin=None):
     try:
         result = subprocess.run(
             ["git", "-C", repo, *args],
+            input=stdin,
+            env=env,
             capture_output=True,
             creationflags=CREATE_NO_WINDOW,
         )
@@ -92,6 +96,117 @@ def working_tree_dirty(repo):
 
 def cherry_pick_in_progress(repo):
     return git_run(repo, "rev-parse", "-q", "--verify", "CHERRY_PICK_HEAD")[0] == 0
+
+
+def list_local_branches(repo):
+    raw = git_ok(repo, "for-each-ref", "--format=%(refname:short)", "refs/heads")
+    return sorted(line for line in raw.decode("utf-8", errors="replace").splitlines() if line)
+
+
+def original_message(repo, sha):
+    raw = git_ok(repo, "log", "-1", "--format=%B", sha)
+    return raw.decode("utf-8", errors="replace").rstrip("\n")
+
+
+def ensure_not_protected(branch):
+    if not branch:
+        raise GitError("Chưa chọn branch.")
+    if branch in PROTECTED_BRANCHES:
+        raise GitError(
+            f"Branch '{branch}' là branch được bảo vệ, không rewrite hay force update (xem pranj-ctrl.md mục 8)."
+        )
+
+
+def rewrite_messages(repo, branch, first_sha, overrides):
+    if git_run(repo, "merge-base", "--is-ancestor", first_sha, f"refs/heads/{branch}")[0] != 0:
+        raise GitError("Commit không còn nằm trên branch, hãy tải lại danh sách.")
+    old_tip = git_ok(repo, "rev-parse", f"refs/heads/{branch}").decode().strip()
+    rows = git_ok(
+        repo, "rev-list", "--reverse", "--topo-order", "--parents", "--ancestry-path", f"{first_sha}..{old_tip}"
+    ).decode().splitlines()
+    first_row = git_ok(repo, "rev-list", "--parents", "-n", "1", first_sha).decode().split()
+    chain = [first_row] + [line.split() for line in rows if line.strip()]
+
+    for index, (sha, *parents) in enumerate(chain):
+        if len(parents) > 1:
+            raise GitError("Vùng cần viết lại có merge commit, chưa hỗ trợ.")
+        if index and parents != [chain[index - 1][0]]:
+            raise GitError("Lịch sử không tuyến tính trong vùng cần viết lại.")
+
+    new_parent = chain[0][1] if len(chain[0]) > 1 else None
+    for sha, *_ in chain:
+        header, _, body = git_ok(repo, "cat-file", "commit", sha).partition(b"\n\n")
+        tree = None
+        author = None
+        for line in header.split(b"\n"):
+            if line.startswith(b"tree "):
+                tree = line[5:].decode()
+            elif line.startswith(b"author "):
+                author = RAW_AUTHOR.match(line)
+        if tree is None or author is None:
+            raise GitError(f"Không đọc được commit {sha[:8]}.")
+
+        message = overrides.get(sha)
+        message_bytes = message.rstrip().encode("utf-8") + b"\n" if message is not None else body
+        env = {
+            **os.environ,
+            "GIT_AUTHOR_NAME": author.group(1).decode("utf-8", errors="replace"),
+            "GIT_AUTHOR_EMAIL": author.group(2).decode("utf-8", errors="replace"),
+            "GIT_AUTHOR_DATE": author.group(3).decode(),
+        }
+        args = ["commit-tree", tree]
+        if new_parent:
+            args += ["-p", new_parent]
+        args += ["-F", "-"]
+        code, out, err = git_run(repo, *args, env=env, stdin=message_bytes)
+        if code:
+            raise GitError((err or out).decode("utf-8", errors="replace").strip())
+        new_parent = out.decode().strip()
+
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    backup_ref = f"refs/backup/{branch}/{stamp}"
+    git_ok(repo, "update-ref", backup_ref, old_tip)
+    git_ok(repo, "update-ref", "-m", "gitsp: rewrite commit messages", f"refs/heads/{branch}", new_parent, old_tip)
+    return len(chain), backup_ref
+
+
+def is_ancestor(repo, ancestor, descendant):
+    return git_run(repo, "merge-base", "--is-ancestor", ancestor, descendant)[0] == 0
+
+
+def remote_is_known(repo, branch, remote_sha):
+    if is_ancestor(repo, remote_sha, f"refs/heads/{branch}"):
+        return True
+    backups = git_ok(repo, "for-each-ref", "--format=%(refname)", f"refs/backup/{branch}/").decode().split()
+    return any(is_ancestor(repo, remote_sha, ref) for ref in backups)
+
+
+def force_update_remote(repo, branch):
+    git_ok(repo, "fetch", "origin")
+    remote_ref = f"refs/remotes/origin/{branch}"
+    code, out, _ = git_run(repo, "rev-parse", "--verify", "-q", remote_ref)
+    if code:
+        raise GitError(f"origin chưa có branch '{branch}', không cần force update.")
+    remote_sha = out.decode().strip()
+    local_sha = git_ok(repo, "rev-parse", f"refs/heads/{branch}").decode().strip()
+    if local_sha == remote_sha:
+        raise GitError("Local và origin đã giống nhau, không có gì để force update.")
+    if not remote_is_known(repo, branch, remote_sha):
+        raise GitError(
+            f"origin/{branch} có commit không nằm trong lịch sử local hoặc backup, force update sẽ làm mất chúng. "
+            "Hãy xử lý theo pranj-ctrl.md mục 10 trước."
+        )
+    code, out, err = git_run(
+        repo,
+        "push",
+        f"--force-with-lease=refs/heads/{branch}:{remote_sha}",
+        "origin",
+        f"refs/heads/{branch}:refs/heads/{branch}",
+    )
+    text = (out + err).decode("utf-8", errors="replace").strip()
+    if code:
+        raise GitError(text or "git push thất bại.")
+    return text
 
 
 COMMIT_TYPES = (
@@ -176,6 +291,9 @@ class App(tk.Tk):
         self.current_name = ""
         self.all_files = []
         self.visible_files = []
+        self.rw_branch_var = tk.StringVar()
+        self.rw_pending = {}
+        self.rw_commits = []
         self.ctype_var = tk.StringVar(value="feat")
         self.commit_scope_var = tk.StringVar()
         self.commit_name_var = tk.StringVar()
@@ -249,6 +367,7 @@ class App(tk.Tk):
         self._build_cherry_tab(notebook)
         self._build_commit_tab(notebook)
         self._build_doc_tab(notebook)
+        self._build_rewrite_tab(notebook)
 
     def _build_files_tab(self, notebook):
         tab = ttk.Frame(notebook, padding=8)
@@ -541,6 +660,170 @@ class App(tk.Tk):
         self.clipboard_append(text)
         self.log(f"Đã copy: {text.splitlines()[0]}")
 
+    def _build_rewrite_tab(self, notebook):
+        tab = ttk.Frame(notebook, padding=8)
+        notebook.add(tab, text="Rewrite & force update")
+
+        top = ttk.Frame(tab)
+        top.pack(fill="x")
+        ttk.Label(top, text="Branch:").pack(side="left")
+        self.rewrite_combo = ttk.Combobox(top, textvariable=self.rw_branch_var, state="readonly", width=34)
+        self.rewrite_combo.pack(side="left", padx=4)
+        ttk.Button(
+            top, text="Tải 100 commit gần nhất", command=lambda: self.guarded(self.load_rewrite_commits)
+        ).pack(side="left", padx=(8, 0))
+
+        frame = ttk.Frame(tab)
+        frame.pack(fill="both", expand=True, pady=(8, 0))
+        self.rewrite_tree = ttk.Treeview(
+            frame,
+            columns=("mark", "hash", "date", "author", "subject"),
+            show="headings",
+            selectmode="browse",
+            height=8,
+        )
+        for column, title, width in (
+            ("mark", "Đã sửa", 70),
+            ("hash", "Hash", 80),
+            ("date", "Ngày", 130),
+            ("author", "Tác giả", 140),
+            ("subject", "Nội dung", 440),
+        ):
+            self.rewrite_tree.heading(column, text=title)
+            self.rewrite_tree.column(column, width=width, stretch=column == "subject")
+        scroll = ttk.Scrollbar(frame, orient="vertical", command=self.rewrite_tree.yview)
+        self.rewrite_tree.configure(yscrollcommand=scroll.set)
+        self.rewrite_tree.pack(side="left", fill="both", expand=True)
+        scroll.pack(side="right", fill="y")
+        self.rewrite_tree.bind("<<TreeviewSelect>>", lambda _event: self.guarded(self.load_selected_message))
+
+        ttk.Label(tab, text="Message đầy đủ của commit đang chọn:").pack(anchor="w", pady=(8, 0))
+        self.rw_text = tk.Text(tab, height=7, wrap="word")
+        self.rw_text.pack(fill="x")
+
+        actions = ttk.Frame(tab)
+        actions.pack(fill="x", pady=(6, 0))
+        ttk.Button(
+            actions,
+            text="Dùng dòng đầu từ tab Mẫu commit",
+            command=lambda: self.guarded(self.apply_template_to_message),
+        ).pack(side="left")
+        ttk.Button(actions, text="Lưu sửa", command=lambda: self.guarded(self.save_rewrite_message)).pack(
+            side="left", padx=6
+        )
+        ttk.Button(actions, text="Bỏ sửa commit này", command=lambda: self.guarded(self.reset_rewrite_message)).pack(
+            side="left"
+        )
+        ttk.Button(
+            actions,
+            text="Force update lên origin",
+            command=lambda: self.guarded(self.force_update_origin),
+        ).pack(side="right")
+        ttk.Button(
+            actions,
+            text="Viết lại message (local)",
+            command=lambda: self.guarded(self.rewrite_local_messages),
+        ).pack(side="right", padx=6)
+
+    def load_rewrite_commits(self):
+        repo = self.repo()
+        branch = self.rw_branch_var.get()
+        if not branch:
+            raise GitError("Chưa chọn branch.")
+        self.rw_commits = read_log(repo, "-n", "100", f"refs/heads/{branch}")
+        self.rw_pending.clear()
+        self.rewrite_tree.delete(*self.rewrite_tree.get_children())
+        for full, short, when, author, subject in self.rw_commits:
+            self.rewrite_tree.insert("", "end", iid=full, values=("", short, when, author, subject))
+        self.rw_text.delete("1.0", "end")
+        self.log(f"Đã tải {len(self.rw_commits)} commit của {branch}.")
+
+    def _selected_rewrite_sha(self):
+        selection = self.rewrite_tree.selection()
+        if not selection:
+            raise GitError("Chọn một commit trước.")
+        return selection[0]
+
+    def load_selected_message(self):
+        selection = self.rewrite_tree.selection()
+        if not selection:
+            return
+        sha = selection[0]
+        text = self.rw_pending[sha] if sha in self.rw_pending else original_message(self.repo(), sha)
+        self.rw_text.delete("1.0", "end")
+        self.rw_text.insert("1.0", text)
+
+    def apply_template_to_message(self):
+        self._selected_rewrite_sha()
+        if not self.commit_subject_var.get().strip():
+            raise GitError("Nhập subject ở tab Mẫu commit trước.")
+        line = build_commit_message(
+            self.ctype_var.get(),
+            self.commit_scope_var.get(),
+            self.commit_name_var.get(),
+            self.commit_subject_var.get(),
+        )
+        _, separator, rest = self.rw_text.get("1.0", "end-1c").partition("\n")
+        self.rw_text.delete("1.0", "end")
+        self.rw_text.insert("1.0", line + separator + rest)
+
+    def save_rewrite_message(self):
+        sha = self._selected_rewrite_sha()
+        text = self.rw_text.get("1.0", "end-1c").strip()
+        if not text:
+            raise GitError("Message không được rỗng.")
+        if text == original_message(self.repo(), sha).strip():
+            self.rw_pending.pop(sha, None)
+        else:
+            self.rw_pending[sha] = text
+        self.rewrite_tree.set(sha, "mark", "Đã sửa" if sha in self.rw_pending else "")
+        self.log(f"Đã lưu sửa cho {sha[:8]}. Tổng commit chờ viết lại: {len(self.rw_pending)}.")
+
+    def reset_rewrite_message(self):
+        sha = self._selected_rewrite_sha()
+        self.rw_pending.pop(sha, None)
+        self.rewrite_tree.set(sha, "mark", "")
+        self.load_selected_message()
+
+    def rewrite_local_messages(self):
+        repo = self.repo()
+        branch = self.rw_branch_var.get()
+        ensure_not_protected(branch)
+        if working_tree_dirty(repo):
+            raise GitError("Working tree còn thay đổi đã tracked. Hãy commit hoặc stash trước.")
+        if not self.rw_pending:
+            raise GitError("Chưa có commit nào được lưu sửa message.")
+        order = [full for full, *_ in self.rw_commits]
+        first = max(self.rw_pending, key=order.index)
+        if not messagebox.askyesno(
+            "Xác nhận viết lại",
+            f"Viết lại {len(self.rw_pending)} message, từ commit {first[:8]} tới đầu branch '{branch}'?\n"
+            "Hash của các commit từ đó trở đi sẽ đổi. Branch cũ được backup trong refs/backup/.",
+        ):
+            return
+        count, backup = rewrite_messages(repo, branch, first, self.rw_pending)
+        self.log(f"Đã viết lại {count} commit trên {branch}. Backup: {backup}\n"
+                 f"Khôi phục nếu cần: git branch -f {branch} {backup}")
+        self.load_rewrite_commits()
+
+    def force_update_origin(self):
+        repo = self.repo()
+        branch = self.rw_branch_var.get()
+        ensure_not_protected(branch)
+        typed = simpledialog.askstring(
+            "Xác nhận force update",
+            f"Force update branch '{branch}' lên origin sẽ ghi đè lịch sử remote.\n"
+            f"Nhập đúng tên branch để xác nhận:",
+            parent=self,
+        )
+        if typed is None:
+            return
+        if typed.strip() != branch:
+            raise GitError("Tên branch không khớp, đã hủy force update.")
+        output = force_update_remote(repo, branch)
+        self.log(f"Force update {branch} lên origin thành công.\n{output}")
+        self.load_rewrite_commits()
+
     def _make_commit_tree(self, parent):
         frame = ttk.Frame(parent)
         frame.pack(fill="both", expand=True, pady=(8, 0))
@@ -609,6 +892,10 @@ class App(tk.Tk):
         self.current_var.set(self.current_name or "(detached HEAD)")
         self.source_combo.configure(values=branches)
         self.period_combo.configure(values=branches)
+        local = list_local_branches(repo)
+        self.rewrite_combo.configure(values=local)
+        if self.rw_branch_var.get() not in local:
+            self.rw_branch_var.set(self.current_name if self.current_name in local else (local[0] if local else ""))
 
         if self.source_var.get() not in branches:
             others = [b for b in branches if b != self.current_name]
