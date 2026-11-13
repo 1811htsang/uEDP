@@ -218,10 +218,10 @@ endif()
 # ANCHOR - Target kiểm thử TSD (chỉ PLAT=LINUX, dùng libunity)
 # NOTE - Yêu cầu chạy generator trước để sinh sources/app/app.c và sources/test/tsd/test_*.c
 if(PLAT STREQUAL "LINUX")
-  set(TSD_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/sources/test/tsd")
-  file(GLOB TSD_TEST_SRCS "${TSD_TEST_DIR}/test_*.c")
+  set(TSD_TEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/sources/test/tezprjec")
+  file(GLOB TSD_TEST_SRCS "${TSD_TEST_DIR}/tez.c")
   if(TSD_TEST_SRCS)
-    add_executable(uedp_tsd_test
+    add_executable(uedp_test
       ${CORE_SRCS}
       ${COMMON_XPRINTF_SRCS}
       ${PAL_SERVICE_SRCS}
@@ -230,7 +230,7 @@ if(PLAT STREQUAL "LINUX")
       "sources/common/libunity/unity.c"
       ${TSD_TEST_SRCS}
     )
-    target_include_directories(uedp_tsd_test PRIVATE
+    target_include_directories(uedp_test PRIVATE
       "sources/common/libunity/"
       "sources/common/container/fifo/"
       "sources/common/container/llist/"
@@ -246,9 +246,9 @@ if(PLAT STREQUAL "LINUX")
       "sources/app/config/"
       "sources/app/declaration/"
     )
-    add_test(NAME uedp_tsd_test COMMAND uedp_tsd_test)
+    add_test(NAME uedp_test COMMAND uedp_test)
   else()
-    message(STATUS "[INFO]: No TSD test sources in ${TSD_TEST_DIR}; uedp_tsd_test target skipped")
+    message(STATUS "[INFO]: No TSD test sources in ${TSD_TEST_DIR}; uedp_test target skipped")
   endif()
 endif()
 
