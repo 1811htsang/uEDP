@@ -719,9 +719,14 @@ Sau khi kiểm tra thì thấy rằng task này đã được triển khai ở r
 - [x] @! TID[epic=Rv1.1.8-i0/pltf+unityfw] PLTF-004 <+ Tìm hiểu về Framework Unit Test Unity để đánh giá khả năng tích hợp với PLTF.TSD/TLC nhằm hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf+unityfw] PLTF-005 <+ Thêm concept testing tiêu chuẩn bổ sung khái niệm cho Unity hiện tại.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.tnorm] PLTF-006 <+ Hoàn thiện cho modelcvert và appc template để hỗ trợ việc phân giải các cấu hình YAML sang các hàm thực thi trong lõi μEDP một cách hiệu quả và ổn định.
-- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.test] TEST-001 <+ Bổ sung testobj-v3 để thực hiện kiểm thử các thay đổi mới cho OCE và ticket PLTF-002, PLTF-003, PLTF-006 nhằm đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.test] TEST-001 <+ Bổ sung testobj-v3 để thực hiện kiểm thử các thay đổi mới cho OCE và ticket PLTF-002, PLTF-003, PLTF-006 nhằm đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 - [x] @! TID[epic=Rv1.1.8-i0/test-structure] DOCS-003 <+ Bổ sung tài liệu chuẩn hóa cấu trúc thiết kế và lưu trữ testcase, nội dung testcase, kết quả testcase, v.v. để hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
 - [x] @! TID[epic=Rv1.1.8-i0/pl-ooc] DOCS-004 <+ Tìm hiểu về PLOOC framework và so sánh với Python trong khả năng triển khai OOP trong quản lý test.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.lstaxer.tsd] PLTF-007 <+ Bổ sung model cho TSD (Test Scenario Descriptor).
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-008 <+ Bổ sung template cho testing và pipeling của TSD và TLC để hỗ trợ việc kiểm thử các tính năng của lõi μEDP.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-009 <+ Cập nhật các assertion cho PLTF.
+- [x] @! TID[epic=v1.1.8/gitsp] REPO-003 <+ Bổ sung gitsp để hỗ trợ các thao tác quản lý với git và repo nhằm tối ưu hóa việc quản lý mã nguồn và các thay đổi trong dự án μEDP.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.test] TEST-002 <+ Thực hiện BST cho tính năng OCE trên testobj-v3 kết hợp triển khai libunity-x-pltf để kiểm thử các tính năng mới của μEDP một cách hiệu quả và ổn định.
 
 <!-- STATUS
 Thông qua quá trình review và so sánh giữa PLOOC framework và Python, đã nhận thấy rằng Python có khả năng triển khai OOP một cách linh hoạt và mạnh mẽ hơn so với PLOOC framework. 
@@ -735,7 +740,15 @@ Do đó, quyết định sử dụng Python để triển khai các tính năng 
 
 //  SECTION - v1.1.9
 
-- [ ] Đề xuất cơ chế quản lý chẩn đoán DEM (Diagnostic Event Management) với ECS (Enable Condition Stage), DBS (Debouncing Stage) và pzsto (persistence store) kết hợp FCR trong quản lý lỗi.
+- [x] @! TID[epic=Rv1.1.8-i0/core.fcr-update] DOCS-001 <+ Đề xuất cơ chế quản lý chẩn đoán DEM (Diagnostic Event Management) với ECS (Enable Condition Stage), DBS (Debouncing Stage) và pzsto (persistence store) kết hợp FCR trong quản lý lỗi.
+- [x] @! TID[epic=Rv1.1.8-i0/core.fcr-update] DOCS-002 <+ Bổ sung tìm hiểu về OPC (Operation Preventing Condition), APC (Activation Preventing Condition) và IOC (Inhibition Preventing Condition) để hỗ trợ việc quản lý các điều kiện ngăn chặn hoạt động trong hệ thống.
+- [x] @! TID[epic=Rv1.1.7-bf1/core.fcr-update] CORE-001 <+ Cập nhật bổ sung mã lỗi `UEDP_FCR_MSG_POOL_REF_RCM` chưa khai báo và assign action trong `uedp_fcr.c` để hỗ trợ việc quản lý các lỗi liên quan đến việc pool recommendation.
+- [x] @! TID[epic=Rv1.1.7-bf1/core.fcr-update] CORE-002 <+ Cập nhật loại bỏ mã lỗi `UEDP_FCR_MSG_NO_REG_PSE` do không còn sử dụng.
+- [x] @! TID[epic=Rv1.1.7-bf1/repo] REPO-001 <+ Thực hiện pickup các update từ nhánh `fix` sang `sub-feat/Rv1.1.7-bf1`.
+
+<!-- STATUS
+Do các fix này không gây ảnh hưởng đến kết quả kiểm thử nên không cần thực hiện regezBST.
+-->
 
 //  !SECTION
 
