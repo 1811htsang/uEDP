@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Any
+import argparse
 from jinja2 import Environment, FileSystemLoader
 
 from ...lstaxer.kre8 import build_generator_context
@@ -94,3 +95,12 @@ def generate_testc(yaml_path: str | Path, output_path: str | Path, level: str | 
   yaml_text = Path(yaml_path).read_text(encoding='utf-8')
   output.write_text(render_testc(yaml_text, level), encoding='utf-8')
   return output
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(description='Generate the libunity test runner from YAML')
+  parser.add_argument('--yaml', default='sources/app/lstaxizer.yaml')
+  parser.add_argument('--output', default='sources/test/tez.c')
+  parser.add_argument('--level', choices=_LEVELS)
+  args = parser.parse_args()
+  output = generate_testc(args.yaml, args.output, args.level)
+  print(f'[INFO] generated {output}')
