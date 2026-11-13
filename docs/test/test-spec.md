@@ -9,21 +9,22 @@ Tài liệu này được tham khảo từ cấu trúc dự án kiểm thử c�
 Cấu trúc tổng thể của một dự án kiểm thử bao gồm các thành phần sau:
 
 ```asciidocs
-μEDP Test Project            
-│                                                   
-└── ftezsec         - Feature Test Section          
-    ├── tezuit          - Test Suite                
-    │   ├── tezk        - Test Case                 
-    │   │   ├── teztep  - Test Step                 
-    │   │   └── ...                                 
-    │   ├── tezk        - Testcase                  
-    │   │   ├── teztep  - Test Step                 
-    │   │   └── ...                                 
-    │   └── ...                                     
-    ├── tezconf         - Test Project Configuration
-    ├── prehook         - Pre Test Configuration    
-    ├── posthook        - Post Test Configuration   
-    └── report          - Test Report
+                       μEDP Test Project                                                       
+                       │                      │                                                
+                       └── ftezsec            │ - Feature Test Section ────────┐               
+                         ┌─┼── tezuit         │ - Test Suite                   │               
+         multiple file ◄─┼─┼───┼── tezk       │ - Test Case                    │               
+tezcal-<indentif>.yaml   └─┼───┼───┼── teztep │ - Test Step                    │               
+                           │   │   └── ...    │                                │               
+                           │   ├── tezk       │ - Testcase                     │               
+                           │   │   ├── teztep │ - Test Step                    │               
+                           │   │   └── ...    │                                │               
+                           │   └── ...        │                                │               
+                           ├── tezconf        │ - Test Project Configuration ──┼─► single file 
+                           ├── prehook        │ - Pre Test Configuration ──────┤   ftezsec.yaml
+                           ├── posthook       │ - Post Test Configuration ─────┘               
+                           └── report         │ - Test Report ───────────────────► folder      
+                                              │                                    tezrebort/  
 ```
 
 Trong đó, `ftezsec` là thư mục chính của dự án kiểm thử, chứa các thư mục con như `tezuit` (Test Suite), `tezconf` (Test Project Configuration), `prehook` (Pre Test Configuration), `posthook` (Post Test Configuration), và `report` (Test Report). Mỗi thư mục con có thể chứa các tệp tin và thư mục con khác để tổ chức các testcase, test step, và các cấu hình kiểm thử.
