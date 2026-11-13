@@ -1,0 +1,35 @@
+identif: "example"
+tezuit:
+- tezk: "a"
+  subidentif: ""
+  dscript: ""
+  teztep:
+  - '1':
+      desc: ""
+      call:
+      - act: |
+          echo "Hello, World!"
+      - act: |
+          echo "This is a test."
+  - '2':
+      desc: ""
+
+- tezk: "b"
+  subidentif: ""
+  dscript: ""
+  teztep:
+  - '1':
+      desc: ""
+      call:
+      - act: |
+          echo "Hello, Sang!"
+      - act: |
+          echo "This is a step in tezk b."
+  - '2':
+      desc: ""
+      call:
+      - act: |
+          echo "Hello, World!"
+      - act: |
+          echo "This is a test."
+  - '3':
