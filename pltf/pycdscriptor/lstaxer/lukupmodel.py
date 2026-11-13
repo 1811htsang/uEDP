@@ -394,37 +394,37 @@ def lukupmodel_psetbl_logic(yaml_text):
 
   return out
 
-def _parse_tsd_step(data):
+def _parse_tezcin_step(data):
   if not isinstance(data, dict):
     return None
   post_isr = data.get('post_isr')
-  return C_tsd_step_obj(
-    post_isr=C_tsd_post_isr_obj(
+  return C_tezcin_step_obj(
+    post_isr=C_tezcin_post_isr_obj(
       to=_normalize_alias_value(post_isr.get('to'), 'id_symbol') or '',
       sig=_normalize_alias_value(post_isr.get('sig'), 'id_symbol') or '',
     ) if isinstance(post_isr, dict) else None,
     advance_tick=int(data['advance_tick']) if 'advance_tick' in data else None,
   )
 
-def _parse_tsd_expect(data):
+def _parse_tezcin_expect(data):
   if not isinstance(data, dict):
     return None
   tsm_state = data.get('tsm_state')
   gda_value = data.get('gda_value')
-  return C_tsd_expect_obj(
-    tsm_state=C_tsd_expect_tsm_state_obj(
+  return C_tezcin_expect_obj(
+    tsm_state=C_tezcin_expect_tsm_state_obj(
       task=_normalize_alias_value(tsm_state.get('task'), 'id_symbol') or '',
       state=_normalize_alias_value(tsm_state.get('state'), 'id_symbol') or '',
     ) if isinstance(tsm_state, dict) else None,
-    gda_value=C_tsd_expect_gda_value_obj(
+    gda_value=C_tezcin_expect_gda_value_obj(
       name=str(gda_value.get('name', '')),
       equals=str(gda_value.get('equals', '')),
     ) if isinstance(gda_value, dict) else None,
   )
 
-def lukupmodel_tsd_logic(yaml_text):
+def lukupmodel_tezcin_logic(yaml_text):
   payload = yaml.safe_load(yaml_text) or {}
-  entries = payload.get('tsd', [])
+  entries = payload.get('tezcin', [])
   if not isinstance(entries, list):
     return []
 
@@ -433,11 +433,11 @@ def lukupmodel_tsd_logic(yaml_text):
     if not isinstance(item, dict) or 'name' not in item:
       continue
 
-    out.append(C_tsd_scenario_obj(
+    out.append(C_tezcin_scenario_obj(
       name=str(item.get('name', '')),
       level=str(item.get('level', 'st')),
-      steps=[s for s in (_parse_tsd_step(x) for x in item.get('steps', []) or []) if s is not None],
-      expect=[e for e in (_parse_tsd_expect(x) for x in item.get('expect', []) or []) if e is not None],
+      steps=[s for s in (_parse_tezcin_step(x) for x in item.get('steps', []) or []) if s is not None],
+      expect=[e for e in (_parse_tezcin_expect(x) for x in item.get('expect', []) or []) if e is not None],
     ))
 
   return out

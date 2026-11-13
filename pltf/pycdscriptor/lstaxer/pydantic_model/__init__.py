@@ -1,6 +1,6 @@
 # NOTE - Export modules for use in other packages
 
-from . import logic, misc, resrc, tsd
+from . import logic, misc, resrc, tezcin
 
 # NOTE - Export class for use in other packages
 
@@ -42,11 +42,11 @@ from .misc import (
   C_outexec_list_obj
 )
 
-from .tsd import (
-  C_tsd_post_isr_obj,
-  C_tsd_step_obj,
-  C_tsd_expect_tsm_state_obj,
-  C_tsd_expect_gda_value_obj,
-  C_tsd_expect_obj,
-  C_tsd_scenario_obj
+from .tezcin import (
+  C_tezcin_post_isr_obj,
+  C_tezcin_step_obj,
+  C_tezcin_expect_tsm_state_obj,
+  C_tezcin_expect_gda_value_obj,
+  C_tezcin_expect_obj,
+  C_tezcin_scenario_obj
 )

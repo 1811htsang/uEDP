@@ -37,7 +37,7 @@ def assert_macro_for(gda_type: str, expected: str) -> str:
     return _ASSERT_BY_TYPE[gda_type]
   if 'char' in gda_type and '*' in gda_type:
     return 'TEST_ASSERT_EQUAL_STRING'
-  raise ValueError(f"unsupported glbda type '{gda_type}' for TSD expect; add a mapping in _ASSERT_BY_TYPE")
+  raise ValueError(f"unsupported glbda type '{gda_type}' for tezcin expect; add a mapping in _ASSERT_BY_TYPE")
 
 def _gda_types(context: dict[str, Any]) -> dict[str, str]:
   return {item['name']: item['type'] for item in context.get('glbda_defs', [])}
@@ -50,11 +50,11 @@ def _check_scenario(scenario: dict[str, Any], tsm_objects: dict[str, str], gda_t
     if check.get('tsm_state'):
       task = check['tsm_state']['task']
       if task not in tsm_objects:
-        raise ValueError(f"tsd '{scenario['name']}': task '{task}' has no TSM")
+        raise ValueError(f"tezcin '{scenario['name']}': task '{task}' has no TSM")
     if check.get('gda_value'):
       name = check['gda_value']['name']
       if name not in gda_types:
-        raise ValueError(f"tsd '{scenario['name']}': gda '{name}' is not declared in glbda")
+        raise ValueError(f"tezcin '{scenario['name']}': gda '{name}' is not declared in glbda")
       check['gda_value']['assert_macro'] = assert_macro_for(gda_types[name], check['gda_value']['equals'])
 
 def build_testc_context(yaml_text: str, level: str | None = None) -> dict[str, Any]:
@@ -64,7 +64,7 @@ def build_testc_context(yaml_text: str, level: str | None = None) -> dict[str, A
   tsm_objects = _tsm_objects(appc)
 
   scenarios = []
-  for scenario in context.get('tsd', []) or []:
+  for scenario in context.get('tezcin', []) or []:
     if level is not None and scenario['level'] != level:
       continue
     _check_scenario(scenario, tsm_objects, gda_types)
