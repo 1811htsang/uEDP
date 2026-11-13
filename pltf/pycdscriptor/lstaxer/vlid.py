@@ -137,7 +137,8 @@ However, UST can be considered to be implemented in the future
 as it a good practice but not necessary for now.
 """
 
-# TASK - Ghi chú để bổ sung kiểm tra trong tương lai
+# DEPRECATED - Old TASK - Ghi chú để bổ sung kiểm tra trong tương lai
+# STATUS - Đã loại bỏ UST cross reference check khỏi roadmap của μE-LS ở phiên bản 1.1.7/1.1.8, do data đã được đảm bảo cross-referenced với UST data b4 users define logic trong YAML file.
 
 # NOTE - Post Resource Existance
 
@@ -151,4 +152,5 @@ However, PRE can be considered to be implemented in the future
 as it a good practice but not necessary for now.
 """
 
-# TASK - Ghi chú để bổ sung kiểm tra trong tương lai
+# DEPRECATED - Old TASK - Ghi chú để bổ sung kiểm tra trong tương lai
+# STATUS - Đã loại bỏ Post Resource Existance check khỏi roadmap của μE-LS ở phiên bản 1.1.7/1.1.8, do data đã được đảm bảo cross-referenced với UST data b4 users define logic trong YAML file.

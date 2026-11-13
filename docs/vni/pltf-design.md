@@ -74,11 +74,12 @@ pltf/
     │   ├── dotcfg.py
     │   └── glbda.py                                                          # Cầu nối context["task_tsm"/"task_fsm"] với glbda của μE-LS
     ├── lstaxer/                                                              # Parse + validate YAML μE-LS (xem mục 3.5)
-    │   ├── symresolv.py, nullremov.py, strucjec.py
+    │   ├── symresolv.py, strucjec.py
     │   ├── lukupmodel.py, vlid.py, kre8.py
     │   └── pydantic_model/                                                   # logic.py, resrc.py, misc.py
     ├── ustab/                                                                # Unified Symbol Table (xem mục 3.5)
     │   ├── gnnerate.py, cvert.py, xportstax.py
+    │   ├── ankorpin.py                                                       # Pin anchor - Đã implement
     │   └── custab.py                                                         # Orchestrator
     └── jnerator/
         ├── pregen/                                                           # Sinh khai báo Kconfig-based (mỗi file 1 artifact)
@@ -134,7 +135,7 @@ Sau khi chuyển vào `pltf/`, module trải qua 2 lần đổi tên riêng bi�
 Đây là phần thay thế trực tiếp cho logic duyệt `kconf.unique_defined_syms` từng nằm rải rác trong `corecfg_gen`/`palcfg_gen` của `uedp.py` cũ. `dotcfg.cfp_parse_dotcfg(config_path)` đọc thẳng file `.config` (dạng text `CONFIG_KEY=value`) — không cần `kconfiglib` nữa ở bước này — và trả về một `context` dict có cấu trúc:
 
 - `core_configs`, `pal_configs`: danh sách chuỗi `#define` cho `CORE_*` / `PAL_*`.
-- `tasknorm_defs`, `taskpoll_defs`, `sig_defs`: tự động gán ID hex tăng dần, bắt đầu từ `0xE6` (task norm), `0xD4` (task poll), `0x01` (signal) — khớp với dải `[HES] Heximal Encoding Signals` đã mô tả trong `arch-design.md` (`TASK_NORM` ở `0xEx`, `TASK_POLL` ở `0xDx`).
+- `tasknorm_defs`, `taskpoll_defs`, `sig_defs`: tự động gán ID hex tăng dần, bắt đầu từ `0xE3` (task norm), `0xD0` (task poll), `0x01` (signal) — khớp với dải `[HES] Heximal Encoding Signals` đã mô tả trong `arch-design.md` (`TASK_NORM` ở `0xEx`, `TASK_POLL` ở `0xDx`).
 - `msgq_defs`, `normhler_lists`, `pollhler_lists`: danh sách tên hàng đợi / handler để sinh bảng task.
 - `appcfg_tsm_*`, `appcfg_fsm_*`, `tsmio_lists`, `fsmio_lists`: dữ liệu riêng cho TSM/FSM (đối tượng, bảng chuyển trạng thái, danh sách state).
 - `arch_name`, `arch_apis`: tên kiến trúc PAL và danh sách Hardware API cần sinh.
@@ -185,14 +186,18 @@ Vì dùng template render-toàn-file thay vì patch, PLTF không còn phụ thu�
 
 ### 3.5 μE-LS / PLD: pipeline `lstaxer` + `ustab` (đã triển khai)
 
-Khác với giai đoạn đầu của PLTF (khi `attribarse/glbda.py` và `test.yaml` còn là bản nháp/PoC độc lập, chưa được orchestrator nào gọi tới), tính đến 1.1.6 pipeline μE-LS (Logical Syntax-izer, thuộc tính năng PLD - Parse-able Logical Descriptor) đã được triển khai đầy đủ và tích hợp vào `entrypoint.sh` (xem mục 4.2). Cú pháp YAML đầy đủ được mô tả chi tiết trong `docs/uels-syntax.md`; ở đây chỉ tóm tắt các module liên quan trực tiếp tới pipeline sinh code:
+Khác với giai đoạn đầu của PLTF (khi `attribarse/glbda.py` và `test.yaml` còn là bản nháp/PoC độc lập, chưa được orchestrator nào gọi tới), tính đến 1.1.6 pipeline μE-LS (Logical Syntax-izer, thuộc tính năng PLD - Parse-able Logical Descriptor) đã được triển khai đầy đủ và tích hợp vào `jainerator.py` và `ntrypont.py` (xem mục 4.2). Cú pháp YAML đầy đủ được mô tả chi tiết trong `docs/uels-syntax.md`; ở đây chỉ tóm tắt các module liên quan trực tiếp tới pipeline sinh code:
 
-- `pltf/pycdscriptor/lstaxer/`: bộ parse + validate file YAML μE-LS (ví dụ `sources/app/lstaxizer.yaml`) — gồm `symresolv.py` (dựng Symbol Resolution Map để giải quyết anchor/alias), `nullremov.py` (dọn các khai báo `NULL` thừa người dùng không cần điền), `strucjec.py` (chuẩn hoá cấu trúc `actvobj`/`fsm`/`tsm` của `tlist`), `lukupmodel.py` (đưa dữ liệu post-validate vào `pydantic_model`), `vlid.py` (5 chiến lược validate), và `kre8.py` (tổng hợp toàn bộ thành `context` cho bước sinh code, hàm `build_generator_context()`).
+- `pltf/pycdscriptor/lstaxer/`: bộ parse + validate file YAML μE-LS (ví dụ `sources/app/lstaxizer.yaml`) — gồm `symresolv.py` (dựng Symbol Resolution Map để giải quyết anchor/alias), `strucjec.py` (chuẩn hoá cấu trúc `actvobj`/`fsm`/`tsm` của `tlist`), `lukupmodel.py` (đưa dữ liệu post-validate vào `pydantic_model`), `vlid.py` (5 chiến lược validate), và `kre8.py` (tổng hợp toàn bộ thành `context` cho bước sinh code, hàm `build_generator_context()`).
 - `pltf/pycdscriptor/attribarse/glbda.py`: điểm nối giữa `dotcfg.py` (field `task_tsm`/`task_fsm`, mục 3.3) và khối `glbda:` trong cú pháp μE-LS.
 - `pltf/pycdscriptor/jnerator/postgen/`: giai đoạn sinh code sau khi logic đã được validate (`cgen.py` gọi `lstaxer.kre8.build_generator_context()` rồi `modalcvert.generate_appc()` để render `sources/app/app.c` trực tiếp từ YAML — đây là điểm khác biệt lớn nhất so với `jnerator/pregen/`, vốn chỉ sinh khai báo/định nghĩa chứ không sinh logic implementation).
 - `pltf/pycdscriptor/ustab/`: Unified Symbol Table — `gnnerate.py` dựng bảng ký hiệu từ `.config`/Kconfig, `xportstax.py` export toàn bộ config sang YAML để đối chiếu ngược với μE-LS, `custab.py` là orchestrator gọi cả hai.
 
-Nói cách khác, pipeline hiện tại có 3 giai đoạn nối tiếp: pre-logicdef (`jnerator/pregen`, sinh khai báo Kconfig-based) → post-logicdef (`jnerator/postgen`, sinh logic implementation từ YAML đã validate) → ustab (đối chiếu, xuất bảng ký hiệu). `docs/uels-syntax.md` mô tả chi tiết ngữ nghĩa YAML; tài liệu này chỉ tập trung vào việc pipeline PLTF gọi các module đó ra sao.
+> Cập nhật mới trong phiên bản v1.1.6-bf4
+>
+> Trong phiên bản v1.1.6-bf4, tên task, signal và message queue sinh ra không còn hậu tố `_ID` (ví dụ `TASK_NORM_A` thay vì `TASK_NORM_A_ID`); `attribarse/dotcfg.py` loại bỏ hậu tố này khi sinh `tasknorm_defs`, `sig_defs`, `msgq_defs`. `modalcvert.py` cũng nhận cả hai dạng tên khi resolve symbol. Khối `psetbl` được validate và sinh thành lệnh `uedp_msg_register_topic()` trong `init_actions`, và `exec` được chấp nhận như một alias của `kwexec` trong `tnorm`.
+>
+> Nói cách khác, pipeline hiện tại có 3 giai đoạn nối tiếp: pre-logicdef (`jnerator/pregen`, sinh khai báo Kconfig-based) → post-logicdef (`jnerator/postgen`, sinh logic implementation từ YAML đã validate) → ustab (đối chiếu, xuất bảng ký hiệu). `docs/uels-syntax.md` mô tả chi tiết ngữ nghĩa YAML; tài liệu này chỉ tập trung vào việc pipeline PLTF gọi các module đó ra sao.
 
 ## 4. Docker & orchestration mới
 
@@ -205,44 +210,39 @@ So với bản KwDI gốc (chỉ `python:3.13-slim` + `kconfiglib`), Dockerfile 
 - Cài thêm `jinja2`, `pytest`, `pyserial` bên cạnh `kconfiglib` — phục vụ pipeline render template và (trong tương lai) chạy test tự động.
 - Tạo sẵn 2 thư mục làm việc tách biệt: `/uedp-libs` (mã nguồn lõi μEDP, mount từ repo) và `/uedp-test` (workspace riêng cho PLTF) — hiện thực hoá đúng mục "Không phân tách workspace" đã nêu là giới hạn của KwDI.
 - Cài `gosu` để hạ quyền từ `root` xuống user thường trước khi vào shell tương tác.
-- `ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]` thay vì `CMD` gọi thẳng `python uedp.py menuconfig` như bản gốc.
+- `ENTRYPOINT ["python", "/uedp-libs/ntrypont.py", "--docker"]` thay vì `CMD` gọi thẳng `python uedp.py menuconfig` như bản gốc.
 
-### 4.2 `entrypoint.sh`
+> Cập nhật mới trong phiên bản v1.1.6-bf2
+>
+> Trong phiên bản v1.1.6-bf2, docker đã trở thành một lựa chọn thay vì bắt buộc. Người dùng có thể chạy trực tiếp trên host nếu đã cài Python 3.13, Jinja2, pytest, pyserial, kconfiglib và ESP-IDF v5.1. Tuy nhiên, để đảm bảo tính nhất quán giữa các máy phát triển khác nhau, vẫn khuyến nghị sử dụng Docker.
 
-```bash
-#!/bin/bash
-set -e
-USER_ID=${MY_UID:-1000}
-GROUP_ID=${MY_GID:-1000}
-# Tạo user "uedp_user" khớp UID/GID của người dùng trên host
-if ! id -u uedp_user >/dev/null 2>&1; then
-  groupadd -g $GROUP_ID uedp_group 2>/dev/null || true
-  useradd --shell /bin/bash -u $USER_ID -g $GROUP_ID -o -c "" -m uedp_user
-fi
-chown $USER_ID:$GROUP_ID /uedp-libs
-chown $USER_ID:$GROUP_ID /uedp-test
-export HOME=/home/uedp_user
-echo "source $IDF_PATH/export.sh > /dev/null 2>&1" >> /home/uedp_user/.bashrc
-# [ENTRY 1] Thu thập input + menuconfig (giữ nguyên như KwDI)
-python uedp.py menuconfig
-# [ENTRY 2] Sinh khai báo pre-logicdef (Kconfig-based) từ .config
-python -m pltf.pycdscriptor.jnerator.pregen.fpregen
-# [ENTRY 3] Sinh logic implementation (app.c) từ post-logicdef YAML (μE-LS)
-python -m pltf.pycdscriptor.jnerator.postgen.cgen \
-  --yaml sources/app/lstaxizer.yaml \
-  --output sources/app/app.c
-# [ENTRY 4] Sinh/đối chiếu Unified Symbol Table
-python -m pltf.pycdscriptor.ustab.custab
-chown -R $USER_ID:$GROUP_ID /uedp-libs/*
-exec gosu uedp_user bash
+### 4.2 `ntrypont.py`
+
+```python
+# ntrypont.py (rút gọn)
+def setup_user():        # tạo uedp_user khớp MY_UID/MY_GID, chown /uedp-libs và /uedp-test
+def run_pipeline(include_menuconfig=True):
+  if include_menuconfig:
+    run_cmd(["python", "uedp.py", "menuconfig"])
+  run_cmd(["python", "-m", "pltf.pycdscriptor.jnerator.pregen.fpregen"])
+  run_cmd(["python", "-m", "pltf.pycdscriptor.ustab.custab"])
+  run_cmd(["python", "-m", "pltf.pycdscriptor.ustab.ankorpin"])
+
+# mode --docker: setup_user() → run_pipeline(menuconfig) → chown → gosu uedp_user bash
+# mode --it:     run_pipeline(menuconfig)
+# mode --n-it:   run_pipeline(bỏ menuconfig)
 ```
 
-Bốn điểm thiết kế đáng chú ý:
+Các điểm thiết kế đáng chú ý:
 
 - Xử lý UID/GID qua biến môi trường `MY_UID`/`MY_GID` (mặc định `1000`): giải quyết trực tiếp vấn đề "file sinh ra thuộc quyền `root` trên host" của KwDI, vì volume `.:/uedp-libs` được mount 2 chiều.
-- 4 giai đoạn nối tiếp trong cùng một lần chạy container: `menuconfig` (KwDI, giữ nguyên) → `fpregen` (pre-logicdef, sinh khai báo Kconfig-based, mục 3.4) → `cgen` (post-logicdef, sinh `app.c` từ YAML μE-LS đã validate, mục 3.5) → `ustab.custab` (đối chiếu, xuất bảng ký hiệu). Với người dùng, trải nghiệm vẫn là "một lệnh, một lần chạy", nhưng bên trong là 4 pipeline tách biệt, có thể gọi lại độc lập bằng `python -m pltf.pycdscriptor....`.
-- So với bản PLTF ban đầu (chỉ có 2 ENTRY: menuconfig + 1 script sinh code duy nhất), việc tách thêm ENTRY 3/4 phản ánh đúng việc pipeline μE-LS (mục 3.5) đã được tích hợp thật vào orchestration, không còn là script debug độc lập.
-- `exec gosu uedp_user bash` ở cuối: sau khi sinh code xong, container không thoát ngay mà rơi vào shell với quyền user thường, cho phép làm việc tiếp (`cd /uedp-test` để phát triển PLTF, hoặc `exit` để chỉ lấy code vừa sinh).
+- Pipeline chạy tuần tự `menuconfig` (KwDI, giữ nguyên) → `fpregen` (pre-logicdef, sinh khai báo Kconfig-based, mục 3.4) → `ustab.custab` (đối chiếu, xuất bảng ký hiệu) → `ustab.ankorpin`. Bước sinh `app.c` từ μE-LS (`cgen`) không nằm trong `ntrypont.py`; nó được gọi bởi `jainerator.py`, xem mục 3.5.
+- Chế độ `--n-it` bỏ qua `menuconfig`, phù hợp cho CI/CD.
+- Ở chế độ `--docker`, sau khi pipeline xong, `ntrypont.py` chown lại `/uedp-libs` rồi `os.execvp("gosu", ...)` vào shell của `uedp_user`, nên container không thoát ngay và người dùng có thể làm việc tiếp (`cd /uedp-test` để phát triển PLTF, hoặc `exit` để chỉ lấy code vừa sinh).
+
+> Cập nhật mới trong phiên bản v1.1.6-bf2
+>
+> Trong phiên bản v1.1.6-bf2, các module Bash-type được chuyển đổi hoàn toàn sang Python-type, do đó các script `entrypoint.sh`, `jainerator.sh` và `insert.sh` được thay thế bằng các script Python tương ứng nhưng vẫn giữ nguyên chức năng.
 
 ### 4.3 `docker-compose.yaml`
 
@@ -285,21 +285,17 @@ Giữ nguyên từ KwDI, không đổi — vẫn loại `docs/` (chứa PDF tham
 | Cơ chế sinh code | Vá chuỗi giữa 2 marker vào file `.h` có sẵn | Render toàn bộ file mới bằng Jinja2 template (`pregen`) hoặc từ YAML đã validate (`postgen`) |
 | Input cho bước sinh code | Trực tiếp object `kconf` (`kconfiglib`) | File `.config` đã ghi ra đĩa, parse 1 lần qua `cfpcall.py` (`pregen`) và file YAML μE-LS đã qua `lstaxer.vlid` (`postgen`) |
 | Docker image | `python:3.13-slim` + `kconfiglib` | + `gcc/cmake/gdb`, + ESP-IDF v5.1, + `jinja2/pytest/pyserial`, + `gosu` |
-| Khởi động container | `CMD` gọi thẳng `uedp.py menuconfig` | `entrypoint.sh` (tạo user, xử lý UID/GID, chạy tuần tự 4 ENTRY, rồi vào shell) |
+| Khởi động container | `CMD` gọi thẳng `uedp.py menuconfig` | `ntrypont.py --docker` (tạo user, xử lý UID/GID, chạy pipeline, rồi vào shell) |
 | Orchestration | Không có (`docker run` thủ công) | `docker-compose.yaml` (service `uedp_udc`) |
 | Workspace | Trộn chung 1 thư mục | Tách `/uedp-libs` (core lib) và `/uedp-test` (PLTF workspace) |
 | Test spec nâng cao (μE-LS/PLD) | Không có | Đã triển khai đầy đủ: `lstaxer/` (parse + validate) + `attribarse/glbda.py` (cầu nối `dotcfg`) + `jnerator/postgen` (sinh `app.c`) + `ustab/` (đối chiếu ký hiệu) — xem `docs/uels-syntax.md` và mục 3.5 |
 
 ## 6. Việc còn thiếu / rủi ro cần lưu ý khi tiếp tục triển khai
 
-- Đường dẫn `sys.path` còn sót lại từ trước khi chuyển `pltf/`: `uedp.py` vẫn chèn `sources/common/kconfigspec` vào `sys.path` dù thư mục này không còn tồn tại (module thật đã chuyển hẳn sang `pltf/kconfigspec/` và được import qua package `pltf.kconfigspec`) — dòng chèn này hiện là dead code, vô hại nhưng gây nhầm lẫn khi đọc code. Việc dọn dẹp này đã được liệt kê riêng trong `docs/to-do.md` ("chore filename để thống nhất các module riêng biệt của PLTF"), chưa thực hiện tại thời điểm viết tài liệu này.
-- Vị trí `ustab.custab` trong `entrypoint.sh` cần xem lại: hiện `ustab.custab` chạy ở ENTRY cuối cùng, sau khi `cgen` đã sinh `app.c` — cần xác nhận lại thứ tự này có đúng ý đồ thiết kế hay không (`docs/to-do.md` đang để mục riêng "Sửa đổi vị trí ustab.custab trong pipeline trên entrypoint.sh" ở trạng thái chưa xử lý).
-- `entrypoint.sh` luôn chạy `uedp.py menuconfig` ở mỗi lần container khởi động: phù hợp cho phiên làm việc tương tác trên máy dev, nhưng chưa có nhánh non-interactive (ví dụ đọc thẳng `.config` có sẵn, bỏ qua menuconfig) để dùng trong CI/CD.
-- Chưa có test tự động cho chính `pltf/`: bản thân testing framework (parser, generator, template, cả pipeline `lstaxer`/`ustab` mới) hiện chưa có test riêng để đảm bảo không hồi quy khi sửa template hay parser.
-- `lstaxer.nullremov` đang bị đánh dấu có thể dư thừa: `docs/to-do.md` ghi nhận cân nhắc loại bỏ module này khỏi pipeline chung vì có thể làm phức tạp thêm việc parse mà không mang lại lợi ích tương xứng - cần theo dõi quyết định cuối cùng để cập nhật lại mục 3.5 nếu module bị loại bỏ.
-- Chưa có BST (Basic Software Test) trên phần cứng thật cho pipeline PLD/μE-LS: mới dừng ở mức sinh code + review thiết kế, chưa có vòng kiểm thử thực tế xác nhận `app.c` sinh ra từ μE-LS chạy đúng trên hardware.
+- Chưa có test tự động cho chính `pltf/`: bản thân testing framework (parser, generator, template, cả pipeline `lstaxer`/`ustab` mới) hiện chưa có test riêng để đảm bảo không hồi quy khi sửa template hay parser. Cân nhắc sử dụng testobj-v0 và pytest để viết test cho `pltf/` (xem `docs/to-do.md`).
 
-<!-- STATUS
+
+<!-- NOTE
 1. Add task to remove dead code in `uedp.py` related to `sys.path` manipulation.
 2. The position of `ustab.custab` in `entrypoint.sh` is aleady fit for the design, therefore no change is needed.
 3. Approved, can be split as a parameterized option to skip `menuconfig` for CI/CD usage.
@@ -308,6 +304,10 @@ Giữ nguyên từ KwDI, không đổi — vẫn loại `docs/` (chứa PDF tham
 6. Approved, BST on real hardware is not in the scope of this document, therefore the task has already appeaered in `docs/to-do.md` and is not needed to be repeated here.
 -->
 
+<!-- STATUS
+Trong bản v1.1.6, các task đã được hoàn thành hoặc được đánh dấu là không cần thiết, do đó các mục trong danh sách việc còn thiếu đã được cập nhật và không còn tồn tại các vấn đề chưa giải quyết.
+-->
+
 ## 7. Kết luận
 
-PLTF không thay thế Kconfig hay Docker của KwDI, mà tách lớp phần sinh code ra khỏi phần thu thập cấu hình, đồng thời container hoá đầy đủ hơn (toolchain build + ESP-IDF + user permission handling) để container không chỉ dùng để chạy `menuconfig` một lần mà có thể dùng làm môi trường phát triển và kiểm thử μEDP xuyên suốt. Khác với giai đoạn đầu (khi hướng mở rộng μE-LS/PLD còn là bản nháp `glbda.py`/`test.yaml` độc lập), tính đến 1.1.6 pipeline này đã được triển khai đầy đủ và tích hợp thật vào `entrypoint.sh` qua 3 giai đoạn `pregen` → `postgen` → `ustab` (mục 3.4, 3.5, 4.2). Phần việc lớn còn lại không còn là "tích hợp μE-LS" nữa, mà chuyển sang dọn dẹp kỹ thuật (đường dẫn `sys.path` còn sót, vị trí `ustab.custab` trong pipeline), bổ sung test tự động cho `pltf/`, và chạy BST trên phần cứng thật — như liệt kê ở mục 6.
+PLTF không thay thế Kconfig hay Docker của KwDI, mà tách lớp phần sinh code ra khỏi phần thu thập cấu hình, đồng thời container hoá đầy đủ hơn (toolchain build + ESP-IDF + user permission handling) để container không chỉ dùng để chạy `menuconfig` một lần mà có thể dùng làm môi trường phát triển và kiểm thử μEDP xuyên suốt. Khác với giai đoạn đầu (khi hướng mở rộng μE-LS/PLD còn là bản nháp `glbda.py`/`test.yaml` độc lập), tính đến 1.1.6 pipeline này đã được triển khai đầy đủ và tích hợp thật vào `jainerator.py` (`postgen`) và `ntrypont.py` (`pregen`, `ustab`) (mục 3.4, 3.5, 4.2). Phần việc lớn còn lại không còn là "tích hợp μE-LS" nữa, mà chuyển sang bổ sung các tính năng khi có feature mới, viết test tự động cho chính PLTF.

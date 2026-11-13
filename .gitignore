@@ -60,9 +60,6 @@ sketch/.obsidian
 # Test build output
 sources/test/*/build/
 
-# VSCode settings
-.vscode/settings.json
-
 # Test build folder
 # CRITICAL - Test Folder -> Allow test folder to be saved to version control due to new policy on testobj.
 
@@ -86,8 +83,8 @@ eim_config.toml
 # Sample config/env file
 # CRITICAL - .config -> Allow config save to version control due to work-everywhere policy
 .env
-.vscode/*
-config.yaml
+.vscode/c_cpp_properties.json
+.vscode/settings.json
 
 # Nogic extension database
 .nogic/*
@@ -96,5 +93,6 @@ config.yaml
 build/*
 !build/README.md
 
-# gitsp cache
-__pycache__/gitsp.cpython-314.pyc
+# Python cache
+__pycache__/*
+sources/test/__pycache__/*

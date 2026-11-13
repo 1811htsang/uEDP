@@ -43,6 +43,7 @@ class C_act_list_obj(BaseModel):
 class C_trans_obj(BaseModel):
   sig: str
   goto: str
+  action: Optional[C_act_obj] = None
 
 class C_trans_list_obj(BaseModel):
   trans: List[C_trans_obj]
@@ -107,6 +108,7 @@ class C_escal_obj(BaseModel):
 
 class C_tnorm_obj(BaseModel):
   task: str
+  priority: Optional[str] = None
   tsm: Optional[C_tsm_list_obj] = None
   fsm: Optional[C_fsm_list_obj] = None
   kwexec: Optional[C_kwexec_list_obj] = None
@@ -116,3 +118,23 @@ class C_tnorm_obj(BaseModel):
 class C_tpoll_obj(BaseModel):
   tpoll: str
   kwexec: List[C_act_obj]
+
+class C_psetbl_obj(BaseModel):
+  sig: str
+  sub: List[str]
+
+class C_lpipe_itnlog_obj(BaseModel):
+  level: str
+  tag: str
+
+class C_lpipe_rprintf_obj(BaseModel):
+  name: str
+  init: Optional[str] = None
+  putc: Optional[str] = None
+  write: Optional[str] = None
+  is_ready: Optional[str] = None
+
+class C_lpipe_obj(BaseModel):
+  itnlog: C_lpipe_itnlog_obj
+  logdp: List[str]
+  rprintf: List[C_lpipe_rprintf_obj]

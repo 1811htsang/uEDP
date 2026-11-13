@@ -1,6 +1,6 @@
 # NOTE - Export modules for use in other packages
 
-from . import logic, misc, resrc
+from . import logic, misc, resrc, tsd
 
 # NOTE - Export class for use in other packages
 
@@ -21,7 +21,11 @@ from .logic import (
   C_trig_list_obj,
   C_escal_obj,
   C_tnorm_obj,
-  C_tpoll_obj
+  C_tpoll_obj,
+  C_psetbl_obj,
+  C_lpipe_itnlog_obj,
+  C_lpipe_rprintf_obj,
+  C_lpipe_obj
 )
 
 from .resrc import (
@@ -36,4 +40,13 @@ from .resrc import (
 from .misc import (
   C_outexec_obj,
   C_outexec_list_obj
+)
+
+from .tsd import (
+  C_tsd_post_isr_obj,
+  C_tsd_step_obj,
+  C_tsd_expect_tsm_state_obj,
+  C_tsd_expect_gda_value_obj,
+  C_tsd_expect_obj,
+  C_tsd_scenario_obj
 )

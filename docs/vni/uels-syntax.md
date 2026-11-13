@@ -194,8 +194,9 @@ Cần rewrite lại phần này tương ứng với các khối phát triển đ
 | Task Norm | Task có trạng thái hoặc xử lý message | `tlist -> tnorm -> tsm/fsm/exec/escal` | `tsm`, `fsm`, `exec`, `escal`, `on_ntry`, `on_actv`, `on_exit`, `on_recv`, `steps`, [`actv`, `kind`, `code`, `func`, `args`] | `uedp_task_norm_create()`, `uedp_task_norm_post_msg()` |
 | Task Poll | Task vòng lặp nhẹ, không theo message | `tlist -> tpoll -> exec` | `exec`, `steps`, [`actv`, `kind`, `code`, `func`, `args`], `ability` | `uedp_task_poll_create()`, `uedp_task_poll_set_ability()` |
 | SII | Đưa signal từ ISR vào hệ thống | `isr -> to/sig` | `to`, `sig` | `uedp_task_norm_post_isr()`, `uedp_msg_drain_isr_pool()` |
-| PPLP | Cấu hình logging pipeline | `pplp -> itnlog -> level/tag/output` | `level`, `tag`, `output.backend`, `output.sink`, `log.timestamp`, `log.msg` | `uedp_itnlog_set_filter()`, `uedp_itnlog_set_output()` |
+| PPLP | Cấu hình logging pipeline | `lpipe -> itnlog -> level/tag/output` | `level`, `tag`, `output.backend`, `output.sink`, `log.timestamp`, `log.msg` | `uedp_itnlog_set_filter()`, `uedp_itnlog_set_output()` |
 | APE | Gọi urgent message / priority escalation | `escal -> trigger -> post_urgent` | `mode: slnf`, `mode: non-slnf`, `scope: self`, `keep_queue_order`, `extra_rounds`, `post_urgent` | `uedp_task_norm_post_urgent()`, `uedp_task_norm_set_urgent()` |
+| PSE | Publish/Subscribe: đăng ký tác vụ nhận tín hiệu | `psetbl -> sig/sub` | `sig`, `sub` | `uedp_msg_register_topic()`, `uedp_msg_publish()` |
 | OCE | Service chạy ngoài luồng logic chính | `outexec -> name/handler/context/state` | `name`, `handler`, `context`, `state` | `ocesvc_register()`, `ocesvc_scheduler()` |
 
 Số lượng state trong `tsm`/`fsm` của mỗi `tnorm` (hàng Task Norm ở trên) khớp 1-1 với khai báo `APPCFG_TSM_TASK_{i}_STATE_{j}`/`APPCFG_FSM_TASK_{i}_STATE_{j}` do `kconfigspec.tnorm` và `kconfigspec.usrinp` sinh riêng cho từng task #i — xem mục "Đồng bộ với `kconfigspec.usrinp` / `kconfigspec.tnorm`" bên dưới.
@@ -221,6 +222,11 @@ tlist:
         trans:
           - sig: KID_SIG_USR_START
             goto: STATE_USR_WAITING
+            action:
+              actv:
+                kind: c_call
+                function: printf
+                args: ['"[System Task USR] Transition action.\\n"']
         on_ntry: NULL # Có thể NULL
         on_actv: NULL
         on_exit: NULL
@@ -248,6 +254,26 @@ tlist:
 ```
 
 `tsm` nên được dùng khi `tnorm` cần quản lý vòng đời trạng thái rõ ràng và có thể sinh ra `on_entry`, `on_exit` và `on_active` tự động bởi `pycdscriptor`.
+
+Mỗi phần tử trong `trans` có thể có thêm `action`. Đây là một action đơn được gọi ngay trước khi TSM chuyển sang trạng thái đích; callback được sinh với tham số `uedp_msg_t* msg`, nên có thể dùng `msg` trong `c_stmt`. Hỗ trợ `c_call` và `c_stmt` theo cùng cú pháp với các action khác:
+
+```yaml
+trans:
+  - sig: KID_SIG_USR_START
+    goto: STATE_USR_WAITING
+    action:
+      actv:
+        kind: c_stmt
+        code: |
+          printf("transition signal: %u\\n", msg->sig);
+```
+
+Nếu không khai báo `action`, transition giữ callback `NULL`.
+
+Vậy sự khác biệt giữa `action` và `on_actv` là gì ?
+
+- `action` là hành vi được gọi ngay trước khi TSM chuyển sang trạng thái đích, chỉ thực thi một lần cho mỗi transition. Nghĩa là ở trạng thái X nếu nhận tín hiệu Y để chuyển sang trạng thái Z, thì `action` sẽ được gọi một lần trước khi TSM chuyển sang Z.
+- `on_actv` là hành vi được gọi mỗi khi TSM đang ở trạng thái X và nhận tín hiệu Y, bất kể có chuyển sang trạng thái Z hay không. Nghĩa là nếu ở trạng thái X nhận tín hiệu Y nhiều lần, `on_actv` sẽ được gọi nhiều lần, còn `action` chỉ được gọi một lần cho transition đầu tiên. Tín hiệu có thể là bất kỳ signal nào, không nhất thiết phải là signal trong `trans`.
 
 `fsm` nên được dùng khi `tnorm` chỉ cần dispatch theo tín hiệu với state handler trực tiếp hoặc có thể lồng vào TSM để xử lý các hành vi phức tạp hơn.
 
@@ -350,8 +376,10 @@ Hiện tại `pycdscriptor` chưa hỗ trợ sinh cấu hình PPLP, nhưng core 
 Trong thiết kế thì PPLP có cấu hình riêng biệt với process-syntax nên có thể tích hợp module riêng để sinh code PPLP từ YAML.
 -->
 
-<!-- TASK
+<!-- DEPRECATED - Old TASK
 Cân nhắc đưa lộ trình hỗ trợ PPLP vào roadmap của μE-LS ở phiên bản 1.1.7/1.1.8 cùng với APE.
+
+# STATUS - Đã chính thức đưa PPLP vào roadmap của μE-LS ở phiên bản 1.1.7/1.1.8, còn đối với APE thì có thể loại bỏ do c_call và c_stmt đã có thể gọi trực tiếp các hàm vượt quyền tạm thời trong core API.
 -->
 
 PPLP khai báo chính sách logging cho Core và backend xuất log. Trong runtime, `itnlog` chỉ giữ filter và callback output; việc flush ra console, UART hoặc file nên đi qua OCE hoặc callback đã đăng ký.
@@ -359,7 +387,7 @@ PPLP khai báo chính sách logging cho Core và backend xuất log. Trong runti
 Với thiết kế PPLP, hệ thống được chia ra làm 3 phần là `itnlog` (filter), `logdp` (sink) và `rprintf` (backend). Cấu hình PPLP nên được viết theo kiểu sau:
 
 ```yaml
-pplp:
+lpipe:
   itnlog:
     level: ITNLOG_LEVEL_INFO
     tag: ITNLOG_TAG_TSK
@@ -400,7 +428,7 @@ Với `rprintf`:
 - Kiểm tra lại cú pháp logging pipeline, đảm bảo các trường `level`, `tag`, `output` được ánh xạ đúng với core API.
 
 ```yaml
-pplp:
+lpipe:
   itnlog:
     level: ITNLOG_LEVEL_INFO
     tag: ITNLOG_TAG_TSK
@@ -419,6 +447,8 @@ pplp:
     write: write_func
     is_ready: true
   - contract: ...
+
+# STATUS - Task này sẽ đưa vào lộ trình phát triển μE-LS ở phiên bản 1.1.7/1.1.8, nên không cần DEPRECATED task này.
 ```
 
 -->
@@ -446,8 +476,10 @@ Do đó, cần review lại tính cần thiết của syntax này với use-case
 2. Cho phép APE trong actv-obj của logic `tsm`, `fsm` và `exec`, nghĩa là người dùng có thể sử dụng với `c_call` và `c_stmt` để gọi APE cho chính mình hoặc cho các tnorm khác, miễn là không bị báo lỗi.
 -->
 
-<!-- TASK
+<!-- DEPRECATED - Old TASK
 Cân nhắc đưa lộ trình hỗ trợ APE vào roadmap của μE-LS ở phiên bản 1.1.7/1.1.8.
+
+# STATUS - Đã loại bỏ APE khỏi roadmap của μE-LS ở phiên bản 1.1.7/1.1.8, do c_call và c_stmt đã có thể gọi trực tiếp các hàm vượt quyền tạm thời trong core API.
 -->
 
 APE hay S-LnF APE là cơ chế được triển khai ở phiên bản 1.1.0 và 1.1.1 để hỗ trợ tnorm có thể gọi các hàm vượt quyền tạm thời (Privilege Escalation) trong môi trường μE(DP)/-OS. Trong μE-LS, APE là khai báo cục bộ theo từng tnorm: mỗi task có thể tự định nghĩa trigger APE cho chính nó, và Core chỉ cung cấp cơ chế thực thi tương ứng qua `uedp_task_norm_post_urgent()` và `uedp_task_norm_set_urgent()`.
@@ -552,6 +584,35 @@ Khi dùng `mode: non-slnf`, tnorm không bắt buộc phải tự gửi một ur
 Cân nhắc loại bỏ toàn bộ cú pháp ISR vì bản thân `process-syntax` đã có thể xử lý syntax C-type với `actv: c_stmt` hoặc `actv: c_call`.
 -->
 
+### PSE - Pub-Sub Engine
+
+Khối `psetbl` khai báo quan hệ đăng ký giữa tín hiệu và tác vụ norm cho PSE. Mỗi phần tử gồm:
+
+- `sig`: tín hiệu được phát bằng `uedp_msg_publish()`.
+- `sub`: danh sách tác vụ norm nhận `sig`, viết đúng tên như khóa `tnorm` trong `tlist`.
+
+```yaml
+psetbl:
+  # A -> B, C
+  - sig: SIG_0X30
+    sub: [TASK_NORM_B, TASK_NORM_C]
+
+  # B -> USR, A, C
+  - sig: SIG_0X01
+    sub: [TASK_NORM_USR, TASK_NORM_A, TASK_NORM_C]
+```
+
+Phát tín hiệu trong logic dùng `c_stmt`:
+
+```yaml
+- actv:
+    kind: c_stmt
+    code: |
+      uedp_msg_publish(SIG_0X30, NULL, 0);
+```
+
+Cơ chế đăng ký lúc khởi tạo và các lưu ý xem mục "Khai báo đăng ký tĩnh (psetbl)" trong `docs/vni/arch-design.md`.
+
 ### OCE - Dịch vụ ngoài ngữ cảnh logic
 
 <!-- REVIEW
@@ -585,11 +646,13 @@ Theo các tài liệu review về ocesvc.mexecjn trước đó, tính năng ch�
 
 ### Template tham chiếu tổng hợp
 
-<!-- TASK
+<!-- DEPRECATED - Old TASK
 Merge nhánh feat để đưa logic-testobj làm ví dụ tổng hợp cho template tham chiếu nhanh.
+
+# STATUS - DONE
 -->
 
-<!-- STUB
+<!-- TASK - Old STUB
 Sẽ thêm nội dung để hướng dẫn người dùng truy cập các logic-testobj do lộ trình bổ sung 1 folder riêng biệt của testobj cho project.
 -->
 

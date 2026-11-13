@@ -30,6 +30,10 @@ void uedp_fsm_go_next(uedp_fsm_t* me, state_handler target) {
   // Lưu trạng thái hiện tại vào lịch sử trước khi chuyển đổi
   me->history[me->history_index] = me->state; // Lưu trạng thái hiện tại vào lịch sử
   me->history_index = (me->history_index + 1) % UEDP_FSM_HIS_MAX; // Cập nhật chỉ số lịch sử, đảm bảo không vượt quá giới hạn
+  if (me->history_count < UEDP_FSM_HIS_MAX) {
+    me->history_count++;
+  }
+  //NOTE - Sửa lỗi code gốc: Cần kiểm tra me->history_count trước khi tăng, tránh tràn số lượng lịch sử
 
   // Cập nhật trạng thái hiện tại của FSM thành trạng thái mục tiêu
   me->state = target; 
@@ -67,7 +71,8 @@ void uedp_fsm_go_back(uedp_fsm_t* me) {
   ui8 prev_index = (me->history_index + UEDP_FSM_HIS_MAX - 1) % UEDP_FSM_HIS_MAX; // Tính chỉ số của trạng thái trước đó
 
   // Lấy trạng thái trước đó từ lịch sử
-  state_handler previous_state = me->history[me->history_index]; 
+  state_handler previous_state = me->history[prev_index];
+  //NOTE - Sửa lỗi code gốc: Cần kiểm tra previous_state trước khi sử dụng, tránh dereference NULL pointer
 
   // Đảm bảo rằng trạng thái trước đó không phải là NULL trước khi quay lại
   if (!previous_state) {

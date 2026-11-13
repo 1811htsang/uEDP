@@ -131,14 +131,58 @@ Starting from version 1.1.5, `uedp_msg_t` supports independently assigning the I
 Example: task A wants to send a message to task B, but task B still needs to know this message came from task A (for example, so it can reply back to the correct sender):
 
 ```c
-uedp_msg_t* msg = uedp_msg_alloc(UEDP_TASK_NORM_B_ID, SIG_REQUEST, 0);
-uedp_msg_set_src_task_id(msg, UEDP_TASK_NORM_A_ID);
+uedp_msg_t* msg = uedp_msg_alloc(TASK_NORM_B, SIG_REQUEST, 0);
+uedp_msg_set_src_task_id(msg, TASK_NORM_A);
 uedp_task_norm_send_msg(msg);
 ```
 
 In task B's handler, it can read back `msg->src_task_id` to know who sent the message, and use `uedp_msg_set_des_task_id()` on a new reply message to send it back to task A. This is a simple mechanism where the user chooses an appropriate ID themselves - the Core does not enforce or validate this source/destination pairing on its own.
 
 > **Note**: starting from 1.1.5, the `internal_uedp_msg_pool_panic` API has been removed from the Core. Fatal errors related to the message pool (pool exhaustion, invalid pointer, ISR FIFO full, ...) are now reported through the FCR mechanism (see the "FCR (Fatal Code Return)" section below) instead of calling panic directly as before.
+
+### Pub-Sub Engine (PSE) - Publish/subscribe mechanism
+
+PSE lets one signal be published to multiple registered tasks, without the publisher needing to know the list of receivers.
+
+#### Topic registration
+
+- `uedp_msg_register_topic(sig, task_list)`: overwrites the list of tasks subscribed to `sig`.
+- `uedp_msg_clear_topic(sig, task_list)`: removes the tasks in `task_list` from the subscriptions of `sig`.
+
+`task_list` ends with `UEDP_TASK_NORM_EOT_ID`. Each norm task maps to one bit, so a topic has at most 16 subscribers. `sig` must be less than `UEDP_TBM_MAX_SIZE` (32 topics by default); otherwise the function returns `STAT_ERROR`.
+
+```c
+task_norm_t task_list[] = { { TASK_NORM_B }, { TASK_NORM_C }, { UEDP_TASK_NORM_EOT_ID } };
+uedp_msg_register_topic(SIG_0X30, task_list);
+```
+
+#### Static registration (psetbl)
+
+In μE-LS, the `psetbl` block registers topics at initialisation, instead of calling `uedp_msg_register_topic()` by hand in `logic_init`:
+
+```yaml
+psetbl:
+  - sig: SIG_0X30
+    sub: [TASK_NORM_B, TASK_NORM_C]
+```
+
+Every name in `sub` must be a declared norm task. To unregister at runtime, call `uedp_msg_clear_topic()`.
+
+#### Publish flow
+
+`uedp_msg_publish(sig, data, data_size)`:
+
+- `data_size` must not exceed `UEDP_MSG_ALLOC_DATA_MAX`, and `data` must not be `NULL` when `data_size > 0`. Violations return `STAT_ERROR`.
+- If the topic has no subscribers, the function returns `STAT_OK` without allocating anything.
+- The Core allocates **one** message and shares it among all subscribers, without copying the payload for each receiver. The message is returned to the pool once all subscribers have finished processing it.
+- If one subscriber's queue is full, that subscriber does not receive the message, the other subscribers still receive it normally, and `publish` returns `STAT_ERROR`.
+
+#### Current limitations
+
+- Messages are only delivered to tasks that are subscribed at the time of publishing.
+- Payloads larger than `UEDP_MSG_ALLOC_DATA_MAX` are rejected.
+- There is no QoS, no priority ordering between receivers, and no pass-by-reference through `ptype`.
+- Convention: do not call `uedp_msg_publish()` from ISR context. The code does not check this yet.
 
 ### FCR (Fatal Code Return) - Handling fatal errors
 
@@ -210,7 +254,7 @@ void task_b_check_status(void) {
 #### Points to note about Dpool GDA
 
 - GDP does not own the `data` memory - registering a local variable instead of a `static`/`global` one will cause the pointer to reference memory that is no longer valid after the declaring function returns.
-- The maximum number of slots GDP can manage at once defaults to `UEDP_GDP_MAX_SLOTS` (16); this can be overridden by defining the macro before including the header if more slots are needed.
+- The maximum number of slots GDP can manage at once defaults to `UEDP_GDP_QUEUE_SIZE` (16); this can be overridden by defining the macro before including the header if more slots are needed.
 - `uedp_gdp_get_val()`/`uedp_gdp_set_val()` will raise FCR if `buf_size` does not match/is insufficient compared to the registered size, instead of silently reading/writing to the wrong memory area.
 - `uedp_gdp_get_ref()` returns a pointer directly into the real memory area, with no critical section wrapper - this fits μEDP's current single-core, non-preemptive scheduler; it should be reconsidered if μEDP is ported to a multi-core environment.
 - The registered `name` in GDP should match the `name` declared in the `glbda:` block of μE-LS to keep the PLD/μE-LS design documentation consistent with the actual implementation.
@@ -294,6 +338,35 @@ In the current code, `uedp_task_norm_post_isr()` is the API dedicated to ISR use
 #### Intended use
 
 A timer can be used as a tool to create a delay or a timeout inside tasks. For example, in a task that needs to use a blocking API such as UART, I2C, or other communication protocols, a timer can be used to create a timeout for those APIs, avoiding the task hanging indefinitely if something goes wrong. Timers can also be used to create periodic events, for example reading a sensor at fixed intervals or sending a heartbeat to indicate that the system is still running.
+
+### PAL STM32H723 - Peripheral APIs
+
+The APIs below are declared in `sources/pal/arch/stm32h723/stm32h723.h` and are called by the application after HAL has been initialised by CubeIDE (`MX_*_Init`). The PAL does not create its own HAL handles: users pass the initialised handle with the `*_bind` functions.
+
+#### UART (USART1)
+
+- `stm32h723_uart_bind(UART_HandleTypeDef* huart)`: `huart` must already be initialised by `HAL_UART_Init()` (`MX_USART1_UART_Init`). CubeIDE links the TX/RX DMA to `huart` through `__HAL_LINKDMA`, so the PAL does not need its own DMA handle.
+
+#### I2S (SPI1)
+
+- `stm32h723_i2s_bind(I2S_HandleTypeDef* hi2s)`: `hi2s` must already be initialised by `HAL_I2S_Init()` (`MX_I2S1_Init`).
+- `stm32h723_i2s_set_rx_callback(stm32h723_i2s_rx_cb_t cb)`: registers the callback that receives `STM32H723_I2S_RX_DONE` or `STM32H723_I2S_RX_ERROR` events.
+- `stm32h723_i2s_rx_start(ui32* buf, ui16 samples)` and `stm32h723_i2s_rx_stop(void)`.
+
+Notes:
+
+- `buf` must be in RAM accessible by DMA (RAM_D1/D2/D3), not DTCMRAM.
+- The callback runs in ISR context and may only call ISR-safe functions.
+- The unit of `samples` has not been verified for 24-bit data and must be checked on hardware.
+
+#### OCTOSPI1
+
+- `stm32h723_ospi_bind(OSPI_HandleTypeDef* hospi)`: `hospi` must already be initialised by `HAL_OSPI_Init()` and `HAL_OSPIM_Config()` (`MX_OCTOSPI1_Init`).
+- `stm32h723_ospi_command(OSPI_RegularCmdTypeDef* cmd, ui32 timeout)`
+- `stm32h723_ospi_transmit(OSPI_RegularCmdTypeDef* cmd, ui8* data, ui32 size, ui32 timeout)`
+- `stm32h723_ospi_receive(OSPI_RegularCmdTypeDef* cmd, ui8* data, ui32 size, ui32 timeout)`
+
+`cmd.NbData` is set automatically from `size`; the other fields of `cmd` are configured by the caller.
 
 ### Itnlog
 
@@ -566,8 +639,8 @@ Example:
 ```c
 task_norm_t app_task_table[] = {
   { UEDP_TASK_NORM_USR_ID,  UEDP_TASK_PRI_LEVEL_8, task_norm_usr_handler, {0}, usr_q_mem  },
-  { TASK_NORM_A_ID,           UEDP_TASK_PRI_LEVEL_7, task_norm_a_handler,   {0}, a_q_mem    },
-  { TASK_NORM_B_ID,           UEDP_TASK_PRI_LEVEL_6, task_norm_b_handler,   {0}, b_q_mem    },
+  { TASK_NORM_A,              UEDP_TASK_PRI_LEVEL_7, task_norm_a_handler,   {0}, a_q_mem    },
+  { TASK_NORM_B,              UEDP_TASK_PRI_LEVEL_6, task_norm_b_handler,   {0}, b_q_mem    },
   { UEDP_TASK_NORM_EOT_ID,  UEDP_TASK_PRI_LEVEL_0, NULL,                  {0}, NULL       }
 };
 ```
@@ -622,6 +695,73 @@ To match the current source, the initialization order should be:
 11. `uedp_task_poll_create()` if there are poll tasks
 12. Send the starting message to `UEDP_TASK_NORM_USR_ID`
 13. The `uedp_task_scheduler()` loop
+
+### Automatic generation from Kconfig and pycdscriptor
+
+The automatic generation process from Kconfig and pycdscriptor reduces errors caused by duplicated or incorrect manual declarations, and ensures that the system components are initialized correctly and completely. Users only need to declare the configuration parameters in Kconfig and pycdscriptor, and the Core will automatically generate the corresponding initialization functions and state description tables.
+
+More specifically:
+
+```bash
+# pwd return at root of project
+# If in interactive mode
+python ntrypont.py --it
+## Write the logic description into sources/app/lstaxizer.yaml
+# Validate and generate code
+python jainerator.py
+
+# If in non-interactive mode
+python ntrypont.py --n-it
+cd sources/test
+python insert.py vir-phy-logic-testobj-v0
+cd ..
+python jainerator.py
+```
+
+In non-interactive mode, users can use the script to insert testobjs (test objects) as logic descriptions into `sources/app/lstaxizer.yaml`, then run `jainerator.py` to validate and generate code automatically. The testobjs available in `sources/test/testobj/` are `vir-phy-logic-testobj-v0`, `vir-phy-postiv-pse-fcr-gdp-testobj-v1` and `vir-phy-negtiv-pse-fcr-gdp-testobj-v2`. This process helps ensure that configuration parameters are declared accurately and completely, and reduces errors caused by duplicated or incorrect manual declarations.
+
+After code is generated, depending on the platform (such as STMCubeIDE, ESP-IDF or Linux), users can add the headers and source files to the project to build and run the application.
+
+The uutobj F103 already includes a sample `include.xml` file to help add the headers and source files to an STMCubeIDE project. Users can refer to it and adjust it to suit their platform.
+
+> Update in version v1.1.6-bf2
+>
+> In version v1.1.6-bf2, the `include.xml` file no longer contains specific BSP paths, to increase its flexibility and reusability. Users can add the BSP paths that match their platform to `include.xml` to ensure the headers and source files are added to the project accurately and completely.
+
+In addition, the developer also provides CMake support with sample `CMakeLists.txt` files, so users can build and test the application on Linux with the following commands:
+
+```bash
+# pwd return at root of project LINUX
+rm -rf build && cmake -B build -DPLAT=LINUX -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+make -C build
+./build/uedp-linux
+```
+
+These commands apply to a separate prjecobj (project object) cloned into its own `uEDP` folder, with the following structure:
+
+```structure
+uedp-prjecobj-linux/
+├── build/
+├── main/
+├── uEDP/
+└── CMakeLists.txt
+```
+
+If users want to build the library directly from the original repository, they can use:
+
+```bash
+# pwd return at root of uEDP
+rm -rf build && cmake -B build -DPLAT=TEST -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+make -C build
+```
+
+On Linux, `main()` is provided by the PAL (`sources/pal/arch/linux/main.c`) and calls `app_main()`. `app_main()` is generated in `app.c` from the template `pltf/templates/appc.txt`, so users only implement the application logic and do not write `main()`.
+
+> Update in version v1.1.6-bf2
+>
+> In version v1.1.6-bf2, Bash-type modules are fully converted to Python-type, so the scripts `entrypoint.sh`, `jainerator.sh` and `insert.sh` are replaced by corresponding Python scripts. This improves compatibility across platforms and reduces errors caused by differences in shell environments. Users can use these Python scripts to perform the same functions as before, including inserting testobjs, validating, and generating code automatically from Kconfig and pycdscriptor.
+>
+> In addition, the Dockerfile is now considered a supporting tool for build and test, rather than a required part of the development process. Users can use Docker to create a consistent development environment and manage dependencies easily, or choose to set up a manual development environment directly on their own system.
 
 ## IV. Important notes
 

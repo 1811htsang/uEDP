@@ -5,6 +5,9 @@
  * @date 2026-08-01
  * @copyright MIT License
  */
+#ifdef UEDP_NEG_TESTCASE
+  #include <stdio.h>
+#endif
 #include <stddef.h>
 #include "uedp_core.h"
 #include "uedp_fcr.h"
@@ -24,16 +27,17 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
   { UEDP_FCR_MSG_INVALID_PTR,      "MSG invalid pointer",             UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_MSG_ISR_FIFO_FULL,    "MSG ISR fifo full",               UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
   { UEDP_FCR_MSG_POOL_MISCONFIG,   "MSG pool misconfigured",          UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
+  { UEDP_FCR_MSG_INVALID_PARAM,    "MSG invalid param",               UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
 
   // [TASK]
-  { UEDP_FCR_TASK_QUEUE_FULL,      "TASK message queue full",         UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_RESET_TASK },
+  { UEDP_FCR_TASK_QUEUE_FULL,      "TASK message queue full",         UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_SYS_PANIC },
   { UEDP_FCR_TASK_INVALID_ID,      "TASK invalid ID",                 UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_TASK_PRI_EXHAUSTED,   "TASK priority escalation exhausted", UEDP_FCR_SEV_WARN, UEDP_FCR_ACT_LOG_ONLY  },
   { UEDP_FCR_TASK_INVALID_PRI,     "TASK invalid priority",           UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
 
   // [TIMER]
   { UEDP_FCR_TIMER_POOL_EXHAUSTED, "TIMER pool exhausted",            UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
-  { UEDP_FCR_TIMER_INVALID_PARAM,  "TIMER invalid param",             UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_TIMER_INVALID_PARAM,  "TIMER invalid param",             UEDP_FCR_SEV_ERROR,   UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_TIMER_CORRUPTED,      "TIMER linked list corrupted",     UEDP_FCR_SEV_FATAL,  UEDP_FCR_ACT_SYS_PANIC  },
 
   // [SM] (FSM/TSM)
@@ -50,16 +54,19 @@ sta const uedp_fcr_entry_t g_fcr_table[] = {
   { UEDP_FCR_OCE_NOT_INIT,         "OCE scheduler called pre-init",   UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
 
   // [PAL]
+  { UEDP_FCR_PAL_FATAL_API_CALLED, "PAL fatal API called",            UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
   { UEDP_FCR_PAL_LOGDP_TABLE_FULL, "PAL logdp output table full",     UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
+  { UEDP_FCR_LIB_COLLAPSE,         "LIB collapsed",                   UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  },
 
   { UEDP_FCR_GDP_TABLE_FULL,       "GDP table full",                  UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_GDP_NOT_FOUND,        "GDP name not found",              UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
-  { UEDP_FCR_GDP_INVALID_PARAM,    "GDP invalid param",               UEDP_FCR_SEV_WARN,   UEDP_FCR_ACT_LOG_ONLY   },
+  { UEDP_FCR_GDP_INVALID_PARAM,    "GDP invalid param",               UEDP_FCR_SEV_WARN,  UEDP_FCR_ACT_LOG_ONLY   },
   { UEDP_FCR_GDP_DUPLICATE_NAME,   "GDP duplicate name",              UEDP_FCR_SEV_ERROR,  UEDP_FCR_ACT_LOG_ONLY   },
 
   // Fallback - LUÔN đặt cuối cùng
   { UEDP_FCR_UNKNOWN,              "Unknown FCR code",                UEDP_FCR_SEV_FATAL, UEDP_FCR_ACT_SYS_PANIC  }
 };
+// DEPRECATED - Old TASK - cần kiểm tra cập nhật số lượng các mã lỗi còn thiếu từ bên header file.
 
 #define UEDP_FCR_TABLE_SIZE   (sizeof(g_fcr_table) / sizeof(g_fcr_table[0]))
 
@@ -100,13 +107,8 @@ void uedp_fcr_raise(uedp_fcr_code_t code, const char* file, ui32 line, const cha
   // 2. Thực hiện hành động xử lý tương ứng với entry tra được trong bảng
   switch (entry->action) {
     case UEDP_FCR_ACT_LOG_ONLY:
-      // Không can thiệp thêm, chỉ ghi log ở bước 1
-      break;
-
-    case UEDP_FCR_ACT_RESET_TASK:
-      // Bản 0.1: chưa tự động khôi phục tác vụ (cần cơ chế reset TSM/FSM về IDLE
-      // an toàn từ bên ngoài ngữ cảnh của chính tác vụ đó). Hiện tại chỉ ghi log
-      // ở mức ERROR để tầng trên (task giám sát / OCE) tự quyết định xử lý tiếp.
+      // NOTE - Không can thiệp thêm, chỉ ghi log ở bước 1
+      // REVIEW - Bổ sung itnlog ở đây
       break;
 
     case UEDP_FCR_ACT_SYS_RESET:
@@ -118,4 +120,9 @@ void uedp_fcr_raise(uedp_fcr_code_t code, const char* file, ui32 line, const cha
       pal_sys_fatal(file, line, entry->desc);
       break;
   }
+
+  #ifdef UEDP_NEG_TESTCASE
+    printf("[UEDP_FCR] RAISE: code=0x%04X, desc='%s', severity=%d, action=%d\n",
+           entry->code, entry->desc, entry->severity, entry->action);
+  #endif
 }

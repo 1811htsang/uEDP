@@ -37,6 +37,7 @@
   #define ITNLOG_TAG_TSM  "TSM"
   #define ITNLOG_TAG_TIM  "TIM"
   #define ITNLOG_TAG_FCR  "FCR"
+  #define ITNLOG_TAG_PAL  "PAL"
 
   /** ANCHOR -  Định nghĩa cấu trúc log
    * @param level Mức độ log
@@ -59,14 +60,19 @@
    *            để biểu thị không có thông tin FSM hoặc TSM liên quan đến log đó.
    */
   typedef struct uedp_itnlog_entry_t {
-    uedp_itnlog_level_t level;
-    const char* tag;
     ui16 task_id;
     ui16 msg_sig;
-    const char* msg;
-    ui32 tmstmp;
+    ui16 tmstmp;
     ui16 hash; 
+    const char* msg;
+    const char* tag;
+    uedp_itnlog_level_t level;
   } uedp_itnlog_entry_t;
+
+  /** NOTE
+   * Định nghĩa được sắp xếp attribute không theo thứ tự
+   * nhằm tối ưu hóa padding và alignment của cấu trúc log entry trong bộ nhớ
+   */
 
   /** ANCHOR - Định nghĩa hàm output cho internal logger
    * @note Hàm này sẽ được sử dụng để xuất dữ liệu log ra đích đến, 

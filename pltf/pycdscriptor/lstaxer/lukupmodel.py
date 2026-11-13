@@ -226,9 +226,17 @@ def _parse_action_list(data):
 def _parse_trans_obj(data):
   if not isinstance(data, dict):
     return None
+
+  action = data.get('action')
+  if isinstance(action, dict) and 'actv' not in action and (
+    'kind' in action or 'type' in action
+  ):
+    action = {'actv': action}
+
   return C_trans_obj(
     sig=_normalize_alias_value(data.get('sig'), 'id_symbol') or '',
     goto=_normalize_alias_value(data.get('goto')) or '',
+    action=_parse_actv_obj(action) if action is not None else None,
   )
 
 def _parse_tsm_obj(data):
@@ -309,7 +317,7 @@ def lukupmodel_tnorm_logic(yaml_text):
       continue
 
     task_name = str(item.get('tnorm', ''))
-    model = C_tnorm_obj(task=task_name)
+    model = C_tnorm_obj(task=task_name, priority=_normalize_alias_value(item.get('priority')))
 
     if 'tsm' in item:
       tsm_raw = item.get('tsm', [])
@@ -323,8 +331,8 @@ def lukupmodel_tnorm_logic(yaml_text):
         fsm_list=[_parse_fsm_obj(x) for x in fsm_raw if _parse_fsm_obj(x) is not None]
       )
 
-    if 'kwexec' in item:
-      kwexec_raw = item.get('kwexec', [])
+    if 'kwexec' in item or 'exec' in item:
+      kwexec_raw = item.get('kwexec', item.get('exec', []))
       model.kwexec = C_kwexec_list_obj(
         kwexec=[_parse_kwexec_obj(x) for x in kwexec_raw if _parse_kwexec_obj(x) is not None]
       )
@@ -367,6 +375,100 @@ def lukupmodel_tpoll_logic(yaml_text):
     out.append(C_tpoll_obj(tpoll=task_name, kwexec=[a for a in parsed_kwexec if a is not None]))
 
   return out
+
+def lukupmodel_psetbl_logic(yaml_text):
+  payload = yaml.safe_load(yaml_text) or {}
+  entries = payload.get('psetbl', [])
+  if not isinstance(entries, list):
+    return []
+
+  out = []
+  for item in entries:
+    if not isinstance(item, dict) or 'sig' not in item:
+      continue
+
+    out.append(C_psetbl_obj(
+      sig=_normalize_alias_value(item.get('sig'), 'id_symbol') or '',
+      sub=[str(task) for task in item.get('sub', []) or []],
+    ))
+
+  return out
+
+def _parse_tsd_step(data):
+  if not isinstance(data, dict):
+    return None
+  post_isr = data.get('post_isr')
+  return C_tsd_step_obj(
+    post_isr=C_tsd_post_isr_obj(
+      to=_normalize_alias_value(post_isr.get('to'), 'id_symbol') or '',
+      sig=_normalize_alias_value(post_isr.get('sig'), 'id_symbol') or '',
+    ) if isinstance(post_isr, dict) else None,
+    advance_tick=int(data['advance_tick']) if 'advance_tick' in data else None,
+  )
+
+def _parse_tsd_expect(data):
+  if not isinstance(data, dict):
+    return None
+  tsm_state = data.get('tsm_state')
+  gda_value = data.get('gda_value')
+  return C_tsd_expect_obj(
+    tsm_state=C_tsd_expect_tsm_state_obj(
+      task=_normalize_alias_value(tsm_state.get('task'), 'id_symbol') or '',
+      state=_normalize_alias_value(tsm_state.get('state'), 'id_symbol') or '',
+    ) if isinstance(tsm_state, dict) else None,
+    gda_value=C_tsd_expect_gda_value_obj(
+      name=str(gda_value.get('name', '')),
+      equals=str(gda_value.get('equals', '')),
+    ) if isinstance(gda_value, dict) else None,
+  )
+
+def lukupmodel_tsd_logic(yaml_text):
+  payload = yaml.safe_load(yaml_text) or {}
+  entries = payload.get('tsd', [])
+  if not isinstance(entries, list):
+    return []
+
+  out = []
+  for item in entries:
+    if not isinstance(item, dict) or 'name' not in item:
+      continue
+
+    out.append(C_tsd_scenario_obj(
+      name=str(item.get('name', '')),
+      level=str(item.get('level', 'st')),
+      steps=[s for s in (_parse_tsd_step(x) for x in item.get('steps', []) or []) if s is not None],
+      expect=[e for e in (_parse_tsd_expect(x) for x in item.get('expect', []) or []) if e is not None],
+    ))
+
+  return out
+
+def lukupmodel_lpipe_logic(yaml_text):
+  payload = yaml.safe_load(yaml_text) or {}
+  entry = payload.get('lpipe')
+  if not isinstance(entry, dict):
+    return None
+
+  itnlog = entry.get('itnlog') or {}
+  logdp = entry.get('logdp') or {}
+  rprintf_items = entry.get('rprintf') or []
+
+  return C_lpipe_obj(
+    itnlog=C_lpipe_itnlog_obj(
+      level=str(itnlog.get('level', 'ITNLOG_LEVEL_DEBUG')),
+      tag=str(itnlog.get('tag', 'NULL')),
+    ),
+    logdp=[str(item) for item in logdp.get('register', []) or []],
+    rprintf=[
+      C_lpipe_rprintf_obj(
+        name=str(item.get('contract', '')),
+        init=_normalize_alias_value(item.get('init')),
+        putc=_normalize_alias_value(item.get('putc')),
+        write=_normalize_alias_value(item.get('write')),
+        is_ready=_normalize_alias_value(item.get('is_ready')),
+      )
+      for item in rprintf_items if isinstance(item, dict)
+    ],
+  )
 
 # DEPRECATED - Old TASK - Remove ISR support in syntax and generator.
 

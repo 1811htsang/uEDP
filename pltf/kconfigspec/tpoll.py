@@ -9,21 +9,22 @@ def task_poll_declaration(num_tasks_poll):
     # NOTE - Config name
     kconfig_content.append(f'\t\tconfig DECL_TASK_POLL_{i}_NAME') 
     kconfig_content.append(f'\t\t\tstring "Name of task poll #{i}"')
-    kconfig_content.append(f'\t\t\tdefault "TASK_POLL_{i}_ID"\n') 
+    kconfig_content.append(f'\t\t\tdefault "TASK_POLL_{i}"\n')
     kconfig_content.append(f'\t\t\thelp\n')
     kconfig_content.append(f'\t\t\t\tThis is the name of task poll, please use upper case.\n')
-    kconfig_content.append(f'\t\t\t\tPrefer like eg. `TASK_POLL_A_ID`, `TASK_POLL_USR_ID`\n')
+    kconfig_content.append(f'\t\t\t\tPrefer like eg. `TASK_POLL_A`, `TASK_POLL_USR`\n')
     kconfig_content.append(f'\t\t\t\tThis is only used for internal identification.\n')
 
     # NOTE - Config handler name
     kconfig_content.append(f'\t\tconfig DECL_POLL_HANDLER_{i}_NAME') 
     kconfig_content.append(f'\t\t\tstring "Name of handler #{i}"')
-    kconfig_content.append(f'\t\t\tdefault "POLL_HANDLER_{i}_ID"')
+    kconfig_content.append(f'\t\t\tdefault "POLL_HANDLER_{i}"')
     kconfig_content.append(f'\t\t\tdepends on DECL_TASK_POLL_{i}_NAME != ""\n')
     kconfig_content.append(f'\t\t\thelp\n')
     kconfig_content.append(f'\t\t\t\tThis is the name of task poll handler.\n')
     kconfig_content.append(f'\t\t\t\tFormat output as void <value>_phler(uedp_msg_t* msg);.\n')
     kconfig_content.append(f'\t\t\t\tUsually prefer eg. `tpoll_a` to produce `tpoll_a_phler(uedp_msg_t* msg);.`\n')
+    kconfig_content.append(f'\t\t\t\tThe value is an internal C identifier and should not use the `_ID` suffix.\n')
 
     kconfig_content.append(f'\tendmenu\n')
 

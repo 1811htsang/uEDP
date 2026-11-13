@@ -47,10 +47,15 @@
 	do { \
 		(me)->state = (state_handler)(init_func); \
 		(me)->history_index = 0; \
+		(me)->history_count = 0; \
 		memset((me)->history, 0, sizeof((me)->history)); \
 		uedp_msg_t* m = uedp_msg_alloc(0, UEDP_FSM_SIG_INIT, 0); \
-		(init_func)(m); /* Gửi tín hiệu INIT đến trạng thái khởi tạo của FSM */ \
+		if (m != NULL) { \
+			(init_func)(m); /* Gửi tín hiệu INIT đến trạng thái khởi tạo của FSM */ \
+			uedp_msg_free(m); \
+		} \
 	} while(0)
+	//NOTE - Add free m after use to avoid memory leak
 
 	/** ANCHOR - Khai báo hàm để xử lý tin nhắn và điều hướng trạng thái trong FSM
 	 * @param me chỉ trạng thái hiện tại của FSM

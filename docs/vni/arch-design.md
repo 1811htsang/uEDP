@@ -122,6 +122,13 @@ Lưu ý khi tích hợp:
 - `pal_rprintf_flush_entry()` chỉ thực sự xuất dữ liệu khi `is_ready()` trả về `true`.
 - Định dạng mặc định của `rprintf` là một dòng có timestamp, task ID, signal ID và message, được tạo bằng `xfprintf()` thay vì ghép chuỗi thủ công.
 
+#### Nguyên tắc thiết kế và sử dụng PAL
+
+Khi kết nối Core với phần cứng cụ thể, BSP (Board Support Package) và các PAL service cần tuân thủ các nguyên tắc sau:
+
+- Các hàm PAL nên được thiết kế để Core không cần biết chi tiết phần cứng, chỉ cần gọi các hàm trừu tượng như `pal_enter_critical()` hoặc `pal_get_highest_priority()`. Do đó, người dùng nên ưu tiên triển khai các API PAL để làm wrapper cho BSP API cụ thể, thay vì gọi trực tiếp các hàm phần cứng trong Core.
+- Các triển khai trong service của PAL nên được triển khai ở pal/arch thay vì trực tiếp triển khai ở `app.c`, một số tính năng như PPLP và OCE có thể cần truy cập trực tiếp vào các thanh ghi phần cứng, nhưng Core không nên biết chi tiết này. Do đó, các hàm PAL nên được triển khai ở pal/arch để tách biệt rõ ràng giữa Core và phần cứng.
+
 ## Logic thiết kế chi tiết
 
 ### [DMP] Deterministic Memory Pooling - Quản lý bộ nhớ tin nhắn với cấp phát tĩnh độc lập vào kiến trúc
@@ -160,7 +167,7 @@ Trong đó, nếu kích thước của dữ liệu nhỏ hơn kích thước đ�
 
 Do đó cần lưu ý rằng đối với việc truyền tham chiếu tới **biến cục bộ** (local variable, thời gian sống giới hạn trong 1 lần gọi hàm), người dùng phải tự đảm bảo vùng nhớ đó còn hợp lệ tại thời điểm message được xử lý (thường là khai báo `static`), tránh lỗi truy cập bộ nhớ khi message được xử lý sau khi biến cục bộ đã hết phạm vi (dangling pointer).
 
-Riêng với trường hợp truyền tham chiếu tới **biến toàn cục thật sự** (static/global storage duration, phục vụ khối `glbda:` của PLD/μE-LS), Core cung cấp thêm cơ chế **[GDP] Global Data Pool** để quản lý việc này một cách tường minh, thay vì để người dùng tự quản lý con trỏ thô như trên. GDP là một bảng đăng ký tĩnh (`uedp_gdp_slot_t`, mặc định `UEDP_GDP_MAX_SLOTS = 16` slot) ánh xạ tên ↔ con trỏ, với 5 API: `uedp_gdp_init()` (khởi tạo bảng), `uedp_gdp_register()`/`uedp_gdp_unregister()` (đăng ký/huỷ đăng ký 1 biến toàn cục theo tên), `uedp_gdp_get_ref()` (lấy con trỏ tham chiếu trực tiếp, dùng cho `ptype: REF`), và `uedp_gdp_get_val()`/`uedp_gdp_set_val()` (sao chép giá trị ra/vào buffer, dùng cho `ptype: VAL`).
+Riêng với trường hợp truyền tham chiếu tới **biến toàn cục thật sự** (static/global storage duration, phục vụ khối `glbda:` của PLD/μE-LS), Core cung cấp thêm cơ chế **[GDP] Global Data Pool** để quản lý việc này một cách tường minh, thay vì để người dùng tự quản lý con trỏ thô như trên. GDP là một bảng đăng ký tĩnh (`uedp_gdp_slot_t`, mặc định `UEDP_GDP_QUEUE_SIZE = 16` slot) ánh xạ tên ↔ con trỏ, với 5 API: `uedp_gdp_init()` (khởi tạo bảng), `uedp_gdp_register()`/`uedp_gdp_unregister()` (đăng ký/huỷ đăng ký 1 biến toàn cục theo tên), `uedp_gdp_get_ref()` (lấy con trỏ tham chiếu trực tiếp, dùng cho `ptype: REF`), và `uedp_gdp_get_val()`/`uedp_gdp_set_val()` (sao chép giá trị ra/vào buffer, dùng cho `ptype: VAL`).
 
 Điểm khác biệt cốt lõi so với 4 pool `BLANK`/`ALLOC`/`EXTAL`/`ISR`: GDP **không cấp phát** vùng nhớ `data` (chỉ lưu con trỏ trỏ tới vùng nhớ đã tồn tại sẵn, do người dùng hoặc PLTF khai báo) và **không có khái niệm giải phóng/vòng đời** - biến toàn cục sống suốt vòng đời chương trình nên không có thao tác "free" một slot đã đăng ký. Điều này khác hẳn `ALLOC`, vốn gắn chặt với vòng đời `uedp_msg_alloc()`/`uedp_msg_free()` và không phù hợp để tái sử dụng cho mục đích lưu trữ biến toàn cục (sẽ phải tự chế thêm cơ chế "never-free" đè lên trên).
 
@@ -218,27 +225,31 @@ Khi bắt đầu, `tsm_init()` được gọi để thiết lập trạng thái 
 Do đó, khi thiết kế hệ thống, cần đảm bảo rằng các task có mức độ ưu tiên phù hợp để tránh tình trạng loop hoặc sai logic.
 
 ```asciidoc
-                    #all                   ║
-                    ┌──────────┐ [in]      ║ > tsm_init
-                    │  ot_ntry │           ║
-                    └────┼─────┘           ║
-          -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
-                  #cur ┌─┴──┐[out][on]     ║
-                ┌──────┼actv┼──────┐       ║ > tsm_dispatch
-                │      └────┘      │       ║
-          -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-║-=-=-=-=-=-=
-                │                  │  #nxt ║
-              ┌─┼──┐           ┌───┼───┐   ║
-         #cur │exit┼───────────┼il_ntry│   ║ > tsm_trans
-              └────┘           └───────┘   ║
-                [on]                 [in]  ║
-                                           ║
+┌────────────────────────────────────────┬────────────────┐
+│         #all [in]                      │                │
+│         ┌───────┐                      │                │
+│         │ot_ntry│                      │ > tsm_init     │
+│         └───┬───┘                      │                │
+├─────────────┼──────────────────────────┼────────────────┤
+│         #cur│   [on]         [on]      │                │
+│           ┌─▼──┐       ┌────┐[out]     │                │
+│         ┌─►onst┼───────►actv┼─┐        │ > tsm_dispatch │
+│         │ └────┘       └────┘ │        │                │
+├─────────┼─────────────────────┼────────┼────────────────┤
+│ #nxt┌───┴───┐               ┌─▼──┐#cur │                │
+│     │il_ntry◄───────────────┤exit│     │ > tsm_trans    │
+│ [in]└───────┘               └────┘[on] │                │
+│                                        │                │
+└────────────────────────────────────────┴────────────────┘
 ```
 
-<!-- DEPRECATED - Old TASK
-Bổ sung mẹo sử dụng HSMC trong syntax của PLD/μE-LS.
-#STATUS - DONE
--->
+Dự kiến ở phiên bản 1.1.8, TSM sẽ được nâng cấp để hỗ trợ đặc điểm mới chính là sự phân biệt rõ ràng giữa hàm thực thi trong trạng thái - `_onst` và hàm thực thi khi chuyển trạng thái - `actv`. Tại sao lại có sự phân biệt rõ ràng như vậy?
+
+> `action` là hành vi được gọi ngay trước khi TSM chuyển sang trạng thái đích, chỉ thực thi một lần cho mỗi transition. Nghĩa là ở trạng thái X nếu nhận tín hiệu Y để chuyển sang trạng thái Z, thì `action` sẽ được gọi một lần trước khi TSM chuyển sang Z.
+
+Trong khi đó,
+
+> `on_actv` là hành vi được gọi mỗi khi TSM đang ở trạng thái X và nhận tín hiệu Y, bất kể có chuyển sang trạng thái Z hay không. Nghĩa là nếu ở trạng thái X nhận tín hiệu Y nhiều lần, `on_actv` sẽ được gọi nhiều lần, còn `action` chỉ được gọi một lần cho transition đầu tiên. Tín hiệu có thể là bất kỳ signal nào, không nhất thiết phải là signal trong `trans`.
 
 #### FSM - Finite State Machine
 
@@ -550,7 +561,9 @@ Mã lỗi FCR (`uedp_fcr_code_t`, kiểu `ui16`) dùng chung nguyên lý encodin
 | `UEDP_FCR_MOD_ITNLOG` | `0x94` | Logger nội bộ (`uedp_itnlog`) |
 | `UEDP_FCR_MOD_OCE` | `0x95` | Out-Context Execution (`uedp_ocesvc`) |
 | `UEDP_FCR_MOD_PAL` | `0x96` | PAL / dịch vụ phần cứng (logdp, rprintf, memrp, arch...) |
-| `0x97` → `0x9D` | *(chưa dùng)* | Để trống cho module core sinh sau này |
+| `UEDP_FCR_MOD_GDP` | `0x97` | Global Data Pool (GDP trong `uedp_msg.c`) |
+| `UEDP_FCR_MOD_LIB` | `0x98` | Thư viện bên ngoài tại `sources/common` |
+| `0x99` → `0x9D` | *(chưa dùng)* | Để trống cho module core sinh sau này |
 | `UEDP_FCR_MOD_APP` | `0x9E` | Dành cho tầng ứng dụng tự khai báo mã lỗi riêng |
 | `UEDP_FCR_MOD_UNK` | `0x9F` | Fallback khi tra bảng không tìm thấy mã lỗi |
 
@@ -586,7 +599,7 @@ FCR không tự ghi log trực tiếp mà đi qua `uedp_itnlog_log()` với tag 
 
 #### Các điểm đã tích hợp FCR vào Core
 
-FCR chỉ có giá trị khi được "khâu" vào đúng những chỗ lỗi thật sự im lặng trước đó, thay vì chỉ tồn tại như một module đứng riêng. Tính đến bản này, FCR đã được raise tại hơn 40 điểm trên 7 file lõi:
+FCR chỉ có giá trị khi được "khâu" vào đúng những chỗ lỗi thật sự im lặng trước đó, thay vì chỉ tồn tại như một module đứng riêng. Tính đến bản này, FCR được raise tại khoảng 76 vị trí gọi trên 8 file (7 file lõi và `pal_logdp.c`):
 
 | File | Một số mã lỗi tiêu biểu |
 | --- | --- |
@@ -604,9 +617,79 @@ Nguyên tắc chọn nơi raise: **chỉ raise ở những nhánh thật sự b�
 
 #### Hạn chế / việc còn thiếu
 
-- `UEDP_FCR_ACT_RESET_TASK` ở bản 0.1 **chưa tự động khôi phục** tác vụ liên quan — mới dừng ở mức ghi log `ERROR`, việc reset TSM/FSM về trạng thái an toàn vẫn phải do tầng trên (task giám sát hoặc OCE) tự xử lý.
 - `UEDP_FCR_ITNLOG_BUF_CORRUPT` đã có mã trong bảng nhưng **chưa có logic kiểm tra hash thực sự** ở phía đọc (`uedp_itnlog_dump()`) — hiện `itnlog` chỉ tính hash lúc ghi, chưa so sánh lại lúc đọc để phát hiện corrupt.
 - Người dùng ở tầng ứng dụng có thể tự khai báo mã lỗi riêng qua `UEDP_FCR_CODE(UEDP_FCR_MOD_APP, x)`, nhưng hiện chưa có cơ chế cho phép tầng ứng dụng **tự đăng ký thêm entry** vào `g_fcr_table[]` lúc runtime — bảng hiện là `static const`, muốn thêm entry mới phải sửa trực tiếp `uedp_fcr.c`.
+
+### [PSE] - Pub-Sub Engine - Cơ chế xuất bản-đăng ký
+
+PSE cho phép một tín hiệu (`sig`) được phát (publish) tới nhiều tác vụ đã đăng ký mà không cần người phát biết danh sách người nhận. Việc đăng ký và phát được thực hiện qua ba API: `uedp_msg_register_topic()`, `uedp_msg_clear_topic()` và `uedp_msg_publish()`.
+
+#### Mô hình đăng ký (Topic)
+
+Mỗi tín hiệu là một **topic** với một bitmask các tác vụ đăng ký, lưu trong bảng `g_tpm_matrix[UEDP_TBM_MAX_SIZE]` (mặc định 32 topic):
+
+- Mỗi tác vụ norm (ID từ `UEDP_TASK_NORM_MIN_ID` = `0xE0` đến `UEDP_TASK_NORM_MAX_ID` = `0xEF`) ánh xạ tới một bit: `bit = task_id - UEDP_TASK_NORM_MIN_ID`. Mỗi topic do đó tối đa 16 tác vụ.
+- `uedp_msg_register_topic(sig, task_list[])` ghi đè bitmask của topic bằng danh sách tác vụ truyền vào; `uedp_msg_clear_topic(sig, task_list[])` xoá các bit tương ứng khỏi bitmask hiện có.
+- Danh sách `task_list[]` kết thúc bằng một phần tử có ID nằm ngoài dải `0xE0..0xEF`.
+- `sig` không được vượt quá `UEDP_TBM_MAX_SIZE`; nếu vượt quá, hàm raise `MSG_INVALID_PARAM` và trả về `STAT_ERROR`.
+
+#### Khai báo đăng ký tĩnh (psetbl)
+
+Khối `psetbl` trong μE-LS khai báo đăng ký topic lúc khởi tạo, thay cho việc gọi tay `uedp_msg_register_topic()` trong `logic_init`. Mỗi phần tử có `sig` (tín hiệu) và `sub` (danh sách tác vụ norm, viết đúng như khóa `tnorm` trong `tlist`):
+
+```yaml
+psetbl:
+  - sig: SIG_0X30
+    sub: [TASK_NORM_B, TASK_NORM_C]
+```
+
+Generator sinh một lệnh trong `logic_init()` cho mỗi phần tử, đặt trước khi post `SIG_USR_START`:
+
+```c
+{ task_norm_t task_list[] = { { TASK_NORM_B }, { TASK_NORM_C }, { UEDP_TASK_NORM_EOT_ID } }; uedp_msg_register_topic(SIG_0X30, task_list); }
+```
+
+Lưu ý:
+
+- Mọi tên trong `sub` phải là tác vụ norm đã khai báo; nếu không, generator báo lỗi và dừng.
+- `psetbl` chỉ đăng ký lúc khởi tạo. Gỡ đăng ký lúc chạy dùng `uedp_msg_clear_topic()` trong `c_stmt`.
+- Đăng ký hoàn tất trước khi `SIG_USR_START` được post, nên tác vụ nhận đúng topic từ tin nhắn đầu tiên.
+
+#### Luồng phát tin (Publish)
+
+`uedp_msg_publish(sig, data, data_size)` thực hiện theo các bước sau:
+
+1. Kiểm tra `sig` và payload: `data_size` không được lớn hơn `UEDP_MSG_ALLOC_DATA_MAX`, và `data` không được `NULL` khi `data_size > 0`. Vi phạm sẽ raise `MSG_INVALID_PARAM`.
+2. Đếm số tác vụ đăng ký (`subscribers`) của topic. Nếu bằng 0, hàm trả về `STAT_OK` ngay mà không cấp phát gì.
+3. Cấp phát **một** tin nhắn duy nhất từ pool phù hợp với `data_size` (`uedp_msg_alloc()`), sao chép payload vào tin nhắn bằng `memcpy` đúng `data_size` byte.
+4. Đặt `ref_count = subscribers` **trước** khi post, để tin nhắn không bị trả về pool trong lúc các tác vụ khác còn đang được post.
+5. Post cùng một con trỏ tin nhắn tới từng tác vụ đăng ký qua `uedp_task_norm_post_msg()`. Nếu một lần post thất bại, hàm giảm `ref_count` đi 1 cho lần post đó.
+
+Nhờ vậy, N tác vụ đăng ký cùng nhận **một** tin nhắn chia sẻ (không sao chép payload cho từng người nhận), và không cần cấp phát N tin nhắn riêng như thiết kế ban đầu.
+
+#### Vòng đời và giải phóng
+
+Mỗi tác vụ, sau khi xử lý xong tin nhắn trong `internal_uedp_task_norm_dispatch()`, gọi `uedp_msg_ref_dec()` thay vì `uedp_msg_free()`. Tin nhắn chỉ được trả về pool khi `ref_count` về 0, tức là khi tất cả tác vụ đăng ký đã xử lý xong (hoặc không nhận được). `uedp_msg_ref_inc()` và `uedp_msg_ref_dec()` hiện không bọc `pal_enter_critical()`; hiện chưa có đường gọi `publish` từ ISR (ISR chỉ đưa tín hiệu vào `isr_pool`, còn việc xả hàng đợi chạy trong scheduler). Đây là ràng buộc theo quy ước chứ chưa được code kiểm tra; nếu sau này `publish` được gọi từ ISR hoặc hệ thống đa nhân, cần bọc hai hàm này bằng critical section.
+
+`ref_count` có kiểu `ui16`, nên giới hạn tham chiếu là `UINT16_MAX`; `uedp_msg_ref_inc()` không tăng vượt giới hạn này.
+
+#### Xử lý lỗi (FCR)
+
+| Tình huống | FCR | Hành vi |
+| --- | --- | --- |
+| `sig >= UEDP_TBM_MAX_SIZE` | `MSG_INVALID_PARAM` (ERROR) | Trả về `STAT_ERROR` |
+| `data_size` vượt `UEDP_MSG_ALLOC_DATA_MAX` hoặc `data == NULL` với `data_size > 0` | `MSG_INVALID_PARAM` (ERROR) | Trả về `STAT_ERROR`, không cấp phát |
+| Pool tin nhắn cạn | `MSG_POOL_EXHAUSTED` (FATAL) | Panic theo bảng FCR |
+| Hàng đợi của một tác vụ đầy | `TASK_QUEUE_FULL` (mức ERROR, hành động `SYS_PANIC`) | Tác vụ đó không nhận được; `ref_count` được giảm; các tác vụ còn lại vẫn nhận bình thường; `publish` trả về `STAT_ERROR` |
+
+Khi hàng đợi của một tác vụ đầy, `TASK_QUEUE_FULL` được raise và entry của nó có hành động `SYS_PANIC`, nên hệ thống dừng ngay tại thời điểm đó. Lệnh raise `LIB_COLLAPSE` trong `put_to_queue()` trước commit `03a3aa6` đã được gỡ khỏi luồng publish; mã lỗi vẫn còn trong bảng nhưng hiện chưa được raise ở đâu.
+
+#### Giới hạn hiện tại
+
+- Chỉ hỗ trợ gửi tới các tác vụ **đã đăng ký** tại thời điểm publish; không có cơ chế gửi tới tác vụ chưa đăng ký hay lọc theo nội dung.
+- Payload lớn hơn `UEDP_MSG_ALLOC_DATA_MAX` bị từ chối. Không còn đường dự phòng qua GDP, vì đường đó dùng chung một tên cố định `"publish"` và gây ghi đè dữ liệu khi có nhiều publish đồng thời.
+- Không có QoS, thứ tự ưu tiên giữa các người nhận, hay truyền tham chiếu theo `ptype`. Các tính năng này được xem xét cho các phiên bản sau.
+- Thiết kế hiện tại chưa có bộ kiểm thử đầy đủ. Các trường hợp kiểm thử được đề xuất nằm trong `docs/test/pse-gdp-fcr-testset.md`.
 
 ## Công cụ hỗ trợ phát triển (Development Tools)
 

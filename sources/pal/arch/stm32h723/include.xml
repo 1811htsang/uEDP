@@ -4,10 +4,6 @@
     <language id="org.eclipse.cdt.core.assembly" name="s,S"/>
     <language id="org.eclipse.cdt.core.gcc" name="C Source File">
       <includepath>Core/Inc</includepath>
-      <includepath>Drivers/STM32F1xx_HAL_Driver/Inc</includepath>
-      <includepath>Drivers/STM32F1xx_HAL_Driver/Inc/Legacy</includepath>
-      <includepath>Drivers/CMSIS/Device/ST/STM32F1xx/Include</includepath>
-      <includepath>Drivers/CMSIS/Include</includepath>
       <includepath workspace_path="true">/${ProjName}/uedp/sources/common/container/fifo</includepath>
       <includepath workspace_path="true">/${ProjName}/uedp/sources/common/container/ring_buffer</includepath>
       <includepath workspace_path="true">/${ProjName}/uedp/sources/common/container/llist</includepath>
