@@ -155,18 +155,18 @@ if (UEDP_BUILD_TSD_TEST)
   if (NOT PLAT STREQUAL "LINUX")
     message(FATAL_ERROR "UEDP_BUILD_TSD_TEST requires PLAT=LINUX")
   endif()
-  add_executable(uedp_tsd_test
+  add_executable(uedp_test
     sources/test/generated/tsd_runner.c
     sources/app/app.c
     ${CORE_SRCS} ${COMMON_XPRINTF_SRCS} ${PAL_SERVICE_SRCS}
     sources/pal/arch/linux/linux.c
     sources/common/unity/unity.c
   )
-  target_compile_definitions(uedp_tsd_test PRIVATE UEDP_TSD_RUNNER_BUILD UNITY_DIFFERENTIATE_FINAL_FAIL)
-  target_link_libraries(uedp_tsd_test pthread m)
-  target_include_directories(uedp_tsd_test PRIVATE ...) # giống target chính
+  target_compile_definitions(uedp_test PRIVATE UEDP_TSD_RUNNER_BUILD UNITY_DIFFERENTIATE_FINAL_FAIL)
+  target_link_libraries(uedp_test pthread m)
+  target_include_directories(uedp_test PRIVATE ...) # giống target chính
   enable_testing()
-  add_test(NAME tsd_ut COMMAND uedp_tsd_test)
+  add_test(NAME tsd_ut COMMAND uedp_test)
   set_tests_properties(tsd_ut PROPERTIES LABELS "ut")
 endif()
 ```
@@ -186,7 +186,7 @@ Sau codegen, quy trình kiểm chứng tối thiểu là:
 
 ```bash
 cmake -S . -B build-tsd -DPLAT=LINUX -DUEDP_BUILD_TSD_TEST=ON
-cmake --build build-tsd --target uedp_tsd_test
+cmake --build build-tsd --target uedp_test
 ctest --test-dir build-tsd --output-on-failure -L ut
 ```
 

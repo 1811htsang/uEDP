@@ -60,8 +60,8 @@ Coverage runtime không thể tính xong trong `jainerator.sh` (thuần codegen)
 
 ```bash
 # runtest.sh (mới, chạy SAU jainerator.sh, không phải một phần của nó)
-cmake --build build --target uedp_tsd_test
-./build/uedp_tsd_test --covrt-dump=sources/test/generated/tlc_runtime_counts.txt
+cmake --build build --target uedp_test
+./build/uedp_test --covrt-dump=sources/test/generated/tlc_runtime_counts.txt
 python -m pltf.pycdscriptor.jnerator.postgen.covrpt \
   --yaml sources/app/lstaxizer.yaml \
   --runtime-counts sources/test/generated/tlc_runtime_counts.txt \
@@ -80,12 +80,12 @@ if (UEDP_COVERAGE_ENABLED)
   if (NOT UEDP_BUILD_TSD_TEST)
     message(FATAL_ERROR "UEDP_COVERAGE_ENABLED requires UEDP_BUILD_TSD_TEST=ON")
   endif()
-  target_sources(uedp_tsd_test PRIVATE sources/core/src/uedp_covrt.c)
-  target_compile_definitions(uedp_tsd_test PRIVATE UEDP_COVERAGE_ENABLED)
+  target_sources(uedp_test PRIVATE sources/core/src/uedp_covrt.c)
+  target_compile_definitions(uedp_test PRIVATE UEDP_COVERAGE_ENABLED)
 endif()
 ```
 
-`uedp_covrt.c` không được thêm vào `SOURCES`/target `uedp` chính — chỉ vào `uedp_tsd_test`.
+`uedp_covrt.c` không được thêm vào `SOURCES`/target `uedp` chính — chỉ vào `uedp_test`.
 
 ### A.8. Rủi ro cần review kỹ trước khi code
 
