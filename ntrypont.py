@@ -50,7 +50,7 @@ def run_test():
   run_cmd([
     "python", "-m", "pltf.pycdscriptor.jnerator.postgen.testgen",
     "--yaml", "sources/app/lstaxizer.yaml",
-    "--output", "sources/test/tez.c"
+    "--output", "sources/test/tezprjec/tez.c"
   ])
 
 def run_pipeline(include_menuconfig=True):
