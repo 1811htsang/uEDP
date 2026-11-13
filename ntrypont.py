@@ -39,6 +39,20 @@ def setup_user():
   with open(bashrc, "a") as f:
     f.write(f"\nsource {idf_path}/export.sh > /dev/null 2>&1\n")
 
+def run_test():
+  # NOTE - Validate and generate the Unity test artifact after app.c.
+  run_cmd(["python", "-m", "pltf.pycdscriptor.lstaxer.vlid"])
+  run_cmd([
+    "python", "-m", "pltf.pycdscriptor.jnerator.postgen.cgen",
+    "--yaml", "sources/app/lstaxizer.yaml",
+    "--output", "sources/app/app.c"
+  ])
+  run_cmd([
+    "python", "-m", "pltf.pycdscriptor.jnerator.postgen.testgen",
+    "--yaml", "sources/app/lstaxizer.yaml",
+    "--output", "sources/test/tez.c"
+  ])
+
 def run_pipeline(include_menuconfig=True):
   # NOTE - Danh sách các tác vụ cần chạy
   if include_menuconfig:
@@ -55,7 +69,7 @@ def run_pipeline(include_menuconfig=True):
 
 def main():
   if len(sys.argv) < 2:
-    print("[ERROR] No parameter. Use --it, --n-it, or --docker.")
+    print("[ERROR] No parameter. Use --it, --n-it, --test-libunity, or --docker.")
     sys.exit(1)
 
   mode = sys.argv[1]
@@ -75,9 +89,15 @@ def main():
   elif mode == "--n-it":
     print("[INFO] Running in non-interactive mode")
     run_pipeline(include_menuconfig=False)
+
+  elif mode == "--test":
+    print("[INFO] Generating test runner with PLTF and libunity")
+    run_pipeline(include_menuconfig=False)
+    run_test()
     
   else:
     print(f"[ERROR] Invalid parameter: {mode}")
+    print("[ERROR] Use --it, --n-it, --test, or --docker.")
     sys.exit(1)
 
 if __name__ == "__main__":
