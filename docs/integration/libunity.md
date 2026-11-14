@@ -119,6 +119,37 @@ Do mỗi file `tezcal` chính là một bộ `tezuit` hoàn chỉnh cho một k�
 
 ## Inject code và mô hình thăm dò
 
+### API điều khiển runtime
+
+Lõi cung cấp `uedp_ctrl.h` làm ranh giới chính thức cho test runner. Callback inject nhận một `point` và `context`, vì vậy test có thể thay đổi fixture hoặc dừng tiến trình tại các điểm đã định mà không phải chèn chuỗi mã vào scheduler.
+
+```c
+static void inject(uedp_ctrl_pnt_t point, void* context) {
+  test_fixture_t* fixture = context;
+  if (point == UEDP_CTRL_BEFORE_TASK_DISPATCH) {
+    fixture->dispatch_count++;
+  }
+}
+
+uedp_ctrl_set_injector(inject, &fixture);
+uedp_ctrl_set_auto_tick(false);
+uedp_ctrl_advance_ticks(5, true, &scheduler_steps);
+```
+
+Các điểm inject hiện có gồm trước/sau scheduler, timer tick, task dispatch, FSM transition và TSM transition. `uedp_ctrl_run_scheduler(max_steps, &executed_steps)` giới hạn số lần dispatch, còn `uedp_ctrl_advance_ticks(tick_count, run_scheduler, &executed_steps)` cho phép test tự điều khiển thời gian logic mà không cần `sleep`. Trên Linux, gọi `uedp_ctrl_set_auto_tick(false)` trước khi chạy scenario để vô hiệu hóa thread tick nền; mặc định vẫn là `true` để giữ hành vi runtime hiện tại.
+
+Tracepoint dùng cùng lớp API nhưng không cho phép sửa trạng thái:
+
+```c
+static void trace(const uedp_ctrl_evt_t* event, void* context) {
+  trace_buffer_append(context, event);
+}
+
+uedp_ctrl_set_tracer(trace, &trace_buffer);
+```
+
+Event trace hiện ghi nhận task dispatch, timer tick và TSM/FSM transition; `subject` trỏ đến đối tượng runtime tương ứng trong suốt thời gian callback.
+
 Với việc tách biệt rõ ràng giữa `testobj` và `tezcal`, việc inject code vào `testobj` để kiểm tra các trạng thái nội bộ là cần thiết để thực hiện các kiểm tra chi tiết. `tezcal` sẽ sử dụng các hàm inject code để truy cập và kiểm tra trạng thái của `testobj` mà không làm thay đổi logic của nó.
 
 Trong đó, `tezcal` sẽ thực hiện các bước sau:
