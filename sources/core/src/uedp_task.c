@@ -11,6 +11,7 @@
 #include "uedp_msg.h"
 #include "fifo.h"
 #include "uedp_fcr.h"
+#include "uedp_ctrl.h"
 
 // ANCHOR - Khai báo các biến toàn cục quản lý thông tin của các tác vụ trong hệ thống UEDP
 
@@ -108,6 +109,10 @@ RETR_STAT uedp_task_norm_post_isr(task_id_t dest_id, ui8 sig) {
 }
 
 RETR_STAT uedp_task_scheduler() {
+  #ifdef UEDP_TRACE
+    uedp_ctrl_inject(UEDP_CTRL_BEFORE_SCHEDULER);
+  #endif
+
   // Xả tin nhắn từ ISR pool 
   uedp_msg_drain_isr_pool();
 
@@ -140,6 +145,10 @@ RETR_STAT uedp_task_scheduler() {
           if (fifo_is_empty(&g_task_norm_table[i].msg_queue)) {
             internal_uedp_task_norm_clear_ready(highest_pri);
           }
+
+          #ifdef UEDP_TRACE
+            uedp_ctrl_inject(UEDP_CTRL_AFTER_SCHEDULER);
+          #endif
           return STAT_OK; // Trả về OK sau khi đã thực thi tác vụ
         }
       }
@@ -159,6 +168,9 @@ RETR_STAT uedp_task_scheduler() {
   // Thực thi các tác vụ poll nếu cần thiết
   internal_uedp_task_poll_exec();
 
+  #ifdef UEDP_TRACE
+    uedp_ctrl_inject(UEDP_CTRL_AFTER_SCHEDULER);
+  #endif
   return STAT_NRDY; // Trả về NRDY nếu không có tác vụ nào sẵn sàng để thực thi
 }
 
@@ -349,6 +361,18 @@ void internal_uedp_task_norm_dispatch(task_norm_t* task, uedp_msg_t* msg) {
   g_current_msg = msg; // Cập nhật con trỏ đến tin nhắn hiện tại đang được xử lý
   g_active_task_norm_id = task->id; // Cập nhật ID của tác vụ hiện tại đang được thực thi
 
+  #ifdef UEDP_TRACE
+    uedp_ctrl_inject(UEDP_CTRL_BEFORE_TASK_DISPATCH);
+    uedp_ctrl_evt_t event = {
+      .point = UEDP_CTRL_BEFORE_TASK_DISPATCH,
+      .task_id = task->id,
+      .signal = msg->sig,
+      .status = STAT_OK,
+      .subject = task
+    };
+    uedp_ctrl_trace(&event);
+  #endif
+
   // Thực thi hàm xử lý của tác vụ với tin nhắn hiện tại
   //NOTE - Add defensive check to avoid null pointer dereference when calling task_norm handler
   if (task->task_norm != NULL) {
@@ -362,6 +386,17 @@ void internal_uedp_task_norm_dispatch(task_norm_t* task, uedp_msg_t* msg) {
   g_current_msg = NULL; // Đặt con trỏ tin nhắn hiện tại về NULL
   g_active_task_norm_id = UEDP_TASK_NORM_IDLE_ID; // Đặt ID của tác vụ hiện tại về ID của tác vụ nhàn rỗi
   g_current_task_norm = (task_norm_t){0}; // Đặt thông tin của tác vụ hiện tại về giá trị mặc định
+  #ifdef UEDP_TRACE
+    uedp_ctrl_inject(UEDP_CTRL_AFTER_TASK_DISPATCH);
+    uedp_ctrl_evt_t event_after = {
+      .point = UEDP_CTRL_AFTER_TASK_DISPATCH,
+      .task_id = task->id,
+      .signal = msg->sig,
+      .status = STAT_OK,
+      .subject = task
+    };
+    uedp_ctrl_trace(&event_after);
+  #endif
 }
 
 // ANCHOR - Hàm nội bộ để thực thi các tác vụ poll có khả năng được bật

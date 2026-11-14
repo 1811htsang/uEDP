@@ -17,6 +17,7 @@
 #include "uedp_timer.h"
 #include "uedp_task.h"
 #include "uedp_fcr.h"
+#include "uedp_ctrl.h"
 
 /** ANCHOR - Cấu trúc quản lý toàn bộ hệ thống Timer
  * @param head: Con trỏ đến đầu danh sách liên kết các timer đang chạy
@@ -170,6 +171,10 @@ RETR_STAT uedp_timer_remove(ui16 tid, ui8 sig) {
 /* Hàm này được gọi từ System Tick ISR (ví dụ mỗi 1ms) */
 //NOTE - Add critical section to protect the timer list from concurrent modification by set/remove functions
 void uedp_timer_tick(void) {
+	#ifdef UEDP_TRACE
+		uedp_ctrl_inject(UEDP_CTRL_BEFORE_TIMER_TICK);
+	#endif
+
 	pal_enter_critical(); // Tick chạy ở ngữ cảnh ngắt, trong khi set/remove sửa cùng danh sách -> phải loại trừ lẫn nhau
 
 	sys_tick++;
@@ -226,6 +231,16 @@ void uedp_timer_tick(void) {
 	}
 
 	pal_exit_critical();
+	
+	#ifdef UEDP_TRACE
+		uedp_ctrl_inject(UEDP_CTRL_AFTER_TIMER_TICK);
+		uedp_ctrl_evt_t event = {
+			.point = UEDP_CTRL_AFTER_TIMER_TICK,
+			.tick = sys_tick,
+			.status = STAT_OK
+		};
+		uedp_ctrl_trace(&event);
+	#endif
 }
 
 void uedp_timer_get_stats(ui8* active, ui8* max_capacity) {

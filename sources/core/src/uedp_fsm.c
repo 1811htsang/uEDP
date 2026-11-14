@@ -8,8 +8,13 @@
 #include "uedp_fsm.h"
 #include "uedp_msg.h"
 #include "uedp_fcr.h"
+#include "uedp_ctrl.h"
 
 void uedp_fsm_go_next(uedp_fsm_t* me, state_handler target) {
+  #ifdef UEDP_TRACE
+    uedp_ctrl_inject(UEDP_CTRL_BEFORE_FSM_TRANSITION);
+  #endif
+  
   // Bảo vệ critical section để đảm bảo tính nhất quán khi thay đổi trạng thái của FSM
   pal_enter_critical();
 
@@ -47,6 +52,16 @@ void uedp_fsm_go_next(uedp_fsm_t* me, state_handler target) {
 
   // Thoát critical section sau khi hoàn thành việc chuyển đổi trạng thái
   pal_exit_critical();
+
+  #ifdef UEDP_TRACE
+    uedp_ctrl_inject(UEDP_CTRL_AFTER_FSM_TRANSITION);
+    uedp_ctrl_evt_t event = {
+      .point = UEDP_CTRL_AFTER_FSM_TRANSITION,
+      .status = STAT_OK,
+      .subject = me
+    };
+    uedp_ctrl_trace(&event);
+  #endif
 }
 
 void uedp_fsm_go_back(uedp_fsm_t* me) {
