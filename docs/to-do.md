@@ -735,6 +735,7 @@ Do đó, quyết định sử dụng Python để triển khai các tính năng 
 - [x] @! TID[epic=v1.1.8/gitsp] REPO-003 <+ Bổ sung gitsp để hỗ trợ các thao tác quản lý với git và repo nhằm tối ưu hóa việc quản lý mã nguồn và các thay đổi trong dự án μEDP.
 - [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.test] TEST-002 <+ Thực hiện BST cho tính năng OCE trên testobj-v3 kết hợp triển khai libunity-x-pltf để kiểm thử các tính năng mới của μEDP một cách hiệu quả và ổn định.
 - [ ] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-010 <+ Thực hiện wiring libunity và tezcin vào pipeline PLTF hiện tại trước khi kiểm tra cho ticket TEST-002
+- [x] @! TID[epic=Rv1.1.18-i0/pltf.libunity-integration] DOCS-008 <+ Bổ sung tài liệu định hướng việc triển khai và giải quyết các vấn đề về tezcal và testobj để hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
 
 //  !SECTION
 
