@@ -10,6 +10,7 @@
   #include "uedp_fsm.h"
   #include "uedp_msg.h"
   #include "uedp_timer.h"
+  #include "uedp_ctrl.h"
 
   /** ANCHOR - Khai báo tác vụ norm
    * @note Tác vụ phải khai báo đúng định dạng `0xEx`
