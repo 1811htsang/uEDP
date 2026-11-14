@@ -313,9 +313,9 @@ To address this, v1.1.7 release to v1.1.8 will apply a new changes to the branch
                   │                 │      │  │                 │    ▼  ▼                  │                                              │
     ▲ v1.1.7 ◄────┼─ main ◄───── release ◄─│┬─│─ integration ◄──┴─── feat - feature ────┬──┼─► app/testobj-v? - specific application      │
     │ v1.1.6      │   │                    ││ │                             ▲           │  │                    codebase for testing      │
-    │ v1.1.5      └───┼────────────────────┘└─│─ docs ◄──── chore           │           └──┴─► sub-feat/v?.?.? - single branch for        │
-                      ▼                     ▲ │                             │                       │            specific version release │
-│ v1.1.6-bf1 ◄────── hotfix ────────────────┘ │                             └───────────────────────┘                                     │
+    │ v1.1.5      └───┼────────────────────┘└─│─ docs ◄──── chore           │       ┌──►└──┴─► sub-feat/v?.?.? - single branch for        │
+                      ▼                     ▲ │    └────────────────────────┼───────┘               │            specific version release │
+│ v1.1.6-bf1 ◄────── hotfix ────────────────┘ │    only main dev release    └───────────────────────┘                                     │
 │ v1.1.6-bf2                  if need         │                              only merge after stable                                      │
 │ v1.1.6-bf3                                  └───────────────────────────────────────────────────────────────────────────────────────────┘
 ▼ v1.1.6-bf4                                                                                                                               

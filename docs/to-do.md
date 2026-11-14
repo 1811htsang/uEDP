@@ -722,17 +722,20 @@ Sau khi kiểm tra thì thấy rằng task này đã được triển khai ở r
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.test] TEST-001 <+ Bổ sung testobj-v3 để thực hiện kiểm thử các thay đổi mới cho OCE và ticket PLTF-002, PLTF-003, PLTF-006 nhằm đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 - [x] @! TID[epic=Rv1.1.8-i0/test-structure] DOCS-003 <+ Bổ sung tài liệu chuẩn hóa cấu trúc thiết kế và lưu trữ testcase, nội dung testcase, kết quả testcase, v.v. để hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
 - [x] @! TID[epic=Rv1.1.8-i0/pl-ooc] DOCS-004 <+ Tìm hiểu về PLOOC framework và so sánh với Python trong khả năng triển khai OOP trong quản lý test.
-- [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.lstaxer.tsd] PLTF-007 <+ Bổ sung model cho TSD (Test Scenario Descriptor).
-- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-008 <+ Bổ sung template cho testing và pipeling của TSD và TLC để hỗ trợ việc kiểm thử các tính năng của lõi μEDP.
-- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-009 <+ Cập nhật các assertion cho PLTF.
-- [x] @! TID[epic=v1.1.8/gitsp] REPO-003 <+ Bổ sung gitsp để hỗ trợ các thao tác quản lý với git và repo nhằm tối ưu hóa việc quản lý mã nguồn và các thay đổi trong dự án μEDP.
-- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.test] TEST-002 <+ Thực hiện BST cho tính năng OCE trên testobj-v3 kết hợp triển khai libunity-x-pltf để kiểm thử các tính năng mới của μEDP một cách hiệu quả và ổn định.
 
 <!-- STATUS
 Thông qua quá trình review và so sánh giữa PLOOC framework và Python, đã nhận thấy rằng Python có khả năng triển khai OOP một cách linh hoạt và mạnh mẽ hơn so với PLOOC framework. 
 
 Do đó, quyết định sử dụng Python để triển khai các tính năng OOP trong quản lý test thay vì PLOOC framework để đảm bảo rằng các tính năng mới được triển khai một cách hiệu quả và ổn định.
 -->
+
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.lstaxer.tsd] PLTF-007 <+ Bổ sung model cho TSD (Test Scenario Descriptor).
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-008 <+ Bổ sung template cho testing và pipeling của TSD và TLC để hỗ trợ việc kiểm thử các tính năng của lõi μEDP.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-009 <+ Cập nhật các assertion cho PLTF.
+- [x] @! TID[epic=v1.1.8/gitsp] REPO-003 <+ Bổ sung gitsp để hỗ trợ các thao tác quản lý với git và repo nhằm tối ưu hóa việc quản lý mã nguồn và các thay đổi trong dự án μEDP.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.test] TEST-002 <+ Thực hiện BST cho tính năng OCE trên testobj-v3 kết hợp triển khai libunity-x-pltf để kiểm thử các tính năng mới của μEDP một cách hiệu quả và ổn định.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-010 <+ Thực hiện wiring libunity và tezcin vào pipeline PLTF hiện tại trước khi kiểm tra cho ticket TEST-002
+- [x] @! TID[epic=Rv1.1.18-i0/pltf.libunity-integration] DOCS-008 <+ Bổ sung tài liệu định hướng việc triển khai và giải quyết các vấn đề về tezcal và testobj để hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
 
 //  !SECTION
 

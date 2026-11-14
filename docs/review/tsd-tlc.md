@@ -47,7 +47,7 @@ Quy trình xử lý TSD sẽ phản chiếu (mirror) hoàn toàn luồng xử l�
     * Template này không sinh ra ứng dụng, mà sinh ra hàm `main()` chuyên biệt cho kiểm thử.
     * *Luồng chạy của C Code:* Gọi `uedp_core_init()` $\rightarrow$ Lặp qua các `steps` $\rightarrow$ Đánh giá `expect` bằng các lệnh `if/else` đơn giản $\rightarrow$ Trả về `0` (Pass) hoặc khác `0` (Fail). Việc không phụ thuộc vào Framework bên thứ 3 (như Unity/CMock) giúp giữ vững triết lý "siêu nhẹ" của OS.
 5. Post-generation (Build Script): Tạo module `testgen.py` (tương đương `modalcvert.py`) được kích hoạt bởi pipeline test riêng, sau bước sinh `app.c`.
-6. Build/Test: Tạo executable `uedp_tsd_test` riêng trên `PLAT=LINUX`, link `unity.c` và `app.c` sinh ra nhưng loại `sources/pal/arch/linux/main.c`. Runner gọi `UNITY_BEGIN()`, `RUN_TEST(...)`, `UNITY_END()`; mã trả về của `UnityEnd()` là kết quả CTest.
+6. Build/Test: Tạo executable `uedp_test` riêng trên `PLAT=LINUX`, link `unity.c` và `app.c` sinh ra nhưng loại `sources/pal/arch/linux/main.c`. Runner gọi `UNITY_BEGIN()`, `RUN_TEST(...)`, `UNITY_END()`; mã trả về của `UnityEnd()` là kết quả CTest.
 
 ### Tận dụng Nền tảng có sẵn (Reusability)
 
@@ -79,7 +79,7 @@ Tránh việc thiết kế quá đà (over-engineering) ngay từ đầu. Hãy b
 
 1. Tính năng TSD v0: Chỉ hỗ trợ `post_isr` và `advance_tick` (cho Steps); chỉ hỗ trợ kiểm tra `tsm_state` và `gda_value` (cho Expect). `post_isr` chỉ hợp lệ trên `PLAT=LINUX` ở v0.
 2. Unity v0: Sinh các hàm test từ TSD và đăng ký bằng `RUN_TEST`; dùng `TEST_ASSERT_*`/`TEST_ASSERT_EQUAL_*`, không tạo assertion framework riêng.
-3. Tính năng TLC v0: Chỉ hỗ trợ một mức duy nhất là `ut`. Sinh ra một file test duy nhất, gắn vào `uedp_tsd_test` và đăng ký CTest với label `ut`.
+3. Tính năng TLC v0: Chỉ hỗ trợ một mức duy nhất là `ut`. Sinh ra một file test duy nhất, gắn vào `uedp_test` và đăng ký CTest với label `ut`.
 4. Quy ước Đặt tên: Vì `docs/test/README.md` đang quy định tiền tố `vir-/phy-/logic-` cho các file Test Object (Task/Logic), TSD cần một quy ước riêng để tránh nhầm lẫn. Đề xuất: Dùng tiền tố `tsd-<name>-v#.yaml` cho các tệp chứa kịch bản kiểm thử.
 
 Khi "lát cắt mỏng" này có thể thực hiện vòng đời khép kín (Round-trip) và chạy thành công trên một file mẫu như `vir-phy-logic-testobj-v0.yaml`, chúng ta mới tiến hành mở rộng các luật `expect` và tích hợp `CTest` đầy đủ.
