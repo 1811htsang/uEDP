@@ -1,35 +1,42 @@
 identif: "example"
 tezuit:
-- tezk: "a"
-  subidentif: ""
-  dscript: ""
-  teztep:
-  - '1':
-      desc: ""
-      call:
-      - act: |
-          echo "Hello, World!"
-      - act: |
-          echo "This is a test."
-  - '2':
-      desc: ""
-
-- tezk: "b"
-  subidentif: ""
-  dscript: ""
-  teztep:
-  - '1':
-      desc: ""
-      call:
-      - act: |
-          echo "Hello, Sang!"
-      - act: |
-          echo "This is a step in tezk b."
-  - '2':
-      desc: ""
-      call:
-      - act: |
-          echo "Hello, World!"
-      - act: |
-          echo "This is a test."
-  - '3':
+  - tezk: "a"
+    subidentif: ""
+    dscript: ""
+    teztep:
+      - '1':
+          desc: ""
+          call:
+          - act: |
+              echo "Hello, World!"
+          - act: |
+              echo "This is a test."
+      - '2':
+          desc: ""
+  - tezk: "b"
+    subidentif: ""
+    dscript: ""
+    teztep:
+      - '1':
+          desc: ""
+          call:
+          - act: |
+              echo "Hello, Sang!"
+          - act: |
+              echo "This is a step in tezk b."
+      - '2':
+          desc: ""
+          call:
+          - act: |
+              echo "Hello, World!"
+          - act: |
+              echo "This is a test."
+      - '3':
+          desc: ""
+          call:
+          - act: |
+              echo "This is the third step."
+    xpect:
+      # tezcal kiểm tra chứ testobj không tự kiểm tra
+      - act: "TEST_ASSERT_EQUAL_STRING(GDA_SYSTEM_STATUS, local_buf);"
+      - act: "TEST_ASSERT_EQUAL_INT(tsm_task_a_state_waiting, uedp_tsm_get_state(TASK_NORM_A));"
