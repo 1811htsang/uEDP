@@ -27,6 +27,7 @@
 #include "pal_logdp.h"
 #include "pal_memrp.h"
 #include "pal_rprintf.h"
+#include "uedp_ctrl.h"
 
 //CRITICAL - Đảm bảo phải có ủy quyền timer_tick để gắn vào timer phần cứng
 //NOTE - In Linux, using pthread to simulate periodic tick, so we need to call uedp_timer_tick() in that thread
@@ -126,7 +127,9 @@ void* linux_simulate_tick_thread(void* arg) {
   while (1) {
     nanosleep(&ts, NULL);
     /* Gọi nhịp đập của Core */
-    uedp_timer_tick(); 
+    if (uedp_ctrl_auto_tick_enabled()) {
+      uedp_timer_tick();
+    }
   }
   return NULL;
 }
