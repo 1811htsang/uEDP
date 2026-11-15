@@ -1,12 +1,21 @@
+/** ANCHOR - Implementation of Control System for UEDP
+ * @file uedp_ctrl.c
+ * @author Shang Huang
+ * @version 0.1
+ * @date 2026-11-15
+ * @copyright MIT License
+ */
 #include "uedp_ctrl.h"
 #include "uedp_timer.h"
 #include "uedp_task.h"
 
-static uedp_ctrl_inject_fn g_injector = NULL;
-static void* g_injector_context = NULL;
-static uedp_ctrl_trace_fn g_tracer = NULL;
-static void* g_tracer_context = NULL;
-static bool g_auto_tick_enabled = true;
+sta uedp_ctrl_inject_fn g_injector = NULL;
+sta void* g_injector_context = NULL;
+sta uedp_ctrl_trace_fn g_tracer = NULL;
+sta void* g_tracer_context = NULL;
+sta bool g_auto_tick_enabled = true;
+sta uedp_ctrl_evt_t g_trace_history[UEDP_CTRL_TRACE_MAX] = {0};
+sta size_t g_trace_idx = 0;
 
 void uedp_ctrl_set_injector(uedp_ctrl_inject_fn callback, void* context) {
   g_injector = callback;
@@ -28,6 +37,20 @@ void uedp_ctrl_trace(const uedp_ctrl_evt_t* event) {
   if (g_tracer && event) {
     g_tracer(event, g_tracer_context);
   }
+}
+
+void uedp_ctrl_trace_custom(ui16 custom_id, ui32 val_a, ui32 val_b, const void* payload) {
+  uedp_ctrl_evt_t evt = {
+    .point = UEDP_CTRL_CUSTOM_EVENT,
+    .task_id = 0xFF,                   // Không thuộc task cố định nào
+    .signal = (ui8)(custom_id & 0xFF), // Mang ID tùy biến
+    .value_a = val_a,
+    .value_b = val_b,
+    .status = STAT_OK,
+    .tick = pal_sys_get_tick(),
+    .subject = payload
+  };
+  uedp_ctrl_trace(&evt);
 }
 
 void uedp_ctrl_set_auto_tick(bool enabled) {
@@ -87,4 +110,32 @@ RETR_STAT uedp_ctrl_advance_ticks(ui32 tick_count, bool run_scheduler, ui32* exe
     *executed_steps = steps;
   }
   return run_scheduler ? status : STAT_OK;
+}
+
+bool uedp_ctrl_verify_sequence(const uedp_seq_step_t* expected_seq, size_t seq_len, bool strict_order) {
+  if (seq_len == 0 || g_trace_idx < seq_len) return false;
+
+  size_t match_idx = 0;
+
+  for (size_t i = 0; i < g_trace_idx; i++) {
+    const uedp_ctrl_evt_t* actual = &g_trace_history[i];
+    const uedp_seq_step_t* target = &expected_seq[match_idx];
+
+    // So khớp các tiêu chí (bỏ qua nếu wildcard 0xFF)
+    bool point_match = (target->point == actual->point);
+    bool task_match  = (target->task_id == 0xFF) || (target->task_id == actual->task_id);
+    bool sig_match   = (target->signal == 0xFF)  || (target->signal == actual->signal);
+
+    if (point_match && task_match && sig_match) {
+      match_idx++; // Khớp được 1 bước trong chuỗi!
+      if (match_idx == seq_len) {
+        return true; // ĐÃ KHỚP TOÀN BỘ CHUỖI THÀNH CÔNG!
+      }
+    } else if (strict_order && match_idx > 0) {
+      // Nếu yêu cầu khắt khe (strict) mà có sự kiện lạ xen vào -> Reset
+      match_idx = 0;
+    }
+  }
+
+  return false; // Không tìm đủ chuỗi
 }
