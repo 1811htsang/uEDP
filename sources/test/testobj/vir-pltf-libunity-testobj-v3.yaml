@@ -1,0 +1,146 @@
+
+pject: "vir-pltf-libunity-testobj-v3"
+versh: "v1.1.8"
+
+# ANCHOR - Global Data Area (GDA)
+
+psetbl:
+  # A -> B, C
+  - sig: SIG_0X03
+    sub: [TASK_NORM_C, TASK_NORM_E]
+
+tlist:
+  # USR --USR_START--> A
+  # USR <-USR_END-- B
+  - tnorm: TASK_NORM_USR
+    <<: *tnorm1-ank
+    exec:
+      # Khi nhận USR_START, gửi USR_START tới A để start tezenv
+      - on_sig: SIG_USR_START
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[USR] RECV USR_START -> POST USR_START TO A\n");
+
+                uedp_msg_t* msg = uedp_msg_alloc(
+                  TASK_NORM_A, SIG_USR_START, UEDP_MSG_TYPE_ALLOC
+                );
+                if (msg != NULL) {
+                  uedp_msg_set_src_task_id(msg, TASK_NORM_USR);
+                  uedp_msg_set_data_val(msg, 0x01, ui8);
+                  uedp_task_norm_post_msg(TASK_NORM_A, msg);
+                }
+      # Khi nhận USR_END, kết thúc tezenv
+      - on_sig: SIG_USR_END
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[USR] RECV USR_END\n");
+                printf("[USR] END\n");
+
+  # A --0x65-> B
+  # A <-0x49-- E
+  # A <-0xAA-- E
+  - tnorm: TASK_NORM_A
+    <<: *tnorm2-ank
+    exec:
+      # Khi nhận USR_START, gửi 0x65 tới B để start tezenv
+      - on_sig: SIG_USR_START
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[A] RECV USR_START -> POST 0x65 TO B\n");
+
+                uedp_msg_t* msg = uedp_msg_alloc(
+                  TASK_NORM_B, SIG_USR_START, UEDP_MSG_TYPE_ALLOC
+                );
+                if (msg != NULL) {
+                  uedp_msg_set_src_task_id(msg, TASK_NORM_A);
+                  uedp_msg_set_data_val(msg, 0x65, ui16);
+                  uedp_task_norm_post_msg(TASK_NORM_B, msg);
+                }
+      # Khi nhận SIG_0x49, gửi 0x65 tới C
+      - on_sig: SIG_0x49
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[A] RECV 0x49 -> POST 0x65 TO C\n");
+
+                uedp_msg_t* msg =
+                  uedp_msg_alloc(TASK_NORM_C, SIG_0X49, UEDP_MSG_TYPE_BLANK);
+                if (msg != NULL) {
+                  uedp_msg_set_src_task_id(msg, TASK_NORM_A);
+                  uedp_msg_set_data_val(msg, 0x49, ui16);
+                  uedp_task_norm_post_msg(TASK_NORM_C, msg);
+                }
+      # Khi nhận SIG_0xAA, ignore
+      - on_sig: SIG_0xAA
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[A] RECV 0xAA -> IGNORE\n");
+
+  # B --0xB7-> D
+  # B --SIG_USR_END-> USR
+  - tnorm: TASK_NORM_B
+    <<: *tnorm3-ank
+    exec:
+      # Khi nhận SIG_0x65, gửi 0xB7 tới D
+      - on_sig: SIG_0X65
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[B] RECV 0x65 -> POST 0xB7 TO D\n");
+
+                uedp_msg_t* msg = uedp_msg_alloc(
+                  TASK_NORM_D, SIG_0X65, UEDP_MSG_TYPE_ALLOC
+                );
+                if (msg != NULL) {
+                  uedp_msg_set_src_task_id(msg, TASK_NORM_B);
+                  uedp_msg_set_data_val(msg, 0xB7, ui16);
+                  uedp_task_norm_post_msg(TASK_NORM_D, msg);
+                }
+      # Khi nhận SIG_0X9F, gửi SIG_USR_END tới USR
+      - on_sig: SIG_0X9F
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[B] RECV 0x9F -> POST SIG_USR_END TO USR\n");
+
+                uedp_msg_t* msg = uedp_msg_alloc(
+                  TASK_NORM_USR, SIG_USR_END, UEDP_MSG_TYPE_BLANK
+                );
+                if (msg != NULL) {
+                  uedp_msg_set_src_task_id(msg, TASK_NORM_B);
+                  uedp_task_norm_post_msg(TASK_NORM_USR, msg);
+                }
+
+  # C nhận 0x30 qua PSE 1-N
+  # C --0x74--> A và C --0xA4--> B
+  - tnorm: TASK_NORM_C
+    <<: *tnorm4-ank
+    exec:
+      - on_sig: SIG_0X30
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[C] RECV 0x30 -> PUBLISH 0x74 to A\n");
+                uedp_msg_publish(SIG_0X74, NULL, 0);
+
+                printf("[C] RECV 0x30 -> PUBLISH 0xA4 to B\n");
+                uedp_msg_publish(SIG_0XA4, NULL, 0);
+
+      - on_sig: SIG_TC_POS_04
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[TC_POS_04] PASS: C received message after B unsubscribe\n");
