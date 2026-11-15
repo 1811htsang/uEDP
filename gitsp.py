@@ -2,11 +2,33 @@ import os
 import json
 import re
 import subprocess
+import sys
+import locale
+
+os.environ.setdefault("PYTHONUTF8", "1")
+if not os.environ.get("LC_CTYPE"):
+    os.environ["LC_CTYPE"] = "C.UTF-8"
+try:
+    locale.setlocale(locale.LC_CTYPE, "")
+except locale.Error:
+    pass
+
 import tkinter as tk
+from argparse import ArgumentParser
 from datetime import date, datetime, timedelta
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
 CREATE_NO_WINDOW = 0x08000000 if os.name == "nt" else 0
+DETACHED_PROCESS = 0x00000008 if os.name == "nt" else 0
+CREATE_NEW_PROCESS_GROUP = 0x00000200 if os.name == "nt" else 0
+UTF8_ENV = {
+    "LANG": "C.UTF-8",
+    "LC_ALL": "C.UTF-8",
+    "LANGUAGE": "C",
+    "GIT_COMMITTER_ENCODING": "UTF-8",
+}
+UI_FONT = os.environ.get("GITSP_UI_FONT", "Noto Sans")
+MONO_FONT = os.environ.get("GITSP_MONO_FONT", "Noto Sans Mono")
 SEP = "\x1f"
 DATE_FORMAT = "--date=format:%Y-%m-%d %H:%M"
 LOG_FORMAT = f"--pretty=format:%H{SEP}%h{SEP}%ad{SEP}%an{SEP}%s"
@@ -19,11 +41,14 @@ class GitError(Exception):
 
 
 def git_run(repo, *args, env=None, stdin=None):
+    git_env = {**os.environ, **UTF8_ENV}
+    if env:
+        git_env.update(env)
     try:
         result = subprocess.run(
             ["git", "-C", repo, *args],
             input=stdin,
-            env=env,
+            env=git_env,
             capture_output=True,
             creationflags=CREATE_NO_WINDOW,
         )
@@ -32,16 +57,48 @@ def git_run(repo, *args, env=None, stdin=None):
     return result.returncode, result.stdout, result.stderr
 
 
+def decode_utf8(data):
+    return data.decode("utf-8", errors="replace") if isinstance(data, bytes) else data
+
+
+def launch_background():
+    if os.name == "nt":
+        subprocess.Popen(
+            [sys.executable, "-m", "gitsp", "--foreground"],
+            cwd=os.path.dirname(os.path.abspath(__file__)),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
+            close_fds=True,
+        )
+        return True
+
+    first_pid = os.fork()
+    if first_pid:
+        return True
+    os.setsid()
+    second_pid = os.fork()
+    if second_pid:
+        os._exit(0)
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    with open(os.devnull, "rb") as stdin, open(os.devnull, "ab") as stdout, open(os.devnull, "ab") as stderr:
+        os.dup2(stdin.fileno(), sys.stdin.fileno())
+        os.dup2(stdout.fileno(), sys.stdout.fileno())
+        os.dup2(stderr.fileno(), sys.stderr.fileno())
+    return False
+
+
 def git_ok(repo, *args):
     code, out, err = git_run(repo, *args)
     if code != 0:
-        raise GitError((err or out).decode("utf-8", errors="replace").strip())
+        raise GitError(decode_utf8(err or out).strip())
     return out
 
 
 def detect_repo(start):
     try:
-        return git_ok(start, "rev-parse", "--show-toplevel").decode("utf-8", errors="replace").strip()
+        return decode_utf8(git_ok(start, "rev-parse", "--show-toplevel")).strip()
     except GitError:
         return start
 
@@ -50,18 +107,18 @@ def list_branches(repo):
     raw = git_ok(repo, "for-each-ref", "--format=%(refname:short)", "refs/heads", "refs/remotes")
     names = {
         name
-        for name in raw.decode("utf-8", errors="replace").splitlines()
+        for name in decode_utf8(raw).splitlines()
         if name and name != "origin" and not name.endswith("/HEAD")
     }
     return sorted(names)
 
 
 def current_branch(repo):
-    return git_ok(repo, "branch", "--show-current").decode("utf-8", errors="replace").strip()
+    return decode_utf8(git_ok(repo, "branch", "--show-current")).strip()
 
 
 def list_submodules(repo):
-    raw = git_ok(repo, "submodule", "status", "--recursive").decode("utf-8", errors="replace")
+    raw = decode_utf8(git_ok(repo, "submodule", "status", "--recursive"))
     entries = []
     for line in raw.splitlines():
         parts = line.strip().split(maxsplit=2)
@@ -130,7 +187,7 @@ def checkout_branch(repo, branch):
 
 def list_files(repo, branch):
     raw = git_ok(repo, "ls-tree", "-r", "-z", "--name-only", branch)
-    return sorted(path for path in raw.decode("utf-8", errors="replace").split("\0") if path)
+    return sorted(path for path in decode_utf8(raw).split("\0") if path)
 
 
 def copy_files_from_branch(repo, branch, paths):
@@ -143,7 +200,7 @@ def copy_files_from_branch(repo, branch, paths):
 
 
 def read_log(repo, *args):
-    raw = git_ok(repo, "log", DATE_FORMAT, LOG_FORMAT, *args).decode("utf-8", errors="replace")
+    raw = decode_utf8(git_ok(repo, "log", DATE_FORMAT, LOG_FORMAT, *args))
     commits = []
     for line in raw.splitlines():
         full, short, when, author, subject = line.split(SEP, 4)
@@ -169,12 +226,12 @@ def cherry_pick_in_progress(repo):
 
 def list_local_branches(repo):
     raw = git_ok(repo, "for-each-ref", "--format=%(refname:short)", "refs/heads")
-    return sorted(line for line in raw.decode("utf-8", errors="replace").splitlines() if line)
+    return sorted(line for line in decode_utf8(raw).splitlines() if line)
 
 
 def original_message(repo, sha):
     raw = git_ok(repo, "log", "-1", "--format=%B", sha)
-    return raw.decode("utf-8", errors="replace").rstrip("\n")
+    return decode_utf8(raw).rstrip("\n")
 
 
 def ensure_not_protected(branch):
@@ -189,11 +246,11 @@ def ensure_not_protected(branch):
 def rewrite_messages(repo, branch, first_sha, overrides):
     if git_run(repo, "merge-base", "--is-ancestor", first_sha, f"refs/heads/{branch}")[0] != 0:
         raise GitError("Commit không còn nằm trên branch, hãy tải lại danh sách.")
-    old_tip = git_ok(repo, "rev-parse", f"refs/heads/{branch}").decode().strip()
+    old_tip = decode_utf8(git_ok(repo, "rev-parse", f"refs/heads/{branch}")).strip()
     rows = git_ok(
         repo, "rev-list", "--reverse", "--topo-order", "--parents", "--ancestry-path", f"{first_sha}..{old_tip}"
-    ).decode().splitlines()
-    first_row = git_ok(repo, "rev-list", "--parents", "-n", "1", first_sha).decode().split()
+    ).decode("utf-8", errors="replace").splitlines()
+    first_row = decode_utf8(git_ok(repo, "rev-list", "--parents", "-n", "1", first_sha)).split()
     chain = [first_row] + [line.split() for line in rows if line.strip()]
 
     for index, (sha, *parents) in enumerate(chain):
@@ -209,7 +266,7 @@ def rewrite_messages(repo, branch, first_sha, overrides):
         author = None
         for line in header.split(b"\n"):
             if line.startswith(b"tree "):
-                tree = line[5:].decode()
+                tree = line[5:].decode("utf-8", errors="replace")
             elif line.startswith(b"author "):
                 author = RAW_AUTHOR.match(line)
         if tree is None or author is None:
@@ -221,7 +278,7 @@ def rewrite_messages(repo, branch, first_sha, overrides):
             **os.environ,
             "GIT_AUTHOR_NAME": author.group(1).decode("utf-8", errors="replace"),
             "GIT_AUTHOR_EMAIL": author.group(2).decode("utf-8", errors="replace"),
-            "GIT_AUTHOR_DATE": author.group(3).decode(),
+            "GIT_AUTHOR_DATE": decode_utf8(author.group(3)),
         }
         args = ["commit-tree", tree]
         if new_parent:
@@ -230,7 +287,7 @@ def rewrite_messages(repo, branch, first_sha, overrides):
         code, out, err = git_run(repo, *args, env=env, stdin=message_bytes)
         if code:
             raise GitError((err or out).decode("utf-8", errors="replace").strip())
-        new_parent = out.decode().strip()
+        new_parent = decode_utf8(out).strip()
 
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     backup_ref = f"refs/backup/{branch}/{stamp}"
@@ -246,7 +303,7 @@ def is_ancestor(repo, ancestor, descendant):
 def remote_is_known(repo, branch, remote_sha):
     if is_ancestor(repo, remote_sha, f"refs/heads/{branch}"):
         return True
-    backups = git_ok(repo, "for-each-ref", "--format=%(refname)", f"refs/backup/{branch}/").decode().split()
+    backups = decode_utf8(git_ok(repo, "for-each-ref", "--format=%(refname)", f"refs/backup/{branch}/")).split()
     return any(is_ancestor(repo, remote_sha, ref) for ref in backups)
 
 
@@ -256,8 +313,8 @@ def force_update_remote(repo, branch):
     code, out, _ = git_run(repo, "rev-parse", "--verify", "-q", remote_ref)
     if code:
         raise GitError(f"origin chưa có branch '{branch}', không cần force update.")
-    remote_sha = out.decode().strip()
-    local_sha = git_ok(repo, "rev-parse", f"refs/heads/{branch}").decode().strip()
+    remote_sha = decode_utf8(out).strip()
+    local_sha = decode_utf8(git_ok(repo, "rev-parse", f"refs/heads/{branch}")).strip()
     if local_sha == remote_sha:
         raise GitError("Local và origin đã giống nhau, không có gì để force update.")
     if not remote_is_known(repo, branch, remote_sha):
@@ -344,6 +401,10 @@ def next_ticket_number(todo_path, prefix):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
+        self.option_add("*Font", (UI_FONT, 10))
+        self.option_add("*Entry.font", (UI_FONT, 10))
+        self.option_add("*Text.font", (UI_FONT, 10))
+        self.option_add("*Listbox.font", (UI_FONT, 10))
         self.title("gitps - Git Support Tool")
         self.geometry("1600x900")
         self.minsize(1280, 720)
@@ -424,7 +485,7 @@ class App(tk.Tk):
         )
 
         ttk.Label(header, text="Branch hiện tại (B):").grid(row=1, column=0, sticky="w", pady=(6, 0))
-        ttk.Label(header, textvariable=self.current_var, font=("Segoe UI", 10, "bold")).grid(
+        ttk.Label(header, textvariable=self.current_var, font=(UI_FONT, 10, "bold")).grid(
             row=1, column=1, sticky="w", pady=(6, 0)
         )
 
@@ -537,7 +598,7 @@ class App(tk.Tk):
         preview = ttk.Frame(tab)
         preview.pack(fill="x", pady=(10, 0))
         ttk.Label(preview, text="Xem trước:").pack(side="left")
-        ttk.Label(preview, textvariable=self.commit_preview_var, font=("Consolas", 10, "bold")).pack(
+        ttk.Label(preview, textvariable=self.commit_preview_var, font=(MONO_FONT, 10, "bold")).pack(
             side="left", padx=6
         )
         ttk.Button(
@@ -614,7 +675,7 @@ class App(tk.Tk):
         preview = ttk.Frame(tab)
         preview.pack(fill="x", pady=(10, 0))
         ttk.Label(preview, text="Xem trước:").pack(side="left")
-        ttk.Label(preview, textvariable=self.doc_preview_var, font=("Consolas", 10, "bold")).pack(
+        ttk.Label(preview, textvariable=self.doc_preview_var, font=(MONO_FONT, 10, "bold")).pack(
             side="left", padx=6
         )
         ttk.Button(
@@ -1217,7 +1278,28 @@ class App(tk.Tk):
             messagebox.showerror("Cherry-pick lỗi", output or "Lỗi không xác định.")
 
 
-if __name__ == "__main__":
+def main():
+    parser = ArgumentParser(description="Git Support Tool")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
+        "--background",
+        action="store_true",
+        help="Chạy cửa sổ Tkinter tách khỏi terminal (mặc định trên hệ POSIX).",
+    )
+    mode.add_argument(
+        "--foreground",
+        action="store_true",
+        help="Giữ tiến trình trong terminal để debug hoặc xem lỗi khởi động.",
+    )
+    args = parser.parse_args()
+
+    if args.background or (not args.foreground and os.name != "nt"):
+        if launch_background():
+            return
+
     app = App()
-    app.guarded(app.refresh_branches) if False else None
     app.mainloop()
+
+
+if __name__ == "__main__":
+    main()
