@@ -293,6 +293,87 @@ Qua các vòng thảo luận và design - debug trên Linux, thiết kế phối
 - Atomic Pointer Swap: Việc thay đổi trạng thái được đảm bảo tính nguyên tử, không bị ngắt quãng bởi các luồng khác.
 - RTC (Run-to-Completion): Đảm bảo một sự kiện trạng thái được xử lý xong xuôi trước khi Task nhận sự kiện tiếp theo, loại bỏ Race Condition ở mức logic.
 
+### [RTC] Runtime Trace Control - Điều khiển quan sát và can thiệp khi chạy
+
+Trong tài liệu này, `RTC` trong tiêu đề này là **Runtime Trace Control**. Nó không thay thế nguyên tắc **Run-to-Completion** cũng được viết tắt là RTC trong phần HSMC; hai khái niệm được phân biệt theo ngữ cảnh: Run-to-Completion là thuộc tính thực thi của task, còn Runtime Trace Control là API hỗ trợ test/debug.
+
+Runtime Trace Control (RTC) là lớp API hỗ trợ kiểm thử hộp trắng, mô phỏng thời gian và chẩn đoán đường chạy của μEDP. RTC được triển khai qua `uedp_ctrl.h`/`uedp_ctrl.c`, nằm ở ranh giới giữa test runner và Core. Mục tiêu của RTC không phải thay thế scheduler hay thay đổi logic nghiệp vụ, mà cung cấp các điểm điều khiển ổn định để `tezcal` hoặc test harness có thể:
+
+- quan sát task dispatch, timer tick và state transition;
+- inject hành vi kiểm thử tại các điểm đã định;
+- chạy scheduler theo số bước hữu hạn;
+- tiến thời gian logic theo số tick xác định mà không cần `sleep` hoặc phụ thuộc thread tick nền.
+
+#### Mô hình API
+
+RTC cung cấp hai callback độc lập:
+
+```c
+typedef void (*uedp_ctrl_inject_fn)(uedp_ctrl_pnt_t point, void* context);
+typedef void (*uedp_ctrl_trace_fn)(const uedp_ctrl_evt_t* event, void* context);
+```
+
+`injector` nhận control point và context do test cung cấp. Callback này phù hợp để bơm message, thay đổi fixture, đặt watchpoint hoặc điều khiển scenario. `tracer` nhận một event chỉ đọc và context; callback này phù hợp để ghi trace buffer, đếm dispatch hoặc làm oracle cho test. Khi callback là `NULL`, đường chạy Core không thực hiện thao tác RTC tương ứng.
+
+Đăng ký callback:
+
+```c
+uedp_ctrl_set_injector(test_inject, &fixture);
+uedp_ctrl_set_tracer(test_trace, &trace_buffer);
+```
+
+#### Control point
+
+Các điểm được định danh bởi `uedp_ctrl_pnt_t`:
+
+| Control point | Vị trí | Mục đích |
+| --- | --- | --- |
+| `UEDP_CTRL_BEFORE_SCHEDULER` / `AFTER_SCHEDULER` | đầu và cuối `uedp_task_scheduler()` | kiểm soát hoặc đo một vòng scheduler |
+| `UEDP_CTRL_BEFORE_TIMER_TICK` / `AFTER_TIMER_TICK` | đầu và cuối `uedp_timer_tick()` | kiểm soát và quan sát tiến triển timer |
+| `UEDP_CTRL_BEFORE_TASK_DISPATCH` / `AFTER_TASK_DISPATCH` | trước và sau task handler | đo RTC của task và kiểm tra signal đang xử lý |
+| `UEDP_CTRL_BEFORE_FSM_TRANSITION` / `AFTER_FSM_TRANSITION` | quanh `uedp_fsm_go_next()` | quan sát chuyển handler của FSM |
+| `UEDP_CTRL_BEFORE_TSM_TRANSITION` / `AFTER_TSM_TRANSITION` | quanh `uedp_tsm_trans()` | quan sát chuyển `cur_state`/`prev_state` của TSM |
+
+Không phải mọi control point đều phát `uedp_ctrl_evt_t` trong implementation hiện tại. Các trace event đang được tạo ở task dispatch, timer tick và sau FSM/TSM transition; injector vẫn được gọi tại toàn bộ các điểm tương ứng. Đây là chủ ý để tách API can thiệp khỏi contract dữ liệu trace và cho phép mở rộng event payload về sau mà không đổi control point.
+
+#### Trace event
+
+`uedp_ctrl_evt_t` là snapshot dùng trong thời gian callback, gồm:
+
+- `point`: control point phát event;
+- `task_id`, `signal`: ngữ cảnh task/message nếu có;
+- `value_a`, `value_b`: cặp giá trị tổng quát, hiện dùng để ghi state cũ và state mới của TSM;
+- `status`: kết quả thao tác liên quan;
+- `tick`: system tick tại thời điểm event;
+- `subject`: con trỏ tới đối tượng runtime liên quan, ví dụ task hoặc TSM.
+
+Callback tracer không được giữ `subject` hoặc con trỏ event để sử dụng sau khi callback kết thúc nếu test không tự sao chép dữ liệu cần thiết. Core không cấp phát bộ nhớ cho trace event; test harness chịu trách nhiệm lưu trace theo mô hình ring buffer hoặc buffer tĩnh.
+
+#### Điều khiển scheduler và thời gian logic
+
+`uedp_ctrl_run_scheduler(max_steps, &executed_steps)` gọi scheduler tối đa `max_steps` lần và dừng khi scheduler trả về trạng thái khác `STAT_OK`. Khi hệ thống không còn việc sẵn sàng, hàm trả về `STAT_NRDY`; `executed_steps` cho biết số lần dispatch thực tế đã chạy.
+
+`uedp_ctrl_advance_ticks(tick_count, run_scheduler, &executed_steps)` gọi `uedp_timer_tick()` đúng số lần yêu cầu. Khi `run_scheduler` là `true`, mỗi tick được nối tiếp bằng một lần `uedp_task_scheduler()`. Khi là `false`, test chỉ tiến timer mà không chạy task, phù hợp để kiểm tra timer expiration và ISR bridge độc lập.
+
+Trên Linux, thread tick nền có thể được tắt bằng:
+
+```c
+uedp_ctrl_set_auto_tick(false);
+uedp_ctrl_advance_ticks(5, true, &executed_steps);
+```
+
+`uedp_ctrl_set_auto_tick(true)` khôi phục hành vi mặc định. Chế độ tắt auto tick chỉ nên dùng trong test hoặc mô phỏng deterministic; ứng dụng production vẫn nên để PAL cung cấp tick phần cứng hoặc thread tick theo nền tảng.
+
+#### Ràng buộc kiến trúc và an toàn
+
+- RTC là cơ chế hỗ trợ test/debug, không phải một scheduler thứ hai và không được dùng để đưa logic nghiệp vụ vào Core.
+- Injector chạy ngay trong ngữ cảnh control point. Callback không được thực hiện thao tác blocking hoặc gọi ngược một API có thể tạo deadlock với critical section đang giữ.
+- `uedp_ctrl_advance_ticks()` phù hợp với test single-thread, non-preemptive. Nếu gọi đồng thời với tick nền, kết quả thời gian không còn deterministic.
+- Trên nền tảng mà `uedp_timer_tick()` chạy trong ISR, injector/tracer tại timer point phải là ISR-safe: không cấp phát động, không dùng mutex và chỉ ghi vào buffer an toàn cho ISR.
+- Context và trace buffer thuộc quyền sở hữu của test runner; Core chỉ giữ con trỏ callback/context đã đăng ký.
+
+RTC vì vậy tạo thành một contract rõ ràng giữa test scenario và μEDP Core: test có thể điều khiển stimulus và tốc độ thời gian, trong khi application logic vẫn giữ nguyên và trace được thu thập tại các abstraction boundary có ý nghĩa.
+
 ### [HES] Heximal Encoding Signals - Mã hóa tín hiệu theo hệ thập lục phân
 
 μEDP sử dụng một hệ thống quản lý tín hiệu (Signal Management) để đảm bảo rằng các tín hiệu được xử lý một cách an toàn và hiệu quả trong hệ thống. Hệ thống này bao gồm:
