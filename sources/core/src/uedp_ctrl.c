@@ -74,9 +74,12 @@ RETR_STAT uedp_ctrl_advance_ticks(ui32 tick_count, bool run_scheduler, ui32* exe
   for (ui32 tick = 0; tick < tick_count; tick++) {
     uedp_timer_tick();
     if (run_scheduler) {
-      while (uedp_task_scheduler() == STAT_OK) {
-        steps++;
-      }
+      do {
+        status = uedp_task_scheduler();
+        if (status == STAT_OK) {
+          steps++;
+        }
+      } while (status == STAT_OK);
     }
   }
 
