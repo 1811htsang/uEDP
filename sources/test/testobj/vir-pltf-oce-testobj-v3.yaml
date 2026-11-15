@@ -1,0 +1,168 @@
+
+pject: "vir-pltf-oce-testobj-v3"
+versh: "v1.1.8-bf1"
+
+# =========================================================
+# ANCHOR - Global Data Area (GDA)
+# =========================================================
+glbda:
+  - &gda_oce_counter
+      name: GDA_OCE_COUNTER
+      type: "int"
+      initial_value: 0
+  - &gda_oce_done
+      name: GDA_OCE_DONE
+      type: "bool"
+      initial_value: false
+  - &gda_status
+      name: GDA_SYSTEM_STATUS
+      type: "const char*"
+      initial_value: "STATUS: OCE TEST START"
+
+# =========================================================
+# ANCHOR - Task List (TLIST)
+# =========================================================
+tlist:
+  # -------------------------------------------------------
+  # TASK_NORM_USR: Điều phối và Thẩm định kết quả OCE
+  # -------------------------------------------------------
+  - tnorm: TASK_NORM_USR
+    tsm:
+      - id: tsm_task_usr_state_idle
+        trans:
+          - sig: *sig1-ank
+            goto: tsm_task_usr_state_running
+          - sig: *sig2-ank
+            goto: UEDP_TSM_STATE_STAY
+        on_ntry:
+          steps:
+            - actv:
+                kind: c_call
+                function: printf
+                args: ['"[USR][IDLE][NTRY] STARTING OCE TEST SEQUENCE.\n"']
+        on_actv:
+          steps:
+            # Phát tín hiệu kích hoạt Task Worker
+            - actv:
+                kind: c_stmt
+                code: |
+                  if (msg->sig == SIG_USR_START) {
+                    printf("[USR][IDLE][ACTV] DISPATCH WORKER.\n");
+                    uedp_msg_t* alloc_msg = uedp_msg_alloc(TASK_NORM_A, SIG_USR_START, sizeof(void*));
+                    if (alloc_msg) {
+                      uedp_task_norm_post_msg(TASK_NORM_A, alloc_msg);
+                    }
+                  }
+        on_exit:
+          steps:
+            - actv:
+                kind: c_call
+                function: printf
+                args: ['"[USR][IDLE][EXIT] TRANSITION TO RUNNING.\n"']
+
+      - id: tsm_task_usr_state_running
+        trans:
+          - sig: *sig4-ank  # SIG_0XFF: Tín hiệu Worker báo xong
+            goto: tsm_task_usr_state_idle
+        on_ntry:
+          steps:
+            - actv:
+                kind: c_call
+                function: printf
+                args: ['"[USR][RUNNING][NTRY] WAITING FOR OCE EXECUTION...\n"']
+        on_actv:
+          steps:
+            # Kiểm tra xem OCE đã thực sự chạy ngầm và cập nhật GDA chưa
+            - actv:
+                kind: c_stmt
+                code: |
+                  if (msg->sig == SIG_0XFF) {
+                    printf("[USR][RUNNING][ACTV] VERIFYING OCE RESULT...\n");
+                    if (GDA_OCE_DONE == true && GDA_OCE_COUNTER > 0) {
+                      printf("[USR][RUNNING][ACTV] >>> OCE TEST PASSED! COUNTER: %d <<<\n", GDA_OCE_COUNTER);
+                    } else {
+                      printf("[USR][RUNNING][ACTV] >>> OCE TEST FAILED! OCE DID NOT RUN OUT-OF-CONTEXT. <<<\n");
+                    }
+                  }
+        on_exit:
+          steps:
+            - actv:
+                kind: c_call
+                function: printf
+                args: ['"[USR][RUNNING][EXIT] TEST SEQUENCE COMPLETE.\n"']
+    <<: *tnorm1-ank
+
+  # -------------------------------------------------------
+  # TASK_NORM_A (Worker): Kích hoạt Service OCE
+  # -------------------------------------------------------
+  - tnorm: TASK_NORM_A
+    tsm:
+      - id: tsm_task_a_state_idle
+        trans:
+          - sig: *sig1-ank
+            goto: tsm_task_a_state_busy
+        on_ntry:
+          steps:
+            - actv:
+                kind: c_call
+                function: printf
+                args: ['"[A][IDLE][NTRY] WORKER READY.\n"']
+        on_actv:
+          steps:
+            - actv:
+                kind: c_stmt
+                code: |
+                  // Đợi SIG_USR_START để chuyển sang BUSY
+        on_exit:
+          steps:
+            - actv:
+                kind: c_call
+                function: printf
+                args: ['"[A][IDLE][EXIT] STARTING WORK.\n"']
+
+      - id: tsm_task_a_state_busy
+        trans:
+          - sig: *sig3-ank  # SIG_0X34: Tự chuyển trạng thái
+            goto: tsm_task_a_state_idle
+        on_ntry:
+          steps:
+            - actv:
+                kind: c_call
+                function: printf
+                args: ['"[A][BUSY][NTRY] REGISTERING OCE SERVICE...\n"']
+            # ĐĂNG KÝ DỊCH VỤ OCE
+            - actv:
+                kind: c_stmt
+                code: |
+                  // Đăng ký dịch vụ OCE_SVC_DATA_FLUSH đã khai báo tĩnh ở outexec
+                  extern ocesvc_t svc_data_flush; 
+                  uedp_ocesvc_register(&svc_data_flush);
+                  printf("[A][BUSY][NTRY] OCE SERVICE REGISTERED TO QUEUE.\n");
+        on_actv:
+          steps:
+            # Gửi tin nhắn kết thúc công việc cho chính mình và thông báo cho Task USR
+            - actv:
+                kind: c_stmt
+                code: |
+                  printf("[A][BUSY][ACTV] WORKER TASK YIELDING CPU.\n");
+                  // Gửi SIG_0xFF cho USR để chuẩn bị kiểm tra kết quả
+                  uedp_msg_t* done_msg = uedp_msg_alloc(TASK_NORM_USR, SIG_0XFF, sizeof(void*));
+                  if (done_msg) {
+                    uedp_task_norm_post_msg(TASK_NORM_USR, done_msg);
+                  }
+        on_exit:
+          steps:
+            - actv:
+                kind: c_call
+                function: printf
+                args: ['"[A][BUSY][EXIT] WORKER FINISHED.\n"']
+    <<: *tnorm2-ank
+
+# =========================================================
+# ANCHOR - Out-Context Execution (OUTEXEC)
+# =========================================================
+outexec:
+  - name: OCE_SVC_DATA_FLUSH
+    handler: oce_data_flush_handler
+    context: "&GDA_OCE_COUNTER"
+    state: READY

@@ -8,6 +8,7 @@
 #include "uedp_tsm.h"
 #include "uedp_msg.h"
 #include "uedp_fcr.h"
+#include "uedp_ctrl.h"
 
 void uedp_tsm_init(
 	uedp_tsm_t* tsm_table, const tsm_state_desc_t* state_des_table, 
@@ -55,6 +56,10 @@ void uedp_tsm_trans(uedp_tsm_t* tsm_table, tsm_state_id_t state_id) {
 		return;
 	}
 
+	#ifdef UEDP_TRACE
+		uedp_ctrl_inject(UEDP_CTRL_BEFORE_TSM_TRANSITION);
+	#endif
+
 	// Chỉ bảo vệ việc đọc/hoán đổi trạng thái; handler exit/entry/callback chạy NGOÀI critical section
 	pal_enter_critical();
 	tsm_state_id_t cur_state = tsm_table->cur_state;
@@ -91,6 +96,18 @@ void uedp_tsm_trans(uedp_tsm_t* tsm_table, tsm_state_id_t state_id) {
 	if (tsm_table->on_state_changed) {
 		tsm_table->on_state_changed(next_state);
 	}
+	
+	#ifdef UEDP_TRACE
+		uedp_ctrl_inject(UEDP_CTRL_AFTER_TSM_TRANSITION);
+		uedp_ctrl_evt_t event = {
+			.point = UEDP_CTRL_AFTER_TSM_TRANSITION,
+			.value_a = cur_state,
+			.value_b = next_state,
+			.status = STAT_OK,
+			.subject = tsm_table
+		};
+		uedp_ctrl_trace(&event);
+	#endif
 }
 
 void uedp_tsm_dispatch(uedp_tsm_t* tsm_table, uedp_msg_t* msg) {

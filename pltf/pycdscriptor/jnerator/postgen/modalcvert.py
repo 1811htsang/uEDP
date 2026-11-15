@@ -218,21 +218,11 @@ def build_appc_context(yaml_text: str) -> dict[str, Any]:
       f'{{ task_norm_t task_list[] = {{ {task_list} }}; uedp_msg_register_topic({entry["sig"]}, task_list); }}'
     )
   # CRITICAL - Find any task containing USR, as the initial message to start the user task
-  usr_task = next((task for task in tnorm_codegen if 'USR' in task['task']), None)
+  usr_task = next((task for task in tnorm_codegen if 'USR' or 'STR' in task['task']), None)
   if usr_task:
     context['init_actions'].append(
-      f'uedp_msg_t* start_msg = uedp_msg_alloc({usr_task["task"]}, SIG_STR, 0u);\n  if (start_msg) {{\n    uedp_task_norm_post_msg({usr_task["task"]}, start_msg); \n  }}'
+      f'uedp_msg_t* start_msg = uedp_msg_alloc({usr_task["task"]}, SIG_USR_START, 0u);\n  if (start_msg) {{\n    uedp_task_norm_post_msg({usr_task["task"]}, start_msg); \n  }}'
     )
-    for index, signal in enumerate(
-      ('SIG_TC_POS_03', 'SIG_TC_POS_04', 'SIG_TC_POS_05', 'SIG_TC_POS_06'),
-      start=1,
-    ):
-      context['init_actions'].append(
-        f'uedp_msg_t* testcase_msg_{index} = uedp_msg_alloc({usr_task["task"]}, {signal}, 0u);\n'
-        f'  if (testcase_msg_{index}) {{\n'
-        f'    uedp_task_norm_post_msg({usr_task["task"]}, testcase_msg_{index});\n'
-        '  }'
-      )
   return context
 
 def render_appc(yaml_text: str) -> str:

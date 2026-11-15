@@ -1,4 +1,4 @@
-//ANCHOR - Test runner sinh từ TSD (level: {{ level }})
+//ANCHOR - Test runner sinh từ tezcin (level: {{ level }})
 #include "unity.h"
 #include "libunity.h"
 #include "uedp_core.h"

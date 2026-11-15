@@ -9,7 +9,7 @@ from .lukupmodel import (
 	lukupmodel_lpipe_logic,
 	lukupmodel_psetbl_logic,
 	lukupmodel_sig_resrc,
-	lukupmodel_tsd_logic,
+	lukupmodel_tezcin_logic,
 	lukupmodel_tnorm_logic,
 	lukupmodel_tnorm_resrc,
 	lukupmodel_tpoll_logic,
@@ -27,7 +27,7 @@ class Kre8Project:
 	outexec: list[Any]
 	psetbl: list[Any]
 	lpipe: Any = None
-	tsd: list[Any] = None
+	tezcin: list[Any] = None
 
 	def to_generator_context(self) -> dict[str, Any]:
 		return {
@@ -60,7 +60,7 @@ def build_project_ir(yaml_text: str) -> Kre8Project:
 		outexec=lukupmodel_outexec_logic(yaml_text),
 		psetbl=lukupmodel_psetbl_logic(yaml_text),
 		lpipe=lukupmodel_lpipe_logic(yaml_text),
-		tsd=lukupmodel_tsd_logic(yaml_text),
+		tezcin=lukupmodel_tezcin_logic(yaml_text),
 	)
 
 def build_generator_context(yaml_text: str) -> dict[str, Any]:
