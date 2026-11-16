@@ -34,7 +34,15 @@ void uedp_ctrl_inject(uedp_ctrl_pnt_t point) {
 }
 
 void uedp_ctrl_trace(const uedp_ctrl_evt_t* event) {
-  if (g_tracer && event) {
+  if (event == NULL) {
+    return;
+  }
+
+  if (g_trace_idx < UEDP_CTRL_TRACE_MAX) {
+    g_trace_history[g_trace_idx++] = *event;
+  }
+
+  if (g_tracer) {
     g_tracer(event, g_tracer_context);
   }
 }
