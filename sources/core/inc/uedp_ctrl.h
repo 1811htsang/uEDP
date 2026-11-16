@@ -10,9 +10,10 @@
   #define __CONTROL_H__
 
   // ANCHOR - Khai báo các thư viện sử dụng
+  #include <stdarg.h>
   #include "uedp_core.h"
 
-  // ANCHOR - Định nghĩa các loại Pool tin nhắn (Nội bộ Core sử dụng)
+  // ANCHOR - Định nghĩa các điểm kiểm soát (Control Points) trong hệ thống UEDP
   typedef enum uedp_ctrl_pnt_t {
     UEDP_CTRL_BEFORE_SCHEDULER = 0,
     UEDP_CTRL_AFTER_SCHEDULER,
@@ -32,21 +33,22 @@
    * @param point: Điểm kiểm soát (Control Point) mà sự kiện xảy ra, xác định vị trí trong luồng thực thi
    * @param task_id: ID của tác vụ liên quan đến sự kiện, nếu có
    * @param signal: Tín hiệu liên quan đến sự kiện, nếu có
-   * @param value_a: Giá trị bổ sung A, có thể được sử dụng để truyền thông tin thêm về sự kiện
-   * @param value_b: Giá trị bổ sung B, có thể được sử dụng để truyền thông tin thêm về sự kiện
+   * @param value: Con trỏ đến giá trị bổ sung liên quan đến sự kiện, có thể là bất kỳ dữ liệu nào cần được truyền đi
+   * @param value_size: Kích thước của giá trị bổ sung
    * @param status: Trạng thái kết quả của sự kiện, giúp xác định kết quả của thao tác hoặc hành động liên quan
    * @param tick: Thời điểm (tick) mà sự kiện xảy ra, giúp theo dõi thời gian và thứ tự các sự kiện
    * @param subject: Con trỏ đến đối tượng liên quan đến sự kiện, có thể là tác vụ, FSM, TSM hoặc bất kỳ đối tượng nào khác trong hệ thống
+   * @attention subject có thể chứa nhiều đối tượng nhưng sẽ chỉ được sử dụng để tham chiếu, không được thay đổi dữ liệu của đối tượng đó
 	 */
   typedef struct uedp_ctrl_evt_t {
     uedp_ctrl_pnt_t point;
     ui8 task_id;
     ui8 signal;
-    ui32 value_a;
-    ui32 value_b;
-    RETR_STAT status;
+    void* value;
+    size_t value_size;
     ui32 tick;
-    const void* subject;
+    RETR_STAT status;
+    void* subject;
   } uedp_ctrl_evt_t;
 
   /** ANCHOR - Cấu trúc quản lý một bước trong chuỗi sự kiện kiểm soát (Control Sequence Step)
@@ -93,11 +95,11 @@
   
   /** ANCHOR - Ghi lại (trace) một sự kiện kiểm soát tùy chỉnh trong hệ thống UEDP
    * @param custom_id ID tùy chỉnh để xác định sự kiện kiểm soát
-   * @param val_a Giá trị bổ sung A, có thể được sử dụng để truyền thông tin thêm về sự kiện
-   * @param val_b Giá trị bổ sung B, có thể được sử dụng để truyền thông tin thêm về sự kiện
    * @param payload Con trỏ đến dữ liệu bổ sung liên quan đến sự kiện, có thể là bất kỳ đối tượng nào trong hệ thống
+   * @param value_size Kích thước của giá trị bổ sung
+   * @param ... Các tham số bổ sung có thể được truyền vào để cung cấp thêm thông tin về sự kiện
    */
-  void uedp_ctrl_trace_custom(ui16 custom_id, ui32 val_a, ui32 val_b, const void* payload);
+  void uedp_ctrl_trace_custom(ui16 custom_id, void* payload, size_t value_size, ...);
   
   /** ANCHOR - Thiết lập chế độ tự động tick cho hệ thống UEDP
    * @param enabled true để bật chế độ tự động tick, false để tắt
