@@ -733,9 +733,14 @@ Do đó, quyết định sử dụng Python để triển khai các tính năng 
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-008 <+ Bổ sung template cho testing và pipeling của TSD và TLC để hỗ trợ việc kiểm thử các tính năng của lõi μEDP.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-009 <+ Cập nhật các assertion cho PLTF.
 - [x] @! TID[epic=v1.1.8/gitsp] REPO-003 <+ Bổ sung gitsp để hỗ trợ các thao tác quản lý với git và repo nhằm tối ưu hóa việc quản lý mã nguồn và các thay đổi trong dự án μEDP.
-- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.test] TEST-002 <+ Thực hiện BST cho tính năng OCE trên testobj-v3 kết hợp triển khai libunity-x-pltf để kiểm thử các tính năng mới của μEDP một cách hiệu quả và ổn định.
-- [ ] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-010 <+ Thực hiện wiring libunity và tezcin vào pipeline PLTF hiện tại trước khi kiểm tra cho ticket TEST-002
-- [x] @! TID[epic=Rv1.1.18-i0/pltf.libunity-integration] DOCS-008 <+ Bổ sung tài liệu định hướng việc triển khai và giải quyết các vấn đề về tezcal và testobj để hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.pycdscriptor.test] TEST-002 <+ Thực hiện BST cho tính năng OCE trên testobj-v4 kết hợp triển khai libunity-x-pltf để kiểm thử các tính năng mới của μEDP một cách hiệu quả và ổn định.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-010 <+ Thực hiện wiring libunity và tezcin vào pipeline PLTF hiện tại trước khi kiểm tra cho ticket TEST-002
+- [x] @! TID[epic=Rv1.1.18-i0/pltf.libunity-integration] DOCS-005 <+ Bổ sung tài liệu định hướng việc triển khai và giải quyết các vấn đề về tezcal và testobj để hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
+- [x] @! TID[epic=Rv1.1.18-i0/pltf.libunity-integration] CORE-001 <+ Triển khai API trace và watchpoint cho libunity-x-pltf để hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
+- [ ] @! TID[epic=Rv1.1.8/pltf.libunity-integration.test] TEST-003 <+ Thực hiện thử nghiệm tính năng trace và watchpoint cho libunity-x-pltf để kiểm thử các tính năng mới của μEDP một cách hiệu quả và ổn định trên testobj-v0, testobj-v1, testobj-v2 và testobj-v3.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] CORE-002 <+ Bổ sung khả năng add custom event point + event sequence.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] DOCS-006 <+ Bổ sung tài liệu hướng dẫn việc sử dụng và quản lý các event point và event sequence trong libunity-x-pltf.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration.test] TEST-004 <+ Bổ sung testobj-v4 và tezcal tương ứng để thực hiện ticket TEST-002 và TEST-003
 
 //  !SECTION
 
