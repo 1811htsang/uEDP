@@ -43,9 +43,17 @@ void uedp_ctrl_trace_custom(ui16 custom_id, void* payload, size_t value_size, ..
   va_list args;
   va_start(args, value_size);
 
-  // NOTE - Lưu danh sách các tham số bổ sung sau value_size vào con trỏ value trong sự kiện kiểm soát
-  for (size_t i = 0; i < value_size; i++) {
-    va_arg(args, ui32); // Bỏ qua các tham số bổ sung
+  if (value_size >= 0 && payload == NULL) {
+    // Nếu value_size > 0 nhưng payload là NULL, không thể ghi trace
+    UEDP_FCR_RAISE_MSG(UEDP_FCR_CTRL_INVALID_PARAM, "Payload is NULL while value_size > 0");
+    return;
+  } else {
+    
+
+    // NOTE - Lưu danh sách các tham số bổ sung sau value_size vào con trỏ value trong sự kiện kiểm soát
+    for (size_t i = 0; i < value_size; i++) {
+      va_arg(args, ui32); // Bỏ qua các tham số bổ sung
+    }
   }
 
   uedp_ctrl_evt_t evt = {
@@ -58,6 +66,8 @@ void uedp_ctrl_trace_custom(ui16 custom_id, void* payload, size_t value_size, ..
     .tick = pal_sys_get_tick(),
     .subject = (void*)payload
   };
+
+  va_end(args);
   uedp_ctrl_trace(&evt);
 }
 
