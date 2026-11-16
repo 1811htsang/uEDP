@@ -62,8 +62,8 @@ tlist:
                   uedp_msg_set_data_val(msg, 0x65, ui16);
                   uedp_task_norm_post_msg(TASK_NORM_B, msg);
                 }
-      # Khi nhận SIG_0x49, gửi 0x65 tới C
-      - on_sig: SIG_0x49
+      # Khi nhận SIG_0X49, gửi 0x65 tới C
+      - on_sig: SIG_0X49
         steps:
           - actv:
               kind: c_stmt
@@ -74,11 +74,11 @@ tlist:
                   uedp_msg_alloc(TASK_NORM_C, SIG_0X49, UEDP_MSG_TYPE_BLANK);
                 if (msg != NULL) {
                   uedp_msg_set_src_task_id(msg, TASK_NORM_A);
-                  uedp_msg_set_data_val(msg, 0x49, ui16);
+                  uedp_msg_set_data_val(msg, 0x65, ui16);
                   uedp_task_norm_post_msg(TASK_NORM_C, msg);
                 }
       # Khi nhận SIG_0xAA, ignore
-      - on_sig: SIG_0xAA
+      - on_sig: SIG_0XAA
         steps:
           - actv:
               kind: c_stmt
@@ -122,25 +122,92 @@ tlist:
                   uedp_task_norm_post_msg(TASK_NORM_USR, msg);
                 }
 
-  # C nhận 0x30 qua PSE 1-N
-  # C --0x74--> A và C --0xA4--> B
+  # C --0x18--> E
+  # C --0x9F--> B
+  # C <-0x65-- A
+  # A <-0x03-- D
   - tnorm: TASK_NORM_C
     <<: *tnorm4-ank
     exec:
-      - on_sig: SIG_0X30
+      # Khi nhận SIG_0X65, gửi 0x18 tới E
+      - on_sig: SIG_0X65
         steps:
           - actv:
               kind: c_stmt
               code: |
-                printf("[C] RECV 0x30 -> PUBLISH 0x74 to A\n");
-                uedp_msg_publish(SIG_0X74, NULL, 0);
+                printf("[C] RECV 0X65 -> POST 0x18 TO E\n");
 
-                printf("[C] RECV 0x30 -> PUBLISH 0xA4 to B\n");
-                uedp_msg_publish(SIG_0XA4, NULL, 0);
-
-      - on_sig: SIG_TC_POS_04
+                uedp_msg_t* msg = uedp_msg_alloc(
+                  TASK_NORM_E, SIG_0X18, UEDP_MSG_TYPE_ALLOC
+                );
+                if (msg != NULL) {
+                  uedp_msg_set_src_task_id(msg, TASK_NORM_C);
+                  uedp_msg_set_data_val(msg, 0x18, ui16);
+                  uedp_task_norm_post_msg(TASK_NORM_E, msg);
+                }
+      # Khi nhận SIG_0X03, gửi 0x9F tới B
+      - on_sig: SIG_0X03
         steps:
           - actv:
               kind: c_stmt
               code: |
-                printf("[TC_POS_04] PASS: C received message after B unsubscribe\n");
+                printf("[C] RECV 0x03 -> POST 0x9F TO B\n");
+
+                uedp_msg_t* msg = uedp_msg_alloc(
+                  TASK_NORM_B, SIG_0X9F, UEDP_MSG_TYPE_ALLOC
+                );
+                if (msg != NULL) {
+                  uedp_msg_set_src_task_id(msg, TASK_NORM_C);
+                  uedp_msg_set_data_val(msg, 0x9F, ui16);
+                  uedp_task_norm_post_msg(TASK_NORM_B, msg);
+                }
+
+  # D --0x03--> C, E
+  # D <-0xB7-- B
+  - tnorm: TASK_NORM_D
+    <<: *tnorm5-ank
+    exec:
+      # Khi nhận SIG_0XB7, publish 0x03 tới C và E
+      - on_sig: SIG_0XB7
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[D] RECV 0xB7 -> PUBLISH 0x03 TO C, E\n");
+                uedp_msg_publish(SIG_0X03, NULL, 0);
+
+  # E --0x49--> A khi nhận 0x03
+  # E --0xAA--> A khi nhận 0x18
+  - tnorm: TASK_NORM_E
+    <<: *tnorm6-ank
+    exec:
+      - on_sig: SIG_0X03
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[E] RECV 0x03 -> POST 0x49 TO A\n");
+
+                uedp_msg_t* msg = uedp_msg_alloc(
+                  TASK_NORM_A, SIG_0X49, UEDP_MSG_TYPE_ALLOC
+                );
+                if (msg != NULL) {
+                  uedp_msg_set_src_task_id(msg, TASK_NORM_E);
+                  uedp_msg_set_data_val(msg, 0x49, ui16);
+                  uedp_task_norm_post_msg(TASK_NORM_A, msg);
+                }
+      - on_sig: SIG_0X18
+        steps:
+          - actv:
+              kind: c_stmt
+              code: |
+                printf("[E] RECV 0x18 -> POST 0xAA TO A\n");
+
+                uedp_msg_t* msg = uedp_msg_alloc(
+                  TASK_NORM_A, SIG_0XAA, UEDP_MSG_TYPE_ALLOC
+                );
+                if (msg != NULL) {
+                  uedp_msg_set_src_task_id(msg, TASK_NORM_E);
+                  uedp_msg_set_data_val(msg, 0xAA, ui16);
+                  uedp_task_norm_post_msg(TASK_NORM_A, msg);
+                }
