@@ -32,6 +32,7 @@ MONO_FONT = os.environ.get("GITSP_MONO_FONT", "Noto Sans Mono")
 SEP = "\x1f"
 DATE_FORMAT = "--date=format:%Y-%m-%d %H:%M"
 LOG_FORMAT = f"--pretty=format:%H{SEP}%h{SEP}%ad{SEP}%an{SEP}%s"
+STASH_FORMAT = f"--pretty=format:%H{SEP}%h{SEP}%ad{SEP}%gd{SEP}%s"
 PROTECTED_BRANCHES = ("main", "release", "feat", "fix", "integration")
 RAW_AUTHOR = re.compile(rb"author (.*) <(.*)> (\d+ [+-]\d{4})$")
 
@@ -222,6 +223,29 @@ def working_tree_dirty(repo):
 
 def cherry_pick_in_progress(repo):
     return git_run(repo, "rev-parse", "-q", "--verify", "CHERRY_PICK_HEAD")[0] == 0
+
+
+def list_stashes(repo):
+    raw = decode_utf8(git_ok(repo, "stash", "list", DATE_FORMAT, STASH_FORMAT))
+    stashes = []
+    for line in raw.splitlines():
+        if not line:
+            continue
+        full, short, when, ref, subject = line.split(SEP, 4)
+        stashes.append({"sha": full, "short": short, "date": when, "ref": ref, "subject": subject})
+    return stashes
+
+
+def stash_detail(repo, sha):
+    parent = f"{sha}^1"
+    stat = decode_utf8(git_ok(repo, "diff", "--stat", parent, sha)).rstrip()
+    patch = decode_utf8(git_ok(repo, "diff", parent, sha)).rstrip()
+    sections = [f"Thay đổi tracked (so với {parent}):", stat or "(không có)", patch]
+    if git_run(repo, "rev-parse", "-q", "--verify", f"{sha}^3")[0] == 0:
+        names = decode_utf8(git_ok(repo, "ls-tree", "-r", "--name-only", f"{sha}^3")).rstrip()
+        content = decode_utf8(git_ok(repo, "show", "--format=", "-p", f"{sha}^3")).rstrip()
+        sections += ["", "File untracked được lưu (stash -u):", names, content]
+    return "\n".join(sections)
 
 
 def list_local_branches(repo):
@@ -504,6 +528,7 @@ class App(tk.Tk):
         self._build_doc_tab(notebook)
         self._build_rewrite_tab(notebook)
         self._build_submodule_tab(notebook)
+        self._build_stash_tab(notebook)
 
     def _build_files_tab(self, notebook):
         tab = ttk.Frame(notebook, padding=8)
@@ -916,6 +941,65 @@ class App(tk.Tk):
             text="Ràng buộc được lưu trong .gitsp-submodules.json và nên được commit cùng repo chính.",
             foreground="gray",
         ).pack(anchor="w", pady=(8, 0))
+
+    def _build_stash_tab(self, notebook):
+        tab = ttk.Frame(notebook, padding=8)
+        notebook.add(tab, text="Stash")
+
+        top = ttk.Frame(tab)
+        top.pack(fill="x")
+        ttk.Button(top, text="Tải danh sách stash", command=lambda: self.guarded(self.load_stashes)).pack(side="left")
+
+        frame = ttk.Frame(tab)
+        frame.pack(fill="both", expand=True, pady=(8, 0))
+        self.stash_tree = ttk.Treeview(
+            frame, columns=("ref", "hash", "date", "subject"), show="headings", selectmode="browse", height=8
+        )
+        for column, title, width in (
+            ("ref", "Stash", 110),
+            ("hash", "Hash", 80),
+            ("date", "Ngày", 130),
+            ("subject", "Nội dung", 500),
+        ):
+            self.stash_tree.heading(column, text=title)
+            self.stash_tree.column(column, width=width, stretch=column == "subject")
+        scroll = ttk.Scrollbar(frame, orient="vertical", command=self.stash_tree.yview)
+        self.stash_tree.configure(yscrollcommand=scroll.set)
+        self.stash_tree.pack(side="left", fill="both", expand=True)
+        scroll.pack(side="right", fill="y")
+        self.stash_tree.bind("<<TreeviewSelect>>", lambda _event: self.guarded(self.show_selected_stash))
+
+        ttk.Label(tab, text="Thay đổi đã lưu trong stash đang chọn:").pack(anchor="w", pady=(8, 0))
+        text_frame = ttk.Frame(tab)
+        text_frame.pack(fill="both", expand=True)
+        text_scroll = ttk.Scrollbar(text_frame, orient="vertical")
+        self.stash_text = tk.Text(text_frame, height=14, wrap="none", state="disabled", yscrollcommand=text_scroll.set)
+        text_scroll.config(command=self.stash_text.yview)
+        self.stash_text.pack(side="left", fill="both", expand=True)
+        text_scroll.pack(side="right", fill="y")
+
+    def load_stashes(self):
+        repo = self.repo()
+        self.stash_tree.delete(*self.stash_tree.get_children())
+        self._set_stash_text("")
+        stashes = list_stashes(repo)
+        for item in stashes:
+            self.stash_tree.insert(
+                "", "end", iid=item["sha"], values=(item["ref"], item["short"], item["date"], item["subject"])
+            )
+        self.log(f"Tìm thấy {len(stashes)} stash.")
+
+    def show_selected_stash(self):
+        selection = self.stash_tree.selection()
+        if not selection:
+            return
+        self._set_stash_text(stash_detail(self.repo(), selection[0]))
+
+    def _set_stash_text(self, text):
+        self.stash_text.configure(state="normal")
+        self.stash_text.delete("1.0", "end")
+        self.stash_text.insert("1.0", text)
+        self.stash_text.configure(state="disabled")
 
     def load_submodule_state(self):
         repo = self.repo()
