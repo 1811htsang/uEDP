@@ -39,16 +39,24 @@ void uedp_ctrl_trace(const uedp_ctrl_evt_t* event) {
   }
 }
 
-void uedp_ctrl_trace_custom(ui16 custom_id, ui32 val_a, ui32 val_b, const void* payload) {
+void uedp_ctrl_trace_custom(ui16 custom_id, void* payload, size_t value_size, ...) {
+  va_list args;
+  va_start(args, value_size);
+
+  // NOTE - Lưu danh sách các tham số bổ sung sau value_size vào con trỏ value trong sự kiện kiểm soát
+  for (size_t i = 0; i < value_size; i++) {
+    va_arg(args, ui32); // Bỏ qua các tham số bổ sung
+  }
+
   uedp_ctrl_evt_t evt = {
     .point = UEDP_CTRL_CUSTOM_EVENT,
     .task_id = 0xFF,                   // Không thuộc task cố định nào
     .signal = (ui8)(custom_id & 0xFF), // Mang ID tùy biến
-    .value_a = val_a,
-    .value_b = val_b,
+    .value = va_arg(args, ui32*),
+    .value_size = value_size,
     .status = STAT_OK,
     .tick = pal_sys_get_tick(),
-    .subject = payload
+    .subject = (void*)payload
   };
   uedp_ctrl_trace(&evt);
 }
