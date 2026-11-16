@@ -11,6 +11,7 @@
 #include <stddef.h>
 #include "uedp_core.h"
 #include "uedp_fcr.h"
+#include "uedp_dem.h"
 #include "uedp_itnlog.h"
 #include "pal_core.h"
 
@@ -104,7 +105,12 @@ void uedp_fcr_raise(uedp_fcr_code_t code, const char* file, ui32 line, const cha
     (extra_msg != NULL) ? extra_msg : entry->desc
   );
 
-  // 2. Thực hiện hành động xử lý tương ứng với entry tra được trong bảng
+  // 2. DEM quyết định có thực hiện hành động hay không (ECS/DBS)
+  if (!uedp_dem_report(code)) {
+    return;
+  }
+
+  // 3. Thực hiện hành động xử lý tương ứng với entry tra được trong bảng
   switch (entry->action) {
     case UEDP_FCR_ACT_LOG_ONLY:
       // NOTE - Không can thiệp thêm, chỉ ghi log ở bước 1
