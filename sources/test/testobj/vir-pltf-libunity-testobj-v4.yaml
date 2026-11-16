@@ -22,6 +22,8 @@ tlist:
               kind: c_stmt
               code: |
                 printf("[USR] RECV USR_START -> POST USR_START TO A\n");
+                ui32 trace_marker = 0x01;
+                uedp_ctrl_trace_custom(0x0101, &trace_marker, 0, &trace_marker);
 
                 uedp_msg_t* msg = uedp_msg_alloc(
                   TASK_NORM_A, SIG_USR_START, UEDP_MSG_TYPE_ALLOC
@@ -53,6 +55,8 @@ tlist:
               kind: c_stmt
               code: |
                 printf("[A] RECV USR_START -> POST 0x65 TO B\n");
+                ui32 trace_marker = 0x02;
+                uedp_ctrl_trace_custom(0x0102, &trace_marker, 0, &trace_marker);
 
                 uedp_msg_t* msg = uedp_msg_alloc(
                   TASK_NORM_B, SIG_USR_START, UEDP_MSG_TYPE_ALLOC
@@ -69,6 +73,8 @@ tlist:
               kind: c_stmt
               code: |
                 printf("[A] RECV 0x49 -> POST 0x65 TO C\n");
+                ui32 trace_marker = 0x06;
+                uedp_ctrl_trace_custom(0x0106, &trace_marker, 0, &trace_marker);
 
                 uedp_msg_t* msg =
                   uedp_msg_alloc(TASK_NORM_C, SIG_0X49, UEDP_MSG_TYPE_BLANK);
@@ -97,6 +103,8 @@ tlist:
               kind: c_stmt
               code: |
                 printf("[B] RECV 0x65 -> POST 0xB7 TO D\n");
+                ui32 trace_marker = 0x03;
+                uedp_ctrl_trace_custom(0x0103, &trace_marker, 0, &trace_marker);
 
                 uedp_msg_t* msg = uedp_msg_alloc(
                   TASK_NORM_D, SIG_0X65, UEDP_MSG_TYPE_ALLOC
@@ -113,6 +121,8 @@ tlist:
               kind: c_stmt
               code: |
                 printf("[B] RECV 0x9F -> POST SIG_USR_END TO USR\n");
+                ui32 trace_marker = 0x09;
+                uedp_ctrl_trace_custom(0x0109, &trace_marker, 0, &trace_marker);
 
                 uedp_msg_t* msg = uedp_msg_alloc(
                   TASK_NORM_USR, SIG_USR_END, UEDP_MSG_TYPE_BLANK
@@ -136,6 +146,8 @@ tlist:
               kind: c_stmt
               code: |
                 printf("[C] RECV 0X65 -> POST 0x18 TO E\n");
+                ui32 trace_marker = 0x05;
+                uedp_ctrl_trace_custom(0x0105, &trace_marker, 0, &trace_marker);
 
                 uedp_msg_t* msg = uedp_msg_alloc(
                   TASK_NORM_E, SIG_0X18, UEDP_MSG_TYPE_ALLOC
@@ -152,6 +164,8 @@ tlist:
               kind: c_stmt
               code: |
                 printf("[C] RECV 0x03 -> POST 0x9F TO B\n");
+                ui32 trace_marker = 0x08;
+                uedp_ctrl_trace_custom(0x0108, &trace_marker, 0, &trace_marker);
 
                 uedp_msg_t* msg = uedp_msg_alloc(
                   TASK_NORM_B, SIG_0X9F, UEDP_MSG_TYPE_ALLOC
@@ -174,6 +188,8 @@ tlist:
               kind: c_stmt
               code: |
                 printf("[D] RECV 0xB7 -> PUBLISH 0x03 TO C, E\n");
+                ui32 trace_marker = 0x04;
+                uedp_ctrl_trace_custom(0x0104, &trace_marker, 0, &trace_marker);
                 uedp_msg_publish(SIG_0X03, NULL, 0);
 
   # E --0x49--> A khi nhận 0x03
@@ -187,6 +203,8 @@ tlist:
               kind: c_stmt
               code: |
                 printf("[E] RECV 0x03 -> POST 0x49 TO A\n");
+                ui32 trace_marker = 0x07;
+                uedp_ctrl_trace_custom(0x0107, &trace_marker, 0, &trace_marker);
 
                 uedp_msg_t* msg = uedp_msg_alloc(
                   TASK_NORM_A, SIG_0X49, UEDP_MSG_TYPE_ALLOC
@@ -202,6 +220,8 @@ tlist:
               kind: c_stmt
               code: |
                 printf("[E] RECV 0x18 -> POST 0xAA TO A\n");
+                ui32 trace_marker = 0x0A;
+                uedp_ctrl_trace_custom(0x010A, &trace_marker, 0, &trace_marker);
 
                 uedp_msg_t* msg = uedp_msg_alloc(
                   TASK_NORM_A, SIG_0XAA, UEDP_MSG_TYPE_ALLOC
