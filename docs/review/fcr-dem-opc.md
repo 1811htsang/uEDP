@@ -111,3 +111,25 @@ Lưu ý: OCE được thiết kế theo nguyên tắc chỉ chạy khi hệ th�
 4. Sau khi các điểm trên được chốt, mới cập nhật `docs/eng/arch-design-en.md`, `docs/vni/arch-design.md` và user manual.
 
 Hai ticket DOCS-001 và DOCS-002 trong `docs/to-do.md` vẫn để trạng thái `[ ]`, cho đến khi người phụ trách xác nhận nội dung.
+
+## Trạng thái cập nhật cho các findings
+
+### Đối với section 2
+
+- Vấn đề 1,2 đã được giải quyết trong nhánh `sub-feat/Rv1.1.7-bf1` (commit `core.fcr-update`), nhưng chưa merge vào nhánh chính để cho ra release.
+- Vấn đề 3 đã được giải quyết từ trước khi release phiên bản 1.1.7, do đó không cần bổ sung tài liệu.
+- Vấn đề 4 sẽ được open ticket riêng để bổ sung log FCR code hay các concatenation đặc biệt.
+- Vấn đề 5 đã deprecated do không còn sử dụng, nên không cần cập nhật tài liệu.
+- Vấn đề 6,7 là các vấn đề về comment và sắp xếp, không ảnh hưởng hành vi, nên không cần cập nhật tài liệu.
+
+### Đối với section 3
+
+- Vấn đề 1, loại bỏ pzsto do vấn đề về implementation và khả năng ghi flash trong đường panic.
+- Vấn đề 2, dependency với NVM/EEPROM, nên không triển khai pzsto.
+- Vấn đề 3, dependency với NVM/EEPROM, nên không triển khai pzsto.
+- Vấn đề 4, cấu hình ECS/DBS là tĩnh (bảng biên dịch) để giảm độ phức tạp.
+- Vấn đề 5, DEM chỉ tiêu thụ FCR raise, không tự phát event.
+
+### Đối với section 5
+
+- OPC, APC và IOC được xác nhận là các cờ điều kiện chặn hành động, và sẽ được triển khai trong các tầng ứng dụng.
