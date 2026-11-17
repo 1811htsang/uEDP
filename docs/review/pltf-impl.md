@@ -212,3 +212,12 @@ Unity phải in kết quả test ra stdout và trả exit code khác 0 khi có a
 ## 6. Đề xuất kết luận
 
 Triển khai theo đúng 12 bước ở mục 4, đi theo lộ trình rollout ở mục 12 để có thể review từng phần nhỏ thay vì một PR khổng lồ. Trước khi bắt đầu Bước 1, cần chốt trả lời cho 6 câu hỏi mở ở mục 5. Unity được chốt là framework assertion và test lifecycle của runner; không chốt việc dùng Unity để mock core hoặc tạo coverage runtime. Mốc đầu tiên phải chứng minh được vòng đời `generate → build → ctest -L ut` trên Linux với một scenario mẫu.
+
+## Review 1404 - 171126
+
+- Vấn đề 1 hiện tại obsolete do expect hiện tại chỉ cần sử dụng API của libunity để perform các assertion, không cần phải so sánh trực tiếp với các state id. Do đó, việc tạo bảng lookup id→function pointer cho FSM state là không cần thiết nữa.
+- Vấn đề 2 xảy ra khi mức test nằm về `st` hoặc `it`, do đó việc sử dụng `linux_simulate_interrupt` chỉ applicable ở level `ut` và `ct`, phải có cơ chế validate để cảnh báo cho người dùng khi sử dụng `post_isr` ở level `st` hoặc `it` kèm bổ sung tài liệu hướng dẫn sử dụng cho người dùng.
+- Vấn đề 3 được confirm sẽ đưa vào release 1.1.8 này nhằm hoàn thiện tích hợp libunity vào TSD/TLC, do đó sẽ không hoãn sang review syntax riêng.
+- Vấn đề 4 chưa được quyết định, do đó sẽ hoãn sang review ticket.
+- Vấn đề 5 đã được confirm sẽ sử dụng `sources/test/tezprjec/` làm thư mục output file sinh ra chạy tezcal.
+- Vấn đề 6 hiện tại obsolete do khi sử dụng libunity, việc dừng tick thread Linux sau `UnityEnd()` là không cần thiết nữa và core sẽ tự động dừng tick thread Linux sau khi `UnityEnd()` được gọi.
