@@ -129,11 +129,64 @@ Quy ước assertion: dùng `TEST_ASSERT_*` / `TEST_ASSERT_EQUAL_*` của Unity.
 
 | Mức | Ý nghĩa | Trạng thái |
 | --- | --- | --- |
-| `ut` (unit) | Gọi trực tiếp một hàm do codegen sinh (ví dụ `{state}_onst`, `{state}_entry`, `{state}_exit`) với một `uedp_msg_t` dựng tay; assert side-effect. Không qua scheduler, không qua hàng đợi, không cần tick thread. | **Đề xuất**, chưa có runner riêng |
-| `ct` (component) | Chạy TSM/FSM đầy đủ của một task qua scheduler, nhưng chặn (stub) các message gửi sang task khác. | **Đề xuất**, cần cơ chế stub cross-task |
-| `st` (system) | Nhiều task, qua scheduler thật và PAL Linux thật. | **Đã có** (`tsd_runner` baseline) |
+| `ut` (unit) | Gọi trực tiếp một hàm do codegen sinh (ví dụ `{task}_onst`) với `uedp_msg_t` dựng tay; assert side-effect (GDA, giá trị trả về). Không khởi tạo core, không qua scheduler. Không assert `tsm_state`. | **Đã có** trong `testgen.py` (khi `level: ut`) |
+| `ct` (component) | Khởi tạo core và `logic_init()`, chạy scheduler thật (`uedp_ctrl_run_scheduler`), kiểm tra thứ tự message bằng `uedp_ctrl_verify_sequence` và trạng thái TSM/GDA. | **Đã có** (mặc định khi không khai báo `level`) |
+| `st` (system) | Nhiều task, qua scheduler thật và PAL Linux thật. | **Đề xuất**, chưa có runner riêng |
 | `it` (integration) | Tích hợp với phần cứng hoặc subsystem thật (ví dụ STM32 thật). | **Ngoài phạm vi** `pycdscriptor`; cần quy trình riêng với board thật |
 
-Hiện tại mọi kịch bản đều chạy như `st`, bất kể nhãn `level` khai báo. Nhãn chỉ đổi cách nhóm báo cáo, chưa đổi cách chạy. Việc để `level` điều khiển cách chạy cần quyết định trước vị trí của trường `level` (trên `tsd` hay `tlc`); xem [docs/review/tlc-impl-post-v123.md](../review/tlc-impl-post-v123.md).
+Hiện `testgen.py` chỉ hỗ trợ `ut` và `ct`. Giá trị `level` khác sẽ bị từ chối khi sinh mã.
+
+#### Cú pháp tezcal
+
+Tezcal là file YAML có khóa `tezuit`, với cấu trúc như `sources/test/tezcal/vir-pltf-libunity-tezcal-1-testobj-v4.yaml`:
+
+```yaml
+identif: "vir-pltf-libunity-tezcal-1-testobj-v4"
+tezuit:
+  - tezk: "a"                     # tên kịch bản, thành hàm test_a
+    level: ct                     # tùy chọn, mặc định ct
+    subidentif: "TC_LIBUNITY_FLOW_01"
+    dscript: "Mô tả kịch bản"
+    teztep:
+      - '1':
+          desc: "Bơm USR_START vào USR"
+          call:
+          - act: |
+              uedp_msg_t* start_msg = uedp_msg_alloc(TASK_NORM_USR, SIG_USR_START, UEDP_MSG_TYPE_ALLOC);
+              uedp_task_norm_post_msg(TASK_NORM_USR, start_msg);
+      - '2':
+          desc: "Cho scheduler chạy đến khi hết message"
+          call:
+          - act: |
+              ui32 executed_steps = 0;
+              uedp_ctrl_run_scheduler(100, &executed_steps);
+    xpect:
+      - act: "TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence(...));"
+```
+
+- `teztep` là danh sách bước; mỗi bước là một map có một khóa số (`'1'`, `'2'`, ...) chứa `desc` và `call`.
+- `call` là danh sách các `act`, mỗi `act` là một đoạn C được chèn nguyên văn.
+- `xpect` là danh sách các `act` assert, được chèn sau các bước. Assert là do tezcal viết, testobj không tự kiểm tra.
+- `subidentif`, `dscript`, `desc` chỉ dùng làm comment trong file sinh ra.
+
+Lệnh sinh mã:
+
+```bash
+python -m pltf.pycdscriptor.jnerator.postgen.testgen --yaml <tezcal.yaml> --output sources/test/tezprjec/tez.c [--level ut|ct]
+```
+
+YAML không có khóa `tezuit` sẽ bị bỏ qua, không lỗi.
+
+#### Khác biệt giữa tezcal `ct` và `ut`
+
+| Hạng mục | `ct` | `ut` |
+| --- | --- | --- |
+| Khởi tạo | `uedp_core_init()` và `logic_init()` trong `main` | Không khởi tạo core, không gọi `logic_init()` |
+| Cách chạy | Chạy scheduler thật qua `uedp_ctrl_run_scheduler` | Gọi trực tiếp hàm do codegen sinh, ví dụ `TASK_NORM_A_onst(&msg)` |
+| Cách kiểm tra | `uedp_ctrl_verify_sequence` để xác nhận thứ tự message, GDA, `tsm_state` | GDA hoặc giá trị trả về; không assert `tsm_state` |
+| Đăng ký `RUN_TEST` | Sau `uedp_core_init()`/`logic_init()` | Đứng trước, không phụ thuộc core |
+| Phụ thuộc | Cần `uedp_ctrl` và runtime đầy đủ | Vẫn include các header chung (`uedp_core.h`, `uedp_ctrl.h`, `app_decl.h`) nhưng không gọi hàm khởi tạo |
+
+Với `ut`, `main` chỉ gọi `RUN_TEST` cho các kịch bản `ut`. Với `ct`, `main` mới khởi tạo core rồi mới gọi `RUN_TEST` cho các kịch bản `ct`.
 
 Tích hợp CTest dự kiến: map mỗi mức vào thuộc tính `LABELS` của `add_test()` để chạy `ctest -L <level>`. Đây là thiết kế, chưa được triển khai trong `CMakeLists.txt`.
