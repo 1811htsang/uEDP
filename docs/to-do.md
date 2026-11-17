@@ -741,6 +741,10 @@ Do đó, quyết định sử dụng Python để triển khai các tính năng 
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] CORE-002 <+ Bổ sung khả năng add custom event point + event sequence.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] DOCS-006 <+ Bổ sung tài liệu hướng dẫn việc sử dụng và quản lý các event point và event sequence trong libunity-x-pltf.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration.test] TEST-004 <+ Bổ sung testobj-v4 và tezcal tương ứng để thực hiện ticket TEST-002 và TEST-003
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] CORE-003 <+ Bổ sung dynamic parameter cho `uedp_ctrl_trace_custom`, chuyển thuộc tính cố định sang mảng con trỏ và cập nhật cấu trúc event.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] CORE-004 <+ Bổ sung kiểm tra NULL payload trong `uedp_ctrl_trace_custom` kèm lỗi FCR cho tham số CTRL không hợp lệ.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] CORE-005 <+ Xử lý NULL event trong `uedp_ctrl_trace`, cập nhật trace history và thêm trace marker trong quá trình thực thi task để hỗ trợ debug.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration.test] TEST-005 <+ Bổ sung test case cho sự kiện USR_START và các custom event sequence trên testobj-v4.
 
 //  !SECTION
 
@@ -753,10 +757,39 @@ Do đó, quyết định sử dụng Python để triển khai các tính năng 
 - [x] @! TID[epic=Rv1.1.7-bf1/core.fcr-update] CORE-001 <+ Cập nhật bổ sung mã lỗi `UEDP_FCR_MSG_POOL_REF_RCM` chưa khai báo và assign action trong `uedp_fcr.c` để hỗ trợ việc quản lý các lỗi liên quan đến việc pool recommendation.
 - [x] @! TID[epic=Rv1.1.7-bf1/core.fcr-update] CORE-002 <+ Cập nhật loại bỏ mã lỗi `UEDP_FCR_MSG_NO_REG_PSE` do không còn sử dụng.
 - [x] @! TID[epic=Rv1.1.7-bf1/repo] REPO-001 <+ Thực hiện pickup các update từ nhánh `fix` sang `sub-feat/Rv1.1.7-bf1`.
+- [x] @! TID[epic=Rv1.1.9-i0/core.dem] CORE-003 <+ Bổ sung header Diagnostic Event Management (DEM) với cấu hình và các hàm báo cáo (`uedp_dem.h`).
+- [x] @! TID[epic=Rv1.1.9-i0/core.dem] CORE-004 <+ Triển khai DEM (`uedp_dem.c`) với bảng cấu hình event, trạng thái và điều kiện enable.
+- [x] @! TID[epic=Rv1.1.9-i0/core.dem] CORE-005 <+ Tích hợp báo cáo DEM vào hàm raise của FCR (`uedp_fcr.c`).
+- [x] @! TID[epic=Rv1.1.9-i0/repo.gitsp] REPO-002 <+ Bổ sung chức năng quản lý stash cho gitsp kèm tích hợp UI.
+- [ ] @! TID[epic=Rv1.1.9-i0/core.dem.test] TEST-001 <+ Thực hiện BST cho DEM (Diagnostic Event Management) để kiểm thử báo cáo DEM khi FCR raise.
+
+<!-- STATUS
+Các mục CORE-003 đến CORE-005 mới ở mức triển khai code trên nhánh `sub-feat/Rv1.1.9`, chưa có kết quả kiểm thử BST cho DEM.
+-->
 
 <!-- STATUS
 Do các fix này không gây ảnh hưởng đến kết quả kiểm thử nên không cần thực hiện regezBST.
 -->
+
+//  !SECTION
+
+### Phiên bản 1.2.0: The Infrastructure Preparation for μE-OS
+
+//  SECTION - v1.2.0
+
+<!-- NOTE - Hoàn tất bộ sản phẩm PLTF
+TSD đã hoàn thành syntax cho tezcal ở v1.1.8 nhưng còn thiếu tài liệu. TLC đã đề xuất mức ut và gần đạt ct với libunity integration. Phiên bản này bổ sung mức ct còn lại, mức it, mức st và tài liệu tương ứng.
+Trường `level` được xử lý như metadata phân loại báo cáo theo `docs/review/pltf-impl-post-v121.md` §B, chưa đổi cơ chế chạy scenario.
+-->
+
+- [ ] @! TID[epic=Rv1.2.0-i0/pltf.tsd.docs] DOCS-001 <+ Bổ sung tài liệu thiết kế TSD (Test Scenario Descriptor) cho syntax đã hoàn thành trên tezcal, bản VN và EN.
+- [ ] @! TID[epic=Rv1.2.0-i0/pltf.tlc.ct] PLTF-001 <+ Hoàn thiện mức ct (component) của TLC với libunity integration để hoàn tất phần đang dở từ v1.1.8.
+- [ ] @! TID[epic=Rv1.2.0-i0/pltf.tlc.level] PLTF-002 <+ Bổ sung trường `level` (ut | ct | st | it) cho `tlc[]` trong pydantic model, structural validation và lukupmodel theo `docs/review/pltf-impl-post-v121.md` §B.3.
+- [ ] @! TID[epic=Rv1.2.0-i0/pltf.tlc.it] PLTF-003 <+ Bổ sung mức it (integration) cho TLC, cho phép TSD scenario gắn nhãn và thu thập coverage ở mức tích hợp giữa các task.
+- [ ] @! TID[epic=Rv1.2.0-i0/pltf.tlc.st] PLTF-004 <+ Bổ sung mức st (system) cho TLC, cho phép TSD scenario gắn nhãn và thu thập coverage ở mức toàn hệ thống.
+- [ ] @! TID[epic=Rv1.2.0-i0/pltf.tlc.report] PLTF-005 <+ Cập nhật IR builder (`tsdcvert.py::build_tlc_context`) và report generator (`covrpt.py`) để nhóm kết quả và báo cáo theo từng level.
+- [ ] @! TID[epic=Rv1.2.0-i0/pltf.tlc.docs] DOCS-002 <+ Bổ sung tài liệu thiết kế TLC (VN/EN) và cú pháp `level` trong `docs/vni/uels-syntax.md`.
+- [ ] @! TID[epic=Rv1.2.0-i0/pltf.tlc.test] TEST-001 <+ Bổ sung testobj và tezcal để kiểm thử mức it và st của TLC trên uutobj Linux.
 
 //  !SECTION
 
@@ -771,7 +804,6 @@ Do các fix này không gây ảnh hưởng đến kết quả kiểm thử nên
 -->
 
 - [ ] Mở rộng PLD với TSD (Test Scenario Descriptor) để hỗ trợ việc mô tả các kịch bản kiểm thử một cách dễ đọc và dễ hiểu, hướng tới việc tự động sinh mã nguồn C từ các mô tả kịch bản kiểm thử này, giúp giảm thiểu lỗi và tăng tính nhất quán trong việc triển khai các kịch bản kiểm thử cho lõi μEDP.
-- [ ] Hoàn thiện thiết kế TLC (Test Level Coverager) để cho phép chỉ định mức kiểm tra từ ut (unit), ct (component), st (system) và it (integration) nhằm đảm bảo rằng các tính năng của lõi μEDP được kiểm thử đầy đủ và hiệu quả trên các mức độ khác nhau của hệ thống.
 - [ ] Bổ sung tài liệu chi tiết cho thiết kế Safe Input Filter nhằm đảm bảo các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, nhằm đảm bảo tính ổn định và an toàn của hệ thống khi xử lý các tín hiệu từ bên ngoài.
 - [ ] Refine tính năng SOCI với OCE để đảm bảo rằng các tín hiệu đầu vào từ lõi được xử lý an toàn ở pool EXTAL trước khi được chuyển vào pool nội bộ của lõi, đồng thời đảm bảo rằng các sự kiện quan trọng được xử lý kịp thời mà không cần phải chờ đến lượt của task scheduler.
 - [ ] Hoàn thiện thiết kế Safe Input Filter.
