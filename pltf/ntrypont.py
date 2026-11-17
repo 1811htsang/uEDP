@@ -41,14 +41,14 @@ def setup_user():
 
 def run_test():
   # NOTE - Validate and generate the Unity test artifact after app.c.
-  run_cmd(["python", "-m", "pltf.pycdscriptor.lstaxer.vlid"])
+  run_cmd(["python", "-m", "pycdscriptor.lstaxer.vlid"])
   run_cmd([
-    "python", "-m", "pltf.pycdscriptor.jnerator.postgen.cgen",
+    "python", "-m", "pycdscriptor.jnerator.postgen.cgen",
     "--yaml", "sources/app/tezprjec.yaml",
     "--output", "sources/app/app.c"
   ])
   run_cmd([
-    "python", "-m", "pltf.pycdscriptor.jnerator.postgen.testgen",
+    "python", "-m", "pycdscriptor.jnerator.postgen.testgen",
     "--yaml", "sources/app/tezprjec.yaml",
     "--output", "sources/test/tezprjec/tez.c"
   ])
@@ -59,9 +59,9 @@ def run_pipeline(include_menuconfig=True):
     run_cmd(["python", "uedp.py", "menuconfig"])
   
   tasks = [
-    ["python", "-m", "pltf.pycdscriptor.jnerator.pregen.fpregen"],
-    ["python", "-m", "pltf.pycdscriptor.ustab.custab"],
-    ["python", "-m", "pltf.pycdscriptor.ustab.ankorpin"]
+    ["python", "-m", "pycdscriptor.jnerator.pregen.fpregen"],
+    ["python", "-m", "pycdscriptor.ustab.custab"],
+    ["python", "-m", "pycdscriptor.ustab.ankorpin"]
   ]
   
   for task in tasks:
