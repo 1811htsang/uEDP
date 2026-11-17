@@ -44,12 +44,12 @@ def run_test():
   run_cmd(["python", "-m", "pltf.pycdscriptor.lstaxer.vlid"])
   run_cmd([
     "python", "-m", "pltf.pycdscriptor.jnerator.postgen.cgen",
-    "--yaml", "sources/app/lstaxizer.yaml",
+    "--yaml", "sources/app/tezprjec.yaml",
     "--output", "sources/app/app.c"
   ])
   run_cmd([
     "python", "-m", "pltf.pycdscriptor.jnerator.postgen.testgen",
-    "--yaml", "sources/app/lstaxizer.yaml",
+    "--yaml", "sources/app/tezprjec.yaml",
     "--output", "sources/test/tezprjec/tez.c"
   ])
 

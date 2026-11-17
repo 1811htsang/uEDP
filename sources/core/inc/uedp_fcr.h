@@ -36,6 +36,7 @@
   #define UEDP_FCR_MOD_PAL      (0x96u) // Module PAL / dịch vụ phần cứng (logdp, rprintf, memrp, arch...)
   #define UEDP_FCR_MOD_GDP      (0x97u) // Module Global Data Pool (dpool GDP trong uedp_msg.c, định danh nội bộ GAXES)
   #define UEDP_FCR_MOD_LIB      (0x98u) // Module thư viện bên ngoài tại sources/common
+  #define UEDP_FCR_MOD_CTRL     (0x99u) // Module kiểm soát (uedp_ctrl)
   #define UEDP_FCR_MOD_APP      (0x9Eu) // Dành riêng cho tầng ứng dụng tự khai báo mã lỗi
   #define UEDP_FCR_MOD_UNK      (0x9Fu) // Module không xác định / fallback
 
@@ -97,6 +98,9 @@
 
   // NOTE - [LIB] - 0x98xx
   #define UEDP_FCR_LIB_COLLAPSE           UEDP_FCR_CODE(UEDP_FCR_MOD_LIB, 0x00) // Thư viện tại sources/common đã bị sụp đổ (các hàm không thể hoạt động bình thường)
+
+  // NOTE - [CTRL] - 0x99xx
+  #define UEDP_FCR_CTRL_INVALID_PARAM     UEDP_FCR_CODE(UEDP_FCR_MOD_CTRL, 0x00) // Tham số không hợp lệ khi gọi các hàm kiểm soát
 
   // Fallback
   #define UEDP_FCR_UNKNOWN                UEDP_FCR_CODE(UEDP_FCR_MOD_UNK, 0xFF) // Mã lỗi không tra được trong bảng (không có entry tương ứng)

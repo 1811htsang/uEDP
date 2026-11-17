@@ -1,0 +1,94 @@
+identif: "vir-pltf-libunity-tezcal-1-testobj-v4"
+tezuit:
+- tezk: "a"
+  subidentif: "TC_LIBUNITY_FLOW_01"
+  dscript: "Bơm USR_START vào USR, chạy scheduler và kiểm tra thứ tự message của testobj-v4"
+  teztep:
+  - '1':
+      desc: "Bơm USR_START vào USR"
+      call:
+      - act: |
+          uedp_msg_t* start_msg = uedp_msg_alloc(
+            TASK_NORM_USR, SIG_USR_START, UEDP_MSG_TYPE_ALLOC
+          );
+          if (start_msg != NULL) {
+            uedp_task_norm_post_msg(TASK_NORM_USR, start_msg);
+          }
+  - '2':
+      desc: "Cho scheduler chạy đến khi hết message"
+      call:
+      - act: |
+          ui32 executed_steps = 0;
+          uedp_ctrl_run_scheduler(100, &executed_steps);
+  xpect:
+  # tezcal kiểm tra chứ testobj không tự kiểm tra
+  # Tracepoint đầu vào và kết thúc của luồng USR
+  - act: "TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){{UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_USR, SIG_USR_START}}, 1, false));"
+  - act: "TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){{UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_B, SIG_0X9F}, {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_USR, SIG_USR_END}}, 2, false));"
+  # Luồng chính: a > b > d > e
+  - act: |
+      TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_A, SIG_USR_START},
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_B, SIG_0X65},
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_D, SIG_0XB7},
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_E, SIG_0X03}
+      }, 4, false));
+  # Nhánh c > e > a
+  - act: |
+      TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_C, SIG_0X65},
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_E, SIG_0X18},
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_A, SIG_0XAA}
+      }, 3, false));
+  # Nhánh d > e > a
+  - act: |
+      TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_D, SIG_0XB7},
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_E, SIG_0X03},
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_A, SIG_0X49}
+      }, 3, false));
+  # B nhận 0x65 và 0x9F
+  - act: |
+      TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_B, SIG_0X65},
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_B, SIG_0X9F}
+      }, 2, false));
+  # D nhận 0xB7
+  - act: "TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){{UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_D, SIG_0XB7}}, 1, false));"
+  # C nhận 0x03
+  - act: "TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){{UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_C, SIG_0X03}}, 1, false));"
+  # E nhận 0x03 và 0x18
+  - act: |
+      TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_E, SIG_0X03},
+        {UEDP_CTRL_AFTER_TASK_DISPATCH, TASK_NORM_E, SIG_0X18}
+      }, 2, false));
+  # Custom event: USR -> A -> B -> D -> publish
+  - act: |
+      TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x01},
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x02},
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x03},
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x04}
+      }, 4, false));
+  # Custom event: A -> C -> E -> A (nhánh 0x49, 0x18, 0xAA)
+  - act: |
+      TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x06},
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x05},
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x0A}
+      }, 3, false));
+  # Custom event: E -> A -> C -> E (nhánh 0x03, 0x49, 0x65, 0x18)
+  - act: |
+      TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x07},
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x06},
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x05},
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x0A}
+      }, 4, false));
+  # Custom event: C -> B -> USR (nhánh 0x03, 0x9F, USR_END)
+  - act: |
+      TEST_ASSERT_TRUE(uedp_ctrl_verify_sequence((uedp_seq_step_t[]){
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x08},
+        {UEDP_CTRL_CUSTOM_EVENT, 0xFF, 0x09}
+      }, 2, false));
