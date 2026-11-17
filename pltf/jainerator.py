@@ -14,7 +14,7 @@ def run_module(module_name):
 
 def run_postgen(yaml_path, output_path):
   # NOTE - Hàm chạy cgen với các tham số
-  module = "pltf.pycdscriptor.jnerator.postgen.cgen"
+  module = "pycdscriptor.jnerator.postgen.cgen"
   print(f"[ENTRY] call {module}")
   try:
     subprocess.check_call([
@@ -36,7 +36,7 @@ def main():
   args = parser.parse_args()
 
   # NOTE - 1. Chạy validator
-  run_module("pltf.pycdscriptor.lstaxer.vlid")
+  run_module("pycdscriptor.lstaxer.vlid")
   
   # NOTE - 2. Chạy generator
   run_postgen(args.yaml, args.output)
