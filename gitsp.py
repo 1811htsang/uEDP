@@ -388,13 +388,32 @@ def build_ticket(done, deprecated, epic, prefix, number, text):
     return f"- [{mark}] @! {marker} {prefix}-{number} <+ {text.strip() or '<mô tả>'}"
 
 
-def next_ticket_number(todo_path, prefix):
+def read_todo(todo_path):
     try:
         with open(todo_path, encoding="utf-8") as handle:
-            content = handle.read()
+            return handle.read()
     except OSError as exc:
         raise GitError(f"Không đọc được {todo_path}: {exc}") from exc
-    numbers = [int(num) for pfx, num in re.findall(r"\b([A-Z]+)-(\d{3})\b", content) if pfx == prefix]
+
+
+def list_versions(todo_path):
+    return re.findall(r"^### Phiên bản (\d+\.\d+\.\d+):", read_todo(todo_path), re.M)
+
+
+def version_section(content, version):
+    lines = content.splitlines()
+    start = next((i for i, line in enumerate(lines) if line.startswith(f"### Phiên bản {version}:")), None)
+    if start is None:
+        return ""
+    for end in range(start + 1, len(lines)):
+        if lines[end].startswith(("### ", "## ")):
+            return "\n".join(lines[start:end])
+    return "\n".join(lines[start:])
+
+
+def next_ticket_number(todo_path, prefix, version):
+    section = version_section(read_todo(todo_path), version)
+    numbers = [int(num) for pfx, num in re.findall(r"\b([A-Z]+)-(\d{3})\b", section) if pfx == prefix]
     return f"{max(numbers, default=0) + 1:03d}"
 
 
@@ -443,6 +462,7 @@ class App(tk.Tk):
         self.ticket_done_var = tk.BooleanVar(value=False)
         self.ticket_deprecated_var = tk.BooleanVar(value=False)
         self.ticket_epic_var = tk.StringVar()
+        self.ticket_version_var = tk.StringVar()
         self.ticket_prefix_var = tk.StringVar(value="DOCS")
         self.ticket_number_var = tk.StringVar()
         self.ticket_text_var = tk.StringVar()
@@ -716,25 +736,31 @@ class App(tk.Tk):
         ttk.Checkbutton(form, text="DEPRECATED", variable=self.ticket_deprecated_var).grid(
             row=1, column=0, columnspan=2, sticky="w"
         )
-        ttk.Label(form, text="Epic:").grid(row=2, column=0, sticky="w", pady=(6, 0))
-        ttk.Entry(form, textvariable=self.ticket_epic_var).grid(row=2, column=1, sticky="ew", padx=4, pady=(6, 0))
-        ttk.Label(form, text="Prefix:").grid(row=3, column=0, sticky="w", pady=(6, 0))
+        ttk.Label(form, text="Phiên bản:").grid(row=2, column=0, sticky="w", pady=(6, 0))
+        self.version_combo = ttk.Combobox(
+            form, textvariable=self.ticket_version_var, state="readonly", width=12
+        )
+        self.version_combo.grid(row=2, column=1, sticky="w", padx=4, pady=(6, 0))
+        self.version_combo.bind("<<ComboboxSelected>>", lambda _event: self.guarded(self.suggest_ticket_number))
+        ttk.Label(form, text="Epic:").grid(row=3, column=0, sticky="w", pady=(6, 0))
+        ttk.Entry(form, textvariable=self.ticket_epic_var).grid(row=3, column=1, sticky="ew", padx=4, pady=(6, 0))
+        ttk.Label(form, text="Prefix:").grid(row=4, column=0, sticky="w", pady=(6, 0))
         prefix_box = ttk.Combobox(
             form, textvariable=self.ticket_prefix_var, values=TICKET_PREFIXES, state="readonly", width=10
         )
-        prefix_box.grid(row=3, column=1, sticky="w", padx=4, pady=(6, 0))
+        prefix_box.grid(row=4, column=1, sticky="w", padx=4, pady=(6, 0))
         prefix_box.bind("<<ComboboxSelected>>", lambda _event: self.guarded(self.suggest_ticket_number))
-        ttk.Label(form, text="Số:").grid(row=4, column=0, sticky="w", pady=(6, 0))
+        ttk.Label(form, text="Số:").grid(row=5, column=0, sticky="w", pady=(6, 0))
         number_row = ttk.Frame(form)
-        number_row.grid(row=4, column=1, sticky="ew", padx=4, pady=(6, 0))
+        number_row.grid(row=5, column=1, sticky="ew", padx=4, pady=(6, 0))
         ttk.Entry(number_row, textvariable=self.ticket_number_var, width=8).pack(side="left")
         ttk.Button(
             number_row,
             text="Gợi ý số tiếp theo",
             command=lambda: self.guarded(self.suggest_ticket_number),
         ).pack(side="left", padx=6)
-        ttk.Label(form, text="Mô tả:").grid(row=5, column=0, sticky="w", pady=(6, 0))
-        ttk.Entry(form, textvariable=self.ticket_text_var).grid(row=5, column=1, sticky="ew", padx=4, pady=(6, 0))
+        ttk.Label(form, text="Mô tả:").grid(row=6, column=0, sticky="w", pady=(6, 0))
+        ttk.Entry(form, textvariable=self.ticket_text_var).grid(row=6, column=1, sticky="ew", padx=4, pady=(6, 0))
 
     def switch_doc_mode(self):
         is_note = self.doc_mode_var.get() == "note"
@@ -744,16 +770,32 @@ class App(tk.Tk):
             self.note_frame.pack(fill="both", expand=True)
         else:
             self.ticket_frame.pack(fill="x")
-            if not self.ticket_number_var.get().strip():
+            if not self.ticket_number_var.get().strip() and self.ticket_version_var.get():
                 self.guarded(self.suggest_ticket_number)
         self.update_doc_preview()
 
+    def todo_path(self):
+        return os.path.join(self.repo(), *TODO_RELPATH)
+
+    def refresh_versions(self):
+        try:
+            versions = list_versions(self.todo_path())
+        except GitError:
+            versions = []
+        self.version_combo.configure(values=list(reversed(versions)))
+        match = re.search(r"Rv?(\d+\.\d+\.\d+)", self.current_name)
+        guess = match.group(1) if match else ""
+        if self.ticket_version_var.get() not in versions:
+            self.ticket_version_var.set(guess if guess in versions else (versions[-1] if versions else ""))
+
     def suggest_ticket_number(self):
+        version = self.ticket_version_var.get()
+        if not version:
+            raise GitError("Chưa chọn phiên bản.")
         prefix = self.ticket_prefix_var.get()
-        todo = os.path.join(self.repo(), *TODO_RELPATH)
-        number = next_ticket_number(todo, prefix)
+        number = next_ticket_number(self.todo_path(), prefix, version)
         self.ticket_number_var.set(number)
-        self.log(f"Số tiếp theo cho {prefix}: {number}")
+        self.log(f"Số tiếp theo cho {prefix} ở phiên bản {version}: {number}")
 
     def _on_note_modified(self, _event=None):
         if self.note_text.edit_modified():
@@ -1171,6 +1213,7 @@ class App(tk.Tk):
             self.period_branch_var.set(self.current_name or (branches[0] if branches else ""))
 
         self.log(f"Đã tải {len(branches)} branch. Branch hiện tại: {self.current_name or '(detached HEAD)'}")
+        self.refresh_versions()
         self.load_files()
         self.load_submodule_state()
 
