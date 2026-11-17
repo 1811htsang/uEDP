@@ -352,6 +352,14 @@ In current implementation, pull request - PR is used for any changes required to
 
 Specifically for PR from any `sub-feat/` branch into `feat` branch, it is required to have at least 3 major changes to consider a PR before merging into `integration` branch with documentation for release.
 
+### 11.5. When does feature ready for integration
+
+In current implementation, `sub-feat/Rv1.1.8`, `sub-feat/Rv1.1.9`, and `sub-feat/Rv1.1.7-bf1` are used for feature development or applying new bugfixes for each release. However, it is not clear when a feature is considered ready for integration into the main feature branch (`feat`). Therefore, we will use the following rules to determine when a feature is ready for integration:
+
+- The feature has been fully implemented and tested in the `sub-feat/` branch.
+- The feature has been reviewed and approved by the necessary stakeholders.
+- The feature is compatible with the current state of the main feature branch (`feat`) or required changes that are needed to be merged into the main feature branch (`feat`) have been identified and addressed.
+
 ## 12. Changes selection
 
 ### 12.1. Documentation update between development branches

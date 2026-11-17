@@ -212,3 +212,106 @@ Unity phải in kết quả test ra stdout và trả exit code khác 0 khi có a
 ## 6. Đề xuất kết luận
 
 Triển khai theo đúng 12 bước ở mục 4, đi theo lộ trình rollout ở mục 12 để có thể review từng phần nhỏ thay vì một PR khổng lồ. Trước khi bắt đầu Bước 1, cần chốt trả lời cho 6 câu hỏi mở ở mục 5. Unity được chốt là framework assertion và test lifecycle của runner; không chốt việc dùng Unity để mock core hoặc tạo coverage runtime. Mốc đầu tiên phải chứng minh được vòng đời `generate → build → ctest -L ut` trên Linux với một scenario mẫu.
+
+## Review 1404 - 171126
+
+- Vấn đề 1 hiện tại obsolete do expect hiện tại chỉ cần sử dụng API của libunity để perform các assertion, không cần phải so sánh trực tiếp với các state id. Do đó, việc tạo bảng lookup id→function pointer cho FSM state là không cần thiết nữa.
+- Vấn đề 2 xảy ra khi mức test nằm về `st` hoặc `it`, do đó việc sử dụng `linux_simulate_interrupt` chỉ applicable ở level `ut` và `ct`, phải có cơ chế validate để cảnh báo cho người dùng khi sử dụng `post_isr` ở level `st` hoặc `it` kèm bổ sung tài liệu hướng dẫn sử dụng cho người dùng.
+- Vấn đề 3 được confirm sẽ đưa vào release 1.1.8 này nhằm hoàn thiện tích hợp libunity vào TSD/TLC, do đó sẽ không hoãn sang review syntax riêng.
+- Vấn đề 4 chưa được quyết định, do đó sẽ hoãn sang review ticket.
+- Vấn đề 5 đã được confirm sẽ sử dụng `sources/test/tezprjec/` làm thư mục output file sinh ra chạy tezcal.
+- Vấn đề 6 hiện tại obsolete do khi sử dụng libunity, việc dừng tick thread Linux sau `UnityEnd()` là không cần thiết nữa và core sẽ tự động dừng tick thread Linux sau khi `UnityEnd()` được gọi.
+
+Ở thời điểm hiện tại sau review, pipeline generation của TSD/TLC đã cơ bản hoàn thiện và mapping vào đúng các tezcal, do đó, trước khi bước sang vấn đề hoàn thiện TLC ở các level `ut`, `it` và `st` thì cần thực hiện các bước kiểm tra để đảm bảo hoạt động ổn định của TSD/TLC trên testobj-v4 và tezcal-1.
+
+### Định vị thiết kế hiện tại
+
+Dựa trên toàn bộ hạ tầng đã xây dựng (`libunity`, `testobj`, `tezcal`, `RTc`),
+
+> Hệ thống đang nằm vững chắc ở mức CT (Component Test) và tiệm cận White-Box ST (System Test sơ khai). Nhưng chưa có UT thực sự và chưa chạm tới IT thực sự.
+
+### Tại sao lại như vậy?
+
+#### Chưa phải UT (Unit Test)
+
+Trong các bài test hiện tại, chúng ta vẫn phải gọi `uedp_core_init()`, nạp Task vào Scheduler, cấp phát Message Pool, và dùng `RTc` để quay bánh đà thời gian. Bản chất là đang test sự tương tác của một cụm logic với hệ điều hành. UT thực sự là phải test một hàm C (ví dụ một hàm `state_entry` hoặc một thuật toán giải mã) mà không cần bật Scheduler, không cần Message Pool, không cần RTc.
+
+#### Đang là CT (Component Test) rất mạnh
+
+Chúng ta cô lập được một Task hoặc một nhóm Task (`TASK_A`, `TASK_B`), bơm sự kiện bằng `post_isr`, tua thời gian bằng `RTc`, và kiểm tra xem máy trạng thái (TSM/FSM) có chuyển đúng State hay không. Đây chính là định nghĩa của Component Testing cho hệ thống hướng sự kiện.
+
+#### Chưa phải IT (Integration Test)
+
+Chúng ta chưa có bài test nào vượt qua Ranh giới vật lý/bất đồng bộ thật sự: Chưa test giữa 2 nhân (AMP trên ESP32-S3), chưa test ngắt thật từ phần cứng (EXTI/DMA thật trên STM32F103) mà vẫn đang dùng `post_isr` giả lập bằng phần mềm trên Linux.
+
+#### Chưa phải ST (System Test) hoàn chỉnh
+
+Chúng ta vẫn đang "soi" vào biến nội bộ (`GDA`, `tsm_state`, `RTc trace`). ST thực thụ phải là kiểm thử "Hộp đen" (Black-box): tác động từ chân cắm ngoại vi thật và chỉ nhìn kết quả đầu ra ở cổng giao tiếp (UART Log, Led, CAN) mà không được dùng bất kỳ con trỏ nội bộ nào.
+
+### Đề xuất
+
+Để khi người dùng chỉ định một mức test (ví dụ gõ `--level st`), hệ thống sẽ tự động thực thi lũy tiến từ thấp lên cao: Pass UT $\to$ mới chạy CT $\to$ mới nạp mạch chạy IT $\to$ mới chạy kịch bản ST.
+
+```text
+       /\
+      /ST\     <- Chạy trên Mạch thật, Black-box, Kịch bản người dùng
+     /----\
+    /  IT  \   <- Chạy trên Mạch thật (HIL), Test giao tiếp Đa nhân (AMP) & Driver
+   /--------\
+  /    CT    \ <- Chạy trên Docker/Linux, Test State Machine + RTc (HIỆN TẠI)
+ /------------\
+/      UT      \ <- Chạy trên Host, Test từng hàm C cô lập, 100% Mock
+----------------
+```
+
+Dưới đây là các bước kỹ thuật cần làm cho từng tầng:
+
+---
+
+#### Tầng UT (Unit Test)
+
+Mục tiêu là kiểm tra các hàm logic độc lập với tốc độ hàng ngàn test/giây. Điều này có thể thực hiện thông qua việc gọi thẳng các hàm C trong `app.c` hoặc các hàm state entry của TSM/FSM mà không cần khởi tạo Core, Scheduler hay Message Pool.
+
+Trong `tezcal` (YAML): Cho phép kịch bản khai báo gọi thẳng hàm C:
+
+```yaml
+tezk: "UT_CRC8_CALC"
+level: ut
+teztep:
+  - act: "TEST_ASSERT_EQUAL_HEX8(0xB4, crc8(\"test\", 4, 0x00));"
+```
+
+Trong Generator (`testgen.py`): Khi gặp nhãn `level: ut`, KHÔNG SINH RA các lệnh khởi tạo Core (`uedp_core_init`, `app_init`). Chỉ `#include` file header cần test và gọi thẳng macro của Unity.
+
+---
+
+#### Tầng CT (Component Test)
+
+Mục tiêu là test máy trạng thái TSM/FSM và các cơ chế Core (DMP, PSE, FCR). Có thể chuẩn hóa bổ sung với việc tự động tạo 1 task stub để tự động trả lời message của 1 task.
+
+---
+
+#### Tầng IT (Integration Test)
+
+Mục tiêu là đưa phần cứng thật và cơ chế Đa nhân vào cuộc đua một cách tự động. Điều này đòi hỏi việc phải thống nhất về cách triển khai và hạ tầng test cho các biên giới như đơn nhân và đa nhân, cũng như cơ chế đồng bộ hóa giữa các core.
+
+Trong đó:
+
+- Biên giới 1 (Core $\leftrightarrow$ Phần cứng): Thay vì dùng `RTc` tua tick bằng tay, bật timer phần cứng thật trên STM32F103/H723. Đánh giá xem ngắt thật bắn vào thì cơ chế SII (Safe ISR Injection) có bị mất gói tin nào không.
+- Biên giới 2 (Core 0 $\leftrightarrow$ Core 1 trên ESP32-S3): Chạy Task Producer ở Core 0, Task Consumer ở Core 1. Dùng Unity kiểm tra xem dữ liệu truyền qua Shared GDA có bị lỗi tranh chấp bộ nhớ (Cache Incoherency) hay không.
+
+---
+
+#### Tầng ST (System Test)
+
+Mục tiêu là kiểm tra toàn bộ sản phẩm như người dùng cuối sử dụng thông qua việc đóng gói toàn bộ firmware vào mạch thật, tác động vào các chân GPIO, UART, CAN, SPI, I2C và quan sát kết quả đầu ra. Đây là kiểm thử Black-box thực sự mà không được phép truy cập vào bất kỳ biến nội bộ nào của hệ thống.
+
+---
+
+### Thiết kế Bộ điều phối Lũy tiến (The Hierarchical Gating Engine)
+
+Để hệ thống tự động kiểm tra từ mức thấp đến mức cao, chúng ta cần một bộ điều phối (thường viết bằng Python trong `pltf` hoặc thông qua `CTest`) nhằm đảm bảo rằng:
+
+- Nếu UT thất bại, CT không được chạy.
+- Nếu CT thất bại, IT không được chạy.
+- Giữa CT và IT cần có hỗ trợ tự động hóa cho việc nạp firmware vào mạch thật, khởi tạo các core, và đồng bộ hóa giữa các core.

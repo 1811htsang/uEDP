@@ -294,7 +294,6 @@ Giữ nguyên từ KwDI, không đổi — vẫn loại `docs/` (chứa PDF tham
 
 - Chưa có test tự động cho chính `pltf/`: bản thân testing framework (parser, generator, template, cả pipeline `lstaxer`/`ustab` mới) hiện chưa có test riêng để đảm bảo không hồi quy khi sửa template hay parser. Cân nhắc sử dụng testobj-v0 và pytest để viết test cho `pltf/` (xem `docs/to-do.md`).
 
-
 <!-- NOTE
 1. Add task to remove dead code in `uedp.py` related to `sys.path` manipulation.
 2. The position of `ustab.custab` in `entrypoint.sh` is aleady fit for the design, therefore no change is needed.
