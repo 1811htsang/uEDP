@@ -403,3 +403,19 @@ git commit --allow-empty -m "sub-feat(dummy): add dummy commit to highlight new 
 ```
 
 This will create a new commit in the current working branch that highlights the new fix that has been copied from the `fix` branch. The `--allow-empty` flag allows for an empty commit to be created, which can be useful for highlighting changes that have been made without actually modifying any files.
+
+## 13. Ticket append and update
+
+When we have a ticket that has been created for a specific feature or bug fix but we need to move or hold the ticket for a later release, we will need a rule to append or update the ticket to reflect the changes made. The following rules are proposed:
+
+> If the ticket is considered to be moved to a later release, we will need to update the current ticket with tag `DEPRECATED`. In new release section, this ticket will follow new ticket number for the new release but adding a reference to the old ticket number. This will ensure that the ticket is properly tracked and documented in the commit history.
+
+For example, in v1.1.8, ticket PLTF-012, PLTF-014, PLTF-015, PLTF-016 are considered to be moved to v1.2.0. Therefore, we will update the current ticket with tag `DEPRECATED`, non-ticket and create new tickets for v1.2.0 with same epic and reference to the old ticket numbers. In v1.2.0, the new tickets can follow the format as below:
+
+```md
+# in v1.1.8
+- [ ] @! DEPRECATED[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-016 <+
+
+# in v1.2.0
+- [ ] @! DEPRECATED[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-XXX (REF: Rv1.1.8/PLTF-016) <+
+```
