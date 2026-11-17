@@ -11,7 +11,7 @@ import kconfiglib
 import menuconfig
 import argparse
 # [5] Import user input function from kconfigspec
-from pltf.kconfigspec import user_input, task_norm_declaration, task_poll_declaration, signal_declaration, hardware_api_declaration
+from kconfigspec import user_input, task_norm_declaration, task_poll_declaration, signal_declaration, hardware_api_declaration
 # [6] Global variables to hold user input values (if needed)
 DEFAULT_VALS = {
   "num_tasks_norm": 1,
