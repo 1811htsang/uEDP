@@ -117,6 +117,42 @@ def current_branch(repo):
     return decode_utf8(git_ok(repo, "branch", "--show-current")).strip()
 
 
+def is_repo_root(path):
+    if not os.path.isdir(path):
+        return False
+    code, out, _ = git_run(path, "rev-parse", "--show-toplevel")
+    if code != 0:
+        return False
+    top = decode_utf8(out).strip()
+    return os.path.normcase(os.path.realpath(top)) == os.path.normcase(os.path.realpath(path))
+
+
+def resolve_ref(repo, branch):
+    if git_run(repo, "show-ref", "--verify", "--quiet", f"refs/heads/{branch}")[0] == 0:
+        return branch
+    if git_run(repo, "show-ref", "--verify", "--quiet", f"refs/remotes/origin/{branch}")[0] == 0:
+        return f"origin/{branch}"
+    raise GitError(f"Repo '{repo}' không có branch '{branch}'.")
+
+
+def gitlinks_in_ref(repo, ref):
+    raw = decode_utf8(git_ok(repo, "ls-tree", "-r", "-z", ref))
+    links = {}
+    for record in raw.split("\0"):
+        if not record:
+            continue
+        meta, path = record.split("\t", 1)
+        mode, _kind, sha = meta.split()
+        if mode == "160000":
+            links[path] = sha
+    return links
+
+
+def unpushed_commits(subrepo):
+    raw = decode_utf8(git_ok(subrepo, "log", "--oneline", "HEAD", "--not", "--remotes"))
+    return [line for line in raw.splitlines() if line]
+
+
 def list_submodules(repo):
     raw = decode_utf8(git_ok(repo, "submodule", "status", "--recursive"))
     entries = []
@@ -127,10 +163,11 @@ def list_submodules(repo):
         sha = parts[0].lstrip("-+U")
         path = parts[1]
         subrepo = os.path.join(repo, *path.split("/"))
-        try:
+        initialized = is_repo_root(subrepo)
+        if initialized:
             branch = current_branch(subrepo)
             dirty = working_tree_dirty(subrepo)
-        except GitError:
+        else:
             branch = "(chưa khởi tạo)"
             dirty = False
         entries.append(
@@ -140,9 +177,96 @@ def list_submodules(repo):
                 "branch": branch,
                 "dirty": dirty,
                 "repo": subrepo,
+                "initialized": initialized,
             }
         )
     return entries
+
+
+def plan_submodule_switch(repo, target, rules):
+    source_links = gitlinks_in_ref(repo, "HEAD")
+    target_links = gitlinks_in_ref(repo, resolve_ref(repo, target))
+    entries = {entry["path"]: entry for entry in list_submodules(repo)}
+    leaving = sorted(set(source_links) - set(target_links))
+    staying = sorted(set(source_links) & set(target_links))
+    arriving = sorted(set(target_links) - set(source_links))
+    problems = []
+
+    if working_tree_dirty(repo):
+        problems.append("Repo chính còn thay đổi đã tracked. Hãy commit hoặc stash trước.")
+    missing = [path for path in staying + arriving if path not in rules]
+    if missing:
+        problems.append("Thiếu ràng buộc cho: " + ", ".join(missing))
+
+    for path in staying:
+        entry = entries.get(path)
+        if not entry or not entry["initialized"]:
+            problems.append(f"{path} chưa khởi tạo. Chạy git submodule update --init --recursive trước (mục 14.2).")
+            continue
+        if entry["dirty"]:
+            problems.append(f"{path} còn thay đổi chưa commit.")
+        elif path in rules and not branch_exists(entry["repo"], rules[path]):
+            problems.append(f"Branch ràng buộc '{rules[path]}' không tồn tại trong {path}.")
+
+    for path in leaving:
+        entry = entries.get(path)
+        full = os.path.join(repo, *path.split("/"))
+        if entry is None or not entry["initialized"]:
+            if os.path.isdir(full) and os.listdir(full):
+                problems.append(f"{path} không phải repo nhưng còn nội dung. Xử lý theo mục 14.6 trước khi chuyển.")
+            continue
+        if entry["dirty"]:
+            problems.append(f"{path} còn thay đổi chưa commit. Commit và push trong PLTF trước (mục 14.6, bước 2).")
+        if unpushed_commits(entry["repo"]):
+            problems.append(f"{path} có commit chưa push. Push branch PLTF trước (mục 14.6, bước 2).")
+        if entry["sha"] != source_links[path]:
+            problems.append(
+                f"{path} không ở commit pin. Chạy git submodule update --init -- {path} trước (mục 14.6, bước 3)."
+            )
+
+    return {
+        "problems": problems,
+        "leaving": leaving,
+        "staying": staying,
+        "arriving": arriving,
+        "entries": entries,
+    }
+
+
+def migration_audit(repo):
+    branches = list_local_branches(repo)
+    paths = sorted({path for branch in branches for path in gitlinks_in_ref(repo, branch)} | {"pltf"})
+    lines = []
+    for path in paths:
+        moddir = os.path.join(repo, ".git", "modules", *path.split("/"))
+        has_moddir = os.path.isdir(moddir)
+        trees = {}
+        if has_moddir:
+            raw = decode_utf8(git_ok(repo, f"--git-dir={moddir}", "log", "--all", "--format=%H %T"))
+            for line in raw.splitlines():
+                commit, tree = line.split()
+                trees.setdefault(tree, []).append(commit)
+        for branch in branches:
+            line = decode_utf8(git_ok(repo, "ls-tree", branch, "--", path)).strip()
+            gitmodules = git_run(repo, "cat-file", "-e", f"{branch}:.gitmodules")[0] == 0
+            if not line:
+                state = "không có"
+            else:
+                mode, _kind, sha = line.split()[:3]
+                if mode == "160000":
+                    present = has_moddir and git_run(repo, f"--git-dir={moddir}", "cat-file", "-e", f"{sha}^{{commit}}")[0] == 0
+                    state = f"gitlink, pin {sha[:8]}, {'có' if present else 'THIẾU'} trong kho PLTF cục bộ"
+                elif mode == "040000":
+                    matches = trees.get(sha, [])
+                    if matches:
+                        state = f"cây thường, khớp PLTF {matches[0][:8]}"
+                    else:
+                        state = "cây thường, KHÔNG khớp commit PLTF nào (blocker 14.9.1)"
+                else:
+                    state = f"mode {mode}"
+            lines.append(f"{branch}: {path} → {state}; .gitmodules: {'có' if gitmodules else 'không'}")
+    return lines
+
 
 
 def load_submodule_rules(repo):
@@ -926,6 +1050,9 @@ class App(tk.Tk):
         ttk.Button(
             top, text="Chuyển branch theo ràng buộc", command=lambda: self.guarded(self.switch_with_submodules)
         ).pack(side="right")
+        ttk.Button(top, text="Kiểm tra migration", command=lambda: self.guarded(self.show_migration_audit)).pack(
+            side="right", padx=(0, 8)
+        )
 
         frame = ttk.Frame(tab)
         frame.pack(fill="both", expand=True, pady=(8, 0))
@@ -1010,29 +1137,44 @@ class App(tk.Tk):
         target = self.submodule_main_combo.get()
         if not target:
             raise GitError("Chưa chọn branch repo chính.")
-        entries = list_submodules(repo)
         rules = load_submodule_rules(repo).get(target, {})
-        missing = [entry["path"] for entry in entries if entry["path"] not in rules]
-        invalid = [entry["path"] for entry in entries if entry["path"] in rules and not branch_exists(entry["repo"], rules[entry["path"]])]
-        if missing:
-            raise GitError("Thiếu ràng buộc cho: " + ", ".join(missing))
-        if invalid:
-            raise GitError("Branch ràng buộc không tồn tại trong: " + ", ".join(invalid))
-        if working_tree_dirty(repo) or any(entry["dirty"] for entry in entries):
-            raise GitError("Repo chính hoặc submodule còn thay đổi đã tracked. Hãy commit hoặc stash trước.")
-        if target == self.current_name and all(entry["branch"] == rules[entry["path"]] for entry in entries):
+        plan = plan_submodule_switch(repo, target, rules)
+        if plan["problems"]:
+            raise GitError("Chưa thể chuyển branch:\n- " + "\n- ".join(plan["problems"]))
+        entries = plan["entries"]
+        if (
+            target == self.current_name
+            and not plan["leaving"]
+            and not plan["arriving"]
+            and all(entries[path]["branch"] == rules[path] for path in plan["staying"])
+        ):
             raise GitError("Repo chính và các submodule đã đúng ràng buộc.")
         if not messagebox.askyesno(
             "Xác nhận chuyển branch",
-            f"Chuyển repo chính sang '{target}' và đồng bộ {len(entries)} submodule theo ràng buộc?",
+            f"Chuyển repo chính sang '{target}'?\n"
+            f"- Giữ và đồng bộ theo ràng buộc: {len(plan['staying'])}\n"
+            f"- Thêm mới: {len(plan['arriving'])}\n"
+            f"- Gỡ khỏi working tree: {len(plan['leaving'])}",
         ):
             return
         checkout_branch(repo, target)
-        for entry in entries:
-            checkout_branch(entry["repo"], rules[entry["path"]])
+        for path in plan["arriving"]:
+            git_ok(repo, "submodule", "update", "--init", "--", path)
+        for path in plan["arriving"] + plan["staying"]:
+            checkout_branch(os.path.join(repo, *path.split("/")), rules[path])
         self.refresh_branches()
         self.load_submodule_state()
-        self.log(f"Đã chuyển {target} và đồng bộ {len(entries)} submodule.")
+        self.log(
+            f"Đã chuyển {target}. Đồng bộ {len(plan['staying'])} submodule, thêm {len(plan['arriving'])}, "
+            f"gỡ {len(plan['leaving'])}."
+        )
+
+    def show_migration_audit(self):
+        repo = self.repo()
+        lines = migration_audit(repo)
+        if not lines:
+            raise GitError("Không có branch nào để kiểm tra.")
+        self.log("Kiểm tra migration submodule (mục 14.9):\n" + "\n".join(lines))
 
     def load_rewrite_commits(self):
         repo = self.repo()
