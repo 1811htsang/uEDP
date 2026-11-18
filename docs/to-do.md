@@ -737,7 +737,7 @@ Do đó, quyết định sử dụng Python để triển khai các tính năng 
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-010 <+ Thực hiện wiring libunity và tezcin vào pipeline PLTF hiện tại trước khi kiểm tra cho ticket TEST-002
 - [x] @! TID[epic=Rv1.1.18-i0/pltf.libunity-integration] DOCS-005 <+ Bổ sung tài liệu định hướng việc triển khai và giải quyết các vấn đề về tezcal và testobj để hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
 - [x] @! TID[epic=Rv1.1.18-i0/pltf.libunity-integration] CORE-001 <+ Triển khai API trace và watchpoint cho libunity-x-pltf để hỗ trợ việc kiểm thử các tính năng của lõi μEDP một cách hiệu quả và ổn định.
-- [ ] @! TID[epic=Rv1.1.8/pltf.libunity-integration.test] TEST-003 <+ Thực hiện thử nghiệm tính năng trace và watchpoint cho libunity-x-pltf để kiểm thử các tính năng mới của μEDP một cách hiệu quả và ổn định trên testobj-v0, testobj-v1, testobj-v2 và testobj-v3.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration.test] TEST-003 <+ Thực hiện thử nghiệm tính năng trace và watchpoint cho libunity-x-pltf để kiểm thử các tính năng mới của μEDP một cách hiệu quả và ổn định trên testobj-v0, testobj-v1, testobj-v2 và testobj-v3.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] CORE-002 <+ Bổ sung khả năng add custom event point + event sequence.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] DOCS-006 <+ Bổ sung tài liệu hướng dẫn việc sử dụng và quản lý các event point và event sequence trong libunity-x-pltf.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration.test] TEST-004 <+ Bổ sung testobj-v4 và tezcal tương ứng để thực hiện ticket TEST-002 và TEST-003
@@ -770,6 +770,8 @@ Hiện tại đối với các ticket PLTF-014 >> 016 thì sẽ cân nhắc đư
 -->
 
 - [ ] @! TID[epic=Rv1.1.8-i0/version-control-policy] REPO-004 <+ Cập nhật bổ sung các thay đổi của ticket allocation từ v1.1.8 sang v1.2.0
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.submodulize] REPO-005 <+ Phân tách và module hóa pltf thành submodule để quản lý và phát triển các tính năng của PLTF một cách hiệu quả và ổn định.
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.submodulize] DOCS-008 <+ Bổ sung policy cho việc quản lý submodule trong PLTF, bao gồm các quy tắc về cách thức phân tách, quản lý và phát triển các submodule một cách hiệu quả và ổn định.
 
 //  !SECTION
 
@@ -777,8 +779,8 @@ Hiện tại đối với các ticket PLTF-014 >> 016 thì sẽ cân nhắc đư
 
 //  SECTION - v1.1.9
 
-- [x] @! TID[epic=Rv1.1.8-i0/core.fcr-update] DOCS-001 <+ Đề xuất cơ chế quản lý chẩn đoán DEM (Diagnostic Event Management) với ECS (Enable Condition Stage), DBS (Debouncing Stage) và pzsto (persistence store) kết hợp FCR trong quản lý lỗi.
-- [x] @! TID[epic=Rv1.1.8-i0/core.fcr-update] DOCS-002 <+ Bổ sung tìm hiểu về OPC (Operation Preventing Condition), APC (Activation Preventing Condition) và IOC (Inhibition Preventing Condition) để hỗ trợ việc quản lý các điều kiện ngăn chặn hoạt động trong hệ thống.
+- [x] @! TID[epic=Rv1.1.9-i0/core.fcr-update] DOCS-001 <+ Đề xuất cơ chế quản lý chẩn đoán DEM (Diagnostic Event Management) với ECS (Enable Condition Stage), DBS (Debouncing Stage) và pzsto (persistence store) kết hợp FCR trong quản lý lỗi.
+- [x] @! TID[epic=Rv1.1.9-i0/core.fcr-update] DOCS-002 <+ Bổ sung tìm hiểu về OPC (Operation Preventing Condition), APC (Activation Preventing Condition) và IOC (Inhibition Preventing Condition) để hỗ trợ việc quản lý các điều kiện ngăn chặn hoạt động trong hệ thống.
 - [x] @! TID[epic=Rv1.1.7-bf1/core.fcr-update] CORE-001 <+ Cập nhật bổ sung mã lỗi `UEDP_FCR_MSG_POOL_REF_RCM` chưa khai báo và assign action trong `uedp_fcr.c` để hỗ trợ việc quản lý các lỗi liên quan đến việc pool recommendation.
 - [x] @! TID[epic=Rv1.1.7-bf1/core.fcr-update] CORE-002 <+ Cập nhật loại bỏ mã lỗi `UEDP_FCR_MSG_NO_REG_PSE` do không còn sử dụng.
 - [x] @! TID[epic=Rv1.1.7-bf1/repo] REPO-001 <+ Thực hiện pickup các update từ nhánh `fix` sang `sub-feat/Rv1.1.7-bf1`.
