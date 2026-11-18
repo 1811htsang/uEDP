@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import shutil
 import subprocess
 import sys
 import locale
@@ -224,6 +225,11 @@ def plan_submodule_switch(repo, target, rules):
                 f"{path} không ở commit pin. Chạy git submodule update --init -- {path} trước (mục 14.6, bước 3)."
             )
 
+    for path in arriving:
+        full = os.path.join(repo, *path.split("/"))
+        if os.path.isdir(full) and untracked_under(repo, path):
+            problems.append(f"{path} còn file chưa được Git quản lý. Di chuyển hoặc xóa trước khi chuyển (mục 6).")
+
     return {
         "problems": problems,
         "leaving": leaving,
@@ -231,6 +237,58 @@ def plan_submodule_switch(repo, target, rules):
         "arriving": arriving,
         "entries": entries,
     }
+
+
+def untracked_under(repo, path):
+    raw = decode_utf8(git_ok(repo, "status", "--porcelain", "--untracked-files=all", "--ignored", "--", path))
+    return [line for line in raw.splitlines() if line[:2] in ("??", "!!")]
+
+
+def parked_path(repo, path):
+    return os.path.join(repo, ".git", "gitsp-parked", *path.split("/"))
+
+
+def park_submodule(repo, path):
+    src = os.path.join(repo, *path.split("/"))
+    dst = parked_path(repo, path)
+    if os.path.lexists(dst):
+        raise GitError(f"Đã có bản lưu của {path} tại {dst}. Xử lý trước khi chuyển branch.")
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    shutil.move(src, dst)
+
+
+def unpark_submodule(repo, path):
+    src = parked_path(repo, path)
+    if not os.path.isdir(src):
+        return False
+    dst = os.path.join(repo, *path.split("/"))
+    if os.path.isdir(dst):
+        if os.listdir(dst):
+            raise GitError(f"{path} đang có nội dung, không khôi phục được bản lưu. Di chuyển nội dung đó trước.")
+        os.rmdir(dst)
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    shutil.move(src, dst)
+    return True
+
+
+def apply_submodule_switch(repo, target, rules, plan):
+    parked = []
+    try:
+        for path in plan["leaving"]:
+            if is_repo_root(os.path.join(repo, *path.split("/"))):
+                park_submodule(repo, path)
+                parked.append(path)
+        checkout_branch(repo, target)
+    except GitError:
+        for path in reversed(parked):
+            unpark_submodule(repo, path)
+        raise
+    for path in plan["arriving"]:
+        unpark_submodule(repo, path)
+        git_ok(repo, "submodule", "update", "--init", "--", path)
+    for path in plan["arriving"] + plan["staying"]:
+        checkout_branch(os.path.join(repo, *path.split("/")), rules[path])
+    return parked
 
 
 def migration_audit(repo):
@@ -1154,20 +1212,18 @@ class App(tk.Tk):
             f"Chuyển repo chính sang '{target}'?\n"
             f"- Giữ và đồng bộ theo ràng buộc: {len(plan['staying'])}\n"
             f"- Thêm mới: {len(plan['arriving'])}\n"
-            f"- Gỡ khỏi working tree: {len(plan['leaving'])}",
+            f"- Gỡ khỏi working tree: {len(plan['leaving'])} (lưu vào .git/gitsp-parked và khôi phục khi quay lại)",
         ):
             return
-        checkout_branch(repo, target)
-        for path in plan["arriving"]:
-            git_ok(repo, "submodule", "update", "--init", "--", path)
-        for path in plan["arriving"] + plan["staying"]:
-            checkout_branch(os.path.join(repo, *path.split("/")), rules[path])
+        parked = apply_submodule_switch(repo, target, rules, plan)
         self.refresh_branches()
         self.load_submodule_state()
         self.log(
             f"Đã chuyển {target}. Đồng bộ {len(plan['staying'])} submodule, thêm {len(plan['arriving'])}, "
             f"gỡ {len(plan['leaving'])}."
         )
+        if parked:
+            self.log("Đã lưu submodule vào .git/gitsp-parked: " + ", ".join(parked))
 
     def show_migration_audit(self):
         repo = self.repo()
