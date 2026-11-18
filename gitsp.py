@@ -2,8 +2,10 @@ import os
 import json
 import re
 import shutil
+import stat
 import subprocess
 import sys
+import tempfile
 import locale
 
 os.environ.setdefault("PYTHONUTF8", "1")
@@ -90,8 +92,8 @@ def launch_background():
     return False
 
 
-def git_ok(repo, *args):
-    code, out, err = git_run(repo, *args)
+def git_ok(repo, *args, env=None):
+    code, out, err = git_run(repo, *args, env=env)
     if code != 0:
         raise GitError(decode_utf8(err or out).strip())
     return out
@@ -289,6 +291,127 @@ def apply_submodule_switch(repo, target, rules, plan):
     for path in plan["arriving"] + plan["staying"]:
         checkout_branch(os.path.join(repo, *path.split("/")), rules[path])
     return parked
+
+
+NO_PROMPT_ENV = {"GIT_TERMINAL_PROMPT": "0"}
+
+
+def remove_tree(path):
+    def clear_readonly(func, target, _exc_info):
+        os.chmod(target, stat.S_IWRITE)
+        func(target)
+
+    shutil.rmtree(path, onerror=clear_readonly)
+
+
+def tree_mode(repo, ref, path):
+    raw = decode_utf8(git_ok(repo, "ls-tree", ref, "--", path)).strip()
+    return raw.split()[0] if raw else ""
+
+
+def find_remote_pin(repo, url, tree):
+    tmp = tempfile.mkdtemp(prefix="gitsp-remote-", dir=os.path.join(repo, ".git"))
+    try:
+        clone = os.path.join(tmp, "remote")
+        git_ok(repo, "clone", "--quiet", "--no-checkout", "--", url, clone, env=NO_PROMPT_ENV)
+        raw = decode_utf8(git_ok(clone, "log", "--remotes", "--format=%H %T"))
+        for line in raw.splitlines():
+            commit, commit_tree = line.split()
+            if commit_tree == tree:
+                return commit
+        return None
+    finally:
+        remove_tree(tmp)
+
+
+def rollback_conversion(repo, original, work_branch, path, parked, gitmodules_existed):
+    errors = []
+
+    def attempt(step):
+        try:
+            step()
+        except (GitError, OSError) as exc:
+            errors.append(str(exc))
+
+    attempt(lambda: git_ok(repo, "reset", "-q"))
+    gitmodules = os.path.join(repo, ".gitmodules")
+    if gitmodules_existed:
+        attempt(lambda: git_ok(repo, "checkout", "--", ".gitmodules"))
+    elif os.path.exists(gitmodules):
+        attempt(lambda: os.remove(gitmodules))
+    full = os.path.join(repo, *path.split("/"))
+    if parked:
+        attempt(lambda: remove_tree(full) if os.path.isdir(full) else None)
+        attempt(lambda: unpark_submodule(repo, path))
+    attempt(lambda: git_ok(repo, "switch", original))
+    attempt(lambda: git_ok(repo, "branch", "-d", work_branch))
+    return errors
+
+
+def convert_folder_to_submodule(repo, path, url, work_branch, commit_name):
+    path = path.strip().strip("/")
+    url = url.strip()
+    work_branch = work_branch.strip()
+    commit_name = commit_name.strip()
+    if not path or any(part in ("", ".", "..") for part in path.split("/")):
+        raise GitError("Đường dẫn thư mục không hợp lệ.")
+    if not url:
+        raise GitError("Chưa nhập URL remote của submodule.")
+    if not commit_name:
+        raise GitError("Chưa nhập tên người/nhóm cho commit.")
+    original = current_branch(repo)
+    if not original:
+        raise GitError("Đang ở detached HEAD, hãy checkout một branch trước.")
+    if git_run(repo, "check-ref-format", "--branch", work_branch)[0] != 0:
+        raise GitError(f"Tên branch '{work_branch}' không hợp lệ.")
+    if work_branch in PROTECTED_BRANCHES or branch_exists(repo, work_branch):
+        raise GitError(f"Branch '{work_branch}' là branch được bảo vệ hoặc đã tồn tại. Chọn tên khác.")
+    if working_tree_dirty(repo):
+        raise GitError("Working tree còn thay đổi đã tracked. Hãy commit hoặc stash trước.")
+    if untracked_under(repo, path):
+        raise GitError(f"'{path}' còn file chưa được Git quản lý hoặc bị ignore. Di chuyển hoặc xóa trước (mục 6).")
+    mode = tree_mode(repo, "HEAD", path)
+    if mode == "160000":
+        raise GitError(f"'{path}' trên {original} đã là submodule (gitlink).")
+    if mode != "040000":
+        raise GitError(f"'{path}' không phải thư mục thường trên {original} (mode '{mode or 'không có'}').")
+
+    tree = decode_utf8(git_ok(repo, "rev-parse", f"HEAD:{path}")).strip()
+    pin = find_remote_pin(repo, url, tree)
+    if not pin:
+        raise GitError(
+            f"Không tìm thấy commit nào trên {url} có cây giống '{path}' ({tree[:8]}). "
+            "Dừng để không đổi nội dung (mục 14.9, blocker 1)."
+        )
+    gitmodules_existed = git_run(repo, "cat-file", "-e", "HEAD:.gitmodules")[0] == 0
+
+    git_ok(repo, "switch", "-c", work_branch)
+    parked = False
+    try:
+        park_submodule(repo, path)
+        parked = True
+        git_ok(repo, "rm", "-r", "--cached", "-q", "--", path)
+        git_ok(repo, "update-index", "--add", "--cacheinfo", f"160000,{pin},{path}")
+        git_ok(repo, "config", "-f", ".gitmodules", f"submodule.{path}.path", path)
+        git_ok(repo, "config", "-f", ".gitmodules", f"submodule.{path}.url", url)
+        git_ok(repo, "add", "--", ".gitmodules")
+        git_ok(repo, "submodule", "update", "--init", "--", path, env=NO_PROMPT_ENV)
+        sub = os.path.join(repo, *path.split("/"))
+        if decode_utf8(git_ok(sub, "rev-parse", "HEAD")).strip() != pin:
+            raise GitError("Submodule không checkout đúng commit pin.")
+        if decode_utf8(git_ok(sub, "rev-parse", "HEAD^{tree}")).strip() != tree:
+            raise GitError("Cây của submodule không khớp thư mục gốc.")
+        if decode_utf8(git_ok(sub, "status", "--porcelain")).strip():
+            raise GitError("Submodule có thay đổi sau khi checkout.")
+        message = build_commit_message("chore", path, commit_name, f"track {path} as submodule gitlink at {pin[:8]}")
+        git_ok(repo, "commit", "-m", message)
+    except (GitError, OSError) as exc:
+        errors = rollback_conversion(repo, original, work_branch, path, parked, gitmodules_existed)
+        message = str(exc)
+        if errors:
+            message += "\nRollback chưa hoàn tất:\n- " + "\n- ".join(errors)
+        raise GitError(message) from exc
+    return pin
 
 
 def migration_audit(repo):
@@ -1111,6 +1234,9 @@ class App(tk.Tk):
         ttk.Button(top, text="Kiểm tra migration", command=lambda: self.guarded(self.show_migration_audit)).pack(
             side="right", padx=(0, 8)
         )
+        ttk.Button(
+            top, text="Chuyển sang submodule", command=lambda: self.guarded(self.convert_folder_to_submodule_ui)
+        ).pack(side="right", padx=(0, 8))
 
         frame = ttk.Frame(tab)
         frame.pack(fill="both", expand=True, pady=(8, 0))
@@ -1231,6 +1357,44 @@ class App(tk.Tk):
         if not lines:
             raise GitError("Không có branch nào để kiểm tra.")
         self.log("Kiểm tra migration submodule (mục 14.9):\n" + "\n".join(lines))
+
+    def convert_folder_to_submodule_ui(self):
+        repo = self.repo()
+        branch = self.current_name
+        if not branch:
+            raise GitError("Đang ở detached HEAD, hãy checkout một branch trước.")
+        path = simpledialog.askstring(
+            "Chuyển sang submodule", "Thư mục cần chuyển (ví dụ: pltf):", initialvalue="pltf", parent=self
+        )
+        if path is None:
+            return
+        url = simpledialog.askstring("Chuyển sang submodule", "URL remote của submodule:", parent=self)
+        if url is None:
+            return
+        work_branch = simpledialog.askstring(
+            "Chuyển sang submodule",
+            "Branch làm việc mới (ví dụ sub-chore/pltf-gitlink-<tên>):",
+            initialvalue=f"sub-chore/{path.strip().strip('/')}-gitlink-{branch}",
+            parent=self,
+        )
+        if work_branch is None:
+            return
+        commit_name = simpledialog.askstring("Chuyển sang submodule", "Tên người/nhóm cho commit:", parent=self)
+        if commit_name is None:
+            return
+        if not messagebox.askyesno(
+            "Xác nhận chuyển sang submodule",
+            f"Trên '{branch}', chuyển '{path.strip()}' thành gitlink trỏ tới commit PLTF có cây giống hệt?\n"
+            f"Thao tác tạo branch '{work_branch.strip()}' và một commit. Không push.",
+        ):
+            return
+        pin = convert_folder_to_submodule(repo, path, url, work_branch, commit_name)
+        self.refresh_branches()
+        self.load_submodule_state()
+        self.log(
+            f"Đã chuyển '{path.strip()}' thành gitlink tại {pin[:8]} trên branch {work_branch.strip()}.\n"
+            f"Thư mục cũ được lưu tại {parked_path(repo, path.strip())}. Chưa push, hãy kiểm tra rồi mở PR (mục 14.9)."
+        )
 
     def load_rewrite_commits(self):
         repo = self.repo()
