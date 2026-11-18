@@ -746,6 +746,31 @@ Do đó, quyết định sử dụng Python để triển khai các tính năng 
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] CORE-005 <+ Xử lý NULL event trong `uedp_ctrl_trace`, cập nhật trace history và thêm trace marker trong quá trình thực thi task để hỗ trợ debug.
 - [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration.test] TEST-005 <+ Bổ sung test case cho sự kiện USR_START và các custom event sequence trên testobj-v4.
 
+<!-- NOTE - Review 1404 - 171126 (docs/review/pltf-impl.md)
+Vấn đề 1 và 6 đã obsolete. Vấn đề 3 và 5 đã được chốt cho 1.1.8. Vấn đề 2 và 4 còn mở.
+Hệ thống hiện đang ở mức CT, chưa có UT thực sự và chưa chạm tới IT, ST thực sự.
+Hiện tại với các changes mới được cập nhật từ commit 0dbdfb4a8b0ca714c872004ad967ae74c6d23f82, PLTF đã hỗ trợ cho ut và syntax dựa trên tezcal-1 của testobj-v4. Cần thực hiện bổ sung TEST ticket để thực hiện BST cho các tính năng mới này, đồng thời bổ sung tài liệu hướng dẫn cho người dùng về cách sử dụng các tính năng mới này trong PLTF.
+-->
+
+- [x] @! TID[epic=Rv1.1.8-i0/verctrl] DOCS-007 <+ Bổ sung mục 11.5 về tiêu chí feature sẵn sàng tích hợp vào `integration` trong `docs/verctrl/pranj-ctrl.md`.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-011 <+ Bổ sung validate và cảnh báo khi dùng `post_isr` ở level `st` hoặc `it`, kèm tài liệu hướng dẫn cho người dùng (vấn đề 2 trong review 1404 - 171126).
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-012 <+ Chốt vấn đề 4 trong review 1404 - 171126 (chưa quyết định, hoãn sang review ticket).
+
+<!-- STATUS
+Hiện tại đối với các ticket PLTF-012 thì sẽ move ticket ở v1.2.0 tương ứng để chốt
+-->
+
+- [x] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-013 <+ Hoàn thiện tezcal level `ut` gọi thẳng hàm do codegen sinh, không khởi tạo core và không qua scheduler, đồng bộ với `docs/test/test-spec.md`.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-014 <+ Thiết kế Hierarchical Gating Engine để chạy lũy tiến UT → CT → IT → ST, dừng ngay khi tầng dưới fail.
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-015 <+ Thiết kế tầng IT cho hai biên giới: core với phần cứng thật (timer/ngắt trên STM32F103/H723) và đa nhân (ESP32-S3 Core 0/Core 1, Shared GDA).
+- [ ] @! TID[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-016 <+ Thiết kế tầng ST black-box, kiểm tra qua GPIO/UART/CAN và không truy cập biến nội bộ.
+
+<!-- STATUS
+Hiện tại đối với các ticket PLTF-014 >> 016 thì sẽ cân nhắc đưa qua v1.2.0 do yếu tố dính tới phần cứng cần phải xử lý triệt để. Ở v1.1.8 thì có thể cover được tốt ut và ct là tối ưu để deliver release.
+-->
+
+- [ ] @! TID[epic=Rv1.1.8-i0/version-control-policy] REPO-004 <+ Cập nhật bổ sung các thay đổi của ticket allocation từ v1.1.8 sang v1.2.0
+
 //  !SECTION
 
 ### Phiên bản 1.1.9: OPC introduction and DEM-FCR cross fault management
