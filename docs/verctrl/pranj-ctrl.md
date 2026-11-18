@@ -390,6 +390,8 @@ struct(docs > to-do.md): update task list for v1.1.9
 
 Follow the same rule for any other files in the documentation branch. This will ensure that the documentation is up to date with the latest changes and also allow for the documentation to be updated without having to merge the entire documentation branch into the current working branch.
 
+Furthermore, if any errors raised from migration and integration process of submodulize, cherry-pick for current development branch is acceptable to support documentation update with out version control errors. However, it is important to ensure that the cherry-picked changes are properly documented and tracked in the commit history to avoid confusion and ensure that the documentation is accurate and up to date.
+
 ### 12.2. Code update between development branches
 
 When we have a release that has been released and we are having branch `fix` to apply bug fixes for multiple release, it may create a situation where merging the `fix` branch into the `sub-feat/` branch for that release may cause redundant changes or conflicts. Therefore, we will need a rule to select which changes from `fix` branch to support code update among multiple development branches. The following rules are proposed:
