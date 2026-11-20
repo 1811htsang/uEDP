@@ -422,283 +422,868 @@ For example, in v1.1.8, ticket PLTF-012, PLTF-014, PLTF-015, PLTF-016 are consid
 - [ ] @! DEPRECATED[epic=Rv1.1.8-i0/pltf.libunity-integration] PLTF-XXX (REF: Rv1.1.8/PLTF-016) <+
 ```
 
-## 14. Submodulize and policy against checkout, PR
+## 14. Git Submodule Management Procedure
 
-Since μEDP has been submodulized with PLTF, it is important to add new policy and guidelines for submodule usage, especially when it comes to checking out and creating pull requests.
+### 14.1. Purpose
 
-### 14.1. Pinning rules
+This document defines a single, practical procedure for introducing and managing Git submodules in the superproject, including:
 
-- `pltf` is not tracked the same way on every branch (snapshot 2026-11-18). Only `sub-feat/Rv1.1.8` has `pltf` as a submodule (gitlink, mode 160000) and a `.gitmodules` file. On `main`, `feat`, `fix`, `doc`, `chore`, `reft`, `sub-feat/Rv1.1.7-bf1`, and `sub-feat/Rv1.1.9`, `pltf` is tracked as regular files. `release` and `integration` have no `pltf` path.
-- On a branch with a gitlink, the pinned commit is the PLTF version that the branch contains. Different branches may pin different commits.
-- Never commit a gitlink that points to a PLTF commit that is not pushed to the PLTF remote.
-- Do not use `git submodule update --remote` on `main`, `release`, or any branch used for build or release verification. These branches must follow the pinned commit.
+- converting an existing tracked directory into a submodule;
+- switching between branches that use the same submodule;
+- handling local modifications safely;
+- merging and cherry-picking branches that change a submodule pin;
+- reviewing pull requests that contain submodule changes;
+- handling the temporary migration period where some branches still contain regular files;
+- verifying the final state after migration.
 
-### 14.2. Checkout and switch
+`pltf` is used as the example submodule path. The same rules apply to other submodules.
 
-1. Before switching μEDP branches, make sure `pltf` has no uncommitted or unpushed work: `git -C pltf status`. Commit or stash inside `pltf` first.
-2. After any `git switch`, `git checkout`, `git pull`, or `git merge` that changes `pltf` or `.gitmodules`, run:
+---
 
-   ```bash
-   git submodule sync --recursive
-   git submodule update --init --recursive
-   git submodule status --recursive
-   ```
+### 14.2. Git Model and Terminology
 
-3. Do not build, test, or open a PR until `git submodule status --recursive` shows no `+` (checked-out commit differs from the pin), `-` (not initialized), or `U` (conflict) prefix.
-4. Do not develop in detached HEAD inside `pltf`. Switch to or create a named branch in `pltf` before committing.
+A superproject does not store the files of a submodule directly. It stores a **gitlink** that points to one commit in the submodule repository.
 
-### 14.3. Merge between branches
+| Representation | Meaning |
+| --- | --- |
+| `100644` | Normal tracked file |
+| `040000 tree` | Normal tracked directory/tree in a commit |
+| `160000 commit` | Gitlink pointing to a submodule commit |
+| **Pin** | The submodule commit recorded by the superproject |
 
-1. Before merging, check whether the source branch changes the submodule pin: `git diff --submodule=log <target>...<source>`.
-2. If the source and target pin different PLTF commits, resolve the gitlink conflict as follows:
-   - `git -C pltf fetch --all`
-   - Choose the integration commit. If neither pin is a descendant of the other, merge the PLTF branches inside `pltf` and push the result first.
-   - Push the PLTF integration commit to the remote.
-   - In μEDP, run `git add pltf`, then complete the merge.
-3. A merge or cherry-pick that changes the `pltf` gitlink or `.gitmodules` is never merged directly, even when the change is small. It must go through a pull request (see section 11.4).
-4. When a branch must not receive PLTF, cherry-pick the required commits instead of merging the whole branch, or add the submodule in a separate, isolated commit.
-5. Cherry-picking a commit that changes the `pltf` gitlink requires approval. The PLTF commit must already exist on the remote. Run the submodule update and status commands afterwards.
+Example:
 
-### 14.4. Pull requests
+```text
+feat
+└── pltf 160000 -> commit A
 
-- The PR description must state the PLTF pin change: old commit, new commit, and PLTF branch or tag.
-- A PR that changes only the gitlink uses the commit message `chore(pltf)[<name>]: update pltf submodule to <short-sha>`. Do not mix a pin change with unrelated μEDP changes in the same PR.
-- Review pin changes with `git diff --submodule=log <target>...<source>`.
-- Once `release` or `main` track `pltf` as a gitlink, PRs into them must pin a PLTF commit that is part of an approved PLTF release or tag.
-- CI must be able to fetch the pinned PLTF commit. Credentials must grant access to both μEDP and PLTF.
-
-### 14.5. Checklist
-
-| Action | Before | After |
-| --- | --- | --- |
-| Switch or checkout | `pltf` is clean and pushed | `submodule update --init --recursive`, then `submodule status` shows no `+`, `-`, or `U` |
-| Merge | Know which side changes the pin | Gitlink resolved, PLTF integration commit pushed, `git add pltf` done |
-| Update pin | PLTF commit pushed | Gitlink-only PR, CI verifies the pinned commit can be fetched |
-| Cherry-pick a pin change | Approval given, PLTF commit on remote | Submodule update and status checked |
-| Switch across the gitlink boundary (`sub-feat/Rv1.1.8` to or from a branch without the gitlink) | `pltf` has no uncommitted or unpushed work | No `pltf` change recorded on the target branch; `submodule status` checked where a gitlink exists |
-
-### 14.6. Switching across the gitlink boundary
-
-Observed behaviour when switching from `sub-feat/Rv1.1.8` to a branch such as `doc` or `feat`:
-
-1. Git reports local changes inside `pltf` that must be committed in the PLTF repository. These changes belong to the current branch, not the target branch.
-2. If those changes are discarded, Git then reports new `pltf` changes on the target branch and asks for a commit. The result is equivalent to applying PLTF changes to the target branch without a pull request.
-
-This is not an allowed way to deliver PLTF changes. Rules:
-
-1. Treat `pltf` changes found after a switch as work until proven otherwise. Check them before any discard: `git -C pltf status` and `git -C pltf log --oneline HEAD --not --remotes`.
-2. If the work must be kept, commit it on a PLTF work branch and push it through the PLTF review flow, or stash it inside `pltf` using the naming convention in section 7.
-
-    > This means that if any leftover changes in the submodule folder are found in the target branch, they must be committed or stashed in the PLTF repository before any actual changes from the remote `pltf` repository are applied to the target branch.
-
-3. Never record a `pltf` change on the target branch with `git add pltf`, `git add -A`, or `git commit -a`. If `git status` shows `pltf` modified on a branch where `pltf` is regular files, stop and ask for help. Do not commit.
-4. Do not discard `pltf` changes to make a switch pass until the procedure below has been followed through its step 2. If the procedure is unfamiliar, practice it on a clean clone first.
-5. Adding or removing the `pltf` gitlink or `.gitmodules` is a structural change. Keep it in its own commit, and bring it into another branch only through a pull request (14.3.3) or a cherry-pick approved under 14.3.5.
-
-#### Procedure: `sub-feat/Rv1.1.8` to `doc`
-
-**Step 1. Record the state on the source branch.**
-
-```bash
-git switch sub-feat/Rv1.1.8
-git status --short --branch
-git submodule status pltf
-git -C pltf status --short --branch
-git -C pltf log --oneline HEAD --not --remotes
-PINNED=$(git rev-parse HEAD:pltf)
-echo "Pinned PLTF commit: $PINNED"
+reft
+└── pltf 160000 -> commit B
 ```
 
-- `PINNED` is the gitlink on this branch. Keep the value; step 3 restores it.
-- A `+` prefix in `git submodule status pltf` means the checked-out PLTF commit differs from the pin.
-- The last command lists PLTF commits that are not on any remote. Each commit must either be pushed to an appropriate PLTF remote branch or intentionally preserved before leaving the source state.
-- If `git -C pltf status` is empty and the log is empty, skip to step 4.
+Commit A and commit B may differ. Each superproject branch records the PLTF revision required by that branch.
 
-**Step 2. Keep the PLTF work and push it. Do not discard it.**
+#### 14.2.1. Core invariant
+
+For every branch that uses `pltf` as a submodule:
+
+1. `pltf` is stored as mode `160000`.
+2. `.gitmodules` contains the correct path and repository URL.
+3. The pinned PLTF commit exists on an accessible remote.
+4. Before build, test, merge, or PR verification, the checked-out PLTF commit matches the superproject pin.
+
+---
+
+### 14.3. Target State
+
+The long-term target is that every branch containing `pltf` represents it consistently as a submodule.
+
+```text
+branch A
+└── pltf 160000 -> PLTF commit X
+
+branch B
+└── pltf 160000 -> PLTF commit Y
+```
+
+Avoid keeping this mixed structure permanently:
+
+```text
+branch A                     branch B
+└── pltf 160000              └── pltf/
+                                 ├── file1 100644
+                                 └── file2 100644
+```
+
+The mixed state is supported only during migration because switching between a regular tree and a gitlink can leave working-tree content that blocks checkout.
+
+---
+
+### 14.4. Convert an Existing Tracked Directory to a Submodule
+
+#### 14.4.1. Preconditions
+
+Start from the branch to be migrated:
 
 ```bash
-git -C pltf switch -c pacup/<short-description>
-git -C pltf add -A
-git -C pltf diff --cached --stat
-git -C pltf commit -m "feat(pltf)[<name>]: <short subject>"
+git checkout <target-branch>
+git status
+```
+
+The superproject should not contain unrelated modifications.
+
+Check the current `pltf` representation:
+
+```bash
+git ls-tree HEAD -- pltf
+git ls-files --stage "pltf/*"
+```
+
+Before migration, the expected state is a normal tree/files, for example:
+
+```text
+040000 tree <tree-sha>    pltf
+```
+
+and individual index entries such as:
+
+```text
+100644 <blob-sha> 0    pltf/README.md
+100644 <blob-sha> 0    pltf/uedp.py
+```
+
+Do **not** run `git submodule add ... pltf` while these files are still tracked. Otherwise Git may report:
+
+```text
+fatal: 'pltf' already exists in the index
+```
+
+#### 14.4.2. Confirm the PLTF revision before conversion
+
+Before replacing the tracked directory, identify the PLTF commit that contains the intended content and make sure that commit exists on the PLTF remote.
+
+Prefer performing this verification in a separate PLTF clone if the current `pltf/` path is still a normal superproject directory.
+
+Useful checks:
+
+```bash
+git -C <PLTF_CLONE> fetch --all
+git -C <PLTF_CLONE> branch -r --contains <PLTF_COMMIT>
+git -C <PLTF_CLONE> rev-parse <PLTF_COMMIT>^{tree}
+git rev-parse <target-branch>:pltf
+```
+
+If the selected PLTF commit does not represent the intended directory content, stop. Choosing an incorrect pin would change project content during migration.
+
+#### 14.4.3. Optional safety copy
+
+For a migration PR, keeping a temporary copy outside the superproject simplifies final content comparison:
+
+```bash
+cp -r pltf ../pltf-pre-migration-<target-branch>
+```
+
+On PowerShell:
+
+```powershell
+Copy-Item -Recurse pltf ../pltf-pre-migration-<target-branch>
+```
+
+Keep this copy only until the migration has been verified.
+
+#### 14.4.4. Remove the regular files
+
+Remove the old representation:
+
+```bash
+git rm -r pltf
+```
+
+Git will report the existing `pltf/*` files as deleted. This is **expected**.
+
+The deletion means that the superproject stops tracking the files individually. It does not mean that the files are deleted from the standalone PLTF repository.
+
+#### 14.4.5. Add the submodule
+
+```bash
+git submodule add <PLTF_REPOSITORY_URL> pltf
+```
+
+If a valid local submodule repository already exists and intentionally needs to be reused, `-f` may be used only after the old tracked entries have been removed:
+
+```bash
+git submodule add -f <PLTF_REPOSITORY_URL> pltf
+```
+
+Do not use `-f` as a substitute for fixing an existing `100644` representation.
+
+Select the required PLTF commit:
+
+```bash
+git -C pltf fetch --all
+git -C pltf checkout <PLTF_COMMIT>
 git -C pltf rev-parse HEAD
-git -C pltf push -u origin pacup/<short-description>
-git -C pltf branch -r --contains HEAD
 ```
 
-- `switch -c` keeps uncommitted changes and makes the new branch point at the current PLTF commit. If `pltf` is detached, the commits are reachable only through this branch.
-- Review `git -C pltf diff --cached --stat` before committing. Unstage unrelated or generated files with `git -C pltf restore --staged <file>`.
-- Use the commit format from section 4. Commit only the PLTF change, not the μEDP gitlink.
-- Write down the SHA printed by `git -C pltf rev-parse HEAD`. Step 6 needs it.
-- The last command must list `origin/pacup/<short-description>`. Do not continue until it does, because the work must not exist only on this machine.
-- Open the PLTF review through the PLTF flow. Do not merge it into a μEDP branch.
-- A stash keeps the work on this machine only, using the section 7 naming (`git -C pltf stash push -u -m "1534 - 011026"`). It is not enough for step 6. Push the branch first.
-- Finish every `git -C pltf` check before step 5. After the switch to `doc`, `pltf` is a regular path of μEDP and `git -C pltf` no longer targets the PLTF repository.
-- Check ignored files too: `git -C pltf status --ignored --short`. Ignored outputs are not pushed; copy any you need before step 5.
+A detached HEAD is acceptable here because this is only selecting the pin. Do not develop or create new PLTF commits while detached.
 
-**Step 3. Restore the pinned PLTF commit on the source branch.**
-
-> **What this step does:** puts the `pltf` checkout back to the commit that `sub-feat/Rv1.1.8` pins, so the μEDP branch is clean before you leave it. Nothing is committed here.
+Stage the submodule metadata:
 
 ```bash
-git submodule update --init pltf
+git add .gitmodules pltf
+```
+
+#### 14.4.6. Verify before committing
+
+Check the gitlink:
+
+```bash
+git ls-files --stage pltf
+git ls-tree HEAD -- pltf
+```
+
+Before the new commit is created, the index should show:
+
+```text
+160000 <PLTF_COMMIT> 0    pltf
+```
+
+If a safety copy was created, compare the actual contents:
+
+```bash
+diff -r -x .git ../pltf-pre-migration-<target-branch> pltf
+```
+
+No output means the content is equivalent.
+
+Check the staged changes:
+
+```bash
 git status --short
-git submodule status pltf
 ```
 
-- `git submodule status pltf` must show no `+` and no `-` prefix.
-- `git status --short` must not list `pltf`. The pin in μEDP is unchanged, so do not stage or commit anything here.
-- If the update cannot find the pinned commit, stop and go back to step 1. Do not try to force the pin.
+The migration should contain only the structural changes required for the conversion, such as:
 
-**Step 4. Confirm the target branch stores `pltf` as regular files.**
+- `.gitmodules` added or updated;
+- old `pltf/*` entries removed from the superproject;
+- `pltf` added as mode `160000`.
 
-> **What this step does:** checks the target branch before switching. If `doc` still had a gitlink (`160000`), the switch would change the pin rather than the files, and the rest of this procedure would not apply. Stop and ask for help in that case.
+#### 14.4.7. Commit the migration
+
+Example:
 
 ```bash
-git ls-tree doc -- pltf
-git cat-file -e doc:.gitmodules 2>/dev/null && echo "doc has .gitmodules" || echo "doc has no .gitmodules"
+git commit -m "chore(pltf): convert pltf to submodule at <short-sha>"
 ```
 
-- The first command should show a `040000 tree` entry, not `160000 commit`. That confirms the switch changes the path from gitlink to regular files.
+A result such as the following is normal:
 
-**Step 5. Switch and check the target branch.**
-
-> **What this step does:** performs the switch. This is the first point where Git compares `pltf` on both branches. Any `pltf` leftover shown here should already be saved by step 2. If a change is unexpected, stop here and do not run step 6.
-
-```bash
-git switch doc
-git status --short --branch
-git status --short -- pltf
+```text
+59 files changed, 1 insertion(+), 4859 deletions(-)
+create mode 160000 pltf
+delete mode 100644 pltf/README.md
+...
 ```
 
-- Do not add `-f`, `--force`, or `--discard-changes` to the switch. If it refuses, read the message and go back to step 1.
-- If `git status --short -- pltf` is empty, the procedure is finished for this step.
-- If it shows `M` or `??` entries under `pltf/`, do not stage or commit them. Go to step 6.
+Do **not** restore those deleted `100644` entries after the conversion. They are intentionally replaced by the `160000` gitlink.
 
-**Step 6. Only when step 5 shows `pltf` leftovers on `doc`: move them aside, then restore the `doc` files.**
+Conceptually:
 
-> **What this step does:** moves the leftover PLTF folder out of μEDP and restores the `doc` files in its place. Nothing is deleted. It runs only when the PLTF work is on `origin`, not in a local commit or a stash.
+```text
+Before
+Superproject
+└── pltf/
+    ├── file1 100644
+    ├── file2 100644
+    └── ...
 
-Precondition: check the pushed branch with the SHA from step 2. Replace `<PLTF_WORK_SHA>` with that value. `--git-dir` is used because `pltf/` is no longer a PLTF repository after the switch to `doc`.
-
-```bash
-git --git-dir=.git/modules/pltf branch -r --contains <PLTF_WORK_SHA>
+After
+Superproject
+└── pltf 160000
+        |
+        +--> PLTF repository @ selected commit
 ```
 
-The output must list `origin/pacup/<short-description>`. If it is empty, stop. A stash-only state is not enough.
+---
+
+### 14.5. Post-Migration Verification
+
+Run:
 
 ```bash
-mv pltf ../pltf-leftover-<date>
-git status --short -- pltf
-git restore --source=HEAD --staged --worktree -- pltf
-git status --short -- pltf
+git status
+git diff HEAD
+git ls-tree HEAD -- pltf
+git -C pltf rev-parse HEAD
+git submodule status --recursive
+git config -f .gitmodules --get-regexp '^submodule\..*'
 ```
 
-- `mv` keeps the old folder outside μEDP instead of deleting it. After moving the submodule working tree outside the superproject, do not rely on the moved working tree's `.git` indirection. Use the parent's `.git/modules/pltf` metadata or the already pushed remote branch for verification.
-- `git --git-dir=.git/modules/pltf` reads PLTF metadata that stays in μEDP's `.git`, so the check still works after the move.
-- After `git restore`, `git status --short -- pltf` must be empty.
-- Keep `../pltf-leftover-<date>` until the PLTF review of step 2 is complete, then delete it.
-- If `git restore` fails or reports a path that is not under `pltf/`, stop and ask for help. Do not use `git clean -f` or `git reset --hard`.
+Expected results:
 
-**Step 7. Return to the source branch.**
+- `git status` reports a clean working tree.
+- `git diff HEAD` produces no output.
+- `git ls-tree HEAD -- pltf` reports `160000 commit`.
+- `git -C pltf rev-parse HEAD` matches the pin recorded by the superproject.
+- `.gitmodules` contains the correct path and URL.
+- `git submodule status --recursive` reports no abnormal prefix.
+
+Prefix interpretation:
+
+| Prefix | Meaning |
+| --- | --- |
+| none / space | Checked-out commit matches the recorded pin |
+| `+` | Submodule is checked out at a different commit |
+| `-` | Submodule is not initialized |
+| `U` | Submodule conflict |
+
+To verify that the files still exist inside PLTF:
 
 ```bash
-git switch sub-feat/Rv1.1.8
+git -C pltf ls-tree -r --name-only HEAD
+```
+
+---
+
+### 14.6. Normal Branch Switching After Both Branches Are Submodulized
+
+Once both source and target branches use `pltf` as mode `160000`, branch switching becomes simple.
+
+Before switching:
+
+```bash
+git status
+git -C pltf status
+```
+
+If both repositories are clean:
+
+```bash
+git switch <target-branch>
 git submodule sync --recursive
 git submodule update --init --recursive
 git submodule status --recursive
+```
+
+Equivalent `git checkout <target-branch>` may be used instead of `git switch`.
+
+#### 14.6.1. Why `submodule update` is required
+
+Switching the superproject branch changes the expected gitlink but does not guarantee that the PLTF working tree is already checked out at that revision.
+
+Example:
+
+```text
+feat -> pltf@AAA
+reft -> pltf@BBB
+```
+
+After switching from `feat` to `reft`, run:
+
+```bash
+git submodule update --init --recursive
+```
+
+so that `pltf` is moved from `AAA` to the `BBB` pin required by `reft`.
+
+---
+
+### 14.7. Handling Local PLTF Modifications
+
+Before switching the superproject branch, always inspect PLTF:
+
+```bash
+git -C pltf status --short --branch
+git -C pltf log --oneline HEAD --not --remotes
+```
+
+#### 14.7.1. Modifications must be kept
+
+Do not use `--force`.
+
+Create or switch to a named PLTF branch, then commit and push the work:
+
+```bash
+git -C pltf switch -c <work-branch>
+git -C pltf add -A
+git -C pltf commit -m "<message>"
+git -C pltf push -u origin <work-branch>
+```
+
+Alternatively, for temporary local preservation:
+
+```bash
+git -C pltf stash push -u -m "before superproject branch switch"
+```
+
+A stash is local-only. If the work must be durable or shared, push it to the PLTF remote.
+
+#### 14.7.2. Modifications are no longer needed
+
+If the local PLTF changes are intentionally disposable, the target pin may be enforced with:
+
+```bash
+git submodule update --init --recursive --force
+```
+
+`--force` should **not** be the default command. Use it only when the local submodule checkout may safely be replaced.
+
+If an explicit cleanup is required, inspect first:
+
+```bash
+git -C pltf status
+```
+
+Then, only when the data is known to be disposable:
+
+```bash
+git -C pltf reset --hard
+git -C pltf clean -fd
+git submodule update --init --recursive --force
+```
+
+`reset --hard` and `clean -fd` permanently discard local work and untracked files. They must never be used blindly in the standard procedure.
+
+---
+
+### 14.8. Temporary Procedure Across the Gitlink Boundary
+
+This section applies only during migration when one branch uses `pltf` as a submodule while another still stores `pltf` as regular files.
+
+Example:
+
+```text
+migrated branch
+└── pltf 160000
+
+legacy branch
+└── pltf/ 040000 tree
+```
+
+This mixed state is the main source of errors such as:
+
+```text
+The following untracked working tree files would be overwritten by checkout
+```
+
+#### 14.8.1. Before switching
+
+Inspect and protect PLTF work:
+
+```bash
+git status
+git -C pltf status --short --branch
+git -C pltf log --oneline HEAD --not --remotes
+```
+
+Commit/push or stash anything that must be preserved.
+
+Confirm how the target branch represents `pltf`:
+
+```bash
+git ls-tree <target-branch> -- pltf
+```
+
+Interpretation:
+
+```text
+160000 commit ... pltf    -> target uses a submodule
+040000 tree ... pltf      -> target uses regular files
+```
+
+#### 14.8.2. From a submodule branch to a regular-tree branch
+
+Do not force the branch switch if Git reports files that would be overwritten.
+
+After PLTF work has been safely preserved, deinitialize the submodule working tree:
+
+```bash
+git submodule deinit -f -- pltf
+```
+
+If the physical folder remains and is known to contain no unsaved work, remove or move it outside the superproject.
+
+PowerShell example:
+
+```powershell
+Move-Item pltf ../pltf-leftover
+```
+
+or, only when deletion is safe:
+
+```powershell
+Remove-Item -Recurse -Force pltf
+```
+
+Then switch:
+
+```bash
+git switch <regular-tree-branch>
+git restore --source=HEAD --staged --worktree -- pltf
+```
+
+The target branch must not accidentally commit residual submodule content.
+
+#### 14.8.3. From a regular-tree branch to a submodule branch
+
+Ensure the regular-tree branch is clean first:
+
+```bash
+git status
+```
+
+Move or remove the existing `pltf/` working directory only after confirming that its contents are safely tracked or backed up.
+
+Then:
+
+```bash
+git switch <submodule-branch>
+git submodule sync --recursive
+git submodule update --init --recursive
+git submodule status --recursive
+```
+
+Do not use `git clean -f` or `git reset --hard` as a generic solution to crossing this boundary.
+
+#### 14.8.4. Migration recommendation
+
+This entire section should become unnecessary once every long-lived branch represents `pltf` as mode `160000`. Therefore, migrating the remaining branches is preferred over maintaining a complicated permanent boundary-switch procedure.
+
+---
+
+### 14.9. Merge Procedure
+
+#### 14.9.1. Preconditions
+
+Before merging branches that both use PLTF:
+
+1. Both branches should represent `pltf` as mode `160000`.
+2. Both branches should have compatible `.gitmodules` entries.
+3. Any repository-specific branch mapping file, such as `.gitsp-submodules.json`, must be reviewed separately from the gitlink.
+4. All PLTF commits that may become the resulting pin must already exist on the PLTF remote.
+
+Inspect the pin difference before merge:
+
+```bash
+git diff --submodule=log <target>...<source>
+```
+
+#### 14.9.2. Case A: same PLTF pin
+
+```text
+target -> pltf@AAA
+source -> pltf@AAA
+```
+
+No gitlink resolution is required. Resolve only accompanying configuration files if they differ.
+
+#### 14.9.3. Case B: one branch advances the other
+
+Example:
+
+```text
+base   -> AAA
+target -> AAA
+source -> BBB
+```
+
+If `BBB` is the intended compatible PLTF revision, the resulting superproject may pin `BBB`.
+
+Prefer reviewing a deliberate pin update rather than allowing an incidental pin change to be hidden inside unrelated changes.
+
+#### 14.9.4. Case C: both branches move PLTF independently
+
+Example:
+
+```text
+base   -> AAA
+target -> BBB
+source -> CCC
+```
+
+Do not arbitrarily choose one gitlink.
+
+Resolve the actual PLTF changes in the PLTF repository first:
+
+```bash
+cd pltf
+git fetch --all
+git switch <integration-branch>
+git merge <other-pltf-branch>
+# resolve conflicts and test
+git push
+cd ..
+```
+
+Then point the superproject at the resulting PLTF integration commit:
+
+```bash
+git add pltf
+```
+
+Update any associated mapping/configuration file as required and verify:
+
+```bash
+git submodule update --init --recursive
+git submodule status --recursive
+```
+
+---
+
+### 14.10. Cherry-Pick Rules
+
+A cherry-pick that modifies `pltf` may also change the gitlink.
+
+Before cherry-picking:
+
+```bash
+git show --submodule=log <commit>
+```
+
+If the commit changes the PLTF pin:
+
+1. confirm that the referenced PLTF commit exists on the remote;
+2. cherry-pick the commit;
+3. synchronize and update the submodule;
+4. verify the resulting pin.
+
+```bash
+git cherry-pick <commit>
+git submodule sync --recursive
+git submodule update --init --recursive
+git submodule status --recursive
+```
+
+Avoid cherry-picking structural migration commits into branches that are intentionally not ready for submodules.
+
+---
+
+### 14.11. Pull Request Policy
+
+A PR that changes the `pltf` gitlink should clearly state:
+
+- old PLTF commit;
+- new PLTF commit;
+- PLTF branch/tag when applicable;
+- reason for the pin update;
+- verification performed.
+
+Review the difference with:
+
+```bash
+git diff --submodule=log <target>...<source>
+```
+
+For a pin-only update, keep the PR focused. Do not mix unrelated superproject modifications unless they are inseparable from the PLTF update.
+
+For a migration PR, mass deletion of the former `pltf/*` files is expected. Reviewers should verify:
+
+```text
+old representation: 040000 tree / individual 100644 files
+new representation: 160000 gitlink
+```
+
+and verify that the selected PLTF commit contains the intended content.
+
+CI should initialize submodules from a clean checkout:
+
+```bash
+git submodule sync --recursive
+git submodule update --init --recursive
+```
+
+CI credentials must be able to access the PLTF repository and the pinned commit.
+
+---
+
+### 14.12. `.gitsp-submodules.json` and Branch Mapping
+
+If the project uses `.gitsp-submodules.json`, treat it as **branch-mapping metadata**, not as the authoritative commit pin.
+
+Example:
+
+```json
+{
+  "feat": {
+    "pltf": "main"
+  },
+  "reft": {
+    "pltf": "main"
+  }
+}
+```
+
+Important distinction:
+
+```text
+.gitsp-submodules.json -> desired PLTF branch relationship
+superproject gitlink   -> exact PLTF commit used by this superproject commit
+```
+
+The gitlink remains the source of truth for reproducible checkout.
+
+After any tool-driven branch switch, always verify:
+
+```bash
+git submodule status --recursive
+```
+
+A branch mapping alone does not guarantee that the checked-out PLTF commit matches the gitlink.
+
+If `.gitsp-submodules.json` causes merge conflicts, resolve the combined mapping deliberately and separately from the gitlink decision.
+
+---
+
+### 14.13. Standard Operational Checklist
+
+| Operation | Before | Required after |
+| --- | --- | --- |
+| Switch between two submodule branches | `git status`; `git -C pltf status` | `git submodule sync --recursive`; `git submodule update --init --recursive`; status check |
+| Discard obsolete PLTF modifications | Confirm changes are disposable | `git submodule update --init --recursive --force` |
+| Merge | Inspect `git diff --submodule=log`; ensure PLTF pins exist remotely | Resolve pin intentionally; update; test |
+| Cherry-pick pin change | Verify referenced PLTF commit exists remotely | Update and verify submodule |
+| Update PLTF pin | PLTF commit already pushed | Focused PR and CI verification |
+| Convert regular `pltf/` to submodule | Confirm correct PLTF commit and content | Verify `160000`, SHA match, clean tree |
+| Cross gitlink/regular-tree boundary during migration | Preserve PLTF work first | Remove/move residual working tree safely and restore target representation |
+
+---
+
+### 14.14. Commands for Diagnosis
+
+#### 14.14.1. Determine how the current branch stores PLTF
+
+```bash
+git ls-tree HEAD -- pltf
+```
+
+Expected submodule:
+
+```text
+160000 commit <sha>    pltf
+```
+
+Regular directory:
+
+```text
+040000 tree <sha>    pltf
+```
+
+#### 14.14.2. Determine which files the index tracks
+
+```bash
+git ls-files --stage pltf
+git ls-files --stage "pltf/*"
+```
+
+#### 14.14.3. Show the pin recorded by the current superproject commit
+
+```bash
 git rev-parse HEAD:pltf
+```
+
+#### 14.14.4. Show the commit currently checked out inside PLTF
+
+```bash
 git -C pltf rev-parse HEAD
 ```
 
-- The last two SHAs must match. A `+` in `git submodule status` means the pin and the checkout still differ.
-- If `git submodule update` refuses because untracked files under `pltf/` would be overwritten, back them up and move them aside. Do not use `-f` to force the checkout.
+These two SHA values should match before build/test/PR verification.
 
-### 14.7. gitsp notes for submodules
-
-- The "Submodule & ràng buộc" tab stores its mapping in `.gitsp-submodules.json` at the repo root, in the form `{"<main-branch>": {"<submodule-path>": "<submodule-branch>"}}`. Commit this file with μEDP. Saving a rule only changes the working tree.
-- gitsp reads the mapping from the current checkout before switching. The target branch's mapping is therefore whatever the current branch's file says. Keep the file identical across branches that use it, or switch only from a branch whose file already contains the target mapping.
-- "Chuyển branch theo ràng buộc" requires a rule for every submodule listed on the current checkout, and refuses tracked changes in μEDP or in any submodule. It switches the main repo first, then each submodule to its required branch. It does not run `git submodule update --init`, does not read the target branch's gitlink, and only handles submodules listed before the switch. Use it only when the current and target branches both have `pltf` as a gitlink. For switches across the gitlink boundary, follow 14.2 and 14.6 manually.
-- A gitsp branch rule is a branch name, not a commit pin. After switching, the submodule commit can still differ from the gitlink. Run `git submodule status --recursive` and check for `+` (see 14.2).
-- An empty submodule list on a branch means that branch has no gitlink. It does not mean `pltf` is absent.
-
-### 14.8. Submodule invariant
-
-For every μEDP commit that represents `pltf` as a gitlink:
-
-1. `HEAD:pltf` shall be a mode `160000` gitlink.
-2. The referenced PLTF commit shall exist on an accessible PLTF remote.
-3. The checked-out PLTF repository shall match the gitlink before build, test, merge, or PR verification.
-4. `.gitmodules` and the gitlink shall be changed only through reviewed μEDP commits.
-
-### 14.9. Migration `pltf` as gitlink on every branch
-
-Target state: every branch that contains `pltf` stores it as a gitlink (mode `160000`) with a matching `.gitmodules` entry. No branch stores `pltf` as regular files (`040000 tree`). Only then do the rules in 14.2 to 14.8 and the gitsp rules in 14.7 apply the same way on every branch.
-
-Current state (snapshot 2026-11-18, from `origin`):
-
-| Branch | `pltf` on origin | `.gitmodules` on origin |
-| --- | --- | --- |
-| `sub-feat/Rv1.1.8` | gitlink `160000`, pin `225af111` | yes |
-| `main`, `release`, `feat`, `fix`, `doc`, `chore`, `reft`, `integration`, `sub-feat/Rv1.1.7-bf1`, `sub-feat/Rv1.1.9` | regular tree `040000` | no |
-
-Blockers, to be resolved before any branch is migrated:
-
-1. **Pin per branch is undecided.** The `pltf` tree on `origin/main`, `origin/release`, and `origin/feat` is the same tree (`806d8f10`). It does not match the tree of any commit in the local PLTF repository (`.git/modules/pltf`, checked with `log --all`). A gitlink must pin a PLTF commit whose tree equals the content the branch carries today. Otherwise the migration silently changes μEDP content. If no PLTF commit matches, stop and decide with the PLTF owners which commit to pin.
-2. **URL is not confirmed for all branches.** The only `.gitmodules` today (on `sub-feat/Rv1.1.8`) uses `https://github.com/The-Personal-Toolsetation/pltf.git`. Confirm this URL before copying it to other branches.
-3. **Fresh clones change behaviour.** On a migrated branch, `pltf/` is empty after `git clone` until `git submodule update --init --recursive` runs (14.2, 14.8). Tell the team and CI before the first migration PR lands.
-
-Migration rules:
-
-1. Migrate one branch per PR. Each PR is a single commit: `.gitmodules` plus the gitlink, nothing else. Do not mix it with other changes (14.4).
-2. Do not push directly to protected branches. Use the normal PR flow (section 9).
-3. Do not rewrite history. Migration is a new commit on top of the existing branch.
-4. Until every branch that contains `pltf` is migrated, do not merge or switch between a migrated branch and an unmigrated one without the procedure in 14.6. The mismatch between a tree and a gitlink is the source of the switch problem described in 14.6.
-5. The migration order is an open decision. Record it here before starting.
-
-Procedure for one branch (run on a work branch created from the target branch):
+#### 14.14.5. Inspect submodule differences between branches
 
 ```bash
-# 1. Confirm the PLTF commit C has the same tree as the branch's pltf tree.
-git rev-parse <branch>:pltf
-git -C pltf rev-parse C^{tree}          # must print the same SHA
-
-# 2. Work branch from the target branch (naming: section 2).
-git switch -c sub-chore/pltf-gitlink-<branch> <branch>
-
-# 3. Remove pltf from the index and keep a copy of the folder for comparison.
-git rm -r --cached pltf
-mv pltf ../pltf-pre-migration-<branch>
-
-# 4. Add the gitlink and .gitmodules, then check out C.
-git update-index --add --cacheinfo 160000,C,pltf
-git config -f .gitmodules submodule.pltf.path pltf
-git config -f .gitmodules submodule.pltf.url https://github.com/The-Personal-Toolsetation/pltf.git
-git add .gitmodules
-git submodule update --init pltf
-
-# 5. Verify before committing.
-git ls-tree HEAD -- pltf                 # 160000 commit C
-git submodule status pltf                # no + or - prefix
-diff -r -x .git ../pltf-pre-migration-<branch> pltf   # must print nothing
-git status --short                       # only .gitmodules and pltf
-
-# 6. Commit only the migration, then open a PR.
-git commit -m "chore(pltf)[<name>]: track pltf as submodule gitlink at <short-sha>"
+git diff --submodule=log <target>...<source>
 ```
 
-- Step 3 moves the folder aside because `submodule update` refuses to write into a path with untracked files (section 6).
-- Step 5 `diff -r` is the proof that no μEDP content changed. If it prints anything, stop, do not commit, and check the pin in step 1.
-- The PR description must state: the old tree SHA, the new pin C, and the result of step 5.
-- After the PR merges, delete `../pltf-pre-migration-<branch>` only once the branch is verified on a clean clone.
+#### 14.14.6. Detect local PLTF work
 
-Post-migration invariants, checked for each branch:
+```bash
+git -C pltf status --short --branch
+git -C pltf log --oneline HEAD --not --remotes
+```
 
-- `git ls-tree <branch> -- pltf` shows `160000 commit`, and `git cat-file -e <branch>:.gitmodules` succeeds.
-- No branch shows `pltf` as `040000 tree`.
-- After `git submodule update --init --recursive`, `git submodule status --recursive` shows no `+`, `-`, or `U` prefix.
+---
 
-gitsp impact (open items, not implemented):
+### 14.15. Practices to Avoid
 
-- gitsp's "Chuyển branch theo ràng buộc" does not run `git submodule update` after switching, and it does not read the target gitlink (14.7). Once every branch is a gitlink, add the update step to the switch flow, and check `git submodule status` afterwards.
-- `.gitsp-submodules.json` must hold the same rules on every branch that uses it (14.7).
+Do not use the following as standard workflow:
+
+#### 14.15.1. Force-checkout to bypass conflicting files
+
+```bash
+git checkout -f <branch>
+```
+
+This hides the underlying working-tree ownership problem and may discard useful changes.
+
+#### 14.15.2. Restore old `pltf/*` files after conversion
+
+After successfully converting to mode `160000`, restoring the former `100644` files defeats the migration.
+
+#### 14.15.3. Blind cleanup
+
+```bash
+git reset --hard
+git clean -fd
+```
+
+These commands can permanently delete work. Use them only after explicitly determining that the affected data is disposable.
+
+#### 14.15.4. Blind submodule force update
+
+```bash
+git submodule update --init --recursive --force
+```
+
+Use `--force` only when local submodule modifications are intentionally no longer needed.
+
+#### 14.15.5. Treat a branch mapping as the pin
+
+A PLTF branch name in `.gitsp-submodules.json` does not replace the superproject gitlink. Reproducibility comes from the exact `160000` commit.
+
+---
+
+### 14.16. Final Recommended Workflow
+
+#### 14.16.1. One-time migration
+
+```text
+regular pltf/ files
+        |
+        | verify matching PLTF commit
+        v
+remove old tracked files
+        |
+        v
+add pltf submodule
+        |
+        v
+checkout required PLTF commit
+        |
+        v
+verify content + 160000 gitlink
+        |
+        v
+commit + PR
+```
+
+#### 14.16.2. Daily development after migration
+
+```bash
+# Before switching
+git status
+git -C pltf status
+
+# Switch superproject branch
+git switch <target-branch>
+
+# Synchronize submodule
+git submodule sync --recursive
+git submodule update --init --recursive
+
+# Verify
+git submodule status --recursive
+```
+
+If obsolete local PLTF modifications are intentionally discarded:
+
+```bash
+git submodule update --init --recursive --force
+```
+
+### 14.16.3. Final principle
+
+A stable submodule workflow comes from keeping a clear ownership boundary:
+
+```text
+Superproject owns:
+- .gitmodules
+- pltf gitlink (160000)
+- optional branch-mapping policy
+
+PLTF repository owns:
+- PLTF source files
+- PLTF commits and branches
+```
+
+Once all relevant branches follow this structure, normal switching and merging no longer requires deleting and restoring dozens of `pltf` files. The superproject changes only the pin, while the submodule repository remains responsible for its own source and history.
